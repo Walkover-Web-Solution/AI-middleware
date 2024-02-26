@@ -1,0 +1,41 @@
+const {configurationModel}=require("../../mongoModel/configuration");
+const mongoose=require("mongoose");
+const createBridges = async (configuration) => {
+    try {
+        const result=await new configurationModel({...configuration}).save();
+        return {success:true,bridge:result}
+    } catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"}
+    }
+}
+const getAllBridges=async (org_id)=>{
+try {
+    const bridges = await configurationModel.find({org_id:org_id},{ bridge_id: 1, _id: 1,name:1,service:1 });
+    return { success: true, bridges: bridges }
+} catch (error) {
+    console.log("error:",error)
+    return {success:false,error:"something went wrong!!"}
+}
+}
+const updateBridges=async(bridge_id,configuration,org_id)=>{
+    try {
+        const bridges = await configurationModel.findOneAndUpdate({_id:bridge_id,org_id:org_id},{configuration:configuration,name:configuration?.name,service:configuration?.service});
+        return { success: true, message:"bridge updated successfully" }
+    } catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"}
+    }
+}
+const getBridges= async (bridge_id)=>{
+    try {
+        const bridges = await configurationModel.findOne({_id:bridge_id});
+        return { success: true, bridges: bridges };
+    }catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"};
+    }
+}
+
+
+module.exports={createBridges,getAllBridges,getBridges,updateBridges}

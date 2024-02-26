@@ -1,0 +1,135 @@
+const ModelsConfig = require("../../configs/modelConfiguration");
+const { services } = require("../../../config/models");
+const { getAllThreads, getThread } = require("../../controllers/conversationContoller");
+const configurationService = require("../../db_services/ConfigurationServices");
+
+
+
+const getAIModels = async (req, res) => {
+    try {
+
+        const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
+
+        if (!(service in services)) {
+            return res.status(400).json({ success: false, error: "service does not exist!" });
+        }
+
+        console.log(services[service]["models"].values())
+        let modelInfo = {};
+        for (const model of services[service]["models"].values()) {
+            const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
+            const modelfunc = ModelsConfig[modelname];
+            let modelConfig = modelfunc().configuration;
+            modelInfo[modelname] = modelConfig;
+        }
+        return res.status(200).json({ sucess: true, models: Array.from(services[service]["models"]), type: { embeddings: Array.from(services[service]["embedding"]), completions: Array.from(services[service]["completion"]), chats: Array.from(services[service]["chat"]) }, modelInfo: modelInfo });
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const getThreads = async (req, res) => {
+    try {
+        const { thread_id, bridge_id } = req.params;
+        const { org_id } = req.body;
+        const threads = await getThread(thread_id, org_id, bridge_id);
+        if (threads?.success) {
+            return res.status(200).json(threads);
+        }
+        return res.status(400).json(threads);
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const getMessageHistory = async (req, res) => {
+    try {
+        const { bridge_id } = req.params;
+        const { org_id } = req.body;
+        const threads = await getAllThreads(bridge_id, org_id);
+        if (threads?.success) {
+            return res.status(200).json(threads);
+        }
+        return res.status(400).json(threads);
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const createBridges = async (req, res) => {
+    try {
+        const { configuration, org_id } = req.body;
+        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: configuration?.service });
+        if (result.success) {
+            return res.status(200).json({ ...result });
+        }
+        return res.status(400).json(result);
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const getAllBridges = async (req, res) => {
+    try {
+        const { org_id } = req.body;
+        const result = await configurationService.getAllBridges(org_id);
+        if (result.success) {
+            return res.status(200).json(result);
+        }
+        return res.status(400).json(result);
+    } catch (error) {
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const getBridges = async (req, res) => {
+    try {
+        // console.log(req.params,res);
+        const { bridge_id } = req.params;
+        const result = await configurationService.getBridges(bridge_id);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+        const service = result?.bridges?.service ? result.bridges.service.toLowerCase() : '';
+        if (!(service in services)) {
+            return res.status(400).json(result);
+        }
+        const model=result?.bridges?.configuration?.model ? result.bridges.configuration.model : '';
+        const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
+        const modelfunc = ModelsConfig[modelname];
+        let modelConfig = modelfunc().configuration;
+        for (const key in modelConfig) {
+            modelConfig[key]["default"] = result?.bridges?.configuration[key] ? result?.bridges?.configuration[key] : modelConfig[key]["default"];
+        }
+        result.bridges.configuration = modelConfig;
+        return res.status(200).json({ ...result});
+       
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+const updateBridges = async (req, res) => {
+    try {
+        const { bridge_id } = req.params;
+        const { configuration, org_id } = req.body;
+        const result = await configurationService.updateBridges(bridge_id, configuration, org_id);
+        if (result.success) {
+            return res.status(200).json(result);
+        }
+        return res.status(400).json(result);
+    } catch (error) {
+        console.log("error:", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+
+
+module.exports = {
+    getAIModels,
+    getThreads,
+    getMessageHistory,
+    createBridges,
+    getAllBridges,
+    getBridges,
+    updateBridges
+}
