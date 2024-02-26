@@ -7,6 +7,7 @@
     "dev": "nodemon index",
     "migrate:up": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "dockerStart": "sequelize db:migrate && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
