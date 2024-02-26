@@ -7,5 +7,5 @@ RUN npm install i npm@latest -g
 RUN npm install dotenv-cli -g
 COPY package.json package-lock*.json ./
 RUN npm install
-COPY . .    
-CMD ["npm","run dev"]
+COPY . .   
+CMD ["npm","run" , "dockerStart"]
