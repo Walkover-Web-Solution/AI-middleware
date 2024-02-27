@@ -98,7 +98,7 @@ const getBridges = async (req, res) => {
         const modelfunc = ModelsConfig[modelname];
         let modelConfig = modelfunc().configuration;
         for (const key in modelConfig) {
-            modelConfig[key]["default"] = result?.bridges?.configuration[key] ? result?.bridges?.configuration[key] : modelConfig[key]["default"];
+            modelConfig[key] = {default: result?.bridges?.configuration[key] ? result?.bridges?.configuration[key] : modelConfig[key]["default"]};
         }
         result.bridges.configuration = modelConfig;
         return res.status(200).json({ ...result});
