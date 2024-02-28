@@ -14,7 +14,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "stream": { field: "text", default: false, level: 0, typeOf: "boolean" }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.0005,output_cost:0.0015}}],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -35,7 +35,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "stream": { field: "text", default: false, level: 0, typeOf: "boolean" }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.0005,output_cost:0.0015} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -59,7 +59,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.0005,output_cost:0.0015} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -83,7 +83,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.0005,output_cost:0.0015} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -106,7 +106,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.03,output_cost:0.06} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -129,7 +129,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.03,output_cost:0.06}}],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -153,7 +153,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.01,output_cost:0.03} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -177,7 +177,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -201,7 +201,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "response_format": { field: "json_object", default: { "text": "json_object" }, level: 0 }
         }
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.01,output_cost:0.03} }],
             message: "choices[0].message.content",
             tools: "choices[0].message.tool_calls",
             id: "id"
@@ -216,7 +216,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         }
 
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", total_tokens: "usage.total_tokens",total_cost:0.00013}],
             message: "data[0].embedding"
         }
         return { configuration, outputConfig }
@@ -229,7 +229,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         }
 
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", total_tokens: "usage.total_tokens",total_cost:0.00002 }],
             message: "data[0].embedding"
         }
         return { configuration, outputConfig }
@@ -268,7 +268,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         }
 
         const outputConfig = {
-            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" }],
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.0015,output_cost:0.0020} }],
             message: "choices[0].text",
             id: "id"
         }
@@ -285,7 +285,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         }
 
         const outputConfig = {
-            usage: [],
+            usage: [{ prompt_tokens: "usage.input_tokens", output_tokens: "usage.output_tokens", total_tokens: "usage.total_tokens",total_cost:0 }],
             message: "candidates[0].content.parts[0].text",
             role: "model"
         }
@@ -296,7 +296,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "model": { field: "drop", default: "embedding-001", "level": 1 }
         }
         const outputConfig = {
-            usage: [],
+            usage:  [{ prompt_tokens: "usage.input_tokens", output_tokens: "usage.output_tokens", total_tokens: "usage.total_tokens",total_cost:0 }],
             message: "values",
             role: "model"
         }
