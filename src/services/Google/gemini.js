@@ -39,14 +39,24 @@ const {
               const result = await chat.sendMessage(configuration?.user_input);
               const response = result.response;
               console.log(response.text());
-              return {success:true,modelResponse:response}
+              const history = await chat.getHistory(); 
+              const msgContent = { role: "user", parts: [{ text: configuration?.user_input }] }; 
+              const contents = [...history, msgContent];
+              const { totalTokens:input_tokens } = await model.countTokens({ contents });
+              const { totalTokens:output_tokens } = await model.countTokens({ contents:response.candidates[0].content });
+              console.log(response.text())
+              return {success:true,modelResponse:response,usage:{input_tokens:input_tokens,output_tokens:output_tokens,total_tokens:input_tokens+output_tokens},history:history}
             case "completion":
               const promptResponse=await model.generateContent(configuration?.prompt);
-              return {success:true,modelResponse:promptResponse.response}
+              const { totalTokens:prompt_tokens } = await model.countTokens(configuration?.prompt);
+              const { totalTokens:completion_tokens } = await model.countTokens(promptResponse.response.text());
+              return {success:true,modelResponse:promptResponse.response,usage:{input_tokens:prompt_tokens,output_tokens:completion_tokens,total_tokens:prompt_tokens+completion_tokens}}
 
             case "embedding":
               const embeddingResponse = await model.embedContent(configuration?.input || "");
-              return {success:true,modelResponse:embeddingResponse.embedding}
+              // const { totalTokens:embedding_tokens } = await model.countTokens(configuration?.input || "");
+              // const { totalTokens:embedCompletion_tokens } = await model.countTokens(embeddingResponse.embedding.values);
+              return {success:true,modelResponse:embeddingResponse.embedding,usage:{input_tokens:0,output_tokens:0,total_tokens:0}}
             
           }
           return {success:false,error:"operation undefined!"}

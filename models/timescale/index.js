@@ -1,3 +1,4 @@
+
 'use strict';
 
 const fs = require('fs');
@@ -6,23 +7,34 @@ const Sequelize = require('sequelize');
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
+const config = require(__dirname + '/../../config/timescale_config.js')[env];
 const db = {};
+  
+// let sequelize;
+const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
+  dialect: 'postgres',
+    protocol: 'postgres',
+    port: 35362,
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
+    logging: console.log
+});
+const dbservice = async () => {
+  try {
+    await sequelize.sync();
+    console.log('Connection of timescale has been established successfully.', 2);
+  } catch (error) {
+    console.error('Unable to connect to the database:', error,444);
+  }
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], {
-    dialect: 'postgres',
-    host: process.env.DB_HOST,
-    logging:false
-  });
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, {
-    dialect: 'postgres',
-    host: process.env.DB_HOST,
-    logging:false
-  });
-}
+};
+dbservice();
+
+
 
 fs
   .readdirSync(__dirname)
