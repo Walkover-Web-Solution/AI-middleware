@@ -12,7 +12,7 @@ module.exports = {
           service,
           model, 
           time_bucket('5 minutes', created_at) as interval,
-          COUNT(*) FILTER (where status = 'success') AS success_count,
+          COUNT(*) FILTER (where status = true) AS success_count,
           SUM(latency) AS sum_latency,
           SUM(expected_cost) AS expected_cost_sum,
           SUM(input_tokens + output_tokens) AS token_count,
