@@ -10,6 +10,7 @@
     "migrateT:up": "sequelize-cli db:migrate --config config/timescale_config.js --migrations-path migrations/timescale",
     "migrateT:undo": "sequelize-cli db:migrate:undo --config config/timescale_config.js --migrations-path migrations/timescale",
     "create:migrateT": "npx sequelize-cli  migration:create --migrations-path migrations/timescale --name",
+    "create:migrateP": "npx sequelize-cli  migration:create --migrations-path migrations --name",
     "dockerStart": "sequelize db:migrate && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

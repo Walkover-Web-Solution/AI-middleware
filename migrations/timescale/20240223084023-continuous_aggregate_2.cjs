@@ -11,15 +11,15 @@ module.exports = {
           authkey_name,
           service,
           model,
-          time_bucket('1 day', created_at, 'Asia/Kolkata') as interval,
-
-          SUM(latency) AS sum_latency,
-          SUM(expected_cost) AS expected_cost_sum,
-          SUM(input_tokens + output_tokens) AS token_count,
-          COUNT(CASE WHEN status = 'success' THEN 1 END) AS success_count,
-
-          COUNT(*) AS record_count
-      FROM raw_data
+          
+          SUM(sum_latency) AS sum_latency,
+          SUM(expected_cost_sum) AS expected_cost_sum,
+          SUM(token_count) AS token_count,
+          SUM(success_count) AS success_count,
+          
+          SUM(record_count) AS record_count,
+          time_bucket('1 day', created_at, 'Asia/Kolkata') as interval
+      FROM five_minute_data
       GROUP BY 
           org_id, interval, authkey_name,service, model;
     `);

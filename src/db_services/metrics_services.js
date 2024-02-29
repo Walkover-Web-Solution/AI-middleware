@@ -1,4 +1,5 @@
 const timescale = require('./../../models/timescale/index.js')
+const postgres = require('./../../models/index.js')
 const Sequelize = require('sequelize');
 
 function startOfToday() {
@@ -44,8 +45,7 @@ async function create(dataset) {
         authkey_name: DataObject.authkeyName || 'not_found',
         latency: DataObject.latency || 0,
         service: DataObject.service,
-        status: DataObject?.success? "success":"fail",
-        error: (!DataObject.success ? DataObject.error : 'works perfectly fine'),
+        status: DataObject?.success? true:false,
         model: DataObject.model,
         input_tokens: DataObject.inputTokens || 0,
         output_tokens: DataObject.outputTokens || 0,
@@ -60,8 +60,34 @@ async function create(dataset) {
         throw error;
     }
 }
+
+async function createPg(dataset) {
+    console.log("dataset",dataset)
+    const insertAiDataInPg = dataset.map((DataObject) => ({
+        org_id: DataObject.orgId,
+        authkey_name: DataObject.authkeyName || 'not_found',
+        latency: DataObject.latency || 0,
+        service: DataObject.service,
+        status: DataObject?.success? true:false,
+        error: (!DataObject.success ? DataObject.error : 'works perfectly fine'),
+        model: DataObject.model,
+        input_tokens: DataObject.inputTokens || 0,
+        output_tokens: DataObject.outputTokens || 0,
+        expected_cost: DataObject.expectedCost || 0,
+        created_at: new Date(),
+    }));
+    try {
+        await postgres.raw_data.bulkCreate(insertAiDataInPg);
+    } catch (error) {
+        // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
+        console.log('Error during bulk insert of Ai middleware in postgres', error);
+        throw error;
+    }
+}
+
 module.exports = {
     find,
     create,
+    createPg,
     findOne,
 };
