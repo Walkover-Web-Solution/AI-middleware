@@ -6,8 +6,10 @@ const getConfiguration = async (configuration,service,bridge_id) => {
             return {success:false,error:"bridge_id does not exist"}
         }
             configuration = result?.bridges?.configuration;
-            service = configuration?.service?.toLowerCase();
+            service = result?.bridges?.service ? result.bridges.service.toLowerCase() : "";
+
     }
+    service=service?service.toLowerCase():"";
     return {success:true,configuration:configuration,service:service}
 }
 
