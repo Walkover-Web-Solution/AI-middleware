@@ -107,7 +107,6 @@ const prochat = async (req, res) => {
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages:[];
                 console.log("conversation=>",conversation) 
                 customConfig["messages"] = configuration?.prompt || [];
-                console.log("mesages==>",customConfig["messages"])
                 customConfig["messages"] = [...customConfig["messages"], ...conversation, !user ? tool_call : { role: "user", content: user }];
                 const openAIResponse = await chats(customConfig, apikey);
                 modelResponse = _.get(openAIResponse, "modelResponse", {});
