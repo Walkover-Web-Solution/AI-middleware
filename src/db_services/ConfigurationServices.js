@@ -37,5 +37,15 @@ const getBridges= async (bridge_id)=>{
     }
 }
 
+const getBridgesByName= async (name,org_id)=>{
+    try {
+        const bridges = await configurationModel.findOne({name:name,org_id:org_id});
+        return { success: true, bridges: bridges };
+    }catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"};
+    }
+}
 
-module.exports={createBridges,getAllBridges,getBridges,updateBridges}
+
+module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName}
