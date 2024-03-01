@@ -1,6 +1,8 @@
+'use strict';
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up (queryInterface, Sequelize) {
     await queryInterface.createTable('raw_data', {
       id: {
         allowNull: false,
@@ -25,6 +27,10 @@ module.exports = {
       status :{
         type:   Sequelize.BOOLEAN,
       },
+      error:{
+        type:Sequelize.STRING,
+        default:"none"
+      },
       input_tokens: {
         type: Sequelize.FLOAT
       },
@@ -39,17 +45,9 @@ module.exports = {
         type: Sequelize.DATE,
       }
     });
-
-    await queryInterface.addIndex('raw_data', {
-      fields: ['id', 'created_at'],
-      unique: true,
-      name: 'index_id_created_at'
-    });
-    await queryInterface.sequelize.query("SELECT create_hypertable('raw_data', 'created_at');");
-
   },
 
-  async down(queryInterface, Sequelize) {
+  async down (queryInterface, Sequelize) {
     await queryInterface.dropTable('raw_data');
   }
 };
