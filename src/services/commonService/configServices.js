@@ -101,14 +101,21 @@ const getBridges = async (req, res) => {
         if (!(service in services)) {
             return res.status(400).json(result);
         }
-        const model=result?.bridges?.configuration?.model ? result.bridges.configuration.model : '';
+        const configuration=result?.bridges?.configuration;
+        const model=configuration?.model ? configuration.model : '';
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
         let modelConfig = modelfunc().configuration;
+        let customConfig={}
         for (const key in modelConfig) {
-            modelConfig[key] = {default: result?.bridges?.configuration[key] ? result?.bridges?.configuration[key] : modelConfig[key]["default"]};
+            customConfig[key] = {default: configuration[key] ? configuration[key] : modelConfig[key]["default"]};
         }
-        result.bridges.configuration = modelConfig;
+        for(const keys in configuration){
+            if( keys!="name" && keys!="type"){
+            customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
+            }
+        }
+        result.bridges.configuration = customConfig;
         return res.status(200).json({ ...result});
        
     } catch (error) {
