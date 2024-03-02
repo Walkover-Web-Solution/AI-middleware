@@ -52,7 +52,6 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
         }
         console.log("chatToSave", chatToSave)
         const result=await chatbotDbService.createBulk(chatToSave);
-        console.log(result);
         return { success:true,message: "successfully saved chat history" }
 
     } catch (error) {
