@@ -58,7 +58,6 @@ async function create(dataset) {
     } catch (error) {
         // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
         console.log('Error during bulk insert of Ai middleware', error);
-        throw error;
     }
 }
 
@@ -82,7 +81,6 @@ async function createPg(dataset) {
     } catch (error) {
         // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
         console.log('Error during bulk insert of Ai middleware in postgres', error);
-        throw error;
     }
 }
 
