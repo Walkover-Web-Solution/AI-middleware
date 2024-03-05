@@ -71,7 +71,7 @@ const getchat = async (req, res) => {
 
 const prochat = async (req, res) => {
     const startTime = Date.now();
-    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service } = req.body;
+    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service, inputs } = req.body;
     let usage={}, modelResponse = {}, customConfig = {};
     let model = configuration?.model;
     try {
@@ -107,6 +107,19 @@ const prochat = async (req, res) => {
         switch (service) {
             case "openai": 
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages:[];
+                let prompt = configuration?.prompt || [];
+
+                if (inputs && Object.keys(inputs).length > 0) {
+                    Object.entries(inputs).forEach(([key, value]) => {
+                        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                        prompt = prompt.map(item => {
+                            if (typeof item.content === 'string') {
+                                item.content = item.content.replace(regex, value);
+                            }
+                            return item;
+                        });
+                    });
+                }
                 console.log("conversation=>",conversation) 
                 customConfig["messages"] = configuration?.prompt || [];
                 customConfig["messages"] = [...customConfig["messages"], ...conversation, !user ? tool_call : { role: "user", content: user }];
