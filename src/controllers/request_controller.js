@@ -30,4 +30,18 @@ const getRequestData = async (req, res) => {
     }
 };
 
-module.exports = { metrics, getRequestData };
+const getRequestDataForPg = async (req, res) => {
+    const { id } = req.params;
+     try {
+        const data = await metrics_sevice.findOnePg(id);
+        res.status(200).json({
+            statusCode: 200,
+            data,
+            message: 'Successfully get request data of Pg',
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { metrics, getRequestData, getRequestDataForPg };

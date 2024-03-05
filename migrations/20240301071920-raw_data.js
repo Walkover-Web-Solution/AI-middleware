@@ -28,7 +28,7 @@ module.exports = {
         type:   Sequelize.BOOLEAN,
       },
       error:{
-        type:Sequelize.STRING,
+        type:Sequelize.TEXT,
         default:"none"
       },
       input_tokens: {
