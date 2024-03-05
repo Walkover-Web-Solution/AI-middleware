@@ -23,15 +23,7 @@ module.exports= (sequelize, DataTypes) => {
     authkey_name: DataTypes.STRING,
     latency: DataTypes.FLOAT,
     service: DataTypes.STRING,
-    status: {
-      type: DataTypes.ENUM('success', 'fail'),
-      allowNull: false,
-      defaultValue: 'success' // You can set a default value if needed
-    },
-    error:{
-      type:DataTypes.STRING,
-      defaultValue:'none'
-    },
+    status: DataTypes.BOOLEAN,
     model: DataTypes.STRING,
     input_tokens: DataTypes.FLOAT,
     output_tokens: DataTypes.FLOAT,
