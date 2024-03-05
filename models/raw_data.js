@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 
+
 module.exports= (sequelize, DataTypes) => {
   class raw_data extends Model {
     /**
@@ -27,7 +28,7 @@ module.exports= (sequelize, DataTypes) => {
       allowNull: false,
     },
     error:{
-      type:DataTypes.STRING,
+      type:DataTypes.TEXT,
       defaultValue:'none'
     },
     model: DataTypes.STRING,
