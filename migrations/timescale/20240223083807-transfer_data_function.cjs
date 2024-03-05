@@ -51,4 +51,3 @@ FROM timescaledb_information.jobs where proc_name like 'insert_into_five_min_dat
     }
   }
 };
-

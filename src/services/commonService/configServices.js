@@ -58,8 +58,16 @@ const getMessageHistory = async (req, res) => {
 }
 const createBridges = async (req, res) => {
     try {
-        const { configuration, org_id } = req.body;
-        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: configuration?.service });
+        let { configuration, org_id, service } = req.body;
+        service = service? service.toLowerCase(): "";
+        if (!(service in services)) {
+            return res.status(400).json({ success: false, error: "service does not exist!" });
+        }
+        const data=await configurationService.getBridgesByName(configuration?.name,org_id);
+        if(data.success && data.bridges){
+            return res.status(400).json({ success: false, error: "bridge Name already exists! please choose unique one" });
+        }
+        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service });
         if (result.success) {
             return res.status(200).json({ ...result });
         }
@@ -93,14 +101,21 @@ const getBridges = async (req, res) => {
         if (!(service in services)) {
             return res.status(400).json(result);
         }
-        const model=result?.bridges?.configuration?.model ? result.bridges.configuration.model : '';
+        const configuration=result?.bridges?.configuration;
+        const model=configuration?.model ? configuration.model : '';
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
         let modelConfig = modelfunc().configuration;
+        let customConfig={}
         for (const key in modelConfig) {
-            modelConfig[key] = {default: result?.bridges?.configuration[key] ? result?.bridges?.configuration[key] : modelConfig[key]["default"]};
+            customConfig[key] = {default: configuration[key] ? configuration[key] : modelConfig[key]["default"]};
         }
-        result.bridges.configuration = modelConfig;
+        for(const keys in configuration){
+            if( keys!="name" && keys!="type"){
+            customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
+            }
+        }
+        result.bridges.configuration = customConfig;
         return res.status(200).json({ ...result});
        
     } catch (error) {
@@ -111,7 +126,12 @@ const getBridges = async (req, res) => {
 const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
-        const { configuration, org_id } = req.body;
+        let { configuration, org_id, service } = req.body;
+        configuration["service"]=service;
+        service = service? service.toLowerCase(): "";
+        if (!(service in services)) {
+            return res.status(400).json({ success: false, error: "service does not exist!" });
+        }
         const result = await configurationService.updateBridges(bridge_id, configuration, org_id);
         if (result.success) {
             return res.status(200).json(result);
