@@ -37,6 +37,11 @@ async function findOne(id) {
     return await model.findByPk(id);
 }
 
+async function findOnePg(id) {
+    const model = postgres.raw_data ;
+    return await model.findByPk(id);
+}
+
 
 async function create(dataset) {
     console.log("dataset",dataset)
@@ -52,16 +57,6 @@ async function create(dataset) {
         expected_cost: DataObject.expectedCost || 0,
         created_at: new Date(),
     }));
-    try {
-        await timescale.raw_data.bulkCreate(insertAiData);
-    } catch (error) {
-        // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
-        console.log('Error during bulk insert of Ai middleware', error);
-    }
-}
-
-async function createPg(dataset) {
-    console.log("dataset",dataset)
     const insertAiDataInPg = dataset.map((DataObject) => ({
         org_id: DataObject.orgId,
         authkey_name: DataObject.authkeyName || 'not_found',
@@ -77,9 +72,10 @@ async function createPg(dataset) {
     }));
     try {
         await postgres.raw_data.bulkCreate(insertAiDataInPg);
+        await timescale.raw_data.bulkCreate(insertAiData);
     } catch (error) {
         // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
-        console.log('Error during bulk insert of Ai middleware in postgres', error);
+        console.log('Error during bulk insert of Ai middleware', error);
     }
 }
 
@@ -87,7 +83,6 @@ async function createPg(dataset) {
 module.exports = {
     find,
     create,
-    createPg,
     findOne,
-    createPg,
+    findOnePg,
 };

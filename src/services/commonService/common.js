@@ -230,6 +230,7 @@ const getCompletion =async (req,res)=>{
 const proCompletion =async (req,res)=>{
     const startTime=Date.now();
     let { apikey,bridge_id,configuration,org_id,prompt,service} = req.body;
+    console.log("org_id",org_id)
     let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
     try {
