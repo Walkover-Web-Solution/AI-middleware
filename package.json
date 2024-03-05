@@ -7,6 +7,7 @@
     "dev": "nodemon index",
     "migrate:up": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "create:migrate": "npx sequelize-cli  migration:create --migrations-path migrations --name",
     "migrateT:up": "sequelize-cli db:migrate --config config/timescale_config.js --migrations-path migrations/timescale",
     "migrateT:undo": "sequelize-cli db:migrate:undo --config config/timescale_config.js --migrations-path migrations/timescale",
     "create:migrateT": "npx sequelize-cli  migration:create --migrations-path migrations/timescale --name",

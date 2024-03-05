@@ -19,7 +19,7 @@ const getchat = async (req, res) => {
         let { apikey, configuration, service } = req.body;
         const model = configuration?.model;
         let usage, modelResponse = {},customConfig={};
-        service = service.toLowerCase();
+        service = service ? service.toLowerCase() : "";
         
         if (!(service in services && services[service]["chat"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
@@ -37,7 +37,7 @@ const getchat = async (req, res) => {
             case "openai":
                 customConfig["messages"] = configuration?.prompt || [];
                 const conversation = configuration?.conversation || [];
-                customConfig["messages"] = [...customConfig["messages"], ...conversation, ...configuration["user"]];
+                customConfig["messages"] = [...customConfig["messages"], ...conversation, configuration["user"]];
                 const openAIResponse = await chats(customConfig, apikey);
                 modelResponse = _.get(openAIResponse, "modelResponse", {});
                 
@@ -73,15 +73,15 @@ const prochat = async (req, res) => {
     const startTime = Date.now();
     let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service } = req.body;
     let usage={}, modelResponse = {}, customConfig = {};
-    const model = configuration?.model;
+    let model = configuration?.model;
     try {
-        service = service.toLowerCase();
         const getconfig=await getConfiguration(configuration,service,bridge_id);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        model = configuration?.model;
         if (!(service in services && services[service]["chat"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
@@ -180,7 +180,7 @@ const getCompletion =async (req,res)=>{
         let { apikey, configuration, service } = req.body;
         const model = configuration?.model;
         let usage, modelResponse = {},customConfig={};
-        service = service.toLowerCase();
+        service = service ? service.toLowerCase() : "";
         
         if (!(service in services && services[service]["completion"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
@@ -230,16 +230,16 @@ const getCompletion =async (req,res)=>{
 const proCompletion =async (req,res)=>{
     const startTime=Date.now();
     let { apikey,bridge_id,configuration,org_id,prompt,service} = req.body;
-    const model = configuration?.model;
+    let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
     try {
-        service = service.toLowerCase();
         const getconfig=await getConfiguration(configuration,service,bridge_id);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        model = configuration?.model;
         if (!(service in services && services[service]["completion"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
@@ -317,7 +317,7 @@ const getEmbeddings =async (req,res)=>{
         let { apikey, configuration, service } = req.body;
         const model = configuration?.model;
         let usage, modelResponse = {},customConfig={};
-        service = service.toLowerCase();
+        service = service ? service.toLowerCase() : "";
         if (!(service in services && services[service]["embedding"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
@@ -364,18 +364,19 @@ const getEmbeddings =async (req,res)=>{
 }
 
 const proEmbeddings =async (req,res)=>{
+
     const startTime=Date.now();
     let { apikey,bridge_id,configuration,org_id,input, service } = req.body;
-    const model = configuration?.model;
+    let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
     try {
-        service = service.toLowerCase();
         const getconfig=await getConfiguration(configuration,service,bridge_id);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        model = configuration?.model;
         if (!(service in services && services[service]["embedding"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
