@@ -1,6 +1,6 @@
 const ModelsConfig = require("../../configs/modelConfiguration");
 const { services } = require("../../../config/models");
-const { getAllThreads, getThread } = require("../../controllers/conversationContoller");
+const { getAllThreads, getThread, getThreadHistory } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 
 
@@ -32,7 +32,7 @@ const getThreads = async (req, res) => {
     try {
         const { thread_id, bridge_id } = req.params;
         const { org_id } = req.body;
-        const threads = await getThread(thread_id, org_id, bridge_id);
+        const threads = await getThreadHistory(thread_id, org_id, bridge_id);
         if (threads?.success) {
             return res.status(200).json(threads);
         }
