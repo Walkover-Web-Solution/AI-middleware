@@ -21,6 +21,23 @@ async function find(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
+async function findAllMessages(org_id, thread_id,bridge_id) {
+  let conversations = await models.conversations.findAll({
+    attributes: [['message', 'content'], ['message_by', 'role'],'createdAt','id',"function"],
+    where: {
+        org_id,
+        thread_id,
+        bridge_id
+    },
+    order: [
+      ['id', 'DESC'],
+    ],
+    raw: true
+  });
+  conversations=conversations.reverse();
+  // If you want to return the result directly
+  return conversations;
+}
 async function deleteLastThread(org_id, thread_id,bridge_id) {
   const recordsTodelete=await models.conversations.findOne({
     where: {
@@ -61,5 +78,6 @@ module.exports = {
   find,
   createBulk,
   findAllThreads,
-  deleteLastThread
+  deleteLastThread,
+  findAllMessages
 }

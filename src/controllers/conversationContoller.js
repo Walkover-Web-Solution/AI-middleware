@@ -18,6 +18,16 @@ const getThread = async (thread_id, org_id,bridge_id) => {
         return { success: false, message: err.message }
     }
 };
+
+const getThreadHistory = async (thread_id, org_id,bridge_id) => {
+    try {
+        const chats = await chatbotDbService.findAllMessages(org_id, thread_id,bridge_id);
+        return { success: true, data: chats };
+    } catch (err) {
+        console.log(err)
+        return { success: false, message: err.message }
+    }
+}
 const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id,model_name,type,messageBy,userRole="user") => {
     try {
         let chatToSave = [{
@@ -67,5 +77,6 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
 module.exports = {
     getAllThreads,
     savehistory,
-    getThread
+    getThread,
+    getThreadHistory
 };
