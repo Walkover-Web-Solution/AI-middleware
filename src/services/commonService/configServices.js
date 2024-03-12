@@ -143,6 +143,21 @@ const updateBridges = async (req, res) => {
     }
 }
 
+const deleteBridges=async (req,res)=>{
+    try {
+        const { bridge_id } = req.params;
+        const {org_id}=req.body;
+        const result = await configurationService.deleteBridge(bridge_id,org_id);
+        if (result.success) {
+            return res.status(200).json(result);
+        }
+        return res.status(400).json(result);
+    }
+    catch (error) {
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+
 
 module.exports = {
     getAIModels,
@@ -151,5 +166,6 @@ module.exports = {
     createBridges,
     getAllBridges,
     getBridges,
-    updateBridges
+    updateBridges,
+    deleteBridges
 }
