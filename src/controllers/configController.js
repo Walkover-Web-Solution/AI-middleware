@@ -13,4 +13,5 @@ router.get('/models/:service',middleware,common.getAIModels);  //Done
 router.post('/createbridges',middleware,common.createBridges);  //Done
 router.post('/updatebridges/:bridge_id',middleware,common.updateBridges);  //Done
 router.put('/createbridges/:bridge_id', middleware, common.updateBridges);
+router.delete('/deletebridges/:bridge_id',middleware,common.deleteBridges);
 module.exports = router;
