@@ -35,9 +35,10 @@ const getchat = async (req, res) => {
         }
         switch (service) {
             case "openai":
-                customConfig["messages"] = configuration?.prompt || [];
+                let prompt = configuration.prompt ?? [];
+                prompt =Array.isArray(prompt)  ? prompt:[prompt];
                 const conversation = configuration?.conversation || [];
-                customConfig["messages"] = [...customConfig["messages"], ...conversation, configuration["user"]];
+                customConfig["messages"] = [...prompt, ...conversation, configuration["user"]];
                 const openAIResponse = await chats(customConfig, apikey);
                 modelResponse = _.get(openAIResponse, "modelResponse", {});
 
@@ -107,21 +108,26 @@ const prochat = async (req, res) => {
         switch (service) {
             case "openai":
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages : [];
-                let prompt = configuration?.prompt || [];
-
+                console.time("bhasad")
+                let prompt = configuration.prompt ?? [];
+                prompt =Array.isArray(prompt)  ? prompt:[prompt];
                 if (variables && Object.keys(variables).length > 0) {
                     Object.entries(variables).forEach(([key, value]) => {
                         const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
                         prompt = prompt.map(item => {
-                            item.content = item.content.replace(regex, value);
-                            return item;
+                            if(item && "content" in item){
+                                item.content = item.content.replace(regex, value);
+                                return item;
+                            }
                         });
                     });
                 }
                 console.log("conversation=>",conversation)
-                customConfig["messages"] = configuration?.prompt || [];
-                customConfig["messages"] = [...customConfig["messages"], ...conversation, !user ? tool_call : { role: "user", content: user }];
+                
+                customConfig["messages"] = [...prompt, ...conversation, !user ? tool_call : { role: "user", content: user }];
+                console.timeEnd("bhasad")
                 const openAIResponse = await chats(customConfig, apikey);
+
                 modelResponse = _.get(openAIResponse, "modelResponse", {});
                 if (!openAIResponse?.success) {
                     usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:openAIResponse?.error};
