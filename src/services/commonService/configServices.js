@@ -106,10 +106,12 @@ const getBridges = async (req, res) => {
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
         let modelConfig = modelfunc().configuration;
-        let customConfig={}
         for (const key in modelConfig) {
-            customConfig[key] = {default: configuration[key] ? configuration[key] : modelConfig[key]["default"]};
+            if(configuration.hasOwnProperty(key)){
+                modelConfig[key].default=configuration[key];
+            }
         }
+        let customConfig=modelConfig;
         for(const keys in configuration){
             if( keys!="name" && keys!="type"){
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
