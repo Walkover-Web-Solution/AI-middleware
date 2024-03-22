@@ -329,57 +329,41 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
     }
 }
 
-const getEmbeddings =async (req,res)=>{
-
+const getEmbeddings = async (req, res) => {
     try {
         let { apikey, configuration, service } = req.body;
         const model = configuration?.model;
-        let usage, modelResponse = {},customConfig={};
         service = service ? service.toLowerCase() : "";
         if (!(service in services && services[service]["embedding"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
-        const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-        const modelfunc = ModelsConfig[modelname];
-        let { configuration: modelConfig, outputConfig: modelOutputConfig } = modelfunc();
-        for (const key in modelConfig) {
-            if (modelConfig[key]["level"] == 2 || key in configuration) {
-                customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
+
+        const modelName = model.replaceAll(/[-.]/g, "_");
+        const { configuration: modelConfig, outputConfig: modelOutputConfig } = ModelsConfig[modelName]();
+
+        let customConfig = Object.entries(modelConfig).reduce((config, [key, value]) => {
+            if (value.level == 2 || key in configuration) {
+                config[key] = configuration[key] ?? value.default;
             }
-        }
-        switch (service) {
-            case "openai":
-                customConfig["input"] = configuration?.input||"";
-                const openAIResponse = await embeddings(customConfig, apikey);
-                modelResponse = _.get(openAIResponse, "modelResponse", {});
+            return config;
+        }, {});
 
-                if (!openAIResponse?.success) {
-                    return res.status(400).json({ success: false, error: openAIResponse?.error });
-                }
-                usage = modelResponse[modelOutputConfig["usage"]];
-                break;
-            case "google":
-                let geminiConfig = {
-                    input:configuration?.input||"",
-                    model:configuration?.model
-                }
-                const geminiResponse=await runChat(geminiConfig,apikey,"embedding");
-                modelResponse = _.get(geminiResponse, "modelResponse", {});
-                if (!geminiResponse?.success) {
-                    return res.status(400).json({ success: false, error: geminiResponse?.error });
-                }
-                break;
+        customConfig["input"] = configuration?.input || "";
 
+        let apiResponse = await (service === "openai" ? embeddings(customConfig, apikey) : runChat(customConfig, apikey, "embedding"));
+        if (!apiResponse?.success) {
+            return res.status(400).json({ success: false, error: apiResponse.error });
         }
+        let modelResponse = _.get(apiResponse, "modelResponse", {});
 
         return res.status(200).json({ success: true, response: modelResponse });
-
+    
     }
     catch(error){
         console.log("proCompletion common error=>", error);
         return res.status(400).json({ success: false, error: error.message });
     }
-}
+};
 
 const proEmbeddings =async (req,res)=>{
 
@@ -387,7 +371,7 @@ const proEmbeddings =async (req,res)=>{
     let { apikey,bridge_id,configuration,org_id,input, service } = req.body;
     let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
-    try {
+try {
         const getconfig=await getConfiguration(configuration,service,bridge_id);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
@@ -398,68 +382,68 @@ const proEmbeddings =async (req,res)=>{
         if (!(service in services && services[service]["embedding"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
-        const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-        const modelfunc = ModelsConfig[modelname];
-        let { configuration: modelConfig, outputConfig: modelOutputConfig } = modelfunc();
+
+        const modelName = model.replaceAll(/[-.]/g, "_");
+        const { configuration: modelConfig, outputConfig: modelOutputConfig } = ModelsConfig[modelName]();
+
         for (const key in modelConfig) {
-            if (modelConfig[key]["level"] == 2 || key in configuration) {
-                customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
-            }
+            customConfig[key] = configuration[key] ?? modelConfig[key]["default"];
         }
-        switch (service) {
-            case "openai":
-                customConfig["input"] = input || "";
-                const response = await embeddings(customConfig, apikey);
-                modelResponse = _.get(response, "modelResponse", {});
-                if (!response?.success) {
-                    usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:response?.error};
-                    create([usage])
-                    return res.status(400).json({ success: false, error: response?.error });
-                }
-                usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
-                usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
-                usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
-                usage["expectedCost"] = ((usage.totalTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost));
-                break;
-            case "google":
-                let geminiConfig = {
-                    input: input || "",
-                    model: configuration?.model
-                }
-                const geminiResponse=await runChat(geminiConfig,apikey,"embedding");
-                modelResponse = _.get(geminiResponse, "modelResponse", {});
-                if (!geminiResponse?.success) {
-                    usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:geminiResponse?.error};
-                    create([usage])
-                    return res.status(400).json({ success: false, error: geminiResponse?.error });
-                }
-                usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-                usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].input_tokens);
-                usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-                usage["expectedCost"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_cost);
-                break;
+
+        customConfig["input"] = input || "";
+
+        let response;
+        if (service === "openai") {
+            response = await embeddings(customConfig, apikey);
+        } else if (service === "google") {
+            response = await runChat({ input: input || "", model }, apikey, "embedding");
         }
-        const endTime = Date.now();
-        const webhook= configuration?.webhook;
-        const headers= configuration?.headers||{}
-        if(webhook){
-            sendRequest(webhook,{response:modelResponse,...req.body},'POST',headers)
+
+        modelResponse = _.get(response, "modelResponse", {});
+
+        if (!response?.success) {
+            usage = {
+                service: service, model: model, orgId: org_id, 
+                latency: Date.now() - startTime, success: false, error: response?.error
+            };
+            create([usage]);
+            return res.status(400).json({ success: false, error: response?.error });
         }
+
+        if (service === "openai") {
+            usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
+            usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
+            usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
+            usage["expectedCost"] = ((usage.totalTokens / 1000) * _.get(modelResponse, modelOutputConfig.usage[0].total_cost));
+        } else if (service === "google") {
+            usage["totalTokens"] = _.get(response, modelOutputConfig.usage[0].total_tokens);
+            usage["inputTokens"] = _.get(response, modelOutputConfig.usage[0].input_tokens);
+            usage["outputTokens"] = _.get(response, modelOutputConfig.usage[0].output_tokens);
+            usage["expectedCost"] = _.get(response, modelOutputConfig.usage[0].total_cost);
+        }
+
+        const { webhook, headers = {} } = configuration;
+        if (webhook) {
+            sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+        }
+
         const thread_id = uuidv1();
-        savehistory(thread_id,input,JSON.stringify(_.get(modelResponse, modelOutputConfig.message)),org_id,bridge_id,configuration?.model,'embedding',"assistant");
-        usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
-        create([usage])
+        savehistory(thread_id, input, JSON.stringify(_.get(modelResponse, modelOutputConfig.message)), org_id, bridge_id, model, 'embedding', "assistant");
+
+        create([usage]);
         return res.status(200).json({ success: true, response: modelResponse });
-    }
-    catch(error){
-        const endTime = Date.now();
-        const latency = endTime - startTime;
-        usage={...usage,service:service,model:model,orgId:org_id,latency:latency,success:false,error:error.message};
+    } catch (error) {
+        usage = {
+            ...usage, service: service, model: model, orgId: org_id, 
+            latency: Date.now() - startTime, success: false, error: error.message
+        };
         create([usage]);
         console.log("proembeddings common error=>", error);
         return res.status(400).json({ success: false, error: error.message });
     }
-}
+};
+
+
 
 module.exports={
     getchat,
