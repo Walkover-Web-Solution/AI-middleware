@@ -31,11 +31,11 @@ const getchat = async (req, res) => {
             }
             return acc;
         }, {});
-
+        
         let modelResponse = {};
         switch (lowerCaseService) {
             case "openai":
-                const prompt = [].concat(configuration.prompt ?? []);
+                const prompt = Array.isArray(configuration.prompt) ? configuration.prompt : configuration.prompt ? [configuration.prompt] : [];
                 const conversation = configuration.conversation || [];
                 customConfig.messages = [...prompt, ...conversation, configuration.user];
                 const openAIResponse = await chats(customConfig, apikey);
