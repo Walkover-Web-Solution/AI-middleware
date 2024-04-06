@@ -14,6 +14,15 @@ const {runChat} = require("../Google/gemini");
 const {create}=require("../../db_services/metrics_services");
 
 
+async function notifyWebhook(webhookUrl, data, headers) {
+    try {
+      await sendRequest(webhookUrl, data, 'POST', headers);
+      console.log('Webhook notified successfully.');
+    } catch (error) {
+      console.error('Failed to notify webhook:', error.message);
+    }
+  }
+
 const getchat = async (req, res) => {
     try {
         let { apikey, configuration, service } = req.body;
@@ -176,8 +185,11 @@ savehistory(thread_id, user,
         create([usage])
         const { webhook, headers = {} } = configuration;
         if (webhook) {
-            sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
-        }
+            const webhookData = { response: modelResponse, ...req.body };
+            notifyWebhook(webhook, webhookData, headers).catch(console.error);
+      
+            return res.status(200).json({ success: true, response: modelResponse });
+          }
 
         return res.status(200).json({ success: true, response: modelResponse });
 
@@ -317,8 +329,11 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
         const endTime = Date.now();
         const { webhook, headers = {} } = configuration;
         if (webhook) {
-            sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
-        }
+            const webhookData = { response: modelResponse, ...req.body };
+            notifyWebhook(webhook, webhookData, headers).catch(console.error);
+      
+            return res.status(200).json({ success: true, response: modelResponse });
+          }
         const thread_id = uuidv1();
         savehistory(thread_id,prompt,_.get(modelResponse, modelOutputConfig.message),org_id,bridge_id,configuration?.model,'completion',"assistant");
 
@@ -451,8 +466,11 @@ const proEmbeddings =async (req,res)=>{
         const webhook= configuration?.webhook;
         const headers= configuration?.headers||{}
         if(webhook){
-            sendRequest(webhook,{response:modelResponse,...req.body},'POST',headers)
-        }
+            const webhookData = { response: modelResponse, ...req.body };
+            notifyWebhook(webhook, webhookData, headers).catch(console.error);
+      
+            return res.status(200).json({ success: true, response: modelResponse });
+          }
         const thread_id = uuidv1();
         savehistory(thread_id,input,JSON.stringify(_.get(modelResponse, modelOutputConfig.message)),org_id,bridge_id,configuration?.model,'embedding',"assistant");
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
