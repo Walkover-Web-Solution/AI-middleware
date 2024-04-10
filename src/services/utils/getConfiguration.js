@@ -1,5 +1,6 @@
 const configurationService = require("../../db_services/ConfigurationServices");
-const getConfiguration = async (configuration,service,bridge_id) => {
+const helper = require("../../services/utils/helper");
+const getConfiguration = async (configuration,service,bridge_id,api_key) => {
     if (!configuration) {
         const result = await configurationService.getBridges(bridge_id);
         if (!result.success) {
@@ -7,10 +8,11 @@ const getConfiguration = async (configuration,service,bridge_id) => {
         }
             configuration = result?.bridges?.configuration;
             service = result?.bridges?.service ? result.bridges.service.toLowerCase() : "";
+            api_key=api_key?api_key:helper.decrypt(result?.bridges?.api_key)
 
     }
     service=service?service.toLowerCase():"";
-    return {success:true,configuration:configuration,service:service}
+    return {success:true,configuration:configuration,service:service,apikey:api_key}
 }
 
 module.exports={getConfiguration}

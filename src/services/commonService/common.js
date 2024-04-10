@@ -12,7 +12,7 @@ const { completion } = require("../openAI/completion");
 const {embeddings} = require("../openAI/embedding");
 const {runChat} = require("../Google/gemini");
 const {create}=require("../../db_services/metrics_services");
-
+const Helper=require("../../services/utils/helper");
 
 const getchat = async (req, res) => {
     try {
@@ -76,12 +76,13 @@ const prochat = async (req, res) => {
     let usage = {}, modelResponse = {}, customConfig = {};
     let model = configuration?.model;
     try {
-        const getconfig=await getConfiguration(configuration,service,bridge_id);
+        const getconfig=await getConfiguration(configuration,service,bridge_id,apikey);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        apikey=getconfig.apikey;
         model = configuration?.model;
         if (!(service in services && services[service]["chat"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
@@ -251,12 +252,13 @@ const proCompletion =async (req,res)=>{
     let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
     try {
-        const getconfig=await getConfiguration(configuration,service,bridge_id);
+        const getconfig=await getConfiguration(configuration,service,bridge_id,apikey);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        apikey=getconfig.apikey;
         model = configuration?.model;
         if (!(service in services && services[service]["completion"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
@@ -396,12 +398,13 @@ const proEmbeddings =async (req,res)=>{
     let model = configuration?.model;
     let usage={}, modelResponse = {},customConfig={};
     try {
-        const getconfig=await getConfiguration(configuration,service,bridge_id);
+        const getconfig=await getConfiguration(configuration,service,bridge_id,apikey);
         if(!getconfig.success){
             return res.status(400).json({ success: false, error: getconfig.error });
         }
         configuration=getconfig.configuration;
         service = getconfig.service;
+        apikey=getconfig.apikey;
         model = configuration?.model;
         if (!(service in services && services[service]["embedding"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
