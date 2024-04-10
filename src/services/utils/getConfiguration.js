@@ -8,7 +8,7 @@ const getConfiguration = async (configuration,service,bridge_id,api_key) => {
         }
             configuration = result?.bridges?.configuration;
             service = result?.bridges?.service ? result.bridges.service.toLowerCase() : "";
-            api_key=api_key?api_key:helper.decrypt(result?.bridges?.api_key)
+            api_key=api_key?api_key:helper.decrypt(result?.bridges?.apikey);
 
     }
     service=service?service.toLowerCase():"";
