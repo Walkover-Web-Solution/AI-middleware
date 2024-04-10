@@ -2,7 +2,7 @@ const ModelsConfig = require("../../configs/modelConfiguration");
 const { services } = require("../../../config/models");
 const { getAllThreads, getThread, getThreadHistory } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
-
+const helper=require("../../services/utils/helper");
 
 
 const getAIModels = async (req, res) => {
@@ -67,7 +67,7 @@ const createBridges = async (req, res) => {
         if(data.success && data.bridges){
             return res.status(400).json({ success: false, error: "bridge Name already exists! please choose unique one" });
         }
-        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service });
+        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: helper.encrypt("")});
         if (result.success) {
             return res.status(200).json({ ...result });
         }
@@ -118,6 +118,7 @@ const getBridges = async (req, res) => {
             }
         }
         result.bridges.configuration = customConfig;
+        result.bridges.apikey=helper.decrypt(result.bridges.apikey);
         return res.status(200).json({ ...result});
        
     } catch (error) {
@@ -128,13 +129,14 @@ const getBridges = async (req, res) => {
 const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
-        let { configuration, org_id, service } = req.body;
+        let { configuration, org_id, service, apikey } = req.body;
         configuration["service"]=service;
         service = service? service.toLowerCase(): "";
+       apikey= apikey ? helper.encrypt(apikey) : helper.encrypt("");
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        const result = await configurationService.updateBridges(bridge_id, configuration, org_id);
+        const result = await configurationService.updateBridges(bridge_id, configuration, org_id,apikey);
         if (result.success) {
             return res.status(200).json(result);
         }

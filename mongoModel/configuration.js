@@ -5,6 +5,7 @@ const configuration=new mongoose.Schema({
     service:{type:String,default:""},
     name:{type:String,default:""},
     configuration:{type:Object,default:{}},
+    apikey:{type:String,default:""},
     created_at:{type:Date,default:Date.now}
 })
 
