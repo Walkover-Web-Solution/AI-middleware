@@ -13,6 +13,9 @@ const {embeddings} = require("../openAI/embedding");
 const {runChat} = require("../Google/gemini");
 const {create}=require("../../db_services/metrics_services");
 const Helper=require("../../services/utils/helper");
+const RTLayer = require('rtlayer-node').default;
+
+const rtlayer = new RTLayer(process.env.RTLAYER_AUTH)
 
 const getchat = async (req, res) => {
     try {
@@ -84,8 +87,12 @@ const prochat = async (req, res) => {
         service = getconfig.service;
         apikey=getconfig.apikey;
         model = configuration?.model;
+        const rtlLayer = getconfig.RTLayer;
         if (!(service in services && services[service]["chat"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
+        }
+        if(rtlLayer){
+            res.status(200).json({ success: true,message:"Will got reponse over RTlayer." });
         }
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
@@ -178,6 +185,14 @@ savehistory(thread_id, user,
         const { webhook, headers = {} } = configuration;
         if (webhook) {
             sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+        }
+        if(rtlLayer){
+            console.log("ddd",modelResponse)
+            rtlayer.message({
+                ...req.body,
+                response: modelResponse
+              }, req.body.rtlOptions);
+            return;
         }
 
         return res.status(200).json({ success: true, response: modelResponse });

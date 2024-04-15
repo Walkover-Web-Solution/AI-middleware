@@ -9,10 +9,11 @@ const getConfiguration = async (configuration,service,bridge_id,api_key) => {
             configuration = result?.bridges?.configuration;
             service = result?.bridges?.service ? result.bridges.service.toLowerCase() : "";
             api_key=api_key?api_key:helper.decrypt(result?.bridges?.apikey);
+            RTLayer = configuration?.RTLayer ? true:false;
 
     }
     service=service?service.toLowerCase():"";
-    return {success:true,configuration:configuration,service:service,apikey:api_key}
+    return {success:true,configuration:configuration,service:service,apikey:api_key,RTLayer:RTLayer}
 }
 
 module.exports={getConfiguration}
