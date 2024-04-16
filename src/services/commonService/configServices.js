@@ -82,7 +82,7 @@ const getAllBridges = async (req, res) => {
         const { org_id } = req.body;
         const result = await configurationService.getAllBridges(org_id);
         if (result.success) {
-            return res.status(200).json(result);
+            return res.status(200).json({result, org_id :org_id});
         }
         return res.status(400).json(result);
     } catch (error) {
