@@ -82,13 +82,21 @@ const getAllBridges = async (req, res) => {
         const { org_id } = req.body;
         const result = await configurationService.getAllBridges(org_id);
         if (result.success) {
-            return res.status(200).json(result);
+            const bridgesWithOrgId = result.bridges.map(bridge => ({
+                _id: bridge._id,
+                bridge_id: bridge.bridge_id,
+                name: bridge.name,
+                service: bridge.service,
+                org_id: org_id
+            }));
+            return res.status(200).json({ success: true, bridges: bridgesWithOrgId, org_id: org_id });
         }
         return res.status(400).json(result);
     } catch (error) {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
+
 const getBridges = async (req, res) => {
     try {
         // console.log(req.params,res);
