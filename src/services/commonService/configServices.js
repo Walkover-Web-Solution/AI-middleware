@@ -142,7 +142,12 @@ const updateBridges = async (req, res) => {
         for (let key in prev_configuration)
         {
            prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
-        }     
+        }  
+        for (let key in configuration) {
+            if (!(key in prev_configuration)) {
+                prev_configuration[key] = configuration[key];
+            }
+        }   
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
