@@ -113,7 +113,7 @@ const getBridges = async (req, res) => {
         }
         let customConfig=modelConfig;
         for(const keys in configuration){
-            if( keys!="name" && keys!="type"){
+            if( keys!="name" && keys!="type"){ 
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
             }
         }
@@ -130,13 +130,26 @@ const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
         let { configuration, org_id, service, apikey } = req.body;
+
         configuration["service"]=service;
+        let modelConfig = await configurationService.getBridges(bridge_id)
         service = service? service.toLowerCase(): "";
-       apikey= apikey ? helper.encrypt(apikey) : helper.encrypt("");
+        if (!apikey){
+            apikey = modelConfig.apikey;
+        }
+        apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
+        let prev_configuration = modelConfig.bridges.configuration;
+        for (let key in prev_configuration)
+        {
+           prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
+        }  
+        for (let key in configuration) {
+            prev_configuration[key] = configuration[key];
+        }   
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        const result = await configurationService.updateBridges(bridge_id, configuration, org_id,apikey);
+        const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
         if (result.success) {
             return res.status(200).json(result);
         }
