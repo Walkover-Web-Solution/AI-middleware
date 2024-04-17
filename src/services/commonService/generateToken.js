@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-require('dotenv').config(); 
 
 const generateToken = async (req, res) => {
   try {
@@ -10,9 +9,7 @@ const generateToken = async (req, res) => {
       project_id: process.env.PROJECT_ID,
       user_id: bridge_id
     };
-
-    const secretKey = process.env.SECRET_KEY;
-
+    const secretKey = process.env.Access_key;
     const token = jwt.sign(payload, secretKey);
     res.status(200).json({ success : true, token });
 
