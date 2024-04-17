@@ -55,6 +55,18 @@ class Helper {
             console.error('Error creating custom model configuration:', error);
         }
     }
+
+    static extractInputConfig = (configuration)=>{
+        let inputconfig = {};
+        const inputFields = ["prompt", "tool_call", "input"];
+        for (let field of inputFields) {
+            if (configuration[field]) {
+                inputconfig[field] = configuration[field];
+                delete configuration[field];
+            }
+        }
+        return { configuration, inputconfig };
+    }
 }
 
 module.exports = Helper

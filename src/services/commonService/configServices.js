@@ -59,32 +59,33 @@ const getMessageHistory = async (req, res) => {
 const createBridges = async (req, res) => {
     try {
         let { configuration, org_id, service } = req.body;
-        service = service? service.toLowerCase(): "";
+        service = service ? service.toLowerCase() : "";
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        const data=await configurationService.getBridgesByName(configuration?.name,org_id);
-        if(data.success && data.bridges){
+        
+        const data = await configurationService.getBridgesByName(configuration?.name, org_id);
+        if (data.success && data.bridges) {
             return res.status(400).json({ success: false, error: "bridge Name already exists! please choose unique one" });
         }
-        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: helper.encrypt("")});
+        
+        const result = await configurationService.createBridges({ 
+            configuration: configuration, 
+            org_id, 
+            name: configuration?.name, 
+            service: service, 
+            apikey: helper.encrypt("") 
+        });
+
         if (result.success) {
-            let inputconfig = {};
-            const inputFields = ["prompt","tool_call","input"];
-            for (let field of inputFields) {
-                if (configuration[field]) {
-                    inputconfig[field] = configuration[field];
-                    delete configuration[field];
-                }
-            }   
-            const model=configuration?.model ? configuration.model : '';
-            let customConfig = helper.createCustomModelConfig(model,configuration);
+            let { configuration: newConfiguration, inputconfig } = helper.extractInputConfig(configuration);
+            const model = configuration?.model ? configuration.model : '';
+            let customConfig = helper.createCustomModelConfig(model, newConfiguration);
             result.bridge.configuration = customConfig;
             result.bridge = {
                 ...result.bridge._doc,
                 inputconfig,
             }
-            console.log(111,result);
             return res.status(200).json({ ...result });
         }
         return res.status(400).json(result);
@@ -107,78 +108,72 @@ const getAllBridges = async (req, res) => {
 }
 const getBridges = async (req, res) => {
     try {
-        // console.log(req.params,res);
         const { bridge_id } = req.params;
         let result = await configurationService.getBridges(bridge_id);
-        const type = result?.bridges?.configuration?.type ? result.bridges.configuration.type : '';
+
         if (!result.success) {
             return res.status(400).json(result);
         }
+
         const service = result?.bridges?.service ? result.bridges.service.toLowerCase() : '';
         if (!(service in services)) {
             return res.status(400).json(result);
         }
-        const configuration=result?.bridges?.configuration;
-        let inputconfig = {};
-        const inputFields = ["prompt","tool_call","input"];
-        for (let field of inputFields) {
-            if (configuration[field]) {
-                inputconfig[field] = configuration[field];
-                delete configuration[field];
-            }
-        }   
-        const model=configuration?.model ? configuration.model : '';
-        let customConfig = helper.createCustomModelConfig(model,configuration);
+
+        let { configuration: newConfiguration, inputconfig } = helper.extractInputConfig(result.bridges.configuration);
         
-         result.bridges.configuration = customConfig;
-         result.bridges.configuration.type = type;
-         result.bridges.apikey = helper.decrypt(result.bridges.apikey);
-         result.bridges = {
+        const model = result.bridges.configuration?.model ? result.bridges.configuration.model : '';
+        let customConfig = helper.createCustomModelConfig(model, newConfiguration);
+        const type = result.bridges.configuration?.type ? result.bridges.configuration.type : '';
+
+        result.bridges.configuration = {
+            ...customConfig,
+            type
+        };
+        result.bridges.apikey = helper.decrypt(result.bridges.apikey);
+        result.bridges = {
             ...result.bridges._doc,
             inputconfig,
-         }
+        }
         return res.status(200).json(result);
         
-     } catch (error) {
-         console.log("common error=>", error);
-         return res.status(400).json({ success: false, error: "something went wrong!!" });
-     }
- }
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
 const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
         let { configuration, org_id, service, apikey } = req.body;
 
-        configuration["service"]=service;
-        let modelConfig = await configurationService.getBridges(bridge_id)
-        service = service? service.toLowerCase(): "";
-        if (!apikey){
+        configuration["service"] = service;
+        let modelConfig = await configurationService.getBridges(bridge_id);
+        service = service ? service.toLowerCase() : "";
+        if (!apikey) {
             apikey = modelConfig.apikey;
         }
-        apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
+        apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+
         let prev_configuration = modelConfig.bridges.configuration;
 
-        for(let key in prev_configuration){
-           prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
-        }  
-        for(let key in configuration){
+        for (let key in prev_configuration) {
+            prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
+        }
+        for (let key in configuration) {
             prev_configuration[key] = configuration[key];
         }
-        const inputFields = ["prompt","tool_call","input"];
-        let inputconfig = {};
-        for (let field of inputFields) {
-            if (prev_configuration[field]) {
-                inputconfig[field] = prev_configuration[field];
-                delete prev_configuration[field];
-            }
-        }   
+        
+        let { configuration: newConfiguration, inputconfig } = helper.extractInputConfig(prev_configuration);
+
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
+
+        const result = await configurationService.updateBridges(bridge_id, newConfiguration, org_id, apikey);
         if (result.success) {
-            const model=configuration?.model ? configuration.model : '';
-            let customConfig = helper.createCustomModelConfig(model,configuration);
+            const model = configuration?.model ? configuration.model : '';
+            let customConfig = helper.createCustomModelConfig(model, configuration);
             result.bridges.configuration = customConfig;
             result.bridges.apikey = helper.decrypt(result.bridges.apikey);
             result.bridges = {
