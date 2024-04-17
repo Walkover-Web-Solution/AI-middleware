@@ -134,21 +134,14 @@ const updateBridges = async (req, res) => {
         configuration["service"]=service;
         let modelConfig = await configurationService.getBridges(bridge_id)
         service = service? service.toLowerCase(): "";
+        if (!(service in services)) {
+            return res.status(400).json({ success: false, error: "service does not exist!" });
+        }
         if (!apikey){
             apikey = modelConfig.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
-        let prev_configuration = modelConfig.bridges.configuration;
-        for (let key in prev_configuration)
-        {
-           prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
-        }  
-        for (let key in configuration) {
-            prev_configuration[key] = configuration[key];
-        }   
-        if (!(service in services)) {
-            return res.status(400).json({ success: false, error: "service does not exist!" });
-        }
+        let prev_configuration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
         if (result.success) {
             return res.status(200).json(result);
@@ -174,6 +167,27 @@ const deleteBridges=async (req,res)=>{
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
+ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams)=>{
+    try{
+        let modelConfig = await configurationService.getBridges(bridge_id);
+        let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : []; 
+        let api_endpoints=modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
+        let api_call=modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
+        api_call[endpoint]={
+            apiObjectID:apiObjectID,
+            requiredParams:requiredParams}
+        api_endpoints.push(endpoint);
+        tools_call.push(openApiFormat);
+        let configuration={tools: tools_call}
+        const newConfiguration=helper.updateConfiguration(modelConfig.bridges.configuration,configuration);
+        let result = await configurationService.updateToolsCalls(bridge_id,org_id,newConfiguration,api_endpoints,api_call);
+        return result;
+    }
+    catch(error){
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+ }
 
 
 module.exports = {
@@ -184,5 +198,6 @@ module.exports = {
     getAllBridges,
     getBridges,
     updateBridges,
-    deleteBridges
+    deleteBridges,
+    getAndUpdate
 }
