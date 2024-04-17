@@ -2,6 +2,7 @@ const express = require('express');
 
 const common=require("../services/commonService/configServices");
 const middleware=require("../../middlewares/middleware");
+const createApi=require("../services/commonService/apiCallService");
 let router = express.Router();
 
 
@@ -15,4 +16,5 @@ router.post('/updatebridges/:bridge_id',middleware,common.updateBridges);  //Don
 router.put('/createbridges/:bridge_id', middleware, common.updateBridges);
 router.delete('/deletebridges/:bridge_id',middleware,common.deleteBridges);
 router.get('/gethistory/:thread_id/:bridge_id',middleware,common.getThreads);  //Public API for getting history for particular thread
+router.post('/createapi/:bridge_id',middleware,createApi.createsApi); //vaisocket embed create api.
 module.exports = router;
