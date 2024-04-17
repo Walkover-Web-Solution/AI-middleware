@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-function generateToken(bridge_id) {
+const generateToken = (bridge_id) => {
   try {
     const payload = {
       org_id: process.env.ORG_ID,
@@ -11,8 +11,8 @@ function generateToken(bridge_id) {
     return jwt.sign(payload, secretKey);
   } catch (error) {
     console.error("Error generating token:", error);
-    return null;
+    throw new Error('Failed to generate token');
   }
-}
+};
 
 module.exports = { generateToken };
