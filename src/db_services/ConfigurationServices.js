@@ -1,5 +1,6 @@
 const {configurationModel}=require("../../mongoModel/configuration");
 const mongoose=require("mongoose");
+const {apiCallModel} = require("../../mongoModel/apiCall");
 const createBridges = async (configuration) => {
     try {
         const result=await new configurationModel({...configuration}).save();
@@ -57,4 +58,27 @@ const deleteBridge=async (bridge_id,org_id)=>{
     }
 }
 
-module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge}
+const updateToolsCalls=async (bridge_id,org_id,configuration,api_endpoints,api_call)=>{
+    try {
+        const bridges = await configurationModel.findOneAndUpdate({_id:bridge_id,org_id:org_id},{configuration:configuration,api_endpoints:api_endpoints,api_call:api_call,is_api_call:true});
+        return { success: true, message:"bridge updated successfully" }
+        
+    } catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"};
+    }
+    
+}
+
+const getApiCallById=async (apiId)=>{
+    try {
+        const apiCall = await apiCallModel.findById(apiId);
+        return { success: true, apiCall: apiCall };
+    } catch (error) {
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+    
+}
+
+module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById}
