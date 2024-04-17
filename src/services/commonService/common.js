@@ -14,6 +14,7 @@ const {runChat} = require("../Google/gemini");
 const {create}=require("../../db_services/metrics_services");
 const Helper=require("../../services/utils/helper");
 const RTLayer = require('rtlayer-node').default;
+const {functionCall} = require("../openAI/functionCall");
 
 const rtlayer = new RTLayer(process.env.RTLAYER_AUTH)
 
@@ -88,11 +89,14 @@ const prochat = async (req, res) => {
         apikey=getconfig.apikey;
         model = configuration?.model;
         const rtlLayer = getconfig.RTLayer;
+        const bridge=getconfig.bridge;
+        const apiCallavailable= bridge?.is_api_call ?? false;
         if (!(service in services && services[service]["chat"].has(model))) {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
-        if(rtlLayer){
-            res.status(200).json({ success: true,message:"Will got reponse over RTlayer." });
+        const { webhook, headers = {} } = configuration;
+        if(rtlLayer || webhook){
+            res.status(200).json({ success: true,message:"Will got reponse over your configured means." });
         }
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
@@ -116,7 +120,6 @@ const prochat = async (req, res) => {
         switch (service) {
             case "openai":
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages : [];
-                console.time("bhasad")
                 let prompt = configuration.prompt ?? [];
                 prompt =Array.isArray(prompt)  ? prompt:[prompt];
                 if (variables && Object.keys(variables).length > 0) {
@@ -131,16 +134,44 @@ const prochat = async (req, res) => {
                     });
                 }
                 console.log("conversation=>",conversation)
-                
                 customConfig["messages"] = [...prompt, ...conversation, !user ? tool_call : { role: "user", content: user }];
-                console.timeEnd("bhasad")
                 const openAIResponse = await chats(customConfig, apikey);
-
                 modelResponse = _.get(openAIResponse, "modelResponse", {});
                 if (!openAIResponse?.success) {
                     usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:openAIResponse?.error};
                     create([usage])
+                        if(rtlLayer){
+                            rtlayer.message({
+                                ...req.body,
+                                error: openAIResponse?.error,
+                                success: false
+                              }, req.body.rtlOptions);
+                            return 
+                            }
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
+                }
+                if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
+                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig);
+                    const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
+                    if (!functionCallRes?.success) {
+                        usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:functionCallRes?.error};
+                        create([usage])
+                        if(rtlLayer){
+                            rtlayer.message({
+                                ...req.body,
+                                error: functionCallRes?.error,
+                                success: false
+                              }, req.body.rtlOptions);
+                            return 
+                        }
+                        return res.status(400).json({ success: false, error: functionCallRes?.error });
+                    }
+                    _.set(modelResponse, modelOutputConfig.message, _.get(funcModelResponse, modelOutputConfig.message));
+                    _.set(modelResponse, modelOutputConfig.tools, _.get(funcModelResponse, modelOutputConfig.tools));
+                    _.set(modelResponse, modelOutputConfig.usage[0].total_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].total_tokens)+ _.get(modelResponse, modelOutputConfig.usage[0].total_tokens));
+                    _.set(modelResponse, modelOutputConfig.usage[0].prompt_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].prompt_tokens)+ _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens));
+                    _.set(modelResponse, modelOutputConfig.usage[0].completion_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].completion_tokens)+ _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens));
+
                 }
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
@@ -150,6 +181,7 @@ const prochat = async (req, res) => {
                     _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
                     org_id, bridge_id, configuration?.model, 'chat',
                     _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant", user ? "user" : "tool");
+               
                 break;
 
             case "google":
@@ -182,7 +214,6 @@ savehistory(thread_id, user,
         const endTime = Date.now();
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
         create([usage])
-        const { webhook, headers = {} } = configuration;
         if (webhook) {
             sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
         }
@@ -190,7 +221,8 @@ savehistory(thread_id, user,
             console.log("ddd",modelResponse)
             rtlayer.message({
                 ...req.body,
-                response: modelResponse
+                response: modelResponse,
+                success: true
               }, req.body.rtlOptions);
             return;
         }
