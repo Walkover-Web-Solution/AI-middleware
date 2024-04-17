@@ -3,7 +3,7 @@ const { services } = require("../../../config/models");
 const { getAllThreads, getThread, getThreadHistory } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 const helper=require("../../services/utils/helper");
-
+const token = require("../../services/commonService/generateToken")
 
 const getAIModels = async (req, res) => {
     try {
@@ -119,6 +119,8 @@ const getBridges = async (req, res) => {
         }
         result.bridges.configuration = customConfig;
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
+        const embed_token = token.generateToken(bridge_id);
+        result.bridges.embed_token = embed_token;
         return res.status(200).json({ ...result});
        
     } catch (error) {
