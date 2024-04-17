@@ -21,7 +21,7 @@ try {
 const updateBridges=async(bridge_id,configuration,org_id,apikey)=>{
     try {
         const bridges = await configurationModel.findOneAndUpdate({_id:bridge_id,org_id:org_id},{configuration:configuration,name:configuration?.name,service:configuration?.service,apikey:apikey});
-        return { success: true, message:"bridge updated successfully" }
+        return { success: true, bridges : bridges,message:"bridge updated successfully" }
     } catch (error) {
         console.log("error:",error)
         return {success:false,error:"something went wrong!!"}
@@ -29,7 +29,7 @@ const updateBridges=async(bridge_id,configuration,org_id,apikey)=>{
 }
 const getBridges= async (bridge_id)=>{
     try {
-        const bridges = await configurationModel.findOne({_id:bridge_id});
+        let bridges = await configurationModel.findOne({_id:bridge_id});
         return { success: true, bridges: bridges };
     }catch (error) {
         console.log("error:",error)

@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 var assert = require('assert');
+const ModelsConfig = require("../../configs/modelConfiguration");
 
 class Helper {
     static encrypt(text) {
@@ -29,6 +30,30 @@ class Helper {
         let dec = decipher.update(text, 'hex', 'utf8');
         dec += decipher.final('utf8');
         return dec;
+    }
+    static createCustomModelConfig = (model, configuration) => {
+        try {
+            const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
+            const modelfunc = ModelsConfig[modelname];
+            if (!modelfunc) {
+                throw new Error(`Model function not found for model: ${modelname}`);
+            }
+            let modelConfig = modelfunc().configuration;
+            for (const key in modelConfig) {
+                if (configuration.hasOwnProperty(key)) {
+                    modelConfig[key].default = configuration[key];
+                }
+            }
+            let customConfig = modelConfig;
+            for (const keys in configuration) {
+                if (keys != "name" && keys != "type") {
+                    customConfig[keys] = modelConfig[keys] ? customConfig[keys] : configuration[keys];
+                }
+            }
+            return customConfig;
+        } catch (error) {
+            console.error('Error creating custom model configuration:', error);
+        }
     }
 }
 
