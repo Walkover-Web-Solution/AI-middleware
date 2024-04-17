@@ -30,6 +30,16 @@ class Helper {
         dec += decipher.final('utf8');
         return dec;
     }
+    static updateConfiguration=(prev_configuration,configuration)=> {
+            for (let key in prev_configuration)
+            {
+               prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
+            }  
+            for (let key in configuration) {
+                prev_configuration[key] = configuration[key];
+            }
+            return prev_configuration   
+    }
 }
 
 module.exports = Helper
