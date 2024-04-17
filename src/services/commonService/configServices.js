@@ -127,13 +127,18 @@ const getBridges = async (req, res) => {
         const type = result.bridges.configuration?.type ? result.bridges.configuration.type : '';
 
         result.bridges.configuration = {
-            ...customConfig,
-            type
+            ...customConfig
         };
         result.bridges.apikey = helper.decrypt(result.bridges.apikey);
+        if (type === 'chat' && inputconfig.prompt && inputconfig.prompt.role) {
+            const roleValue = inputconfig.prompt.role;
+            inputconfig[roleValue] = { ...inputconfig.prompt };
+            delete inputconfig.prompt;  
+        }
         result.bridges = {
             ...result.bridges._doc,
             inputconfig,
+            type
         }
         return res.status(200).json(result);
         
@@ -146,7 +151,7 @@ const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
         let { configuration, org_id, service, apikey } = req.body;
-
+        
         configuration["service"]=service;
         let modelConfig = await configurationService.getBridges(bridge_id)
         service = service? service.toLowerCase(): "";
@@ -159,11 +164,18 @@ const updateBridges = async (req, res) => {
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
         let prev_configuration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
-        if (result.success) {
+        if (result.success) { 
+            const type = result.bridges.configuration?.type ? result.bridges.configuration.type : ''; 
+            let { configuration: newConfiguration, inputconfig } = helper.extractInputConfig(prev_configuration);      
             const model = configuration?.model ? configuration.model : '';
-            let customConfig = helper.createCustomModelConfig(model, configuration);
+            let customConfig = helper.createCustomModelConfig(model, newConfiguration);
             result.bridges.configuration = customConfig;
             result.bridges.apikey = helper.decrypt(result.bridges.apikey);
+            if (type === 'chat' && inputconfig.prompt && inputconfig.prompt.role) {
+                const roleValue = inputconfig.prompt.role;
+                inputconfig[roleValue] = { ...inputconfig.prompt };
+                delete inputconfig.prompt;  
+            }
             result.bridges = {
                 ...result.bridges._doc,
                 inputconfig,
