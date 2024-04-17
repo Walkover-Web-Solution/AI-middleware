@@ -170,7 +170,7 @@ const deleteBridges=async (req,res)=>{
  const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams)=>{
     try{
         let modelConfig = await configurationService.getBridges(bridge_id);
-        let tools_call = modelConfig.bridges.tools ? modelConfig.bridges.tools : []; 
+        let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : []; 
         let api_endpoints=modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call=modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
         api_call[endpoint]={
