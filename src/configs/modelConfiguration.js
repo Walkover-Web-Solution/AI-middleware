@@ -208,6 +208,57 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         }
         return { configuration, outputConfig }
     }
+    static gpt_4_turbo = () => {
+        const configuration = {
+            "model": { field: "drop", default: "gpt-4-turbo", "level": 1 },
+            "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 1, level: 2 },
+            "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
+            "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
+            "logprobs": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "n": { field: "text", default: 1, typeOf: "number", level: 0 },
+            "stop": { field: "text", default: null, level: 0 },
+            "stream": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "text", level: 0, default: [], typeOf: "array" },
+            "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
+            "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
+        }
+        const outputConfig = {
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
+            message: "choices[0].message.content",
+            tools: "choices[0].message.tool_calls",
+            id: "id"
+        }
+        
+        return { configuration, outputConfig }
+    }
+    
+    static gpt_4_turbo_2024_04_09 = () => {
+        const configuration = {
+            "model": { field: "drop", default: "gpt-4-turbo-2024-04-09", "level": 1 },
+            "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 1, level: 2 },
+            "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
+            "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
+            "logprobs": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "n": { field: "text", default: 1, typeOf: "number", level: 0 },
+            "stop": { field: "text", default: null, level: 0 },
+            "stream": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "text", level: 0, default: [], typeOf: "array" },
+            "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
+            "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
+        }
+        const outputConfig = {
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
+            message: "choices[0].message.content",
+            tools: "choices[0].message.tool_calls",
+            id: "id"
+        }
+
+        return { configuration, outputConfig}
+    }
     static text_embedding_3_large = () => {
         const configuration = {
             "model": { field: "drop", default: "text-embedding-3-large", "level": 1 },
