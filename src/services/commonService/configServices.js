@@ -135,15 +135,16 @@ const updateBridges = async (req, res) => {
 
         configuration["service"]=service;
         let modelConfig = await configurationService.getBridges(bridge_id)
+        let bridge=modelConfig?.bridges;
         service = service? service.toLowerCase(): "";
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
         if (!apikey){
-            apikey = modelConfig.apikey;
+            apikey = bridge.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
-        let prev_configuration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
+        let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
         const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
         if (result.success) {
             return res.status(200).json(result);
