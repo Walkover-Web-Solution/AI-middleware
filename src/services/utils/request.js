@@ -3,6 +3,7 @@ const axios = require('axios')
 const sendRequest =async (url, data,method,header)=>{
     try {
     const options={url:url,data:data,method:method,header:header}
+    console.log("send request=>",options);
     const response=await axios(options);
     return response
 } catch (error) {
