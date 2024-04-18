@@ -365,8 +365,9 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
         }
         const endTime = Date.now();
         const { webhook, headers = {} } = configuration;
-        if (webhook) {
-            sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+        if (webhook) {    
+            await sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+            return;
         }
         const thread_id = uuidv1();
         savehistory(thread_id,prompt,_.get(modelResponse, modelOutputConfig.message),org_id,bridge_id,configuration?.model,'completion',"assistant");
@@ -501,7 +502,8 @@ const proEmbeddings =async (req,res)=>{
         const webhook= configuration?.webhook;
         const headers= configuration?.headers||{}
         if(webhook){
-            sendRequest(webhook,{response:modelResponse,...req.body},'POST',headers)
+            await sendRequest(webhook,{response:modelResponse,...req.body},'POST',headers)
+            return
         }
         const thread_id = uuidv1();
         savehistory(thread_id,input,JSON.stringify(_.get(modelResponse, modelOutputConfig.message)),org_id,bridge_id,configuration?.model,'embedding',"assistant");
