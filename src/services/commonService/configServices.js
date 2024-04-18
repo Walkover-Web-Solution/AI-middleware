@@ -154,15 +154,16 @@ const updateBridges = async (req, res) => {
         
         configuration["service"]=service;
         let modelConfig = await configurationService.getBridges(bridge_id)
+        let bridge=modelConfig?.bridges;
         service = service? service.toLowerCase(): "";
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
         if (!apikey){
-            apikey = modelConfig.apikey;
+            apikey = bridge.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
-        let prev_configuration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
+        let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
         const result = await configurationService.updateBridges(bridge_id, prev_configuration,org_id,apikey);
         if (result.success) { 
             const type = result.bridges.configuration?.type ? result.bridges.configuration.type : ''; 
@@ -209,11 +210,14 @@ const deleteBridges=async (req,res)=>{
         let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : []; 
         let api_endpoints=modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call=modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
-        api_call[endpoint]={
-            apiObjectID:apiObjectID,
-            requiredParams:requiredParams}
+        if(!(endpoint in api_call)){
         api_endpoints.push(endpoint);
         tools_call.push(openApiFormat);
+        api_call[endpoint]={
+            apiObjectID:apiObjectID,
+            requiredParams:requiredParams
+        }
+        }
         let configuration={tools: tools_call}
         const newConfiguration=helper.updateConfiguration(modelConfig.bridges.configuration,configuration);
         let result = await configurationService.updateToolsCalls(bridge_id,org_id,newConfiguration,api_endpoints,api_call);
