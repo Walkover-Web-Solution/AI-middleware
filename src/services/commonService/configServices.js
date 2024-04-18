@@ -3,7 +3,7 @@ const { services } = require("../../../config/models");
 const { getAllThreads, getThread, getThreadHistory } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 const helper=require("../../services/utils/helper");
-
+const token = require("../../services/commonService/generateToken")
 
 const getAIModels = async (req, res) => {
     try {
