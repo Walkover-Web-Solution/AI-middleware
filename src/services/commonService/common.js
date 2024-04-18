@@ -215,7 +215,8 @@ savehistory(thread_id, user,
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
         create([usage])
         if (webhook) {
-            sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+            await sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+            return;
         }
         if(rtlLayer){
             console.log("ddd",modelResponse)
