@@ -214,13 +214,13 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 1, level: 2 },
             "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
             "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
-            "logprobs": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "logprobs": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
-            "n": { field: "text", default: 1, typeOf: "number", level: 0 },
+            "n": { field: "number", default: 1, typeOf: "number", level: 0 },
             "stop": { field: "text", default: null, level: 0 },
-            "stream": { field: "text", default: false, level: 0, typeOf: "boolean" },
-            "tools": { field: "text", level: 0, default: [], typeOf: "array" },
+            "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
@@ -230,8 +230,15 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             tools: "choices[0].message.tool_calls",
             id: "id"
         }
-        
-        return { configuration, outputConfig }
+        const inputConfig = {
+            system: {
+                    "role": "system",
+                    "content": "",
+                    "contentKey": "content",
+                    "type": "json",
+            }
+        }
+        return { configuration, outputConfig,inputConfig }
     }
     
     static gpt_4_turbo_2024_04_09 = () => {
@@ -240,13 +247,13 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 1, level: 2 },
             "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
             "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
-            "logprobs": { field: "text", default: false, level: 0, typeOf: "boolean" },
+            "logprobs": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
-            "n": { field: "text", default: 1, typeOf: "number", level: 0 },
+            "n": { field: "number", default: 1, typeOf: "number", level: 0 },
             "stop": { field: "text", default: null, level: 0 },
-            "stream": { field: "text", default: false, level: 0, typeOf: "boolean" },
-            "tools": { field: "text", level: 0, default: [], typeOf: "array" },
+            "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
             "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
         }
@@ -257,7 +264,15 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             id: "id"
         }
 
-        return { configuration, outputConfig}
+        const inputConfig = {
+            system: {
+                    "role": "system",
+                    "content": "",
+                    "contentKey": "content",
+                    "type": "json",
+            }
+        }
+        return { configuration, outputConfig,inputConfig}
     }
     static text_embedding_3_large = () => {
         const configuration = {
