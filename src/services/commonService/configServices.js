@@ -173,11 +173,14 @@ const deleteBridges=async (req,res)=>{
         let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : []; 
         let api_endpoints=modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call=modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
-        api_call[endpoint]={
-            apiObjectID:apiObjectID,
-            requiredParams:requiredParams}
+        if(!(endpoint in api_call)){
         api_endpoints.push(endpoint);
         tools_call.push(openApiFormat);
+        api_call[endpoint]={
+            apiObjectID:apiObjectID,
+            requiredParams:requiredParams
+        }
+        }
         let configuration={tools: tools_call}
         const newConfiguration=helper.updateConfiguration(modelConfig.bridges.configuration,configuration);
         let result = await configurationService.updateToolsCalls(bridge_id,org_id,newConfiguration,api_endpoints,api_call);
