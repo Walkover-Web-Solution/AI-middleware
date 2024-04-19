@@ -93,7 +93,7 @@ const getBridges = async (req, res) => {
     try {
         // console.log(req.params,res);
         const { bridge_id } = req.params;
-        const result = await configurationService.getBridges(bridge_id);
+        const result = await configurationService.getBridgesWithSelectedData(bridge_id);
         if (!result.success) {
             return res.status(400).json(result);
         }
@@ -102,6 +102,7 @@ const getBridges = async (req, res) => {
             return res.status(400).json(result);
         }
         const configuration=result?.bridges?.configuration;
+        const type = result.bridges.configuration?.type ? result.bridges.configuration.type : '';
         const model=configuration?.model ? configuration.model : '';
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const modelfunc = ModelsConfig[modelname];
@@ -117,10 +118,13 @@ const getBridges = async (req, res) => {
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
             }
         }
-        result.bridges.configuration = customConfig;
+        
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
         const embed_token = token.generateToken(bridge_id);
         result.bridges.embed_token = embed_token;
+        result.bridges.type=result.bridges.configuration.type;
+        result.bridges.configuration = customConfig;
+        
         return res.status(200).json({ ...result});
        
     } catch (error) {
