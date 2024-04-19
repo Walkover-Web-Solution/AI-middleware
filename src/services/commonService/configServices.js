@@ -113,9 +113,7 @@ const getBridges = async (req, res) => {
         }
         let customConfig=modelConfig;
         for(const keys in configuration){
-            if( keys!="name" && keys!="type"){ 
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
-            }
         }
         result.bridges.configuration = customConfig;
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
