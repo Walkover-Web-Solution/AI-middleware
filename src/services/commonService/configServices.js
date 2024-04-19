@@ -122,7 +122,7 @@ const getBridges = async (req, res) => {
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
         const embed_token = token.generateToken(bridge_id);
         result.bridges.embed_token = embed_token;
-        result.bridges.type=result.bridges.configuration.type;
+        result.bridges.type=type;
         result.bridges.configuration = customConfig;
         
         return res.status(200).json({ ...result});
