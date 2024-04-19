@@ -159,7 +159,7 @@ const updateBridges = async (req, res) => {
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        if (!apikey){
+        if (apikey === null){
             apikey = bridge.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");     
