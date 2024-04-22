@@ -117,9 +117,6 @@ const getBridges = async (req, res) => {
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
             }
         }
-        if(configuration.hasOwnProperty("response_format")){
-            customConfig["response_format"].default = modelConfig["response_format"] ? true:false;
-        }
         result.bridges.configuration = customConfig;
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
         const embed_token = token.generateToken(bridge_id);
