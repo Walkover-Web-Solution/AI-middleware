@@ -63,7 +63,7 @@ const updateBridgeSchema = Joi.object({
                 "presence_penalty": Joi.string(),
                 "n": Joi.string(),
                 "stop": Joi.string(),
-                "stream": Joi.string().required()
+                "stream": Joi.string()
             }),
             "gpt-3.5-turbo-0613": Joi.object({
                 "temperature": Joi.string(),
