@@ -108,7 +108,7 @@ const getBridges = async (req, res) => {
         let modelConfig = modelfunc().configuration;
         for (const key in modelConfig) {
             if(configuration.hasOwnProperty(key)){
-                modelConfig[key].default=configuration[key];
+                modelConfig[key].default = configuration[key];
             }
         }
         let customConfig=modelConfig;
@@ -116,6 +116,9 @@ const getBridges = async (req, res) => {
             if( keys!="name" && keys!="type"){ 
             customConfig[keys]= modelConfig[keys] ?  customConfig[keys]:configuration[keys];
             }
+        }
+        if(configuration.hasOwnProperty("response_format")){
+            customConfig["response_format"].default = modelConfig["response_format"] ? true:false;
         }
         result.bridges.configuration = customConfig;
         result.bridges.apikey=helper.decrypt(result.bridges.apikey);
