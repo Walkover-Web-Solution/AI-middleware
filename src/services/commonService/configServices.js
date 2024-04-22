@@ -109,7 +109,7 @@ const getBridges = async (req, res) => {
         let modelConfig = modelfunc().configuration;
         for (const key in modelConfig) {
             if(configuration.hasOwnProperty(key)){
-                modelConfig[key].default=configuration[key];
+                modelConfig[key].default = configuration[key];
             }
         }
         let customConfig=modelConfig;
