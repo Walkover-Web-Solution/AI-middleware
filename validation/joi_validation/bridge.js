@@ -19,10 +19,13 @@ const updateBridgeSchema = Joi.object({
                 'text-embedding-ada-002', 'gpt-3.5-turbo-instruct'
             )
         }).required(),
-        type: Joi.string().valid('chat', 'embedding','completion').required(),
-        prompt : Joi.array().optional(),
+        type: Joi.string().valid('chat', 'embedding', 'completion').required(),
+        prompt: Joi.alternatives().try(
+            Joi.string().allow(''),
+            Joi.array()
+        ).optional(),
         input: Joi.string().optional()
-    }).required().or('prompt', 'input'),
+    }).required(),
     service: Joi.string().valid('openai', 'google').required(),
     apikey: Joi.string()
     .regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/)
