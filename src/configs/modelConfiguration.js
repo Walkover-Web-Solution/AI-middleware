@@ -222,7 +222,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
-            "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
+            "response_format": { field: "boolean", default: { type: "text" }, level: 0 }
         }
         const outputConfig = {
             usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
@@ -255,7 +255,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
-            "response_format": { field: "json_object", default: { "type": "json_object" }, level: 0 }
+            "response_format": { field: "boolean", default: { type: "text" }, level: 0 }
         }
         const outputConfig = {
             usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
