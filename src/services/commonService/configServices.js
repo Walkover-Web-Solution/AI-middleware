@@ -161,13 +161,20 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         let api_endpoints = modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call = modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
         if (!(endpoint in api_call)) {
-            api_endpoints.push(endpoint);
-            tools_call.push(openApiFormat);
-            api_call[endpoint] = {
-                apiObjectID: apiObjectID,
-                requiredParams: requiredParams
-            }
+            api_endpoints.push(endpoint);   
         }
+        let updated_tools_call=[];
+        tools_call.forEach(tool => {
+            if(tool.function.name!==endpoint){
+                updated_tools_call.push(tool);
+            }
+        });
+        updated_tools_call.push(openApiFormat);
+        api_call[endpoint] = {
+            apiObjectID: apiObjectID,
+            requiredParams: requiredParams
+        }
+        tools_call=updated_tools_call;
         let configuration = { tools: tools_call }
         const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
