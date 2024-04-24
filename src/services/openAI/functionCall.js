@@ -26,7 +26,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
             console.log("configuration",configuration);
-            console.log(configuration.messages);
+            console.log(configuration.messages,": messages","\n tools call:",tools_call);
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
             console.log("modelResponse",modelResponse);
