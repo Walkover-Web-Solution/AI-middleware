@@ -146,9 +146,13 @@ const prochat = async (req, res) => {
                                 ...req.body,
                                 error: openAIResponse?.error,
                                 success: false
-                              }, req.body.rtlOptions);
+                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});;
                             return 
                             }
+                        if(webhook){
+                            await sendRequest(webhook, { error: openAIResponse?.error, success: false, ...req.body }, 'POST',headers);
+                            return;
+                        }
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
@@ -162,8 +166,12 @@ const prochat = async (req, res) => {
                                 ...req.body,
                                 error: functionCallRes?.error,
                                 success: false
-                              }, req.body.rtlOptions);
+                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
                             return 
+                        }
+                        if(webhook){
+                            await sendRequest(webhook, { error:  functionCallRes?.error, success: false, ...req.body }, 'POST',headers);
+                            return;
                         }
                         return res.status(400).json({ success: false, error: functionCallRes?.error });
                     }
@@ -203,8 +211,12 @@ const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                             ...req.body,
                             error: geminiResponse?.error,
                             success: false
-                          }, req.body.rtlOptions);
+                          }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
                         return 
+                    }
+                    if(webhook){
+                        await sendRequest(webhook, { error:  geminiResponse?.error, success: false, ...req.body }, 'POST',headers);
+                        return;
                     }
                     return res.status(400).json({ success: false, error: geminiResponse?.error });
                 }
@@ -224,7 +236,7 @@ savehistory(thread_id, user,
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
         create([usage])
         if (webhook) {
-            await sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+            await sendRequest(webhook, { success: true, response: modelResponse, ...req.body }, 'POST', headers);
             return;
         }
         if(rtlLayer){
@@ -232,7 +244,7 @@ savehistory(thread_id, user,
                 ...req.body,
                 response: modelResponse,
                 success: true
-              }, req.body.rtlOptions);
+              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
             return;
         }
 
@@ -251,10 +263,13 @@ savehistory(thread_id, user,
                 ...req.body,
                 error: error?.message,
                 success: false
-              }, req.body.rtlOptions);
+              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
             return 
             }
-
+        if(webhook){
+                await sendRequest(webhook, { error:  error?.message, success: false, ...req.body }, 'POST',headers);
+                return;
+            }
 
         return res.status(400).json({ success: false, error: error.message });
     }
@@ -369,6 +384,11 @@ const proCompletion =async (req,res)=>{
                           }, req.body.rtlOptions);
                         return 
                         }
+                    if(webhook){
+                            await sendRequest(webhook, { error: openAIResponse?.error, success: false, ...req.body }, 'POST',headers);
+                            return;
+                        }
+                        
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
@@ -395,6 +415,10 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
                           }, req.body.rtlOptions);
                         return 
                     }
+                if(webhook){
+                        await sendRequest(webhook, { error:  geminiResponse?.error, success: false, ...req.body }, 'POST',headers);
+                        return;
+                    }
                     return res.status(400).json({ success: false, error: geminiResponse?.error });
                 }
                 usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
@@ -411,7 +435,7 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
         create([usage])
         if (webhook) {    
-            await sendRequest(webhook, { response: modelResponse, ...req.body }, 'POST', headers);
+            await sendRequest(webhook, {success: true ,response: modelResponse, ...req.body }, 'POST', headers);
             return;
         }
         if(rtlLayer){
@@ -438,6 +462,10 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
                 success: false
               }, req.body.rtlOptions);
             return 
+            }
+        if(webhook){
+                await sendRequest(webhook, { error:  error?.message, success: false, ...req.body }, 'POST',headers);
+                return;
             }
         return res.status(400).json({ success: false, error: error.message });
     }
@@ -543,6 +571,10 @@ const proEmbeddings =async (req,res)=>{
                           }, req.body.rtlOptions);
                         return 
                     }
+                    if(webhook){
+                        await sendRequest(webhook, { error:  response?.error, success: false, ...req.body }, 'POST',headers);
+                        return;
+                    }
                     return res.status(400).json({ success: false, error: response?.error });
                 }
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
@@ -568,6 +600,10 @@ const proEmbeddings =async (req,res)=>{
                           }, req.body.rtlOptions);
                         return 
                     }
+                    if(webhook){
+                        await sendRequest(webhook, { error:  geminiResponse?.error, success: false, ...req.body }, 'POST',headers);
+                        return;
+                    }
                     return res.status(400).json({ success: false, error: geminiResponse?.error });
                 }
                 usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
@@ -582,7 +618,7 @@ const proEmbeddings =async (req,res)=>{
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
         create([usage])
         if(webhook){
-            await sendRequest(webhook,{response:modelResponse,...req.body},'POST',headers)
+            await sendRequest(webhook,{success:true, response:modelResponse,...req.body},'POST',headers)
             return
         }
         if(rtlLayer){
@@ -608,6 +644,10 @@ const proEmbeddings =async (req,res)=>{
                 success: false
               }, req.body.rtlOptions);
             return 
+        }
+        if(webhook){
+            await sendRequest(webhook, { error:  error?.message, success: false, ...req.body }, 'POST',headers);
+            return;
         }
         return res.status(400).json({ success: false, error: error.message });
     }
