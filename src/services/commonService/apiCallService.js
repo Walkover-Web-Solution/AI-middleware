@@ -27,8 +27,7 @@ const createsApi=async(req,res)=>{
             axiosCode=`async (data) => {const axios = require('axios'); const response = await axios({url:'${url}',method:'post',data: data,  headers: {'content-type': 'application/json' } }); return response; }`;
     }
     let apiId=""
-    const apiCallData=await apiCallModel.findOne({endpoint:id,org_id,bridge_id})
-    
+    const apiCallData=await apiCallModel.findOne({endpoint:endpoint,org_id,bridge_id})
     apiId=apiCallData ? apiCallData.id : "";
     const response=await saveAPI( desc,
         url,
@@ -80,7 +79,7 @@ const saveAPI = async ( apiDesc, curl, org_id, bridge_id, api_id, short_descript
             const savedApi = await apiData.save();
 
             return {success:true,
-                apiObjectID: savedApi.id,
+                apiObjectID: api_id,
                 required_fields: savedApi.required_fields,
                 optional_fields: savedApi.optional_fields,
             };
@@ -95,7 +94,7 @@ const saveAPI = async ( apiDesc, curl, org_id, bridge_id, api_id, short_descript
             endpoint,
             axios
         };
-        const newApi = new apiCallModel(apiData).save();
+        const newApi = await new apiCallModel(apiData).save();
         //saving newly created  fields in the db with same id
         return { success: true,apiObjectID: newApi.id }
     } catch (error) {
