@@ -76,7 +76,7 @@ const getchat = async (req, res) => {
 
 const prochat = async (req, res) => {
     const startTime = Date.now();
-    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service, variables } = req.body;
+    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service, variables, RTLayer=null} = req.body;
     let usage = {}, modelResponse = {}, customConfig = {};
     let model = configuration?.model;
     let rtlLayer=false;
@@ -89,7 +89,7 @@ const prochat = async (req, res) => {
         service = getconfig.service;
         apikey=getconfig.apikey;
         model = configuration?.model;
-        rtlLayer = getconfig.RTLayer;
+        rtlLayer = RTLayer!=null ? RTLayer : getconfig.RTLayer;
         const bridge=getconfig.bridge;
         const apiCallavailable= bridge?.is_api_call ?? false;
         if (!(service in services && services[service]["chat"].has(model))) {
