@@ -24,12 +24,15 @@ const updateBridgeSchema = Joi.object({
             Joi.string().allow(''),
             Joi.array()
         ).optional(),
-        input: Joi.string().optional()
+        input: Joi.string().optional(),
+        RTLayer: Joi.boolean().optional(),
+        webhook: Joi.string().optional(),
+        headers: Joi.object().optional(),
     }).required(),
     service: Joi.string().valid('openai', 'google').required(),
     apikey: Joi.string()
     .regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/)
-    .required()
+    .optional()
     .allow(''),
     org_id: Joi.string().pattern(/^\d+$/).required().allow('124dfgh67ghj').messages({
         'string.pattern.base': 'The input must contain only numeric characters'
