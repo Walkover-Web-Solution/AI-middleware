@@ -1,8 +1,8 @@
 const chatbotDbService = require('../db_services/conversationDbService');
 
-const getAllThreads = async (bridge_id,org_id) => {
+const getAllThreads = async (bridge_id,org_id,page,pageSize) => {
     try {
-        const chats = await chatbotDbService.findAllThreads(bridge_id,org_id);
+        const chats = await chatbotDbService.findAllThreads(bridge_id,org_id,page,pageSize);
         return { success: true, data: chats };
     } catch (err) {
         console.log("getall threads=>",err)
@@ -19,9 +19,9 @@ const getThread = async (thread_id, org_id,bridge_id) => {
     }
 };
 
-const getThreadHistory = async (thread_id, org_id,bridge_id) => {
+const getThreadHistory = async (thread_id, org_id,bridge_id, page, pageSize) => {
     try {
-        const chats = await chatbotDbService.findAllMessages(org_id, thread_id,bridge_id);
+        const chats = await chatbotDbService.findAllMessages(org_id, thread_id,bridge_id, page, pageSize);
         return { success: true, data: chats };
     } catch (err) {
         console.log(err)

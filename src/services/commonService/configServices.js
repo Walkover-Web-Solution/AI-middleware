@@ -33,7 +33,9 @@ const getThreads = async (req, res) => {
     try {
         const { thread_id, bridge_id } = req.params;
         const { org_id } = req.body;
-        const threads = await getThreadHistory(thread_id, org_id, bridge_id);
+        let page = req?.query?.pageNo || 1;
+        let pageSize = req?.query?.limit || 10 ;
+        const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
         if (threads?.success) {
             return res.status(200).json(threads);
         }
@@ -46,8 +48,10 @@ const getThreads = async (req, res) => {
 const getMessageHistory = async (req, res) => {
     try {
         const { bridge_id } = req.params;
-        const { org_id } = req.body;
-        const threads = await getAllThreads(bridge_id, org_id);
+        const { org_id} = req.body;
+        let page = req?.query?.pageNo || 1;
+        let pageSize = req?.query?.limit || 10 ;
+        const threads = await getAllThreads(bridge_id, org_id, page, pageSize);
         if (threads?.success) {
             return res.status(200).json(threads);
         }
