@@ -21,7 +21,7 @@ async function find(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
-async function findAllMessages(org_id, thread_id,bridge_id) {
+async function findAllMessages(org_id, thread_id,bridge_id,page=1,pageSize=10) {
   let conversations = await models.conversations.findAll({
     attributes: [['message', 'content'], ['message_by', 'role'],'createdAt','id',"function"],
     where: {
@@ -32,7 +32,9 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
     order: [
       ['id', 'DESC'],
     ],
-    raw: true
+    raw: true,
+    limit: pageSize,
+    offset: (page - 1) * pageSize
   });
   conversations=conversations.reverse();
   // If you want to return the result directly
@@ -57,20 +59,27 @@ async function deleteLastThread(org_id, thread_id,bridge_id) {
   return {success:false}
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id,org_id) {
+async function findAllThreads(bridge_id,org_id,page=1,pageSize=10) {
   const threads = await models.conversations.findAll({
-    attributes: ['thread_id', [Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id'],
+    attributes: [
+      'thread_id',
+      [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],  // Min id for each thread_id
+      [Sequelize.fn('MIN', Sequelize.col('bridge_id')), 'bridge_id'],  // Min bridge_id for each thread_id
+      [Sequelize.fn('MIN', Sequelize.col('createdAt')), 'minCreatedAt']  // Min createdAt for each thread_id
+    ],
     where: {
       bridge_id,
       org_id
     },
-    group: ['thread_id', 'bridge_id'],
+    group: ['thread_id'],  // Only group by thread_id
     order: [
       ['thread_id', 'ASC'],
-      [Sequelize.fn('MIN', Sequelize.col('createdAt')), 'ASC'], // Use MIN to get the earliest createdAt within each group
+      [Sequelize.col('minCreatedAt'), 'ASC']  // Order by the earliest createdAt
     ],
-  });
-
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+  }
+  );
   // If you want to return the result directly
   return threads;
 }

@@ -185,7 +185,7 @@ const prochat = async (req, res) => {
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
-                usage["expectedCost"] = ((usage.inputTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost.input_cost))+((usage.outputTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost.output_cost));
+                usage["expectedCost"] = ((usage.inputTokens / 1000)*modelOutputConfig.usage[0].total_cost.input_cost)+((usage.outputTokens / 1000)* modelOutputConfig.usage[0].total_cost.output_cost);
                 savehistory(thread_id, user ? user : JSON.stringify(tool_call),
                     _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
                     org_id, bridge_id, configuration?.model, 'chat',
@@ -223,7 +223,7 @@ const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
                 usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-                usage["expectedCost"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_cost);
+                usage["expectedCost"] =modelOutputConfig.usage[0].total_cost;
 savehistory(thread_id, user, 
                 _.get(modelResponse, modelOutputConfig.message), 
                 org_id, bridge_id, configuration?.model, 'chat', 
@@ -394,7 +394,7 @@ const proCompletion =async (req,res)=>{
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
-                usage["expectedCost"] = ((usage.inputTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost.input_cost))+((usage.outputTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost.output_cost));
+                usage["expectedCost"] = ((usage.inputTokens / 1000)*modelOutputConfig.usage[0].total_cost.input_cost)+((usage.outputTokens / 1000)*modelOutputConfig.usage[0].total_cost.output_cost);
                 break;
             case "google":
                 let geminiConfig = {
@@ -422,9 +422,9 @@ const geminiResponse=await runChat(geminiConfig,apikey,"completion");
                     return res.status(400).json({ success: false, error: geminiResponse?.error });
                 }
                 usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-                usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].input_tokens);
+                usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-                usage["expectedCost"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_cost);
+                usage["expectedCost"] =modelOutputConfig.usage[0].total_cost;
                 break;
         }
         const endTime = Date.now();
@@ -580,7 +580,7 @@ const proEmbeddings =async (req,res)=>{
                 usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
-                usage["expectedCost"] = ((usage.totalTokens / 1000)*_.get(modelResponse, modelOutputConfig.usage[0].total_cost));
+                usage["expectedCost"] = ((usage.totalTokens / 1000)*modelOutputConfig.usage[0].total_cost);
                 break;
             case "google":
                 let geminiConfig = {
@@ -607,9 +607,9 @@ const proEmbeddings =async (req,res)=>{
                     return res.status(400).json({ success: false, error: geminiResponse?.error });
                 }
                 usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-                usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].input_tokens);
+                usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-                usage["expectedCost"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_cost);
+                usage["expectedCost"] =  modelOutputConfig.usage[0].total_cost;
                 break;
         }
         const endTime = Date.now();
