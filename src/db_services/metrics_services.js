@@ -69,7 +69,11 @@ async function create(dataset) {
         output_tokens: DataObject.outputTokens || 0,
         expected_cost: DataObject.expectedCost || 0,
         created_at: new Date(),
+        chat_id: DataObject.chatId || null,
+        variables: DataObject.variables || {},
+        is_present: DataObject.hasOwnProperty('isPresent') ? DataObject.isPresent : false
     }));
+    
     try {
         await postgres.raw_data.bulkCreate(insertAiDataInPg);
         await timescale.raw_data.bulkCreate(insertAiData);
