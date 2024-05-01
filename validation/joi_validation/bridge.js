@@ -24,10 +24,10 @@ const updateBridgeSchema = Joi.object({
             Joi.string().allow(''),
             Joi.array()
         ).optional(),
-        input: Joi.string().optional(),
-        RTLayer: Joi.boolean().optional(),
-        webhook: Joi.string().optional(),
-        headers: Joi.object().optional(),
+      input: Joi.string().allow('').optional(),
+      RTLayer: Joi.boolean().allow(null).optional(),
+      webhook: Joi.string().allow('').optional(),
+      headers: Joi.object().allow(null).optional(),
     }).required(),
     service: Joi.string().valid('openai', 'google').required(),
     apikey: Joi.string()
