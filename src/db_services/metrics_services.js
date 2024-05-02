@@ -1,6 +1,7 @@
 const timescale = require('./../../models/timescale/index.js')
 const postgres = require('./../../models/index.js')
 const Sequelize = require('sequelize');
+const history = require('./../controllers/conversationContoller.js')
 
 function startOfToday() {
     const today = new Date();
@@ -43,7 +44,19 @@ async function findOnePg(id) {
 }
 
 
-async function create(dataset) {
+async function create(dataset,historyParams) {
+    const result = await history.savehistory( historyParams.thread_id,
+        historyParams.user_id,
+        historyParams.message,
+        historyParams.org_id,
+        historyParams.bridge_id,
+        historyParams.model,
+        historyParams.channel,
+        historyParams.type,
+        historyParams.actor);
+        let ChatId = result.result[0].dataValues.id; 
+        dataset[0].chat_id = ChatId;   
+    
     console.log("dataset",dataset)
     const insertAiData = dataset.map((DataObject) => ({
         org_id: DataObject.orgId,
@@ -69,7 +82,7 @@ async function create(dataset) {
         output_tokens: DataObject.outputTokens || 0,
         expected_cost: DataObject.expectedCost || 0,
         created_at: new Date(),
-        chat_id: DataObject.chatId || null,
+        chat_id: DataObject.chat_id || null,
         variables: DataObject.variables || {},
         is_present: DataObject.hasOwnProperty('isPresent') ? DataObject.isPresent : false
     }));

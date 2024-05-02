@@ -21,7 +21,7 @@ const getThread = async (thread_id, org_id,bridge_id) => {
 
 const getThreadHistory = async (thread_id, org_id,bridge_id) => {
     try {
-        const chats = await chatbotDbService.findAllMessages(org_id, thread_id,bridge_id);
+        const chats = await chatbotDbService.findMessage(org_id, thread_id,bridge_id);
         return { success: true, data: chats };
     } catch (err) {
         console.log(err)
@@ -62,7 +62,8 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
         }
         console.log("chatToSave", chatToSave)
         const result=await chatbotDbService.createBulk(chatToSave);
-        return { success:true,message: "successfully saved chat history" }
+        console.log("conversation result==>",result)
+        return { success:true,message: "successfully saved chat history", result: [...result] }
 
     } catch (error) {
         console.log("saveconversation error=>",error)
