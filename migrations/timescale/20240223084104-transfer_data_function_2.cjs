@@ -10,15 +10,15 @@ module.exports = {
     BEGIN
       INSERT INTO daily_data 
           (org_id, authkey_name , service, model, 
-           sum_latency, success_count,record_count, created_at, token_count,expected_cost_sum)
+            avg_latency, success_count,record_count, created_at, token_count,expected_cost_sum)
       SELECT 
           org_id, authkey_name, service, model, 
-          sum_latency, success_count,record_count, interval, token_count,expected_cost_sum
+          avg_latency, success_count,record_count, interval, token_count,expected_cost_sum
       FROM daily_data_aggregate
       WHERE interval > (SELECT COALESCE(MAX(created_at), 'epoch'::timestamp) FROM daily_data)
       ON CONFLICT (org_id, service, model, created_at)
       DO UPDATE SET
-          sum_latency = daily_data.sum_latency + EXCLUDED.sum_latency,
+          avg_latency = (daily_data.avg_latency * daily_data.record_count + EXCLUDED.avg_latency * EXCLUDED.record_count) / (daily_data.record_count + EXCLUDED.record_count),
           expected_cost_sum = daily_data.expected_cost_sum + EXCLUDED.expected_cost_sum,
           record_count = daily_data.record_count + EXCLUDED.record_count,
           success_count = daily_data.success_count + EXCLUDED.success_count,
