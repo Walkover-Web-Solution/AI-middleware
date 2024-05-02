@@ -118,6 +118,7 @@ const prochat = async (req, res) => {
             thread_id = uuidv1();
         }
 
+        let historyParams; 
         switch (service) {
             case "openai":
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages : [];
@@ -190,8 +191,20 @@ const prochat = async (req, res) => {
                     _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
                     org_id, bridge_id, configuration?.model, 'chat',
                     _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant", user ? "user" : "tool");
-               
-                break;
+
+                historyParams = {
+                    thread_id: thread_id,
+                    userId: user ? user : JSON.stringify(tool_call),
+                    message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+                    org_id: org_id,
+                    bridge_id: bridge_id,
+                    model: configuration?.model,
+                    channel: 'chat',
+                    type: _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant",
+                    actor: user ? "user" : "tool"
+                };
+
+                break; 
 
             case "google":
                 let geminiConfig = {
@@ -224,17 +237,28 @@ const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
                 usage["expectedCost"] =modelOutputConfig.usage[0].total_cost;
-savehistory(thread_id, user, 
+                savehistory(thread_id, user, 
                 _.get(modelResponse, modelOutputConfig.message), 
                 org_id, bridge_id, configuration?.model, 'chat', 
                 "model",  "user");
+                historyParams = {
+                    thread_id: thread_id, 
+                    user: user, 
+                    message: _.get(modelResponse, modelOutputConfig.message), 
+                    org_id: org_id,
+                    bridge_id: bridge_id,
+                    model: configuration?.model,
+                    channel: 'chat', 
+                    type: "model", 
+                    actor: "user" 
+                };
                 break;
 
         }
 
         const endTime = Date.now();
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
-        create([usage])
+        create([usage],historyParams)
         if (webhook) {
             await sendRequest(webhook, { success: true, response: modelResponse, ...req.body }, 'POST', headers);
             return;

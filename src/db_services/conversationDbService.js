@@ -38,6 +38,40 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
+
+async function findMessage(org_id, thread_id, bridge_id) {
+
+  const conversations = await models.conversations.findAll({
+    attributes: [
+      ['message', 'content'],
+      ['message_by', 'role'],
+      'createdAt',
+      'id',
+      'function'
+    ],
+    include: [{
+      model: models.raw_data,
+      as: 'raw_data',
+      attributes: ['*'],
+      required: false,
+      on: {
+        'id': models.sequelize.where(models.sequelize.col('conversations.id'), '=', models.sequelize.col('raw_data.chat_id'))
+      }
+    }],
+    where: {
+      org_id: org_id,
+      thread_id: thread_id,
+      bridge_id: bridge_id
+    },
+    order: [
+      ['id', 'DESC']
+    ],
+    raw: true
+  });
+
+  return conversations;
+}
+
 async function deleteLastThread(org_id, thread_id,bridge_id) {
   const recordsTodelete=await models.conversations.findOne({
     where: {
@@ -79,5 +113,6 @@ module.exports = {
   createBulk,
   findAllThreads,
   deleteLastThread,
-  findAllMessages
+  findAllMessages,
+  findMessage
 }

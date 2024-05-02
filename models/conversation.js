@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      conversation.hasMany(models.raw_data, {
+        foreignKey: 'chat_id', 
+        as: 'raw_data'   
+      });
     }
   }
   conversation.init({
