@@ -38,7 +38,6 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
-
 async function findMessage(org_id, thread_id, bridge_id) {
 
   const conversations = await models.conversations.findAll({
