@@ -187,11 +187,7 @@ const prochat = async (req, res) => {
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
                 usage["expectedCost"] = ((usage.inputTokens / 1000)*modelOutputConfig.usage[0].total_cost.input_cost)+((usage.outputTokens / 1000)* modelOutputConfig.usage[0].total_cost.output_cost);
-                savehistory(thread_id, user ? user : JSON.stringify(tool_call),
-                    _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
-                    org_id, bridge_id, configuration?.model, 'chat',
-                    _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant", user ? "user" : "tool");
-
+               
                 historyParams = {
                     thread_id: thread_id,
                     userId: user ? user : JSON.stringify(tool_call),
@@ -213,7 +209,7 @@ const prochat = async (req, res) => {
                     user_input:user
                 }
                 geminiConfig["history"]=configuration?.conversation ? conversationService.createGeminiConversation(configuration.conversation ).messages:[];
-const geminiResponse = await runChat(geminiConfig,apikey,"chat");
+                const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 modelResponse = _.get(geminiResponse, "modelResponse", {});
 
                 if (!geminiResponse?.success) {
@@ -237,10 +233,7 @@ const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
                 usage["expectedCost"] =modelOutputConfig.usage[0].total_cost;
-                savehistory(thread_id, user, 
-                _.get(modelResponse, modelOutputConfig.message), 
-                org_id, bridge_id, configuration?.model, 'chat', 
-                "model",  "user");
+                
                 historyParams = {
                     thread_id: thread_id, 
                     user: user, 
