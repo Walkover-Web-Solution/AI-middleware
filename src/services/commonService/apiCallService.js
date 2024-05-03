@@ -48,7 +48,7 @@ const createsApi=async(req,res)=>{
 
     const result=await getAndUpdate(apiObjectID, bridge_id, org_id, openApiFormat.format, endpoint, requiredParams);
     if(result.success){
-    return res.status(200).json({message:"API saved successfully",success:true,activated:true});
+    return res.status(200).json({message:"API saved successfully",success:true,activated:true, result : result});
     }
     return res.status(400).json(result);
     }

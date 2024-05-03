@@ -158,8 +158,8 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     try {
         let modelConfig = await configurationService.getBridges(bridge_id);
         let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
-        let api_endpoints = modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
-        let api_call = modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
+        let api_endpoints = modelConfig?.bridges?.api_endpoints ? modelConfig.bridges.api_endpoints : [];
+        let api_call = modelConfig?.bridges?.api_call ? modelConfig.bridges.api_call : {};
         if (!(endpoint in api_call)) {
             api_endpoints.push(endpoint);   
         }
@@ -178,6 +178,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         let configuration = { tools: tools_call }
         const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
+        result.tools_call = tools_call;
         return result;
     }
     catch (error) {
