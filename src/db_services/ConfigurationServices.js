@@ -12,7 +12,7 @@ const createBridges = async (configuration) => {
 }
 const getAllBridges=async (org_id)=>{
 try {
-    const bridges = await configurationModel.find({org_id:org_id},{ bridge_id: 1, _id: 1,name:1,service:1,org_id:1 });
+    const bridges = await configurationModel.find({org_id:org_id},{ bridge_id: 1, _id: 1,name:1,service:1,org_id:1, "configuration.model" : 1 });
     return { success: true, bridges: bridges }
 } catch (error) {
     console.log("error:",error)
