@@ -125,10 +125,11 @@ const prochat = async (req, res) => {
                 prompt =Array.isArray(prompt)  ? prompt:[prompt];
                 if (variables && Object.keys(variables).length > 0) {
                     Object.entries(variables).forEach(([key, value]) => {
+                        const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
                         const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
                         prompt = prompt.map(item => {
                             if(item && "content" in item){
-                                item.content = item.content.replace(regex, value);
+                                item.content = item.content.replace(regex, stringValue);
                                 return item;
                             }
                         });
@@ -364,8 +365,9 @@ const proCompletion =async (req,res)=>{
 
                 if (variables && Object.keys(variables).length > 0) {
                     Object.entries(variables).forEach(([key, value]) => {
+                        const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
                         const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-                        customConfig["prompt"] = customConfig.prompt.replace(regex, value);
+                        customConfig["prompt"] = customConfig.prompt.replace(regex, stringValue);
                     });
                 }
                 
