@@ -15,7 +15,7 @@ module.exports = {
         type: Sequelize.STRING, 
         allowNull: true        
       },
-      sum_latency: {
+      avg_latency: {
         type: Sequelize.FLOAT 
       },
       service: {

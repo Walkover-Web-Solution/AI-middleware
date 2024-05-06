@@ -12,7 +12,7 @@ module.exports = {
           service,
           model,
           
-          SUM(sum_latency) AS sum_latency,
+          SUM(sum_latency)/SUM(record_count) AS avg_latency,
           SUM(expected_cost_sum) AS expected_cost_sum,
           SUM(token_count) AS token_count,
           SUM(success_count) AS success_count,
