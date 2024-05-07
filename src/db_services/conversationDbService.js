@@ -74,10 +74,29 @@ async function findAllThreads(bridge_id,org_id) {
   // If you want to return the result directly
   return threads;
 }
+
+async function storeSystemPrompt(promptText, orgId, bridgeId) {
+  try {
+          await models.system_prompt_versionings.create({
+              system_prompt: promptText,
+              org_id: orgId,
+              bridge_id: bridgeId,
+              created_at: new Date(),
+              updated_at: new Date() 
+          });
+      console.log('System prompt saved successfully.');
+  } catch (error) {
+      console.error('Error storing system prompt:', error);
+  }
+}
+
+
+
 module.exports = {
   find,
   createBulk,
   findAllThreads,
   deleteLastThread,
-  findAllMessages
+  findAllMessages,
+  storeSystemPrompt,
 }
