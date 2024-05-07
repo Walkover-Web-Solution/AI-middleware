@@ -5,6 +5,7 @@ const configurationService = require("../../db_services/ConfigurationServices");
 const helper = require("../../services/utils/helper");
 const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
 const { filterDataOfBridgeOnTheBaseOfUI } = require('../../services/utils/getConfiguration')
+const conversationDbService = require('../../db_services/conversationDbService')
 
 const getAIModels = async (req, res) => {
     try {
@@ -127,6 +128,14 @@ const updateBridges = async (req, res) => {
             apikey = bridge.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+
+        const model = configuration.model;
+        const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
+        const inputConfig =ModelsConfig[modelname]().inputConfig.content_location;
+        const contentKey = helper.accessData(configuration, inputConfig)
+        let promptText = typeof contentKey === 'string' ? contentKey : JSON.stringify(contentKey);
+        await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
+        
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
         const result =  await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
         filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
