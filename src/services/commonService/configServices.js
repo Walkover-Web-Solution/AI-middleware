@@ -58,6 +58,19 @@ const getMessageHistory = async (req, res) => {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
+const getSystemPromptHistory = async(req, res)=>{
+    try {
+        const { bridge_id } = req.params;
+        const result = await conversationDbService.getHistory(bridge_id);
+        if(result?.success){
+            return res.status(200).json(result);
+        }
+    } catch (error) {
+        console.log("error occured", error);
+        return res.status(400).json({success: false, error: "something went wrong!"});
+    }
+}
+
 const createBridges = async (req, res) => {
     try {
         let { configuration, org_id, service } = req.body;
@@ -206,5 +219,6 @@ module.exports = {
     getBridges,
     updateBridges,
     deleteBridges,
-    getAndUpdate
+    getAndUpdate,
+    getSystemPromptHistory
 }
