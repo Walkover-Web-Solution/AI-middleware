@@ -38,6 +38,20 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
+
+async function getHistory(bridge_id){
+  const history = await models.system_prompt_versionings.findAll({
+      //attributes: ['bridge_id','system_prompt','updated_at'],
+       where: {
+        bridge_id
+       },
+       order: [
+        ['updated_at','DESC'],
+       ]
+  })
+  return {success:true, history};
+}
+
 async function deleteLastThread(org_id, thread_id,bridge_id) {
   const recordsTodelete=await models.conversations.findOne({
     where: {
@@ -99,4 +113,5 @@ module.exports = {
   deleteLastThread,
   findAllMessages,
   storeSystemPrompt,
+  getHistory
 }
