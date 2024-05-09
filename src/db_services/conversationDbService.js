@@ -57,21 +57,22 @@ async function deleteLastThread(org_id, thread_id,bridge_id) {
   return {success:false}
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id,org_id) {
+async function findAllThreads(bridge_id, org_id) {
   const threads = await models.conversations.findAll({
-    attributes: ['thread_id', [Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id'],
+    attributes: ['thread_id',[Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id',
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
+    ],
     where: {
       bridge_id,
       org_id
     },
-    group: ['thread_id', 'bridge_id'],
+    group: ['thread_id', 'bridge_id'], 
     order: [
-      ['thread_id', 'ASC'],
-      [Sequelize.fn('MIN', Sequelize.col('createdAt')), 'ASC'], // Use MIN to get the earliest createdAt within each group
+      [Sequelize.col('updatedAt'), 'DESC'], 
+      ['thread_id', 'ASC']
     ],
   });
 
-  // If you want to return the result directly
   return threads;
 }
 module.exports = {
