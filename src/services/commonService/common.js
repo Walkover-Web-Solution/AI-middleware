@@ -147,8 +147,8 @@ const prochat = async (req, res) => {
                                 ...req.body,
                                 error: openAIResponse?.error,
                                 success: false
-                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});;
-                            return 
+                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
+                              return 
                             }
                         if(webhook){
                             await sendRequest(webhook, { error: openAIResponse?.error, success: false, ...req.body }, 'POST',headers);
@@ -157,7 +157,17 @@ const prochat = async (req, res) => {
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
-                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig);
+                    rtlayer.message({
+                                ...req.body,
+                                message: "Function call",
+                                function_call:true,
+                                success: true
+                            }, req.body.rtlOptions).then((data) => {
+                                console.log("RTLayer message sent", data);
+                            }).catch((error) => {
+                                console.log("RTLayer message not sent", error);
+                            });
+                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig, rtlLayer);
                     const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
                     if (!functionCallRes?.success) {
                         usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:functionCallRes?.error};
