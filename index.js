@@ -8,6 +8,8 @@ const PORT = process.env.PORT || 7072;
 const mongoose = require('mongoose');
 const config=require('./config/config.js');
 const  metrisRoutes  =require('./routes/metrics_routes.js');
+const interfaceUtilties = require('./routes/interface_utility_routes.js');
+const interfaces = require('./routes/interface_routes.js') 
 app.use(
   cors({
     origin: '*',
@@ -32,6 +34,9 @@ app.get('/healthcheck', async (req, res) => {
 });
 app.use('/api/v1/model',modelController);
 app.use('/api/v1/config',configurationController);
+app.use('/interface',interfaces);
+app.use('/interfaceUtilites', interfaceUtilties);
+
 //Metrics
 app.use('/api/v1/metrics',metrisRoutes)
 app.listen(PORT, () => {
