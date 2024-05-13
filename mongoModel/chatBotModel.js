@@ -2,14 +2,11 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const InterfaceSchema = new Schema({
+const ChatBotSchema = new Schema({
   config: {
     type: Object,
   },
   orgId: {
-    type: String,
-  },
-  projectId: {
     type: String,
   },
   title: {
@@ -32,7 +29,9 @@ const InterfaceSchema = new Schema({
   accessType: {
     type: String,
   },
-
+  responseTypes: {
+    
+  },
   actions: [
     {
       actionIdMapping: {
@@ -56,5 +55,5 @@ const InterfaceSchema = new Schema({
 }, { strict: false, minimize: false });
 
 // Create the model from the schema
-const InterfaceModel = mongoose.model('Interfaces', InterfaceSchema);
-export default InterfaceModel;
+const ChatBotModal = mongoose.model('ChatBot', ChatBotSchema);
+export default ChatBotModal;
