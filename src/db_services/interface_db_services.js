@@ -1,4 +1,4 @@
-import InterfaceModel from '../../mongoModel/interface.js';
+import InterfaceModel from '../../mongoModel/chatBotModel.js';
 import ActionModel from '../mongoModels/ActionModel.js';
 
 // create interfaces db service
