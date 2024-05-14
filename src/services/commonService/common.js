@@ -76,7 +76,7 @@ const getchat = async (req, res) => {
 
 const prochat = async (req, res) => {
     const startTime = Date.now();
-    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service, variables, RTLayer=null} = req.body;
+    let { apikey, bridge_id, configuration, thread_id, org_id, user, tool_call, service, variables, RTLayer=null, playground=false} = req.body;
     let usage = {}, modelResponse = {}, customConfig = {};
     let model = configuration?.model;
     let rtlLayer=false;
@@ -96,7 +96,7 @@ const prochat = async (req, res) => {
             return res.status(400).json({ success: false, error: "model or service does not exist!" });
         }
         const { webhook, headers = {} } = configuration;
-        if(rtlLayer || webhook){
+        if((rtlLayer || webhook) && !playground){
             res.status(200).json({ success: true,message:"Will got reponse over your configured means." });
         }
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
@@ -143,7 +143,7 @@ const prochat = async (req, res) => {
                 if (!openAIResponse?.success) {
                     usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:openAIResponse?.error};
                     create([usage])
-                        if(rtlLayer){
+                        if(rtlLayer && !playground){
                             rtlayer.message({
                                 ...req.body,
                                 error: openAIResponse?.error,
@@ -151,13 +151,14 @@ const prochat = async (req, res) => {
                               }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
                               return 
                             }
-                        if(webhook){
+                        if(webhook && !playground){
                             await sendRequest(webhook, { error: openAIResponse?.error, success: false, ...req.body }, 'POST',headers);
                             return;
                         }
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
+                    if(rtlLayer && !playground){
                     rtlayer.message({
                                 ...req.body,
                                 message: "Function call",
@@ -168,12 +169,13 @@ const prochat = async (req, res) => {
                             }).catch((error) => {
                                 console.log("RTLayer message not sent", error);
                             });
-                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig, rtlLayer);
+                    }
+                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig, rtlLayer,req.body,playground);
                     const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
                     if (!functionCallRes?.success) {
                         usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:functionCallRes?.error};
                         create([usage])
-                        if(rtlLayer){
+                        if(rtlLayer && !playground){
                             rtlayer.message({
                                 ...req.body,
                                 error: functionCallRes?.error,
@@ -181,7 +183,7 @@ const prochat = async (req, res) => {
                               }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
                             return 
                         }
-                        if(webhook){
+                        if(webhook && !playground){
                             await sendRequest(webhook, { error:  functionCallRes?.error, success: false, ...req.body }, 'POST',headers);
                             return;
                         }
@@ -226,7 +228,7 @@ const prochat = async (req, res) => {
                 if (!geminiResponse?.success) {
                     usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:geminiResponse?.error};
                     create([usage])
-                    if(rtlLayer){
+                    if(rtlLayer && !playground){
                         rtlayer.message({
                             ...req.body,
                             error: geminiResponse?.error,
@@ -234,7 +236,7 @@ const prochat = async (req, res) => {
                           }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
                         return 
                     }
-                    if(webhook){
+                    if(webhook && !playground){
                         await sendRequest(webhook, { error:  geminiResponse?.error, success: false, ...req.body }, 'POST',headers);
                         return;
                     }
@@ -263,11 +265,11 @@ const prochat = async (req, res) => {
         const endTime = Date.now();
         usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true, variables:variables,prompt:configuration.prompt};
         create([usage],historyParams)
-        if (webhook) {
+        if (webhook && !playground) {
             await sendRequest(webhook, { success: true, response: modelResponse, ...req.body }, 'POST', headers);
             return;
         }
-        if(rtlLayer){
+        if(rtlLayer && !playground){
             rtlayer.message({
                 ...req.body,
                 response: modelResponse,
