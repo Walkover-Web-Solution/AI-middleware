@@ -158,6 +158,7 @@ const prochat = async (req, res) => {
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
+                    if(rtlLayer && !playground){
                     rtlayer.message({
                                 ...req.body,
                                 message: "Function call",
@@ -168,6 +169,7 @@ const prochat = async (req, res) => {
                             }).catch((error) => {
                                 console.log("RTLayer message not sent", error);
                             });
+                    }
                     const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig, rtlLayer,req.body,playground);
                     const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
                     if (!functionCallRes?.success) {
