@@ -46,7 +46,7 @@ async function findOnePg(id) {
 
 async function create(dataset,historyParams) {
     const result = await history.savehistory( historyParams.thread_id,
-        historyParams.user_id,
+        historyParams.user,
         historyParams.message,
         historyParams.org_id,
         historyParams.bridge_id,
@@ -84,7 +84,7 @@ async function create(dataset,historyParams) {
         created_at: new Date(),
         chat_id: DataObject.chat_id || null,
         variables: DataObject.variables || {},
-        is_present: DataObject.hasOwnProperty('isPresent') ? DataObject.isPresent : false
+        is_present: DataObject.hasOwnProperty('prompt') ? true : false
     }));
     
     try {

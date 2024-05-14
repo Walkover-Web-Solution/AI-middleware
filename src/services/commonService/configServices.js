@@ -186,20 +186,6 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         return { success: false, error: "something went wrong!!" }
     }
 }
-const getChat=async(req,res)=>{
-    try {
-        const { chat_id} = req.params;
-        const data = await getChatData(chat_id);
-        if (data?.success) {
-            return res.status(200).json(data);
-        }
-        return res.status(400).json(data);
-    } catch (error) {
-        console.log("common error=>", error);
-        return res.status(400).json({ success: false, error: "something went wrong!!" });
-    } 
-}
-
 
 module.exports = {
     getAIModels,
@@ -210,6 +196,5 @@ module.exports = {
     getBridges,
     updateBridges,
     deleteBridges,
-    getAndUpdate,
-    getChat
+    getAndUpdate
 }

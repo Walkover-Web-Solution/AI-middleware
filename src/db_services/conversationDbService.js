@@ -40,7 +40,7 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
 }
 async function findMessage(org_id, thread_id, bridge_id) {
 
-  const conversations = await models.conversations.findAll({
+  let conversations = await models.conversations.findAll({
     attributes: [
       ['message', 'content'],
       ['message_by', 'role'],
@@ -67,7 +67,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
     ],
     raw: true
   });
-
+  conversations=conversations.reverse();
   return conversations;
 }
 
@@ -109,20 +109,10 @@ async function findAllThreads(bridge_id, org_id) {
   return threads;
 }
 
-async function findChat(chat_id) {
-  const dataFromBackend=await models.conversations.findOne({
-    where: {
-      chat_id
-    }
-  })
- 
-  return {success:true , data:dataFromBackend }
-}
 
 
 module.exports = {
   find,
-  findChat,
   createBulk,
   findAllThreads,
   deleteLastThread,

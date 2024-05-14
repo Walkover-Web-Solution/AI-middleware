@@ -191,7 +191,7 @@ const prochat = async (req, res) => {
                
                 historyParams = {
                     thread_id: thread_id,
-                    userId: user ? user : JSON.stringify(tool_call),
+                    user: user ? user : JSON.stringify(tool_call),
                     message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
                     org_id: org_id,
                     bridge_id: bridge_id,
@@ -251,7 +251,7 @@ const prochat = async (req, res) => {
         }
 
         const endTime = Date.now();
-        usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
+        usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true, variables:variables,prompt:configuration.prompt};
         create([usage],historyParams)
         if (webhook) {
             await sendRequest(webhook, { success: true, response: modelResponse, ...req.body }, 'POST', headers);
