@@ -2,6 +2,15 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
+const BridgeMappingSchema = new Schema({
+  bridgeId: {
+    type: String,
+  },
+  defaultQuestions: {
+    type: Array,
+  },
+}, { _id: false });
+
 const ChatBotSchema = new Schema({
   config: {
     type: Object,
@@ -20,16 +29,30 @@ const ChatBotSchema = new Schema({
   },
   responseTypes: {
     responseId: {
-      components: {},
-      coordinates: {}
+      components: {
+        type: Object,
+      },
+      coordinates: {
+        type: Object,
+      },
+      description: {
+        type: String,
+      },
     }
   },
-  bridges: {
-    type: Object,
-    // bridgeName: {
-    // id: 'asd',
-    // responseIds = ['asd', 'asd'],
-    // }
+  bridge: {
+    authKey: {
+      type: String,
+    },
+    bridgeKeys: {
+      type: [String],
+      default: ['root'], // Set the default value to ['root']
+    },
+    bridgeMapping: {
+      type: Map,
+      of: BridgeMappingSchema,
+      default: { root: { bridgeId: '', defaultQuestions: [] } },
+    },
   },
   actions: [
     {
