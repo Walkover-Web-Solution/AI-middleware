@@ -38,6 +38,29 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
+
+async function getHistory(bridge_id, timestamp) {
+  try {
+    const history = await models.system_prompt_versionings.findAll({
+      where: {
+        bridge_id,
+        updated_at: {
+          [Sequelize.Op.lte]: timestamp
+        }
+      },
+      order: [
+        ['updated_at', 'DESC'],
+      ],
+      limit: 1
+    });
+
+    return { success: true, system_prompt: history[0].system_prompt };
+  } catch (error) {
+    return { success: false, message: "Prompt not found" };
+  }
+}
+
+
 async function findMessage(org_id, thread_id, bridge_id) {
 
   let conversations = await models.conversations.findAll({
@@ -109,6 +132,21 @@ async function findAllThreads(bridge_id, org_id) {
   return threads;
 }
 
+async function storeSystemPrompt(promptText, orgId, bridgeId) {
+  try {
+          await models.system_prompt_versionings.create({
+              system_prompt: promptText,
+              org_id: orgId,
+              bridge_id: bridgeId,
+              created_at: new Date(),
+              updated_at: new Date() 
+          });
+      console.log('System prompt saved successfully.');
+  } catch (error) {
+      console.error('Error storing system prompt:', error);
+  }
+}
+
 
 
 module.exports = {
@@ -117,5 +155,7 @@ module.exports = {
   findAllThreads,
   deleteLastThread,
   findAllMessages,
+  storeSystemPrompt,
+  getHistory,
   findMessage
 }
