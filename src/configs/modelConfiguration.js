@@ -27,7 +27,9 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 },
                 "contentKey": "content",
                 "type": "json",
-            }
+               
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -61,7 +63,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig,inputConfig }
@@ -98,7 +101,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -137,7 +141,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, outputConfig, inputConfig}
     }
@@ -174,7 +179,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -213,7 +219,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, outputConfig, inputConfig}
     }
@@ -252,7 +259,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -290,7 +298,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -327,7 +336,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -365,7 +375,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -404,7 +415,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -441,7 +453,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -483,7 +496,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, inputConfig, outputConfig }
     }
@@ -551,7 +565,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                     "content": "",
                     "contentKey": "content",
                     "type": "json",
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -573,7 +588,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -595,7 +611,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -618,7 +635,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -654,7 +672,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "prompt": "",
                 "contentKey": "prompt",
                 "type": "text",
-            }
+            },
+            content_location : "prompt"
         }
 
         const chatmessage = {
