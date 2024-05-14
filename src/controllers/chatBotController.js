@@ -1,4 +1,4 @@
-const { ChatbotDbService } = require('../db_services/ChatBotDbService');
+const ChatbotDbService = require('../db_services/ChatBotDbService');
 
 const createChatBot = async (req, res) => {
     const result = await ChatbotDbService.create(req.body);
