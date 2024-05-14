@@ -35,8 +35,8 @@ const updateDetails = async (req, res) => {
 
 const updateChatBotAction = async (req, res) => {
     const identifier = req.params?.botId;
-    const { componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge } = req.body;
-    const result = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge);
+    const { componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId } = req.body;
+    const result = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId);
     return res.status(result.success ? 200 : 404).json(result);
 };
 

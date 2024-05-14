@@ -76,7 +76,7 @@ const updateDetailsInDb = async (identifier, dataToSend) => {
 }
 
 const updateAction = async (
-    chatBotId, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge
+    chatBotId, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId
 ) => {
     try {
         let response = null;
@@ -92,7 +92,6 @@ const updateAction = async (
         if (actionId) {
             const jsonToSend = {};
             if (actionsArr) jsonToSend.actionsArr = actionsArr;
-            if (bridge) jsonToSend.bridge = bridge;
 
             response = await ActionModel.findByIdAndUpdate(
                 actionId,
