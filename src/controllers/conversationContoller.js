@@ -19,6 +19,16 @@ const getThread = async (thread_id, org_id,bridge_id) => {
     }
 };
 
+const getChatData=async(chat_id)=>{
+    try {
+        const chat=await chatbotDbService.findChat(chat_id);
+        return { success: true, data: chat };
+    } catch (err) {
+        console.log(err)
+        return { success: false, message: err.message }
+    }
+}
+
 const getThreadHistory = async (thread_id, org_id,bridge_id) => {
     try {
         const chats = await chatbotDbService.findMessage(org_id, thread_id,bridge_id);
@@ -79,5 +89,6 @@ module.exports = {
     getAllThreads,
     savehistory,
     getThread,
-    getThreadHistory
+    getThreadHistory,
+    getChatData
 };
