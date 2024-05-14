@@ -1,14 +1,13 @@
-const ModelsConfig = require("../../configs/modelConfiguration");
-const { services } = require("../../../config/models");
-const { getAllThreads, getThreadHistory } = require("../../controllers/conversationContoller");
-const configurationService = require("../../db_services/ConfigurationServices");
-const helper = require("../../services/utils/helper");
-const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
-const { filterDataOfBridgeOnTheBaseOfUI } = require('../../services/utils/getConfiguration')
+import ModelsConfig from "../../configs/modelConfiguration.js";
+import { services } from "../../../config/models.js";
+import { getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
+import { getBridgesByName, createBridges as _createBridges, getAllBridges as _getAllBridges, getBridgesWithSelectedData, getBridges as _getBridges, updateBridges as _updateBridges, deleteBridge, updateToolsCalls } from "../../db_services/ConfigurationServices.js";
+import Helper from '../../services/utils/helper.js';
+import { updateBridgeSchema } from '../../../validation/joi_validation/bridge.js';
+import { filterDataOfBridgeOnTheBaseOfUI } from '../../services/utils/getConfiguration.js';
 
 const getAIModels = async (req, res) => {
     try {
-
         const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
 
         if (!(service in services)) {
@@ -64,11 +63,11 @@ const createBridges = async (req, res) => {
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
         }
-        const data = await configurationService.getBridgesByName(configuration?.name, org_id);
+        const data = await getBridgesByName(configuration?.name, org_id);
         if (data.success && data.bridges) {
             return res.status(400).json({ success: false, error: "bridge Name already exists! please choose unique one" });
         }
-        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: helper.encrypt("") });
+        const result = await _createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: Helper.encrypt("") });
         if (result.success) {
             return res.status(200).json({ ...result });
         }
@@ -81,11 +80,11 @@ const createBridges = async (req, res) => {
 const getAllBridges = async (req, res) => {
     try {
         const { org_id } = req.body;
-        const result = await configurationService.getAllBridges(org_id);
+        const result = await _getAllBridges(org_id);
         if (result.success) {
             return res.status(200).json({ ...result, org_id: org_id });
         }
-        
+
         return res.status(400).json(result);
     } catch (error) {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
@@ -95,11 +94,11 @@ const getBridges = async (req, res) => {
     try {
         // console.log(req.params,res);
         const { bridge_id } = req.params;
-        const result = await configurationService.getBridgesWithSelectedData(bridge_id);
+        const result = await getBridgesWithSelectedData(bridge_id);
         if (!result.success) {
             return res.status(400).json(result);
         }
-        filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
+        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
         return res.status(200).json({ ...result });
 
     } catch (error) {
@@ -114,10 +113,10 @@ const updateBridges = async (req, res) => {
         try {
             await updateBridgeSchema.validateAsync({ bridge_id, configuration, org_id, service, apikey });
         } catch (error) {
-            return res.status(422).json({success: false, error: error.details})
+            return res.status(422).json({ success: false, error: error.details })
         }
         configuration["service"] = service;
-        let modelConfig = await configurationService.getBridges(bridge_id)
+        let modelConfig = await _getBridges(bridge_id)
         let bridge = modelConfig?.bridges;
         service = service ? service.toLowerCase() : "";
         if (!(service in services)) {
@@ -126,10 +125,10 @@ const updateBridges = async (req, res) => {
         if (apikey === null) {
             apikey = bridge.apikey;
         }
-        apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
-        let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
-        const result =  await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
-        filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
+        apikey = apikey ? Helper.encrypt(apikey) : Helper.encrypt("");
+        let prev_configuration = Helper.updateConfiguration(bridge.configuration, configuration);
+        const result = await _updateBridges(bridge_id, prev_configuration, org_id, apikey);
+        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
         if (result.success) {
             return res.status(200).json(result);
         }
@@ -144,7 +143,7 @@ const deleteBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
         const { org_id } = req.body;
-        const result = await configurationService.deleteBridge(bridge_id, org_id);
+        const result = await deleteBridge(bridge_id, org_id);
         if (result.success) {
             return res.status(200).json(result);
         }
@@ -156,16 +155,16 @@ const deleteBridges = async (req, res) => {
 }
 const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams) => {
     try {
-        let modelConfig = await configurationService.getBridges(bridge_id);
+        let modelConfig = await _getBridges(bridge_id);
         let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
         let api_endpoints = modelConfig?.bridges?.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call = modelConfig?.bridges?.api_call ? modelConfig.bridges.api_call : {};
         if (!(endpoint in api_call)) {
-            api_endpoints.push(endpoint);   
+            api_endpoints.push(endpoint);
         }
-        let updated_tools_call=[];
+        let updated_tools_call = [];
         tools_call.forEach(tool => {
-            if(tool.function.name!==endpoint){
+            if (tool.function.name !== endpoint) {
                 updated_tools_call.push(tool);
             }
         });
@@ -174,10 +173,10 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
             apiObjectID: apiObjectID,
             requiredParams: requiredParams
         }
-        tools_call=updated_tools_call;
+        tools_call = updated_tools_call;
         let configuration = { tools: tools_call }
-        const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
-        let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
+        const newConfiguration = Helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
+        let result = await updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
         result.tools_call = tools_call;
         return result;
     }
@@ -188,7 +187,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
 }
 
 
-module.exports = {
+export {
     getAIModels,
     getThreads,
     getMessageHistory,

@@ -1,4 +1,4 @@
-import interfaceDbService from '../db_services/interface_db_services.js';
+import interfaceDbService from '../db_services/InterfaceDbService.js';
 import {
   createInterfaceSchema, deleteActionsInterfaceSchema, deleteComponentInterfaceSchema, getAllInterfaceSchema, getOneActionInterfaceSchema, getOneInterfaceSchema, updateInterfaceDetailsSchema, updateInterfaceSchema,
 } from '../../validation/joi_validation/interfaces.js';

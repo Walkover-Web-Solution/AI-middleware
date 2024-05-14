@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 const express = require('express');
 const cors = require('cors');
 const db = require("./models/index.js")
@@ -10,6 +11,21 @@ const config = require('./config/config.js');
 const metrisRoutes = require('./routes/metrics_routes.js');
 const interfaceUtilties = require('./routes/interface_utility_routes.js');
 const chatbot = require('./routes/chatBot_routes.js')
+=======
+import express, { json } from 'express';
+import cors from 'cors';
+// import db from "./models/index.js";
+import modelController from './src/controllers/modelController.js';
+import configurationController from './src/controllers/configController.js';
+const app = express();
+const PORT = process.env.PORT || 7072;
+import { set, connect } from 'mongoose';
+import config from './config/config.js';
+import metrisRoutes from './routes/metrics_routes.js';
+import chatbot from './routes/chatBot_routes.js';
+
+const { mongo } = config;
+>>>>>>> Stashed changes
 app.use(
   cors({
     origin: '*',
@@ -18,10 +34,10 @@ app.use(
   }),
 );
 
-app.use(express.json());
+app.use(json());
 try {
-  mongoose.set("strictQuery", false);
-  mongoose.connect(config.mongo.uri, {
+  set("strictQuery", false);
+  connect(mongo.uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
