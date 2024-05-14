@@ -6,6 +6,8 @@ const helper = require("../../services/utils/helper");
 const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
 const { filterDataOfBridgeOnTheBaseOfUI } = require('../../services/utils/getConfiguration')
 const conversationDbService = require('../../db_services/conversationDbService')
+const _ = require('lodash');
+
 
 const getAIModels = async (req, res) => {
     try {
@@ -144,8 +146,7 @@ const updateBridges = async (req, res) => {
         const model = configuration.model;
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
         const inputConfig =ModelsConfig[modelname]().inputConfig.content_location;
-        const contentKey = helper.accessData(configuration, inputConfig)
-        let promptText = typeof contentKey === 'string' ? contentKey : JSON.stringify(contentKey);
+        const promptText = _.get(configuration, inputConfig);
         await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
         
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
