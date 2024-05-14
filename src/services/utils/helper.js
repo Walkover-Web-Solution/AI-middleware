@@ -40,19 +40,6 @@ class Helper {
             }
             return prev_configuration   
     }
-
-    static accessData = (object, path)=> {
-        const parts = path.replace(/\[(\w+)\]/g, '.$1').split('.');
-        let currentPart = object;
-        for (const part of parts) {
-          if (part in currentPart) {
-            currentPart = currentPart[part];
-          } else {
-            return undefined;
-          }
-        }
-        return currentPart;
-      }
 }
 
 module.exports = Helper

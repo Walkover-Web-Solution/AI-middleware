@@ -39,26 +39,27 @@ async function findAllMessages(org_id, thread_id,bridge_id) {
   return conversations;
 }
 
-async function getHistory(bridge_id, timestamp){
-  const history = await models.system_prompt_versionings.findAll({
-    where: {
-      bridge_id,
-      updated_at: {
-        [Sequelize.Op.lte]: timestamp
-      }
-    },
-    order: [
-      ['updated_at', 'DESC'],
-    ],
-    limit: 1
-  });
+async function getHistory(bridge_id, timestamp) {
+  try {
+    const history = await models.system_prompt_versionings.findAll({
+      where: {
+        bridge_id,
+        updated_at: {
+          [Sequelize.Op.lte]: timestamp
+        }
+      },
+      order: [
+        ['updated_at', 'DESC'],
+      ],
+      limit: 1
+    });
 
-  if (history.length > 0) {
     return { success: true, system_prompt: history[0].system_prompt };
-  } else {
-    return { success: false, message: "No system_prompt found for the given timestamp" };
+  } catch (error) {
+    return { success: false, message: error.message };
   }
 }
+
 
 async function findMessage(org_id, thread_id, bridge_id) {
 
