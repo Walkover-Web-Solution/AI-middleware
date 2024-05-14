@@ -26,19 +26,24 @@ const deleteChatBot = async (req, res) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 
-const updateDetails = async (req, res, next) => {
+const updateDetails = async (req, res) => {
     const identifier = req.params?.botId;
     const dataToSend = { ...req.body };
     const result = await ChatbotDbService.updateDetailsInDb(identifier, dataToSend);
-    next();
     return res.status(result.success ? 200 : 404).json(result);
 };
 
-const updateChatBotAction = async (req, res, next) => {
+const updateChatBotAction = async (req, res) => {
     const identifier = req.params?.botId;
     const { componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge } = req.body;
-    const data = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, responseArr, frontendActions, frontendActionId, bridge);
-    next();
+    const result = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge);
+    return res.status(result.success ? 200 : 404).json(result);
+};
+
+const updateChatBotResponse = async (req, res) => {
+    const identifier = req.params?.botId;
+    const { responseType, gridId } = req.body;
+    const result = await ChatbotDbService.updateResponseTypes(identifier, responseType, gridId);
     return res.status(result.success ? 200 : 404).json(result);
 };
 module.exports = {
@@ -48,5 +53,6 @@ module.exports = {
     updateChatBot,
     deleteChatBot,
     updateDetails,
-    updateChatBotAction
+    updateChatBotAction,
+    updateChatBotResponse
 };

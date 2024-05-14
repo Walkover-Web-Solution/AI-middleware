@@ -38,17 +38,8 @@ const ResponseDetailSchema = new Schema({
     },
 });
 
-const BridgeMappingSchema = new Schema({
-    bridgeId: {
-        type: String,
-    },
-    defaultQuestions: {
-        type: Array,
-    },
-}, { _id: false });
-
 const ActionSchema = new Schema({
-    interfaceId: {
+    chatBotId: {
         type: String,
         required: true,
     },
@@ -61,24 +52,7 @@ const ActionSchema = new Schema({
     type: {
         type: String,
     },
-
-    bridge: {
-        authKey: {
-            type: String,
-        },
-        bridgeKeys: {
-            type: [String],
-            default: ['root'], // Set the default value to ['root']
-        },
-        bridgeMapping: {
-            type: Map,
-            of: BridgeMappingSchema,
-            default: { root: { bridgeId: '', defaultQuestions: [] } },
-        },
-    },
-
     actionsArr: [ActionDetailSchema], // Array of action details
-    responseArr: [ResponseDetailSchema],
 });
 
 // Create the model from the schema

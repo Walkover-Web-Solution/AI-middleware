@@ -1,5 +1,5 @@
 const express = require('express');
-const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction } = require('../src/controllers/chatBotController');
+const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, updateChatBotResponse } = require('../src/controllers/chatBotController');
 
 const routes = express.Router();
 
@@ -20,5 +20,6 @@ routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:botId').put(updateChatBot); // update chatbot
 routes.route('/:botId/updateDetails').put(updateDetails); // update chatbot details
 routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
+routes.route('/:botId/updateResponse').put(updateChatBotResponse); // update chatbot actions
 
 module.exports = routes;

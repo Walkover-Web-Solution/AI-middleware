@@ -104,7 +104,6 @@ const updateAction = async (
             if (actionsArr) actionData.actionsArr = actionsArr;
 
             response = await ActionModel.create(actionData);
-
             valuesToPush.actions = {
                 actionId: response._id,
                 actionIdMapping: response._id,
@@ -114,14 +113,37 @@ const updateAction = async (
         }
 
         const updateInterface = await ChatBotModel.findByIdAndUpdate(
-            interfaceId,
+            chatBotId,
             { $set: valuesToUpdate, $push: valuesToPush },
             { new: true },
         );
 
-        return response || updateInterface;
+        return { success: true, chatBot: response || updateInterface };
     } catch (error) {
+        console.log("Error in updating chatbot details:", error);
+        return {
+            success: false, error: "Failed to update actions"
+        };
+    }
+}
 
+const updateResponseTypes = async (chatBotId, responseType, gridId) => {
+    try {
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate(
+            chatBotId,
+            { $set: { [`responseTypes.${gridId}`]: responseType } },
+            { new: true }
+        );
+
+        // Check if the chatbot was successfully updated and return response
+        if (updatedChatBot) {
+            return { success: true, chatBot: updatedChatBot };
+        } else {
+            return { success: false, error: "Chatbot not found" };
+        }
+    } catch (error) {
+        console.log("Error in updating chatbot details:", error);
+        return { success: false, error: "Failed to update chatbot details" };
     }
 }
 
@@ -130,5 +152,6 @@ module.exports = {
     getOne, update,
     deleteById,
     updateDetailsInDb,
-    updateAction
+    updateAction,
+    updateResponseTypes
 };
