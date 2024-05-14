@@ -1,7 +1,7 @@
 const { ChatbotDbService } = require('../db_services/ChatBotDbService');
 
 const createChatBot = async (req, res) => {
-    const result = await ChatbotDbService.createChatBot(req.body);
+    const result = await ChatbotDbService.(req.body);
     return res.status(result.success ? 201 : 400).json(result);
 };
 
