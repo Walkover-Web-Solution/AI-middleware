@@ -30,7 +30,7 @@ const ChatBotSchema = new Schema({
     type: String,
   },
   responseTypes: {
-    
+
   },
   actions: [
     {
@@ -55,5 +55,6 @@ const ChatBotSchema = new Schema({
 }, { strict: false, minimize: false });
 
 // Create the model from the schema
-const ChatBotModal = mongoose.model('ChatBot', ChatBotSchema);
-export default ChatBotModal;
+const ChatBotModel = mongoose.model('ChatBot', ChatBotSchema);
+// export default ChatBotModel;
+module.exports = ChatBotModel;

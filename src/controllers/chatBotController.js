@@ -1,54 +1,34 @@
-
+const { ChatbotDbService } = require('../db_services/ChatBotDbService');
 
 const createChatBot = async (req, res) => {
-    try {
-        let {  org_id } = req.body;
-       
-        return res.status(200).json({ org_id });
-        // return res.status(400).json(result);
-    } catch (error) {
-        console.log("common error=>", error);
-        return res.status(400).json({ success: false, error: "something went wrong!!" });
-    }
-}
-const updateChatBot = async (req, res) => {
-    try {
-        let {  org_id } = req.body;
-       
-        return res.status(200).json({ org_id });
-        // return res.status(400).json(result);
-    } catch (error) {
-        console.log("common error=>", error);
-        return res.status(400).json({ success: false, error: "something went wrong!!" });
-    }
-}
-const deleteChatBot = async (req, res) => {
-    try {
-        let {  org_id } = req.body;
-       
-        return res.status(200).json({ org_id });
-        // return res.status(400).json(result);
-    } catch (error) {
-        console.log("common error=>", error);
-        return res.status(400).json({ success: false, error: "something went wrong!!" });
-    }
-}
-const getAllChatBot = async (req, res) => {
-    try {
-        let {  org_id } = req.body;
-       
-        return res.status(200).json({ org_id });
-        // return res.status(400).json(result);
-    } catch (error) {
-        console.log("common error=>", error);
-        return res.status(400).json({ success: false, error: "something went wrong!!" });
-    }
-}
+    const result = await ChatbotDbService.createChatBot(req.body);
+    return res.status(result.success ? 201 : 400).json(result);
+};
 
+const getAllChatBots = async (req, res) => {
+    const result = await getAllChatBots();
+    return res.status(result.success ? 200 : 400).json(result);
+};
+
+const getOneChatBot = async (req, res) => {
+    const result = await getOneChatBot(req.params.botId);
+    return res.status(result.success ? 200 : 404).json(result);
+};
+
+const updateChatBot = async (req, res) => {
+    const result = await updateChatBot(req.params.botId, req.body);
+    return res.status(result.success ? 200 : 400).json(result);
+};
+
+const deleteChatBot = async (req, res) => {
+    const result = await deleteChatBot(req.params.botId);
+    return res.status(result.success ? 200 : 404).json(result);
+};
 
 module.exports = {
     createChatBot,
+    getAllChatBots,
+    getOneChatBot,
     updateChatBot,
-    deleteChatBot,
-    getAllChatBot,
-}
+    deleteChatBot
+};
