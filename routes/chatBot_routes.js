@@ -1,4 +1,5 @@
 const express = require('express');
+const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot } = require('../src/controllers/chatBotController');
 
 const routes = express.Router();
 
@@ -12,10 +13,10 @@ const routes = express.Router();
 // routes.route('/:projectId/interfaces/:interfaceId/component/:componentId/action').put(decodeToken, userOrgAccessCheck, deleteActions);
 
 
-routes.route('/').post(); // create chatbot
-routes.route('/all').get(); // get all chatbot
-routes.route('/getOneChatbot/:botId').get(); // get one chatbot
-routes.route('/delete/:botId').delete(); // delete chatbot
-routes.route('/update/:botId').put(); // update chatbot
+routes.route('/').post(createChatBot); // create chatbot
+routes.route('/all').get(getAllChatBots); // get all chatbot
+routes.route('/:botId').get(getOneChatBot); // get one chatbot
+routes.route('/:botId').delete(deleteChatBot); // delete chatbot
+routes.route('/:botId').put(updateChatBot); // update chatbot
 
 module.exports = routes;
