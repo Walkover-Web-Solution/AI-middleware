@@ -108,8 +108,21 @@ async function findAllThreads(bridge_id, org_id) {
 
   return threads;
 }
+
+async function findChat(chat_id) {
+  const dataFromBackend=await models.conversations.findOne({
+    where: {
+      chat_id
+    }
+  })
+ 
+  return {success:true , data:dataFromBackend }
+}
+
+
 module.exports = {
   find,
+  findChat,
   createBulk,
   findAllThreads,
   deleteLastThread,

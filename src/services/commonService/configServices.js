@@ -1,6 +1,6 @@
 const ModelsConfig = require("../../configs/modelConfiguration");
 const { services } = require("../../../config/models");
-const { getAllThreads, getThreadHistory } = require("../../controllers/conversationContoller");
+const { getAllThreads, getThreadHistory, getChatData } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 const helper = require("../../services/utils/helper");
 const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
@@ -186,6 +186,19 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         return { success: false, error: "something went wrong!!" }
     }
 }
+const getChat=async(req,res)=>{
+    try {
+        const { chat_id} = req.params;
+        const data = await getChatData(chat_id);
+        if (data?.success) {
+            return res.status(200).json(data);
+        }
+        return res.status(400).json(data);
+    } catch (error) {
+        console.log("common error=>", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    } 
+}
 
 
 module.exports = {
@@ -197,5 +210,6 @@ module.exports = {
     getBridges,
     updateBridges,
     deleteBridges,
-    getAndUpdate
+    getAndUpdate,
+    getChat
 }
