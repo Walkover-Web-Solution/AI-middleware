@@ -18,19 +18,18 @@ const ChatBotSchema = new Schema({
   updatedBy: {
     type: String,
   },
-  components: {
-    type: Map,
-    of: Object,
-  },
-  coordinates: {
-    type: Map,
-    of: Object,
-  },
-  accessType: {
-    type: String,
-  },
   responseTypes: {
-
+    responseId: {
+      components: {},
+      coordinates: {}
+    }
+  },
+  bridges: {
+    type: Object,
+    // bridgeName: {
+    // id: 'asd',
+    // responseIds = ['asd', 'asd'],
+    // }
   },
   actions: [
     {

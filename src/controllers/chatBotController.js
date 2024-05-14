@@ -25,10 +25,19 @@ const deleteChatBot = async (req, res) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 
+const updateDetails = async (req, res, next) => {
+    const identifier = req.params?.botId;
+    const dataToSend = { ...req.body };
+    const result = await ChatbotDbService.updateDetailsInDb(identifier, dataToSend);
+    next();
+    return res.status(result.success ? 200 : 404).json(result);
+};
+
 module.exports = {
     createChatBot,
     getAllChatBots,
     getOneChatBot,
     updateChatBot,
-    deleteChatBot
+    deleteChatBot,
+    updateDetails
 };
