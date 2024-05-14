@@ -1,16 +1,4 @@
-import express from 'express';
-import {
-  createInterface,
-  deleteActions,
-  deleteByInterfaceId,
-  deleteComponent,
-  getAllInterfacesByProjectId,
-  updateInterfaceDetails,
-  updateInterfaces,
-  updateInterfacesAction,
-} from '../src/controllers/interfaceController.js';
-import { decodeToken } from '../middleware/auth.js';
-import userOrgAccessCheck from '../middleware/userOrgAccessMiddleware.js';
+const express = require('express');
 
 const routes = express.Router();
 
@@ -30,4 +18,4 @@ routes.route('/getOneChatbot/:botId').get(); // get one chatbot
 routes.route('/delete/:botId').delete(); // delete chatbot
 routes.route('/update/:botId').put(); // update chatbot
 
-export default routes;
+module.exports = routes;
