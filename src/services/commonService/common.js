@@ -118,6 +118,7 @@ const prochat = async (req, res) => {
             thread_id = uuidv1();
         }
 
+        let historyParams; 
         switch (service) {
             case "openai":
                 const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages : [];
@@ -147,8 +148,8 @@ const prochat = async (req, res) => {
                                 ...req.body,
                                 error: openAIResponse?.error,
                                 success: false
-                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});;
-                            return 
+                              }, req.body.rtlOptions).then((data)=>{ console.log("message sent",data)}).catch((error)=>{ console.log("message not sent", error)});
+                              return 
                             }
                         if(webhook){
                             await sendRequest(webhook, { error: openAIResponse?.error, success: false, ...req.body }, 'POST',headers);
@@ -157,7 +158,17 @@ const prochat = async (req, res) => {
                     return res.status(400).json({ success: false, error: openAIResponse?.error });
                 }
                 if(!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable){
-                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig);
+                    rtlayer.message({
+                                ...req.body,
+                                message: "Function call",
+                                function_call:true,
+                                success: true
+                            }, req.body.rtlOptions).then((data) => {
+                                console.log("RTLayer message sent", data);
+                            }).catch((error) => {
+                                console.log("RTLayer message not sent", error);
+                            });
+                    const functionCallRes = await functionCall(customConfig,apikey,bridge,_.get(modelResponse, modelOutputConfig.tools)[0],modelOutputConfig, rtlLayer);
                     const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
                     if (!functionCallRes?.success) {
                         usage={service:service,model:model,orgId:org_id,latency:Date.now() - startTime,success:false,error:functionCallRes?.error};
@@ -187,12 +198,20 @@ const prochat = async (req, res) => {
                 usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
                 usage["expectedCost"] = ((usage.inputTokens / 1000)*modelOutputConfig.usage[0].total_cost.input_cost)+((usage.outputTokens / 1000)* modelOutputConfig.usage[0].total_cost.output_cost);
-                savehistory(thread_id, user ? user : JSON.stringify(tool_call),
-                    _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
-                    org_id, bridge_id, configuration?.model, 'chat',
-                    _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant", user ? "user" : "tool");
                
-                break;
+                historyParams = {
+                    thread_id: thread_id,
+                    user: user ? user : JSON.stringify(tool_call),
+                    message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+                    org_id: org_id,
+                    bridge_id: bridge_id,
+                    model: configuration?.model,
+                    channel: 'chat',
+                    type: _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant",
+                    actor: user ? "user" : "tool"
+                };
+
+                break; 
 
             case "google":
                 let geminiConfig = {
@@ -201,7 +220,7 @@ const prochat = async (req, res) => {
                     user_input:user
                 }
                 geminiConfig["history"]=configuration?.conversation ? conversationService.createGeminiConversation(configuration.conversation ).messages:[];
-const geminiResponse = await runChat(geminiConfig,apikey,"chat");
+                const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 modelResponse = _.get(geminiResponse, "modelResponse", {});
 
                 if (!geminiResponse?.success) {
@@ -225,17 +244,25 @@ const geminiResponse = await runChat(geminiConfig,apikey,"chat");
                 usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
                 usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
                 usage["expectedCost"] =modelOutputConfig.usage[0].total_cost;
-savehistory(thread_id, user, 
-                _.get(modelResponse, modelOutputConfig.message), 
-                org_id, bridge_id, configuration?.model, 'chat', 
-                "model",  "user");
+                
+                historyParams = {
+                    thread_id: thread_id, 
+                    user: user, 
+                    message: _.get(modelResponse, modelOutputConfig.message), 
+                    org_id: org_id,
+                    bridge_id: bridge_id,
+                    model: configuration?.model,
+                    channel: 'chat', 
+                    type: "model", 
+                    actor: "user" 
+                };
                 break;
 
         }
 
         const endTime = Date.now();
-        usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true};
-        create([usage])
+        usage={...usage,service:service,model:model,orgId:org_id,latency:endTime - startTime,success:true, variables:variables,prompt:configuration.prompt};
+        create([usage],historyParams)
         if (webhook) {
             await sendRequest(webhook, { success: true, response: modelResponse, ...req.body }, 'POST', headers);
             return;
