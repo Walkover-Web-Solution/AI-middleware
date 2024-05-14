@@ -56,7 +56,7 @@ async function getHistory(bridge_id, timestamp) {
 
     return { success: true, system_prompt: history[0].system_prompt };
   } catch (error) {
-    return { success: false, message: error.message };
+    return { success: false, message: "Prompt not found" };
   }
 }
 
