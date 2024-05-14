@@ -1,6 +1,6 @@
 const ModelsConfig = require("../../configs/modelConfiguration");
 const { services } = require("../../../config/models");
-const { getAllThreads, getThreadHistory } = require("../../controllers/conversationContoller");
+const { getAllThreads, getThreadHistory, getChatData } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 const helper = require("../../services/utils/helper");
 const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
@@ -208,7 +208,6 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         return { success: false, error: "something went wrong!!" }
     }
 }
-
 
 module.exports = {
     getAIModels,

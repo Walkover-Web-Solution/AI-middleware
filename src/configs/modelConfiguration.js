@@ -6,11 +6,11 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 0, level: 2 },
             "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
             "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
-            "logprobs": { field: "text", default: false, level: 0},
+            "logprobs": { field: "boolean", default: false, level: 0},
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0}
         }
         const outputConfig = {
@@ -43,7 +43,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0 }
         }
         const outputConfig = {
@@ -79,7 +79,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0 },
             "tools": { field: "array", level: 0, default: [] },
             "tool_choice": { field: "text", default: "auto", level: 0 },
@@ -117,7 +117,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0 },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -157,7 +157,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "string", default: "auto", level: 0, },
@@ -195,7 +195,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -235,7 +235,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -276,7 +276,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -314,7 +314,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -352,7 +352,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, },
             "tools": { field: "array", level: 0, default: [], },
             "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -391,7 +391,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
                 "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
                 "n": { field: "number", default: 1, level: 0 },
-                "stop": { field: "text", default: null, level: 0 },
+                "stop": { field: "text", default: "", level: 0 },
                 "stream": { field: "boolean", default: false, level: 0, },
                 "tools": { field: "array", level: 0, default: [], },
                 "tool_choice": { field: "text", default: "auto", level: 0, },
@@ -430,11 +430,11 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
                 "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
                 "n": { field: "number", default: 1, level: 0 },
-                "stop": { field: "text", default: null, level: 0 },
+                "stop": { field: "text", default: "", level: 0 },
                 "stream": { field: "boolean", default: false, level: 0, },
                 "tools": { field: "array", level: 0, default: [], },
                 "tool_choice": { field: "text", default: "auto", level: 0, },
-                "response_format": { field: "boolean", default: { "text": "json_object" }, level: 0 }
+                "response_format": { field: "boolean", default: { type: "text" }, level: 0 }
         }
         const outputConfig = {
             usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens",total_cost:{input_cost:0.01,output_cost:0.03} }],
@@ -471,7 +471,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, typeOf: "number", level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
@@ -512,7 +512,41 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
             "n": { field: "number", default: 1, typeOf: "number", level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
+            "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "array", level: 0, default: [], typeOf: "array" },
+            "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
+            "response_format": { field: "boolean", default: { type: "text" }, level: 0 }
+        }
+        const outputConfig = {
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
+            message: "choices[0].message.content",
+            tools: "choices[0].message.tool_calls",
+            assistant: "choices[0].message",
+            id: "id"
+        }
+        const inputConfig = {
+            system: {
+                    "role": "system",
+                    "content": "",
+                    "contentKey": "content",
+                    "type": "json",
+            }
+        }
+        return { configuration, outputConfig, inputConfig }
+    }
+
+    static gpt_4o = () => {
+        const configuration = {
+            "model": { field: "drop", default: "gpt-4-turbo", "level": 1 },
+            "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 0, level: 2 },
+            "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
+            "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
+            "logprobs": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "n": { field: "number", default: 1, typeOf: "number", level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
             "tools": { field: "array", level: 0, default: [], typeOf: "array" },
             "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
@@ -613,15 +647,15 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "best_of": { field: "slider", min: 1, max: 20, default: 1, level: 2, step: 1 },
             "echo": { field: "text", default: false, typeOf: "boolean", level: 2 },
             "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
-            "logit_bias": { field: "text", typeOf: "json_object", default: null, level: 0 },
-            "logprobs": { field: "text", default: false, level: 0, typeOf: "boolean" },
+           //"logit_bias": { field: "text", typeOf: "json_object", default: null, level: 0 },
+            "logprobs": { field: "boolean", default: false, level: 0},
             "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
-            "n": { field: "text", default: 1, typeOf: "number", level: 0 },
+            "n": { field: "number", default: 1, level: 0 },
             "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
-            "seed": { field: "number", default: null, level: 0 },
-            "stop": { field: "text", default: null, level: 0 },
+            "seed": { field: "number", default: 0, level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
             "stream": { field: "boolean", default: false, level: 0 },
-            "suffix": { field: "text", default: null, level: 2 },
+            "suffix": { field: "text", default: "", level: 2 },
             "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 0, level: 2 },
             "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
         }
@@ -658,7 +692,7 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
             "topK": { field: "slider", min: 1, max: 40, step: 1, default: 40, level: 2 },
             "topP": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
             "maxOutputTokens": { field: "slider", min: 1, max: 30720, step: 1, default: 2048, level: 0},
-            "stopSequences": { field: "text", default: null, level: 0 },
+            "stopSequences": { field: "text", default: "", level: 0 },
         }
 
         const outputConfig = {
