@@ -145,8 +145,8 @@ const updateBridges = async (req, res) => {
 
         const model = configuration.model;
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-        const inputConfig =ModelsConfig[modelname]().inputConfig.content_location;
-        const promptText = _.get(configuration, inputConfig);
+        const contentLocation =ModelsConfig[modelname]().inputConfig.content_location;
+        const promptText = _.get(configuration,  contentLoction);
         await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
         
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
