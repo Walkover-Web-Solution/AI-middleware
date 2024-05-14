@@ -1,4 +1,5 @@
 const ChatBotModel = require("../../mongoModel/chatBotModel");
+const ActionModel = require("../../mongoModel/actionModel");
 
 const create = async (chatBotData) => {
     try {
@@ -11,9 +12,9 @@ const create = async (chatBotData) => {
     }
 };
 
-const getAll = async () => {
+const getAll = async (org_id) => {
     try {
-        const chatbots = await ChatBotModel.find();
+        const chatbots = await ChatBotModel.find({ orgId: org_id });
         return { success: true, chatbots };
     } catch (error) {
         console.log("Error in fetching chatbots:", error);
@@ -74,9 +75,60 @@ const updateDetailsInDb = async (identifier, dataToSend) => {
     }
 }
 
+const updateAction = async (
+    chatBotId, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge
+) => {
+    try {
+        let response = null;
+        const valuesToUpdate = {};
+        const valuesToPush = {};
+
+        if (componentId && frontendActions) {
+            valuesToUpdate[
+                `frontendActions.${gridId}.${componentId}.${frontendActionId}`
+            ] = frontendActions;
+        }
+
+        if (actionId) {
+            const jsonToSend = {};
+            if (actionsArr) jsonToSend.actionsArr = actionsArr;
+            if (bridge) jsonToSend.bridge = bridge;
+
+            response = await ActionModel.findByIdAndUpdate(
+                actionId,
+                { $set: jsonToSend },
+                { new: true },
+            );
+        } else if (actionsArr) {
+            const actionData = { chatBotId, componentId, gridId };
+            if (actionsArr) actionData.actionsArr = actionsArr;
+
+            response = await ActionModel.create(actionData);
+
+            valuesToPush.actions = {
+                actionId: response._id,
+                actionIdMapping: response._id,
+                componentId,
+                gridId,
+            };
+        }
+
+        const updateInterface = await ChatBotModel.findByIdAndUpdate(
+            interfaceId,
+            { $set: valuesToUpdate, $push: valuesToPush },
+            { new: true },
+        );
+
+        return response || updateInterface;
+    } catch (error) {
+
+    }
+}
+
 module.exports = {
     create, getAll,
     getOne, update,
     deleteById,
-    updateDetailsInDb
+    updateDetailsInDb,
+    updateAction
 };

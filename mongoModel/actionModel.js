@@ -83,4 +83,5 @@ const ActionSchema = new Schema({
 
 // Create the model from the schema
 const ActionModel = mongoose.model('Actions', ActionSchema);
-export default ActionModel;
+module.exports = ActionModel;
+
