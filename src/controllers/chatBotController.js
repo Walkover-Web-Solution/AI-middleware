@@ -6,7 +6,8 @@ const createChatBot = async (req, res) => {
 };
 
 const getAllChatBots = async (req, res) => {
-    const result = await ChatbotDbService.getAll();
+    const org_id = req.params.org_id;
+    const result = await ChatbotDbService.getAll(org_id);
     return res.status(result.success ? 200 : 400).json(result);
 };
 
@@ -33,11 +34,19 @@ const updateDetails = async (req, res, next) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 
+const updateChatBotAction = async (req, res, next) => {
+    const identifier = req.params?.botId;
+    const { componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId, bridge } = req.body;
+    const data = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, responseArr, frontendActions, frontendActionId, bridge);
+    next();
+    return res.status(result.success ? 200 : 404).json(result);
+};
 module.exports = {
     createChatBot,
     getAllChatBots,
     getOneChatBot,
     updateChatBot,
     deleteChatBot,
-    updateDetails
+    updateDetails,
+    updateChatBotAction
 };
