@@ -17,5 +17,5 @@ router.put('/createbridges/:bridge_id', middleware, common.updateBridges);
 router.delete('/deletebridges/:bridge_id',middleware,common.deleteBridges);
 router.get('/gethistory/:thread_id/:bridge_id',middleware,common.getThreads);  //Public API for getting history for particular thread
 router.post('/createapi/:bridge_id',middleware,createApi.createsApi); //vaisocket embed create api.
-router.get('/systemprompt/gethistory/:bridge_id',middleware,common.getSystemPromptHistory)
+router.get('/systemprompt/gethistory/:bridge_id/:timestamp',middleware,common.getSystemPromptHistory)
 module.exports = router;
