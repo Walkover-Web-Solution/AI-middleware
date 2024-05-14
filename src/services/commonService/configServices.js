@@ -60,11 +60,10 @@ const getMessageHistory = async (req, res) => {
 }
 const getSystemPromptHistory = async(req, res)=>{
     try {
-        const { bridge_id } = req.params;
-        const result = await conversationDbService.getHistory(bridge_id);
-        if(result?.success){
-            return res.status(200).json(result);
-        }
+        const { bridge_id, timestamp } = req.params;
+        const result = await conversationDbService.getHistory(bridge_id,timestamp);
+    
+        return res.status(200).json(result);    
     } catch (error) {
         console.log("error occured", error);
         return res.status(400).json({success: false, error: "something went wrong!"});
