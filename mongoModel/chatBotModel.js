@@ -4,10 +4,8 @@ const { Schema } = mongoose;
 
 const BridgeMappingSchema = new Schema({
   bridgeId: {
-    type: String,
-  },
-  defaultQuestions: {
-    type: Array,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'configuration',
   },
 }, { _id: false });
 
@@ -27,32 +25,10 @@ const ChatBotSchema = new Schema({
   updatedBy: {
     type: String,
   },
-  responseTypes: {
-    responseId: {
-      components: {
-        type: Object,
-      },
-      coordinates: {
-        type: Object,
-      },
-      description: {
-        type: String,
-      },
-    }
-  },
+
   bridge: {
-    authKey: {
-      type: String,
-    },
-    bridgeKeys: {
-      type: [String],
-      default: ['root'], // Set the default value to ['root']
-    },
-    bridgeMapping: {
-      type: Map,
-      of: BridgeMappingSchema,
-      default: { root: { bridgeId: '', defaultQuestions: [] } },
-    },
+    type: Object,
+    of: BridgeMappingSchema,
   },
   actions: [
     {

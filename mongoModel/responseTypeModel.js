@@ -14,17 +14,14 @@ const ReponseMappingSchema = new Schema({
     },
 }, { _id: false });
 
-const OrgSchema = new Schema({
-    title: { type: String },
-    description: { type: String },
-    meta: {
-        created_at: { type: Date, default: Date.now },
-        updated_at: { type: Date, default: Date.now },
-        responseTypes: {
-            type: Map,
-            of: ReponseMappingSchema,
-        },
-    }
+const ResponseTypeSchema = new Schema({
+    responseTypes: {
+        type: Map,
+        of: ReponseMappingSchema,
+    },
+    orgId: {
+        type: Number,
+    },
 });
 
-module.exports = mongoose.model('Organization', OrgSchema);
+module.exports = mongoose.model('ResposneType', ResponseTypeSchema);
