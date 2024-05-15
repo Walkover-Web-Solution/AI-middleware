@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const BridgeMappingSchema = new Schema({
-  bridgeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'configuration',
-  },
-}, { _id: false });
 
 const ChatBotSchema = new Schema({
   config: {
@@ -26,10 +20,10 @@ const ChatBotSchema = new Schema({
     type: String,
   },
 
-  bridge: {
-    type: Object,
-    of: BridgeMappingSchema,
-  },
+  bridge: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Configuration', // Replace 'Configuration' with your actual model name
+  }],
   actions: [
     {
       actionIdMapping: {

@@ -47,7 +47,7 @@ const updateBridge = async (req, res) => {
     const {bridgeId } = req.params;
     const  {bridges} =  await configurationService.getBridges(bridgeId)
     if (bridges.org_id != orgId)return  res.status(401).json({success :  false , message :"invalid orgid"});
-    const chatBot  = await ChatbotDbService.addBridgeInChatBot(chatbotId , bridgeId, bridges.slugName)
+    const chatBot  = await ChatbotDbService.addBridgeInChatBot(chatbotId , bridgeId  )
     return res.status(chatBot.success ? 200 : 404).json(chatBot);
 };
 
@@ -57,7 +57,7 @@ const deleteBridge = async (req, res) => {
     const {bridgeId } = req.params;
     const  {bridges} =  await configurationService.getBridges(bridgeId)
     if (bridges.org_id != orgId)return  res.status(401).json({success :  false , message :"invalid orgid"});
-    const chatBot  = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridges.slugName)
+    const chatBot  = await ChatbotDbService.removeBridgeInChatBot(chatbotId,bridgeId)
     return res.status(chatBot.success ? 200 : 404).json(chatBot);
 };
 const addorRemoveResponseIdInBridge = async (req, res)=>{
@@ -90,6 +90,17 @@ const createAllDefaultResponseInOrg = async (req,res)=>{
     const result =  await responsetypeService.create(orgId)
     return res.status(result.success ? 200 : 404).json(result);
 }
+const sendMessageUsingChatBot = async (req,res)=>{
+    const {orgId} =   req.body 
+    const {slugName , threadId } = req.body;
+    const {bridges} = await configurationService.getBridgeBySlugname(orgId , slugName) ;
+    bridges?.responseRef?.responseTypes.forEach((response)=>{
+        console.log(response);
+
+    })
+  
+    return res.status(bridges?.success ? 200 : 404).json(bridges);
+}
 module.exports = {
     createChatBot,
     getAllChatBots,
@@ -101,6 +112,7 @@ module.exports = {
     createAllDefaultResponseInOrg,
     updateBridge,
     deleteBridge,
-    addorRemoveResponseIdInBridge
+    addorRemoveResponseIdInBridge,
+    sendMessageUsingChatBot
     // updateChatBotResponse
 };

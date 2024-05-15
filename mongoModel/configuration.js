@@ -10,13 +10,13 @@ const configuration = new mongoose.Schema({
     api_call: { type: Object, default: {} },
     api_endpoints: { type: Object, default: [] },
     is_api_call: { type: Boolean, default: false },
-    slugName: { type: String, default: "" },
+    slugName: { type: String },
     responseIds: { type: Array, default: [] },
-    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseType' },
+    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseTypeModel' },
     defaultQuestions: {
         type: Array,
     },
 });
-
+// configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
 const configurationModel = mongoose.model("configuration", configuration);
 module.exports = { configurationModel };

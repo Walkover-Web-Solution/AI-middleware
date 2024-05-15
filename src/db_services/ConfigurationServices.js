@@ -102,20 +102,7 @@ const addResponseIdinBridge=async (bridgeId , orgId , responseId ,responseRefId)
               $set :{
                 responseRef : responseRefId
               }
-        });
-        return { success: true, bridges: bridges };
-    } catch (error) {
-        console.log("error:",error);
-        return {success:false,error:"something went wrong!!"}
-    }
-    
-}
-const removeResponseIdinBridge=async (bridgeId , orgId , responseId)=>{
-    try {
-        const bridges = await configurationModel.findOneAndUpdate({_id :bridgeId , org_id : orgId },{
-            $pull : { responseIds : responseId ,
-              }
-        });
+        },{ new: true});
         return { success: true, bridges: bridges };
     } catch (error) {
         console.log("error:",error);
@@ -124,4 +111,29 @@ const removeResponseIdinBridge=async (bridgeId , orgId , responseId)=>{
     
 }
 
-module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData,addResponseIdinBridge , removeResponseIdinBridge}
+// get bridge with slugname
+const getBridgeBySlugname =async (orgId , slugName)=>{
+    try {
+        console.log(orgId, slugName)
+        const bridges = await configurationModel.findOne({slugName :slugName , org_id : orgId}).populate('responseRef');
+        return { success: true, bridges: bridges };
+    } catch (error) {
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+}
+const removeResponseIdinBridge=async (bridgeId , orgId , responseId)=>{
+    try {
+        const bridges = await configurationModel.findOneAndUpdate({_id :bridgeId , org_id : orgId },{
+            $pull : { responseIds : responseId ,
+              }
+        },{ new: true});
+        return { success: true, bridges: bridges };
+    } catch (error) {
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+    
+}
+
+module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData,addResponseIdinBridge , removeResponseIdinBridge , getBridgeBySlugname}
