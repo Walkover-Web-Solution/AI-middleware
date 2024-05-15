@@ -1,10 +1,13 @@
 const ModelsConfig = require("../../configs/modelConfiguration");
 const { services } = require("../../../config/models");
-const { getAllThreads, getThreadHistory } = require("../../controllers/conversationContoller");
+const { getAllThreads, getThreadHistory, getChatData } = require("../../controllers/conversationContoller");
 const configurationService = require("../../db_services/ConfigurationServices");
 const helper = require("../../services/utils/helper");
 const { updateBridgeSchema } = require('../../../validation/joi_validation/bridge')
 const { filterDataOfBridgeOnTheBaseOfUI } = require('../../services/utils/getConfiguration')
+const conversationDbService = require('../../db_services/conversationDbService')
+const _ = require('lodash');
+
 
 const getAIModels = async (req, res) => {
     try {
@@ -50,7 +53,7 @@ const getMessageHistory = async (req, res) => {
         const { bridge_id } = req.params;
         const { org_id} = req.body;
         let page = req?.query?.pageNo || 1;
-        let pageSize = req?.query?.limit || 10 ;
+        let pageSize = req?.query?.limit || 10;
         const threads = await getAllThreads(bridge_id, org_id, page, pageSize);
         if (threads?.success) {
             return res.status(200).json(threads);
@@ -61,6 +64,18 @@ const getMessageHistory = async (req, res) => {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
+const getSystemPromptHistory = async(req, res)=>{
+    try {
+        const { bridge_id, timestamp } = req.params;
+        const result = await conversationDbService.getHistory(bridge_id,timestamp);
+    
+        return res.status(200).json(result);    
+    } catch (error) {
+        console.log("error occured", error);
+        return res.status(400).json({success: false, error: "something went wrong!"});
+    }
+}
+
 const createBridges = async (req, res) => {
     try {
         let { configuration, org_id, service } = req.body;
@@ -131,6 +146,13 @@ const updateBridges = async (req, res) => {
             apikey = bridge.apikey;
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+
+        const model = configuration.model;
+        const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
+        const contentLocation =ModelsConfig[modelname]().inputConfig.content_location;
+        const promptText = _.get(configuration,  contentLocation);
+        await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
+        
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
         const result =  await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
         filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
@@ -162,8 +184,8 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     try {
         let modelConfig = await configurationService.getBridges(bridge_id);
         let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
-        let api_endpoints = modelConfig.bridges.api_endpoints ? modelConfig.bridges.api_endpoints : [];
-        let api_call = modelConfig.bridges.api_call ? modelConfig.bridges.api_call : {};
+        let api_endpoints = modelConfig?.bridges?.api_endpoints ? modelConfig.bridges.api_endpoints : [];
+        let api_call = modelConfig?.bridges?.api_call ? modelConfig.bridges.api_call : {};
         if (!(endpoint in api_call)) {
             api_endpoints.push(endpoint);   
         }
@@ -182,6 +204,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         let configuration = { tools: tools_call }
         const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
+        result.tools_call = tools_call;
         return result;
     }
     catch (error) {
@@ -189,7 +212,6 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         return { success: false, error: "something went wrong!!" }
     }
 }
-
 
 module.exports = {
     getAIModels,
@@ -200,5 +222,6 @@ module.exports = {
     getBridges,
     updateBridges,
     deleteBridges,
-    getAndUpdate
+    getAndUpdate,
+    getSystemPromptHistory
 }
