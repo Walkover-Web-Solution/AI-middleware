@@ -12,6 +12,23 @@ const create = async (orgId) => {
         return { success: false, error: "Failed to create response in org " };
     }
 };
+const addResponseTypes = async (orgId , responseId , responseJson) => {
+    try {
+        const temp = await responseTypeModel.findOneAndUpdate({
+            orgId: orgId ,
+        },{
+            $set : {
+                [`responseTypes.${responseId}`] : responseJson
+            }
+        }, { new: true});
+
+        console.log('Document created:', temp);
+        return temp._id 
+    } catch (error) {
+        return { success: false, error: "Failed to add response in org " };
+    }
+};
 module.exports = {
-    create
+    create,
+    addResponseTypes
 };

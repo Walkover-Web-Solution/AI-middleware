@@ -20,7 +20,7 @@ const ResponseTypeSchema = new Schema({
         of: ReponseMappingSchema,
     },
     orgId: {
-        type: Number,
+        type: String,
     },
 });
 
