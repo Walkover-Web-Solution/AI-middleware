@@ -1,11 +1,7 @@
-const dotenv = require('dotenv');
-
-
+import dotenv from "dotenv";
 dotenv.config();
-
 const timescaleServiceUrl = process.env.TIMESCALE_SERVICE_URL;
-
-module.exports= {
+export default {
   development: {
     url: timescaleServiceUrl,
     dialect: 'postgres',
@@ -13,13 +9,13 @@ module.exports= {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false,
-      },
-    },
+        rejectUnauthorized: false
+      }
+    }
   },
   test: {
     url: timescaleServiceUrl,
-    dialect: 'postgres',
+    dialect: 'postgres'
   },
   production: {
     url: timescaleServiceUrl,
@@ -28,8 +24,8 @@ module.exports= {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false,
-      },
-    },
-  },
+        rejectUnauthorized: false
+      }
+    }
+  }
 };
