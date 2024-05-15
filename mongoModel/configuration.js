@@ -18,7 +18,7 @@ const configuration = new mongoose.Schema({
     is_api_call: { type: Boolean, default: false },
     slugName: { type: String },
     responseIds: { type: Array, default: [] },
-    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseTypeModel' },
+    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseType' },
     defaultQuestions: {
         type: Array,
     },

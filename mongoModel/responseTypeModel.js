@@ -24,4 +24,4 @@ const ResponseTypeSchema = new Schema({
     },
 });
 
-module.exports = mongoose.model('ResponseTypeModel', ResponseTypeSchema);
+module.exports = mongoose.model('ResponseType', ResponseTypeSchema);
