@@ -58,25 +58,27 @@ async function getHistory(bridge_id, timestamp) {
 
 
 async function findMessage(org_id, thread_id, bridge_id) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
-    include: [{
-      model: models.raw_data,
-      as: 'raw_data',
-      attributes: ['*'],
-      required: false,
-      on: {
-        'id': models.sequelize.where(models.sequelize.col('conversations.id'), '=', models.sequelize.col('raw_data.chat_id'))
-      }
-    }],
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id
-    },
-    order: [['id', 'DESC']],
-    raw: true
-  });
+  console.log(thread_id , bridge_id)
+  let conversations  = await models.pg.conversations.findAll({
+      attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
+      include: [{
+        model: models.raw_data,
+        as: 'raw_data',
+        attributes: ['*'],
+        required: false,
+        'on': {
+          'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+        }
+      }],
+      where: {
+        org_id: org_id,
+        thread_id: thread_id,
+        bridge_id: bridge_id
+      },
+      order: [['id', 'DESC']],
+      raw: true
+    });
+
   conversations = conversations.reverse();
   return conversations;
 }
@@ -141,3 +143,5 @@ export default {
   getHistory,
   findMessage
 };
+
+// findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")
