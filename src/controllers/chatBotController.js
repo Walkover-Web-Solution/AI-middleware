@@ -1,5 +1,6 @@
 const ChatbotDbService = require('../db_services/ChatBotDbService');
-
+const responsetypeService = require('../db_services/responseTypeService');
+const configurationService=require("../db_services/ConfigurationServices");
 const createChatBot = async (req, res) => {
     const result = await ChatbotDbService.create(req.body);
     return res.status(result.success ? 201 : 400).json(result);
@@ -41,11 +42,32 @@ const updateChatBotAction = async (req, res) => {
 };
 
 const updateBridge = async (req, res) => {
-    const identifier = req.params?.botId;
-    const { responseType, gridId } = req.body;
-    const result = await ChatbotDbService.updateResponseTypes(identifier, responseType, gridId);
-    return res.status(result.success ? 200 : 404).json(result);
+    const chatbotId  = req.params?.botId;
+    const orgId  = req.params?.orgId;
+    const {bridgeId } = req.params;
+    const  {bridges} =  await configurationService.getBridges(bridgeId)
+    if (bridges.org_id != orgId)return  res.status(401).json({success :  false , message :"invalid orgid"});
+    const chatBot  = await ChatbotDbService.addBridgeInChatBot(chatbotId , bridgeId, bridges.slugName)
+    return res.status(chatBot.success ? 200 : 404).json(chatBot);
 };
+
+const deleteBridge = async (req, res) => {
+    const chatbotId  = req.params?.botId;
+    const orgId  = req.params?.orgId;
+    const {bridgeId } = req.params;
+    const  {bridges} =  await configurationService.getBridges(bridgeId)
+    if (bridges.org_id != orgId)return  res.status(401).json({success :  false , message :"invalid orgid"});
+    const chatBot  = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridges.slugName)
+    return res.status(chatBot.success ? 200 : 404).json(chatBot);
+};
+
+
+
+const createAllDefaultResponseInOrg = async (req,res)=>{
+    const orgId =  req.params?.orgId;
+    const result =  await responsetypeService.create(orgId)
+    return res.status(result.success ? 200 : 404).json(result);
+}
 module.exports = {
     createChatBot,
     getAllChatBots,
@@ -54,5 +76,8 @@ module.exports = {
     deleteChatBot,
     updateDetails,
     updateChatBotAction,
-    updateChatBotResponse
+    createAllDefaultResponseInOrg,
+    updateBridge,
+    deleteBridge
+    // updateChatBotResponse
 };
