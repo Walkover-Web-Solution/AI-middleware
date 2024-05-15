@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const configuration = new mongoose.Schema({
     org_id: { type: String, default: "" },
     service: { type: String, default: "" },
-    type: {
+    bridgeType: {
         type: String,
         enum: ['api', 'chatbot'],
         required: true,
         default: 'chatbot'
-      },
+    },
     name: { type: String, default: "" },
     configuration: { type: Object, default: {} },
     apikey: { type: String, default: "" },

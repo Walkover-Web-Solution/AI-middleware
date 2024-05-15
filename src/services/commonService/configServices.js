@@ -143,8 +143,8 @@ const updateBridges = async (req, res) => {
 const updateBridgeType = async (req, res) => {
     try {
         const { bridge_id } = req.params;
-        let { type, org_id } = req.body;
-        const result = await configurationService.updateBridgeType(bridge_id, org_id, type);
+        let { bridgeType, org_id } = req.body;
+        const result = await configurationService.updateBridgeType(bridge_id, org_id, bridgeType);
         if (result.success) {
             return res.status(200).json(result);
         }
