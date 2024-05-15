@@ -37,9 +37,9 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
     }
 }
 
-const updateBridgeType = async (bridge_id, org_id, type) => {
+const updateBridgeType = async (bridge_id, org_id, bridgeType) => {
     try {
-        const bridges = await configurationModel.findOneAndUpdate({ _id: bridge_id, org_id: org_id }, { type: type }, { new: true });
+        const bridges = await configurationModel.findOneAndUpdate({ _id: bridge_id, org_id: org_id }, { bridgeType: bridgeType }, { new: true });
         return { success: true, message: "bridge type updated successfully", bridges: bridges };
     } catch (error) {
         console.log("error:", error);
