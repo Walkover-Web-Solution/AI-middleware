@@ -37,7 +37,7 @@ async function findAllMessages(org_id, thread_id, bridge_id) {
 
 async function getHistory(bridge_id, timestamp) {
   try {
-    const history = await models.system_prompt_versionings.findAll({
+    const history = await models.pg.system_prompt_versionings.findAll({
       where: {
         bridge_id,
         updated_at: {
@@ -116,7 +116,7 @@ async function findAllThreads(bridge_id, org_id) {
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
   try {
-          await models.system_prompt_versionings.create({
+          await models.pg.system_prompt_versionings.create({
               system_prompt: promptText,
               org_id: orgId,
               bridge_id: bridgeId,
