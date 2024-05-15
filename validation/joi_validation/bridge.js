@@ -14,7 +14,7 @@ const updateBridgeSchema = Joi.object({
                 'gpt-3.5-turbo-16k-0613', 'gpt-4',
                 'gpt-4-0613', 'gpt-4-1106-preview',
                 'gpt-4-turbo-preview', 'gpt-4-0125-preview',
-                'gpt-4-turbo-2024-04-09', 'gpt-4-turbo',
+                'gpt-4-turbo-2024-04-09', 'gpt-4-turbo', 'gpt-4o',
                 'text-embedding-3-large', 'text-embedding-3-small',
                 'text-embedding-ada-002', 'gpt-3.5-turbo-instruct'
             )
@@ -24,10 +24,9 @@ const updateBridgeSchema = Joi.object({
             Joi.string().allow(''),
             Joi.array()
         ).optional(),
-        input: Joi.string().optional(),
-        RTLayer: Joi.boolean().optional(),
-        webhook: Joi.string().optional(),
-        headers: Joi.object().optional(),
+      input: Joi.string().allow('').optional(),
+      RTLayer: Joi.boolean().allow(null).optional(),
+      webhook: Joi.string().allow('').optional()
     }).required(),
     service: Joi.string().valid('openai', 'google').required(),
     apikey: Joi.string()
@@ -53,6 +52,7 @@ const updateBridgeSchema = Joi.object({
         'gpt-4-0125-preview',
         'gpt-4-turbo-2024-04-09',
         'gpt-4-turbo',
+        'gpt-4o',
         'text-embedding-3-large',
         'text-embedding-3-small',
         'text-embedding-ada-002',
@@ -156,6 +156,19 @@ const updateBridgeSchema = Joi.object({
                 "response_format": Joi.string(),
             }),
             'gpt-4': Joi.object({
+                "temperature": Joi.string(),
+                "max_tokens": Joi.string(),
+                "top_p": Joi.string(),
+                "logprobs": Joi.string(),
+                "frequency_penalty": Joi.string(),
+                "presence_penalty": Joi.string(),
+                "n": Joi.string(),
+                "stop": Joi.string(),
+                "stream": Joi.string(),
+                "tools": Joi.string(),
+                "tool_choice": Joi.string(),
+            }),
+            'gpt-4o': Joi.object({
                 "temperature": Joi.string(),
                 "max_tokens": Joi.string(),
                 "top_p": Joi.string(),
