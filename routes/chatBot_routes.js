@@ -1,5 +1,5 @@
 const express = require('express');
-const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, updateChatBotResponse, createAllDefaultResponseInOrg, updateBridge, deleteBridge } = require('../src/controllers/chatBotController');
+const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, updateChatBotResponse, createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge } = require('../src/controllers/chatBotController');
 
 const routes = express.Router();
 
@@ -13,6 +13,7 @@ routes.route('/:orgId/createResponse').post(createAllDefaultResponseInOrg) // TO
 routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
 routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
+routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // delete chatbot
 
 // routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
 

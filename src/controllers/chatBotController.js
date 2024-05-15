@@ -60,7 +60,29 @@ const deleteBridge = async (req, res) => {
     const chatBot  = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridges.slugName)
     return res.status(chatBot.success ? 200 : 404).json(chatBot);
 };
+const addorRemoveResponseIdInBridge = async (req, res)=>{
+    const orgId  = req.params?.orgId;
+    const {bridgeId } = req.params;
+    const {responseId , responseJson , status } = req.body;
+    if (!responseId )  return res.status( 400).json({success : false , message :"responseId is required"});
+    let responseRefId = null  ;
+    if (responseJson) {
+        responseRefId  = await responsetypeService.addResponseTypes(orgId , responseId , responseJson)
+    }
 
+    let bridges = null
+    // Handle add or remove status
+    if (status === 'add') {
+        bridges  = await configurationService.addResponseIdinBridge(bridgeId, orgId, responseId, responseRefId);
+    } else if (status === 'remove') {
+        bridges  = await configurationService.removeResponseIdinBridge(bridgeId, orgId, responseId);
+    } else {
+        return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
+
+    return res.status(bridges.success ? 200 : 404).json(bridges?.bridges);
+}
 
 
 const createAllDefaultResponseInOrg = async (req,res)=>{
@@ -78,6 +100,7 @@ module.exports = {
     updateChatBotAction,
     createAllDefaultResponseInOrg,
     updateBridge,
-    deleteBridge
+    deleteBridge,
+    addorRemoveResponseIdInBridge
     // updateChatBotResponse
 };

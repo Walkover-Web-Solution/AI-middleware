@@ -94,5 +94,34 @@ const getApiCallById=async (apiId)=>{
     }
     
 }
+const addResponseIdinBridge=async (bridgeId , orgId , responseId ,responseRefId)=>{
+    try {
+        const bridges = await configurationModel.findOneAndUpdate({_id :bridgeId  },{
+            $addToSet : { responseIds : responseId ,
+              },
+              $set :{
+                responseRef : responseRefId
+              }
+        });
+        return { success: true, bridges: bridges };
+    } catch (error) {
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+    
+}
+const removeResponseIdinBridge=async (bridgeId , orgId , responseId)=>{
+    try {
+        const bridges = await configurationModel.findOneAndUpdate({_id :bridgeId , org_id : orgId },{
+            $pull : { responseIds : responseId ,
+              }
+        });
+        return { success: true, bridges: bridges };
+    } catch (error) {
+        console.log("error:",error);
+        return {success:false,error:"something went wrong!!"}
+    }
+    
+}
 
-module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData}
+module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData,addResponseIdinBridge , removeResponseIdinBridge}
