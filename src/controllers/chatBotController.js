@@ -40,7 +40,7 @@ const updateChatBotAction = async (req, res) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 
-const updateChatBotResponse = async (req, res) => {
+const updateBridge = async (req, res) => {
     const identifier = req.params?.botId;
     const { responseType, gridId } = req.body;
     const result = await ChatbotDbService.updateResponseTypes(identifier, responseType, gridId);

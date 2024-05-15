@@ -20,6 +20,7 @@ routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:botId').put(updateChatBot); // update chatbot
 routes.route('/:botId/updateDetails').put(updateDetails); // update chatbot details
 routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
-routes.route('/:botId/updateResponse').put(updateChatBotResponse); // update chatbot actions
+routes.route('/:botId/bridge').put(updateBridge); // update chatbot actions
+routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
 
 module.exports = routes;

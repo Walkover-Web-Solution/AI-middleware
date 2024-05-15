@@ -24,19 +24,6 @@ const ActionDetailSchema = new Schema({
     },
     // You can add more fields here if needed
 });
-// Define the main schema for the 'actions' collection
-
-const ResponseDetailSchema = new Schema({
-    responseId: {
-        type: String,
-    },
-    description: {
-        type: String,
-    },
-    components: {
-        type: Object,
-    },
-});
 
 const ActionSchema = new Schema({
     chatBotId: {
