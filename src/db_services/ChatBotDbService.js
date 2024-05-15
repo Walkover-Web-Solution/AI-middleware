@@ -1,11 +1,34 @@
 const ChatBotModel = require("../../mongoModel/chatBotModel");
 const ActionModel = require("../../mongoModel/actionModel");
+const mongoose = require('mongoose');
 
 const create = async (chatBotData) => {
     try {
         const newChatBot = new ChatBotModel(chatBotData);
         const savedChatBot = await newChatBot.save();
         return { success: true, chatBot: savedChatBot };
+    } catch (error) {
+        console.log("Error in creating chatbot:", error);
+        return { success: false, error: "Failed to create chatbot" };
+    }
+};
+const addBridgeInChatBot = async (chatbotId , bridgeId,bridgeSlugName) => {
+    try {
+       const updatedChatBot =  await ChatBotModel.findByIdAndUpdate({_id :chatbotId },
+            { $set: { [`bridge.${bridgeSlugName}`]: new mongoose.Types.ObjectId(bridgeId) } },
+            { new: true },)
+        return { success: true, chatBot: updatedChatBot };
+    } catch (error) {
+        console.log("Error in creating chatbot:", error);
+        return { success: false, error: "Failed to create chatbot" };
+    }
+};
+const removeBridgeInChatBot = async (chatbotId ,bridgeSlugName) => {
+    try {
+       const updatedChatBot =  await ChatBotModel.findByIdAndUpdate({_id :chatbotId },
+            { $unset: { [`bridge.${bridgeSlugName}`]: "" } },
+            { new: true },)
+        return { success: true, chatBot: updatedChatBot };
     } catch (error) {
         console.log("Error in creating chatbot:", error);
         return { success: false, error: "Failed to create chatbot" };
@@ -152,5 +175,7 @@ module.exports = {
     deleteById,
     updateDetailsInDb,
     updateAction,
-    updateResponseTypes
+    updateResponseTypes,
+    addBridgeInChatBot,
+    removeBridgeInChatBot
 };

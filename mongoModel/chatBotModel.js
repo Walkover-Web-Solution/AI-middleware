@@ -50,7 +50,7 @@ const ChatBotSchema = new Schema({
   frontendActions: {
     type: Object,
   },
-}, { strict: false, minimize: false });
+}, { minimize: false });
 
 // Create the model from the schema
 const ChatBotModel = mongoose.model('ChatBot', ChatBotSchema);
