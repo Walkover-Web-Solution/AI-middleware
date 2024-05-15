@@ -101,6 +101,11 @@ const sendMessageUsingChatBot = async (req,res)=>{
   
     return res.status(bridges?.success ? 200 : 404).json(bridges);
 }
+const getChatBotOfBridge = async (req,res)=>{
+    const {orgId, bridgeId} =   req.params 
+    const {bridges} = await configurationService.findChatbotOfBridge(orgId , bridgeId) ;
+    return res.status(bridges?.success ? 200 : 404).json(bridges);
+}
 module.exports = {
     createChatBot,
     getAllChatBots,
@@ -113,6 +118,7 @@ module.exports = {
     updateBridge,
     deleteBridge,
     addorRemoveResponseIdInBridge,
-    sendMessageUsingChatBot
+    sendMessageUsingChatBot,
+    getChatBotOfBridge
     // updateChatBotResponse
 };

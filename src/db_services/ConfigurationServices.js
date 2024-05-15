@@ -1,6 +1,7 @@
 const {configurationModel}=require("../../mongoModel/configuration");
 const mongoose=require("mongoose");
 const {apiCallModel} = require("../../mongoModel/apiCall");
+const ChatBotModel = require("../../mongoModel/chatBotModel");
 const createBridges = async (configuration) => {
     try {
         const result=await new configurationModel({...configuration}).save();
@@ -19,6 +20,8 @@ try {
     return {success:false,error:"something went wrong!!"}
 }
 }
+
+
 const updateBridges=async(bridge_id,configuration,org_id,apikey)=>{
     try {
         const bridges = await configurationModel.findOneAndUpdate({_id:bridge_id,org_id:org_id},{configuration:configuration,name:configuration?.name,service:configuration?.service,apikey:apikey},
@@ -136,4 +139,17 @@ const removeResponseIdinBridge=async (bridgeId , orgId , responseId)=>{
     
 }
 
-module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData,addResponseIdinBridge , removeResponseIdinBridge , getBridgeBySlugname}
+
+const findChatbotOfBridge=async (orgId , bridgeId)=>{
+    try {
+        const bridges = await ChatBotModel.find({orgId:orgId, bridge: bridgeId} );
+        return { success: true, bridges: bridges }
+    } catch (error) {
+        console.log("error:",error)
+        return {success:false,error:"something went wrong!!"}
+    }
+    }
+
+
+
+module.exports={createBridges,getAllBridges,getBridges,updateBridges,getBridgesByName,deleteBridge,updateToolsCalls,getApiCallById,getBridgesWithSelectedData,addResponseIdinBridge , removeResponseIdinBridge , getBridgeBySlugname,findChatbotOfBridge}
