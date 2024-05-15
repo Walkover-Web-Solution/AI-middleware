@@ -85,7 +85,7 @@ const getAllBridges = async (req, res) => {
         if (result.success) {
             return res.status(200).json({ ...result, org_id: org_id });
         }
-        
+
         return res.status(400).json(result);
     } catch (error) {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
@@ -99,7 +99,7 @@ const getBridges = async (req, res) => {
         if (!result.success) {
             return res.status(400).json(result);
         }
-        filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
+        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
         return res.status(200).json({ ...result });
 
     } catch (error) {
@@ -114,7 +114,7 @@ const updateBridges = async (req, res) => {
         try {
             await updateBridgeSchema.validateAsync({ bridge_id, configuration, org_id, service, apikey });
         } catch (error) {
-            return res.status(422).json({success: false, error: error.details})
+            return res.status(422).json({ success: false, error: error.details })
         }
         configuration["service"] = service;
         let modelConfig = await configurationService.getBridges(bridge_id)
@@ -128,8 +128,8 @@ const updateBridges = async (req, res) => {
         }
         apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
-        const result =  await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
-        filterDataOfBridgeOnTheBaseOfUI(result,bridge_id)
+        const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
+        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
         if (result.success) {
             return res.status(200).json(result);
         }
@@ -139,6 +139,22 @@ const updateBridges = async (req, res) => {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
+
+const updateBridgeType = async (req, res) => {
+    try {
+        const { bridge_id } = req.params;
+        let { type, org_id } = req.body;
+        const result = await configurationService.updateBridgeType(bridge_id, org_id, type);
+        if (result.success) {
+            return res.status(200).json(result);
+        }
+        return res.status(400).json(result);
+    } catch (error) {
+        console.log("error:", error);
+        return res.status(400).json({ success: false, error: "something went wrong!!" });
+    }
+}
+
 
 const deleteBridges = async (req, res) => {
     try {
@@ -161,11 +177,11 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         let api_endpoints = modelConfig?.bridges?.api_endpoints ? modelConfig.bridges.api_endpoints : [];
         let api_call = modelConfig?.bridges?.api_call ? modelConfig.bridges.api_call : {};
         if (!(endpoint in api_call)) {
-            api_endpoints.push(endpoint);   
+            api_endpoints.push(endpoint);
         }
-        let updated_tools_call=[];
+        let updated_tools_call = [];
         tools_call.forEach(tool => {
-            if(tool.function.name!==endpoint){
+            if (tool.function.name !== endpoint) {
                 updated_tools_call.push(tool);
             }
         });
@@ -174,7 +190,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
             apiObjectID: apiObjectID,
             requiredParams: requiredParams
         }
-        tools_call=updated_tools_call;
+        tools_call = updated_tools_call;
         let configuration = { tools: tools_call }
         const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
         let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
@@ -197,5 +213,6 @@ module.exports = {
     getBridges,
     updateBridges,
     deleteBridges,
-    getAndUpdate
+    getAndUpdate,
+    updateBridgeType
 }
