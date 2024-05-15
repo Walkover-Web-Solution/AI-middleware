@@ -1,5 +1,5 @@
 const express = require('express');
-const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, updateChatBotResponse, createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge, sendMessageUsingChatBot } = require('../src/controllers/chatBotController');
+const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, updateChatBotResponse, createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge, sendMessageUsingChatBot, getChatBotOfBridge } = require('../src/controllers/chatBotController');
 
 const routes = express.Router();
 
@@ -14,7 +14,8 @@ routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update cha
 routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // delete chatbot
-routes.route('/test').post(sendMessageUsingChatBot)
+routes.route('/test').post(sendMessageUsingChatBot);
+routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge)
 // routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
 
 module.exports = routes;
