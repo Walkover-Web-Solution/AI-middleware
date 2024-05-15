@@ -1,9 +1,9 @@
-const {chats}= require("./chat");
-const _ = require('lodash');
-const configurationService= require("../../db_services/ConfigurationServices");
-// const ModelsConfig = require("../../configs/modelConfiguration");
-const RTLayer = require('rtlayer-node').default;
-const rtlayer = new RTLayer(process.env.RTLAYER_AUTH)
+import { chats } from "./chat.js";
+import _ from 'lodash';
+import configurationService from "../../db_services/ConfigurationServices.js";
+import RTLayer from 'rtlayer-node';
+
+const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0,rtlLayer=false,body={},playground=false)=>{
     try {
         console.log("tools_call=>",tools_call);
@@ -15,9 +15,9 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
-            const arguments = JSON.parse(tools_call.function.arguments);
-            console.log("arguments",arguments);
-            const apiResponse=await axiosWork(arguments,axios);
+            const args = JSON.parse(tools_call.function.arguments);
+            console.log("arguments",args);
+            const apiResponse=await axiosWork(args,axios);
 
             const funcResponseData={
                 tool_call_id: tools_call.id,
@@ -117,4 +117,4 @@ const checkFields = async ()=>{
 	}
 	return notPresent;
 } 
-module.exports={functionCall}
+export default functionCall;

@@ -1,17 +1,12 @@
-const { OpenAI } = require("openai");
-
-
+import { OpenAI } from "openai";
 class OpenAIInitializer {
-constructor(apiKey) {
+  constructor(apiKey) {
     this.openai = new OpenAI({
-        apiKey: apiKey
+      apiKey: apiKey
     });
+  }
+  getOpenAIService = () => {
+    return this.openai;
+  };
 }
-
-    getOpenAIService=()=>{
-        return this.openai
-    }
-}
-
-
-module.exports=OpenAIInitializer
+export default OpenAIInitializer;
