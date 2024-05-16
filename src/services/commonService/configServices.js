@@ -60,20 +60,19 @@ const getMessageHistory = async (req, res) => {
         return res.status(400).json({ success: false, error: "something went wrong!!" });
     }
 }
-const getSystemPromptHistory = async(req, res)=>{
+const getSystemPromptHistory = async (req, res) => {
     try {
         const { bridge_id, timestamp } = req.params;
-        const result = await conversationDbService.getHistory(bridge_id,timestamp);
-    
-        return res.status(200).json(result);    
+        const result = await conversationDbService.getHistory(bridge_id, timestamp);
+
+        return res.status(200).json(result);
     } catch (error) {
         console.log("error occured", error);
-        return res.status(400).json({success: false, error: "something went wrong!"});
+        return res.status(400).json({ success: false, error: "something went wrong!" });
     }
 }
 
 const createBridges = async (req, res) => {
-
     try {
         let { configuration, org_id, service, bridgeType } = req.body;
         service = service ? service.toLowerCase() : "";
@@ -146,10 +145,10 @@ const updateBridges = async (req, res) => {
 
         const model = configuration.model;
         const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-        const contentLocation =ModelsConfig[modelname]().inputConfig.content_location;
-        const promptText = _.get(configuration,  contentLocation);
+        const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
+        const promptText = _.get(configuration, contentLocation);
         await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
-        
+
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
         const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
         filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
