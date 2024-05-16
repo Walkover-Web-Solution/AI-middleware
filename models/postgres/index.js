@@ -33,17 +33,14 @@ const dbservice = async () => {
 };
 dbservice();
 
-await fs.promises
-  .readdir(__dirname)
-  .then((files) => files
-    .filter((file) => (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js'))
-    .forEach(async (file) => {
-      const model = await import(new URL(file, import.meta.url));
-      const modelInstance = await model.default(sequelize, Sequelize.DataTypes);
-      db[modelInstance.name] = modelInstance
-    })
-  );
-
+const files = await fs.promises.readdir(__dirname);
+for (const file of files) {
+  if (file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js') {
+    const model = await import(new URL(file, import.meta.url));
+    const modelInstance = await model.default(sequelize, Sequelize.DataTypes);
+    db[modelInstance.name] = modelInstance;
+  }
+}
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
     db[modelName].associate(db);

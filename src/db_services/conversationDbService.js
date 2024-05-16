@@ -62,7 +62,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
   let conversations  = await models.pg.conversations.findAll({
       attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
       include: [{
-        model: models.raw_data,
+        model: models.pg.raw_data,
         as: 'raw_data',
         attributes: ['*'],
         required: false,
