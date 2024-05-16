@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const configuration = new mongoose.Schema({
     org_id: { type: String, default: "" },
     service: { type: String, default: "" },
-    type: {
+    bridgeType: {
         type: String,
         enum: ['api', 'chatbot'],
         required: true,
         default: 'chatbot'
-      },
+    },
     name: { type: String, default: "" },
     configuration: { type: Object, default: {} },
     apikey: { type: String, default: "" },
@@ -18,7 +18,7 @@ const configuration = new mongoose.Schema({
     is_api_call: { type: Boolean, default: false },
     slugName: { type: String },
     responseIds: { type: Array, default: [] },
-    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseTypeModel' },
+    responseRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ResponseType' },
     defaultQuestions: {
         type: Array,
     },
