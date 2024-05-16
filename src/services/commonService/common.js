@@ -12,6 +12,7 @@ import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
 import functionCall from "../openAI/functionCall.js";
 import RTLayer from 'rtlayer-node';
+import {v1 as uuidv1} from 'uuid';
 
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
@@ -194,7 +195,17 @@ const prochat = async (req, res) => {
             success: false,
             error: openAIResponse?.error
           };
-          metrics_sevice.create([usage]);
+           metrics_sevice.create([usage], {
+            thread_id: thread_id,
+            user: user ? user : JSON.stringify(tool_call),
+            message: "",
+            org_id: org_id,
+            bridge_id: bridge_id,
+            model: configuration?.model,
+            channel: 'chat',
+            type: "error",
+            actor: user ? "user" : "tool"
+          });
           if (rtlLayer && !playground) {
             rtlayer.message({
               ...req.body,

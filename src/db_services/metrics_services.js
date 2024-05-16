@@ -36,41 +36,42 @@ async function findOnePg(id) {
   return await model.findByPk(id);
 }
 async function create(dataset, historyParams) {
-  const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor);
-  let ChatId = result.result[0].dataValues.id;
-  dataset[0].chat_id = ChatId;
-  console.log("dataset", dataset);
-  const insertAiData = dataset.map(DataObject => ({
-    org_id: DataObject.orgId,
-    authkey_name: DataObject.authkeyName || 'not_found',
-    latency: DataObject.latency || 0,
-    service: DataObject.service,
-    status: DataObject?.success ? true : false,
-    model: DataObject.model,
-    input_tokens: DataObject.inputTokens || 0,
-    output_tokens: DataObject.outputTokens || 0,
-    expected_cost: DataObject.expectedCost || 0,
-    created_at: new Date()
-  }));
-  const insertAiDataInPg = dataset.map(DataObject => ({
-    org_id: DataObject.orgId,
-    authkey_name: DataObject.authkeyName || 'not_found',
-    latency: DataObject.latency || 0,
-    service: DataObject.service,
-    status: DataObject?.success ? true : false,
-    error: !DataObject.success ? DataObject.error : 'works perfectly fine',
-    model: DataObject.model,
-    input_tokens: DataObject.inputTokens || 0,
-    output_tokens: DataObject.outputTokens || 0,
-    expected_cost: DataObject.expectedCost || 0,
-    created_at: new Date(),
-    chat_id: DataObject.chat_id || null,
-    variables: DataObject.variables || {},
-    is_present: DataObject.hasOwnProperty('prompt') ? true : false
-  }));
   try {
-    await postgres.raw_data.bulkCreate(insertAiDataInPg);
-    await timescale.raw_data.bulkCreate(insertAiData);
+      const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor);
+      let ChatId = result.result[0].dataValues.id;
+      dataset[0].chat_id = ChatId;
+      console.log("dataset", dataset);
+      const insertAiData = dataset.map(DataObject => ({
+        org_id: DataObject.orgId,
+        authkey_name: DataObject.authkeyName || 'not_found',
+        latency: DataObject.latency || 0,
+        service: DataObject.service,
+        status: DataObject?.success ? true : false,
+        model: DataObject.model,
+        input_tokens: DataObject.inputTokens || 0,
+        output_tokens: DataObject.outputTokens || 0,
+        expected_cost: DataObject.expectedCost || 0,
+        created_at: new Date()
+      }));
+
+      const insertAiDataInPg = dataset.map(DataObject => ({
+        org_id: DataObject.orgId,
+        authkey_name: DataObject.authkeyName || 'not_found',
+        latency: DataObject.latency || 0,
+        service: DataObject.service,
+        status: DataObject?.success ? true : false,
+        error: !DataObject.success ? DataObject.error : 'No error',
+        model: DataObject.model,
+        input_tokens: DataObject.inputTokens || 0,
+        output_tokens: DataObject.outputTokens || 0,
+        expected_cost: DataObject.expectedCost || 0,
+        created_at: new Date(),
+        chat_id: DataObject.chat_id || null,
+        variables: DataObject.variables || {},
+        is_present: DataObject.hasOwnProperty('prompt') ? true : false
+      }));
+      await postgres.pg.raw_data.bulkCreate(insertAiDataInPg);
+      await timescale.raw_data.bulkCreate(insertAiData);
   } catch (error) {
     // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
     console.log('Error during bulk insert of Ai middleware', error);
