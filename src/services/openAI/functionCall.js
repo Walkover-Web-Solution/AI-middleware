@@ -2,7 +2,9 @@ const {chats}= require("./chat");
 const _ = require('lodash');
 const configurationService= require("../../db_services/ConfigurationServices");
 // const ModelsConfig = require("../../configs/modelConfiguration");
-const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0)=>{
+const RTLayer = require('rtlayer-node').default;
+const rtlayer = new RTLayer(process.env.RTLAYER_AUTH)
+const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0,rtlLayer=false,body={},playground=false)=>{
     try {
         console.log("tools_call=>",tools_call);
         
@@ -27,6 +29,19 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             configuration["messages"].push(funcResponseData);
             console.log("configuration",configuration);
             console.log(configuration.messages,": messages","\n tools call:",tools_call);
+            //rtlayer going to gpt
+            if(rtlLayer && !playground){
+            rtlayer.message({
+                body,
+                message: "Going to GPT",
+                function_call:true,
+                success: true
+            },body.rtlOptions).then((data) => {
+                console.log("RTLayer message sent", data);
+            }).catch((error) => {
+                console.log("RTLayer message not sent", error);
+            });
+        }
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
             console.log("modelResponse",modelResponse);
@@ -36,6 +51,18 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             }
             if(!_.get(modelResponse, outputConfig.message) && l<=3){
                 console.log("l",l);
+                if(rtlLayer && !playground){
+                    rtlayer.message({
+                        ...body,
+                        message: "sending the next fuction call",
+                        function_call:true,
+                        success: true
+                    },body.rtlOptions).then((data) => {
+                        console.log("RTLayer message sent", data);
+                    }).catch((error) => {
+                        console.log("RTLayer message not sent", error);
+                    });
+                }
                 return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
             }
             console.log(openAIResponse);

@@ -27,7 +27,9 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 },
                 "contentKey": "content",
                 "type": "json",
-            }
+               
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -61,7 +63,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig,inputConfig }
@@ -98,7 +101,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -137,7 +141,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, outputConfig, inputConfig}
     }
@@ -174,7 +179,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -213,7 +219,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, outputConfig, inputConfig}
     }
@@ -252,7 +259,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -290,7 +298,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -327,7 +336,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -365,7 +375,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -404,7 +415,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return { configuration, outputConfig, inputConfig }
     }
@@ -441,7 +453,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -483,7 +496,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "contentKey": "content",
                 "type": "json",
 
-            }
+            },
+            content_location : "prompt[0].content"
         }
         return {configuration, inputConfig, outputConfig }
     }
@@ -522,6 +536,41 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
         return { configuration, outputConfig, inputConfig }
     }
 
+    static gpt_4o = () => {
+        const configuration = {
+            "model": { field: "drop", default: "gpt-4-turbo", "level": 1 },
+            "temperature": { field: "slider", min: 0, max: 2, step: 0.1, default: 0, level: 2 },
+            "max_tokens": { field: "slider", min: 0, max: 1024, step: 1, default: 256, level: 2 },
+            "top_p": { field: "slider", min: 0, max: 1, step: 0.1, default: 1, level: 2 },
+            "logprobs": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "frequency_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "presence_penalty": { field: "slider", min: 0, max: 2, step: 0.01, default: 0, level: 2 },
+            "n": { field: "number", default: 1, typeOf: "number", level: 0 },
+            "stop": { field: "text", default: "", level: 0 },
+            "stream": { field: "boolean", default: false, level: 0, typeOf: "boolean" },
+            "tools": { field: "array", level: 0, default: [], typeOf: "array" },
+            "tool_choice": { field: "text", default: "auto", level: 0, typeOf: "string" },
+            "response_format": { field: "boolean", default: { type: "text" }, level: 0 }
+        }
+        const outputConfig = {
+            usage: [{ prompt_tokens: "usage.prompt_tokens", completion_tokens: "usage.completion_tokens", total_tokens: "usage.total_tokens" ,total_cost:{input_cost:0.01,output_cost:0.03}}],
+            message: "choices[0].message.content",
+            tools: "choices[0].message.tool_calls",
+            assistant: "choices[0].message",
+            id: "id"
+        }
+        const inputConfig = {
+            system: {
+                    "role": "system",
+                    "content": "",
+                    "contentKey": "content",
+                    "type": "json",
+            },
+            content_location : "prompt[0].content"
+        }
+        return { configuration, outputConfig, inputConfig }
+    }
+
     static text_embedding_3_large = () => {
         const configuration = {
             "model": { field: "dropdown", default: "text-embedding-3-large", "level": 1 },
@@ -539,7 +588,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -561,7 +611,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -584,7 +635,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "input": "",
                 "contentKey": "input",
                 "type": "text",
-            }
+            },
+            content_location : "input"
         }
 
         return { configuration, outputConfig, inputConfig }
@@ -620,7 +672,8 @@ class ModelsConfig {  //params:[vlaue,enum(0,1,2) 0->optional, 1->required, 2->o
                 "prompt": "",
                 "contentKey": "prompt",
                 "type": "text",
-            }
+            },
+            content_location : "prompt"
         }
 
         const chatmessage = {

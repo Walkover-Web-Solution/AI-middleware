@@ -10,6 +10,10 @@ module.exports= (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      raw_data.belongsTo(models.conversations, {
+        foreignKey: 'chat_id',
+        as: 'conversation'
+      });
     }
   }
   raw_data.init({
@@ -36,6 +40,18 @@ module.exports= (sequelize, DataTypes) => {
     output_tokens: DataTypes.FLOAT,
     expected_cost: DataTypes.FLOAT,
     created_at: DataTypes.DATE,
+    chat_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'conversations',
+        key: 'id',
+      }
+    },
+    variables: DataTypes.JSON,
+    is_present: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
   }, {
     sequelize,
     modelName: 'raw_data',
