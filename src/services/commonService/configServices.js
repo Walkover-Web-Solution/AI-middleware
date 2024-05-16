@@ -237,6 +237,27 @@ const updateBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
+    return res.status(422).json({
+      success: false,
+      error: error.details
+    });
+  }
+};
+const updateBridgeType = async (req, res) => {
+  try {
+    const {
+      bridge_id
+    } = req.params;
+    let {
+      bridgeType,
+      org_id
+    } = req.body;
+    const result = await configurationService.updateBridgeType(bridge_id, org_id, bridgeType);
+    if (result.success) {
+      return res.status(200).json(result);
+    }
+    return res.status(400).json(result);
+  } catch (error) {
     console.log("error:", error);
     return res.status(400).json({
       success: false,
@@ -310,5 +331,6 @@ export default {
   updateBridges,
   deleteBridges,
   getAndUpdate,
+  updateBridgeType,
   getSystemPromptHistory
 };
