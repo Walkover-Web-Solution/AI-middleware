@@ -42,7 +42,7 @@ const createsApi = async (req, res) => {
         bridge_id
       });
       apiId = apiCallData ? apiCallData.id : "";
-      const response = await saveAPI(desc, url, org_id, bridge_id, apiId, short_description = "An API", axiosCode, requiredParams, id, [], true);
+      const response = await saveAPI(desc, url, org_id, bridge_id, apiId, "An API", axiosCode, requiredParams, id, [], true);
       if (!response.success) {
         return res.status(400).json({
           message: "something went wrong!",
