@@ -59,6 +59,4 @@ const configuration = new mongoose.Schema({
 });
 // configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
 const configurationModel = mongoose.model("configuration", configuration);
-export default {
-  configurationModel
-};
+export default configurationModel;
