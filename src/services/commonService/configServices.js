@@ -7,6 +7,7 @@ const { updateBridgeSchema } = require('../../../validation/joi_validation/bridg
 const { filterDataOfBridgeOnTheBaseOfUI } = require('../../services/utils/getConfiguration')
 const conversationDbService = require('../../db_services/conversationDbService')
 const _ = require('lodash');
+const { getChatBotOfBridgeFunction } = require("../../controllers/chatBotController");
 
 
 const getAIModels = async (req, res) => {
@@ -108,9 +109,12 @@ const getAllBridges = async (req, res) => {
 }
 const getBridges = async (req, res) => {
     try {
-        // console.log(req.params,res);
+        const { org_id } = req.body;
         const { bridge_id } = req.params;
         const result = await configurationService.getBridgesWithSelectedData(bridge_id);
+        if (result?.bridges?.bridgeType === "chatbot") {
+            result.bridges.chatbotData = await getChatBotOfBridgeFunction(org_id, bridge_id);
+        }
         if (!result.success) {
             return res.status(400).json(result);
         }
@@ -125,9 +129,9 @@ const getBridges = async (req, res) => {
 const updateBridges = async (req, res) => {
     try {
         const { bridge_id } = req.params;
-        let { configuration, org_id, service, apikey } = req.body;
+        let { configuration, org_id, service, apikey, bridgeType, slugName } = req.body;
         try {
-            await updateBridgeSchema.validateAsync({ bridge_id, configuration, org_id, service, apikey });
+            await updateBridgeSchema.validateAsync({ bridge_id, configuration, org_id, service, apikey, bridgeType, slugName });
         } catch (error) {
             return res.status(422).json({ success: false, error: error.details })
         }
@@ -150,8 +154,11 @@ const updateBridges = async (req, res) => {
         await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
 
         let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
-        const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey);
-        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id)
+        const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey, bridgeType, slugName);
+        filterDataOfBridgeOnTheBaseOfUI(result, bridge_id, false)
+        if (result?.bridges?.bridgeType === "chatbot") {
+            result.bridges.chatbotData = await getChatBotOfBridgeFunction(org_id, bridge_id);
+        }
         if (result.success) {
             return res.status(200).json(result);
         }

@@ -22,9 +22,10 @@ const getAllBridges = async (org_id) => {
 }
 
 
-const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
+const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeType, slugName) => {
     try {
-        const bridges = await configurationModel.findOneAndUpdate({ _id: bridge_id, org_id: org_id }, { configuration: configuration, name: configuration?.name, service: configuration?.service, apikey: apikey },
+        const { name, service } = configuration;
+        const bridges = await configurationModel.findOneAndUpdate({ _id: bridge_id, org_id: org_id }, { configuration, name, service, apikey, bridgeType, slugName },
             {
                 new: true,
                 projection: { "is_api_call": 0, "created_at": 0, "api_endpoints": 0, "__v": 0, "bridge_id": 0 }
@@ -60,6 +61,7 @@ const getBridges = async (bridge_id) => {
 const getBridgesWithSelectedData = async (bridge_id) => {
     try {
         const bridges = await configurationModel.findOne({ _id: bridge_id }, { "is_api_call": 0, "created_at": 0, "api_endpoints": 0, "__v": 0, "bridge_id": 0 }).lean();
+
         return { success: true, bridges: bridges };
     } catch (error) {
         console.log("error:", error)

@@ -3,6 +3,8 @@ const Joi = require("joi");
 
 const updateBridgeSchema = Joi.object({
     bridge_id: Joi.string().alphanum().required(),
+    bridgeType: Joi.string().valid('chatbot', 'api'),
+    slugName: Joi.string().alphanum(),
     configuration: Joi.object({
         model: Joi.string().when('service', {
             is: 'google',
@@ -24,15 +26,15 @@ const updateBridgeSchema = Joi.object({
             Joi.string().allow(''),
             Joi.array()
         ).optional(),
-      input: Joi.string().allow('').optional(),
-      RTLayer: Joi.boolean().allow(null).optional(),
-      webhook: Joi.string().allow('').optional()
+        input: Joi.string().allow('').optional(),
+        RTLayer: Joi.boolean().allow(null).optional(),
+        webhook: Joi.string().allow('').optional()
     }).required(),
     service: Joi.string().valid('openai', 'google').required(),
     apikey: Joi.string()
-    .regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/)
-    .optional()
-    .allow(''),
+        .regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/)
+        .optional()
+        .allow(''),
     org_id: Joi.string().pattern(/^\d+$/).required().allow('124dfgh67ghj').messages({
         'string.pattern.base': 'The input must contain only numeric characters'
     }),
