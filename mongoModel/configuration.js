@@ -5,9 +5,7 @@ const configuration = new mongoose.Schema({
     service: { type: String, default: "" },
     bridgeType: {
         type: String,
-        enum: ['api', 'chatbot'],
-        required: true,
-        default: 'chatbot'
+        enum: ['api', 'chatbot']
     },
     name: { type: String, default: "" },
     configuration: { type: Object, default: {} },

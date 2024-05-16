@@ -73,8 +73,9 @@ const getSystemPromptHistory = async(req, res)=>{
 }
 
 const createBridges = async (req, res) => {
+
     try {
-        let { configuration, org_id, service } = req.body;
+        let { configuration, org_id, service, bridgeType } = req.body;
         service = service ? service.toLowerCase() : "";
         if (!(service in services)) {
             return res.status(400).json({ success: false, error: "service does not exist!" });
@@ -83,7 +84,7 @@ const createBridges = async (req, res) => {
         if (data.success && data.bridges) {
             return res.status(400).json({ success: false, error: "bridge Name already exists! please choose unique one" });
         }
-        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: helper.encrypt("") });
+        const result = await configurationService.createBridges({ configuration: configuration, org_id, name: configuration?.name, service: service, apikey: helper.encrypt(""), bridgeType: bridgeType });
         if (result.success) {
             return res.status(200).json({ ...result });
         }
