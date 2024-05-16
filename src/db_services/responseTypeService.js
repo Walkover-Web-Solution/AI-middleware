@@ -1,34 +1,48 @@
 const responseTypeModel = require("../../mongoModel/responseTypeModel");
-const defaultResponseJson = require("../services/utils/defaultResponseConfig")
+const { defaultResponseJson } = require("../services/utils/defaultResponseConfig")
+
 const create = async (orgId) => {
     try {
         const temp = await responseTypeModel.create({
             orgId: orgId,
-            responseTypes :  defaultResponseJson
+            responseTypes: defaultResponseJson
         });
         console.log('Document created:', temp);
-        return { success: true, chatBot: temp  };
+        return { success: true, chatBot: temp };
     } catch (error) {
         return { success: false, error: "Failed to create response in org " };
     }
 };
-const addResponseTypes = async (orgId , responseId , responseJson) => {
+
+const getAll = async (orgId) => {
+    try {
+        const temp = await responseTypeModel.findOne({
+            orgId: orgId,
+        });
+        console.log('Document found:', temp);
+        return { success: true, chatBot: temp };
+    } catch (error) {
+        return { success: false, error: "Failed to create response in org " };
+    }
+};
+
+const addResponseTypes = async (orgId, responseId, responseJson) => {
     try {
         const temp = await responseTypeModel.findOneAndUpdate({
-            orgId: orgId ,
-        },{
-            $set : {
-                [`responseTypes.${responseId}`] : responseJson
+            orgId: orgId,
+        }, {
+            $set: {
+                [`responseTypes.${responseId}`]: responseJson
             }
-        }, { new: true});
+        }, { new: true });
 
         console.log('Document created:', temp);
-        return temp._id 
+        return temp._id
     } catch (error) {
         return { success: false, error: "Failed to add response in org " };
     }
 };
 module.exports = {
-    create,
+    create, getAll,
     addResponseTypes
 };

@@ -90,6 +90,12 @@ const createAllDefaultResponseInOrg = async (req, res) => {
     const result = await responsetypeService.create(orgId)
     return res.status(result.success ? 200 : 404).json(result);
 }
+const getAllDefaultResponseInOrg = async (req, res) => {
+    const orgId = req.params?.orgId;
+    const result = await responsetypeService.getAll(orgId)
+    return res.status(result.success ? 200 : 404).json(result);
+}
+
 const sendMessageUsingChatBot = async (req, res) => {
     const { orgId } = req.body
     const { slugName, threadId } = req.body;
@@ -129,6 +135,7 @@ module.exports = {
     updateDetails,
     updateChatBotAction,
     createAllDefaultResponseInOrg,
+    getAllDefaultResponseInOrg,
     updateBridge,
     deleteBridge,
     addorRemoveResponseIdInBridge,
