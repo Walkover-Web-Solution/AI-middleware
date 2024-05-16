@@ -1,4 +1,4 @@
-import { apiCallModel } from "../../../mongoModel/apiCall.js";
+import apiCallModel from "../../../mongoModel/apiCall.js";
 import common from "../../services/commonService/configServices.js";
 const createsApi = async (req, res) => {
   try {
@@ -128,23 +128,23 @@ const createOpenAPI = (endpoint, desc, required_fields = [], optional_fields = [
       "type": "function",
       "function": {
         "name": endpoint,
-        "description": desc,
-        "parameters": {
-          "type": "object",
-          "properties": {
-            // "location": {
-            //     "type": "string",
-            //     "description": "The city and state, e.g. San Francisco, CA",
-            // },
-            // "format": {
-            //     "type": "string",
-            //     "enum": ["celsius", "fahrenheit"],
-            //     "description": "The temperature unit to use. Infer this from the users location.",
-            // },
-          },
-          "required": required_fields
-        }
+        "description": desc
       }
+    };
+    let parameters = {
+      "type": "object",
+      "properties": {
+        // "location": {
+        //     "type": "string",
+        //     "description": "The city and state, e.g. San Francisco, CA",
+        // },
+        // "format": {
+        //     "type": "string",
+        //     "enum": ["celsius", "fahrenheit"],
+        //     "description": "The temperature unit to use. Infer this from the users location.",
+        // },
+      },
+      "required": required_fields
     };
     let properties = {};
     for (const field of required_fields) {
@@ -152,7 +152,10 @@ const createOpenAPI = (endpoint, desc, required_fields = [], optional_fields = [
         "type": "string"
       };
     }
-    format.function.parameters.properties = properties;
+    if (required_fields.length > 0) {
+      format.function["parameters"] = parameters;
+      format.function.parameters.properties = properties;
+    }
     console.log("api call format", format);
     return {
       success: true,
