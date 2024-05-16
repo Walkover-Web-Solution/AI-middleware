@@ -11,7 +11,8 @@ const basename = path.basename(__filename);
 dotenv.config();
 const db = {};
 
-
+try {
+  
 const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
   dialect: 'postgres',
     protocol: 'postgres',
@@ -56,4 +57,7 @@ await fs.promises
   db.sequelize = sequelize;
   db.Sequelize = Sequelize;
   
+} catch (error) {
+  console.log('Error while connecting to the Timescaledb:',error);
+}
   export default db;
