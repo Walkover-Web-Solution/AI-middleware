@@ -115,7 +115,7 @@ async function deleteLastThread(org_id, thread_id,bridge_id) {
   return {success:false}
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id) {
+async function findAllThreads(bridge_id, org_id, page, pageSize) {
   const threads = await models.conversations.findAll({
     attributes: ['thread_id',[Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id',
       [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
