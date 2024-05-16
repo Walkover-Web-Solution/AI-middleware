@@ -44,6 +44,4 @@ const apiCall = new mongoose.Schema({
   }
 });
 const apiCallModel = mongoose.model("apicall", apiCall);
-export  default{
-  apiCallModel
-};
+export default apiCallModel;
