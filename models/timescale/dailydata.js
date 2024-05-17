@@ -1,7 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-
-
-module.exports= (sequelize, DataTypes) => {
+import { Model, DataTypes } from "sequelize";
+export default ((sequelize, DataTypes) => {
   class daily_data extends Model {
     /**
      * Helper method for defining associations.
@@ -41,4 +39,4 @@ module.exports= (sequelize, DataTypes) => {
     timestamps: false
   });
   return daily_data;
-};
+});
