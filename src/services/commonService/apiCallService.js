@@ -75,7 +75,7 @@ const createsApi = async (req, res) => {
     });
   }
 };
-const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_description = "An API", axios = "", required_fields = null, endpoint = "", optional_fields = [], activated = false) => {
+const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, "An API", axios = "", required_fields = null, endpoint = "", optional_fields = [], activated = false) => {
   try {
     if (api_id) {
       const apiData = await apiCallModel.findById(api_id);
@@ -107,64 +107,54 @@ const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_descripti
       activated,
       endpoint,
       axios
-    };
-    const newApi = await new apiCallModel(apiData).save();
-    //saving newly created  fields in the db with same id
-    return {
-      success: true,
-      apiObjectID: newApi.id
-    };
-  } catch (error) {
-    console.log("error:", error);
-    return {
-      success: false,
-      error: error
-    };
-  }
-};
-const createOpenAPI = (endpoint, desc, required_fields = [], optional_fields = []) => {
-  try {
-    let format = {
+  };
+  const newApi = await new apiCallModel(apiData).save();
+  //saving newly created  fields in the db with same id
+  return { success: true,apiObjectID: newApi.id }
+} catch (error) {
+  console.log("error:", error);
+  return { success: false, error: error };
+}
+}
+
+const createOpenAPI= (endpoint,desc,required_fields=[],optional_fields=[])=>{
+try {
+  let format={
       "type": "function",
-      "function": {
-        "name": endpoint,
-        "description": desc,
-        "parameters": {
-          "type": "object",
-          "properties": {
-            // "location": {
-            //     "type": "string",
-            //     "description": "The city and state, e.g. San Francisco, CA",
-            // },
-            // "format": {
-            //     "type": "string",
-            //     "enum": ["celsius", "fahrenheit"],
-            //     "description": "The temperature unit to use. Infer this from the users location.",
-            // },
-          },
-          "required": required_fields
-        }
-      }
-    };
-    let properties = {};
-    for (const field of required_fields) {
-      properties[field] = {
-        "type": "string"
-      };
-    }
-    format.function.parameters.properties = properties;
-    console.log("api call format", format);
-    return {
-      success: true,
-      format
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error
-    };
+  "function": {
+      "name": endpoint,
+      "description": desc
   }
 };
-export default {
-  createsApi
+let parameters={
+      "type": "object",
+      "properties": {
+          // "location": {
+          //     "type": "string",
+          //     "description": "The city and state, e.g. San Francisco, CA",
+          // },
+          // "format": {
+          //     "type": "string",
+          //     "enum": ["celsius", "fahrenheit"],
+          //     "description": "The temperature unit to use. Infer this from the users location.",
+          // },
+      },
+      "required": required_fields,
 };
+let properties={}
+for(const field of required_fields){
+  properties[field]={"type": "string"}
+}
+if(required_fields.length>0){
+  format.function["parameters"]=parameters;
+  format.function.parameters.properties=properties;
+}
+console.log("api call format",format);
+return {success:true,format};
+} catch (error) {
+  return { success: false, error: error };
+}
+
+}
+
+module.exports={createsApi};
