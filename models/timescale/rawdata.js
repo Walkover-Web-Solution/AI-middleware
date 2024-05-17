@@ -1,7 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-
-
-module.exports= (sequelize, DataTypes) => {
+import { Model, DataTypes } from "sequelize";
+export default ((sequelize, DataTypes) => {
   class raw_data extends Model {
     /**
      * Helper method for defining associations.
@@ -28,12 +26,11 @@ module.exports= (sequelize, DataTypes) => {
     input_tokens: DataTypes.FLOAT,
     output_tokens: DataTypes.FLOAT,
     expected_cost: DataTypes.FLOAT,
-    created_at: DataTypes.DATE,
+    created_at: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'raw_data',
     timestamps: false
   });
   return raw_data;
-};
-
+});

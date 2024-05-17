@@ -1,6 +1,5 @@
-const jwt = require("jsonwebtoken");
-
-const generateToken = (bridge_id) => {
+import jwt from "jsonwebtoken";
+const generateToken = bridge_id => {
   try {
     const payload = {
       org_id: process.env.ORG_ID,
@@ -14,5 +13,6 @@ const generateToken = (bridge_id) => {
     throw new Error('Failed to generate token');
   }
 };
-
-module.exports = { generateToken };
+export default {
+  generateToken
+};

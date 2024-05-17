@@ -1,6 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-
-module.exports = (sequelize, DataTypes) => {
+import { Model } from "sequelize";
+export default ((sequelize, DataTypes) => {
   class system_prompt_versionings extends Model {
     /**
      * Helper method for defining associations.
@@ -37,14 +36,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING
     },
     org_id: {
-        allowNull: false,
-        type: DataTypes.STRING
-      }
+      allowNull: false,
+      type: DataTypes.STRING
+    }
   }, {
     sequelize,
     modelName: "system_prompt_versionings",
     timestamps: false
   });
-
   return system_prompt_versionings;
-};
+});
