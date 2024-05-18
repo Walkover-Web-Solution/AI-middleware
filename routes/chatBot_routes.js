@@ -1,6 +1,6 @@
 const express = require('express');
 const { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction,
-    createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge, sendMessageUsingChatBot, getChatBotOfBridge, getAllDefaultResponseInOrg } = require('../src/controllers/chatBotController');
+    createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge, sendMessageUsingChatBot, getChatBotOfBridge, getAllDefaultResponseInOrg, addorRemoveBridgeInChatBot } = require('../src/controllers/chatBotController');
 
 const routes = express.Router();
 
@@ -16,7 +16,7 @@ routes.route('/:orgId/getAllResponse').get(getAllDefaultResponseInOrg) // TODO -
 
 // routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
 // routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
-routes.route('/:orgId/:botId/bridge/:bridgeId').put(addorRemoveResponseIdInBridge); // update chatbot actions
+routes.route('/:orgId/:botId/bridge/:bridgeId').put(addorRemoveBridgeInChatBot); // update chatbot actions
 
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
