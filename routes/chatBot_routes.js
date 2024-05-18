@@ -1,5 +1,5 @@
 import express from "express";
-import { createChatBot, getAllChatBots, getOneChatBot, deleteChatBot, updateChatBot, updateDetails, updateChatBotAction, createAllDefaultResponseInOrg, updateBridge, deleteBridge, addorRemoveResponseIdInBridge, sendMessageUsingChatBot, getChatBotOfBridge, getAllDefaultResponseInOrg, addorRemoveBridgeInChatBot } from "../src/controllers/chatBotController.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, sendMessageUsingChatBot, updateChatBot, updateChatBotAction, updateDetails } from "../src/controllers/chatBotController.js";
 const routes = express.Router();
 routes.route('/').post(createChatBot); // create chatbot
 routes.route('/:org_id/all').get(getAllChatBots); // get all chatbot
