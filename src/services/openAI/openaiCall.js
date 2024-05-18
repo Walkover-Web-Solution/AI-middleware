@@ -115,7 +115,17 @@ class UnifiedOpenAICase {
           success: false,
           error: functionCallRes?.error
         };
-        this.metrics_sevice.create([usage]);
+        this.metrics_sevice.create([usage],{
+          thread_id: thread_id,
+          user: user ? user : JSON.stringify(tool_call),
+          message: "",
+          org_id: org_id,
+          bridge_id: bridge_id,
+          model: configuration?.model,
+          channel: 'chat',
+          type: "error",
+          actor: user ? "user" : "tool"
+        });
 
         if (this.rtlLayer && !this.playground) {
           this.rtlayer.message({
