@@ -18,6 +18,19 @@ const create = async orgId => {
     };
   }
 };
+
+const getAll = async (orgId) => {
+  try {
+    const temp = await responseTypeModel.findOne({
+      orgId: orgId,
+    });
+    console.log('Document found:', temp);
+    return { success: true, chatBot: temp };
+  } catch (error) {
+    return { success: false, error: "Failed to create response in org " };
+  }
+};
+
 const addResponseTypes = async (orgId, responseId, responseJson) => {
   try {
     const temp = await responseTypeModel.findOneAndUpdate({
@@ -40,5 +53,6 @@ const addResponseTypes = async (orgId, responseId, responseJson) => {
 };
 export default {
   create,
-  addResponseTypes
+  addResponseTypes,
+  getAll
 };
