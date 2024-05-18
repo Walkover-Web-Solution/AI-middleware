@@ -2,7 +2,7 @@ import { runModel } from "./runModel.js";
 
 const chats = async (configuration, apikey) => {
   try {
-    console.log(configuration, apikey);
+    // console.log(configuration, apikey);
     const {
       success,
       response,

@@ -40,7 +40,7 @@ async function create(dataset, historyParams) {
       const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor);
       let ChatId = result.result[0].dataValues.id;
       dataset[0].chat_id = ChatId;
-      console.log("dataset", dataset);
+      // console.log("dataset", dataset);
       const insertAiData = dataset.map(DataObject => ({
         org_id: DataObject.orgId,
         authkey_name: DataObject.authkeyName || 'not_found',

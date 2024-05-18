@@ -29,5 +29,21 @@ class Helper {
     }
     return prev_configuration;
   };
+  static replaceVariablesInPrompt = (prompt, variables) => {
+    if (variables && Object.keys(variables).length > 0) {
+      Object.entries(variables).forEach(([key, value]) => {
+        const stringValue = JSON.stringify(value);
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+        prompt = prompt.map(item => {
+          if (item && "content" in item) {
+            item.content = item.content.replace(regex, stringValue);
+          }
+          return item;
+        });
+      });
+    }
+    return prompt;
+  };
+  
 }
 export default Helper;

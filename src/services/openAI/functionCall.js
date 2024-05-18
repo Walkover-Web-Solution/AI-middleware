@@ -10,8 +10,8 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
-        console.log("apiName",apiName);
-        console.log("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
+        // console.log("apiName",apiName);
+        // console.log("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
@@ -44,13 +44,13 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         }
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
-            console.log("modelResponse",modelResponse);
+            // console.log("modelResponse",modelResponse);
             if(!openAIResponse?.success){
                 console.log("openAIResponse errror",openAIResponse);
                 return {success:false,error:openAIResponse?.error}
             }
             if(!_.get(modelResponse, outputConfig.message) && l<=3){
-                console.log("l",l);
+                // console.log("l",l);
                 if(rtlLayer && !playground){
                     rtlayer.message({
                         ...body,
@@ -65,7 +65,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 }
                 return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
             }
-            console.log(openAIResponse);
+            // console.log(openAIResponse);
             return openAIResponse;
         }
         return {success:false,error:"endpoint does not exist"}
