@@ -244,7 +244,7 @@ const prochat = async (req, res) => {
               console.log("RTLayer message not sent", error);
             });
           }
-          const functionCallRes = await functionCall(customConfig, apikey, bridge, _.get(modelResponse, modelOutputConfig.tools)[0], modelOutputConfig, rtlLayer, req.body, playground);
+          const functionCallRes = await functionCall(customConfig, apikey, bridge, _.get(modelResponse, modelOutputConfig.tools)[0], modelOutputConfig,0,rtlLayer, req.body, playground);
           const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
           if (!functionCallRes?.success) {
             usage = {
