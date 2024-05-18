@@ -142,7 +142,7 @@ const getBridgeBySlugname = async (orgId, slugName) => {
 }
 const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
     try {
-        const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId, org_id: orgId }, {
+        const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
             $pull: {
                 responseIds: responseId,
             }

@@ -22,7 +22,7 @@ const ChatBotSchema = new Schema({
 
   bridge: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Configuration', // Replace 'Configuration' with your actual model name
+    ref: 'configuration', // Replace 'Configuration' with your actual model name
   }],
   actions: [
     {

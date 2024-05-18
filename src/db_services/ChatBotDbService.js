@@ -12,9 +12,9 @@ const create = async (chatBotData) => {
         return { success: false, error: "Failed to create chatbot" };
     }
 };
-const addBridgeInChatBot = async (chatbotId , bridgeId) => {
+const addBridgeInChatBot = async (chatbotId, bridgeId) => {
     try {
-       const updatedChatBot =  await ChatBotModel.findByIdAndUpdate({_id :chatbotId },
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
             { $addToSet: { bridge: new mongoose.Types.ObjectId(bridgeId) } },
             { new: true },)
         return { success: true, chatBot: updatedChatBot };
@@ -23,10 +23,10 @@ const addBridgeInChatBot = async (chatbotId , bridgeId) => {
         return { success: false, error: "Failed to create chatbot" };
     }
 };
-const removeBridgeInChatBot = async (chatbotId ,bridgeId) => {
+const removeBridgeInChatBot = async (chatbotId, bridgeId) => {
     try {
-       const updatedChatBot =  await ChatBotModel.findByIdAndUpdate({_id :chatbotId },
-            { $pull: { bridge:bridgeId } },
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
+            { $pull: { bridge: bridgeId } },
             { new: true },)
         return { success: true, chatBot: updatedChatBot };
     } catch (error) {
@@ -47,7 +47,7 @@ const getAll = async (org_id) => {
 
 const getOne = async (botId) => {
     try {
-        const chatbot = await ChatBotModel.findById(botId);
+        const chatbot = await ChatBotModel.findById(botId).populate('bridge');
         if (!chatbot) {
             return { success: false, error: "Chatbot not found" };
         }

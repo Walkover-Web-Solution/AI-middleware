@@ -1,12 +1,16 @@
 const ChatbotDbService = require('../db_services/ChatBotDbService');
 const responsetypeService = require('../db_services/responseTypeService');
 const configurationService = require("../db_services/ConfigurationServices");
+const { filterDataOfBridgeOnTheBaseOfUI } = require('../services/utils/getConfiguration');
+
+
 const createChatBot = async (req, res) => {
     const result = await ChatbotDbService.create(req.body);
     return res.status(result.success ? 201 : 400).json(result);
 };
-
+// action and frontend action hatane he 
 const getAllChatBots = async (req, res) => {
+
     const org_id = req.params.org_id;
     const result = await ChatbotDbService.getAll(org_id);
     return res.status(result.success ? 200 : 400).json(result);
@@ -60,28 +64,30 @@ const deleteBridge = async (req, res) => {
     const chatBot = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridgeId)
     return res.status(chatBot.success ? 200 : 404).json(chatBot);
 };
-const addorRemoveResponseIdInBridge = async (req, res) => {
+const addorRemoveResponseIdInBridge = async (req, res) => { // why using status ??
     const orgId = req.params?.orgId;
     const { bridgeId } = req.params;
     const { responseId, responseJson, status } = req.body;
     if (!responseId) return res.status(400).json({ success: false, message: "responseId is required" });
     let responseRefId = null;
-    if (responseJson) {
-        responseRefId = await responsetypeService.addResponseTypes(orgId, responseId, responseJson)
-    }
+    // if (responseJson) {
+    //     responseRefId = await responsetypeService.addResponseTypes(orgId, responseId, responseJson)
+    // }
 
-    let bridges = null
+    let result = null
     // Handle add or remove status
     if (status === 'add') {
-        bridges = await configurationService.addResponseIdinBridge(bridgeId, orgId, responseId, responseRefId);
+        console.log(bridgeId, orgId)
+        result = await configurationService.addResponseIdinBridge(bridgeId, orgId, responseId, responseRefId);
     } else if (status === 'remove') {
-        bridges = await configurationService.removeResponseIdinBridge(bridgeId, orgId, responseId);
+        result = await configurationService.removeResponseIdinBridge(bridgeId, orgId, responseId);
     } else {
         return res.status(400).json({ success: false, message: "Invalid status value" });
     }
 
+    filterDataOfBridgeOnTheBaseOfUI(result, bridgeId)
 
-    return res.status(bridges.success ? 200 : 404).json(bridges?.bridges);
+    return res.status(result.success ? 200 : 404).json(result?.bridges);
 }
 
 
