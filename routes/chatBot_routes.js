@@ -13,8 +13,10 @@ routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbo
 routes.route('/:orgId/createResponse').post(createAllDefaultResponseInOrg) // TODO --- remove orgid from here and from middlware 
 routes.route('/:orgId/getAllResponse').get(getAllDefaultResponseInOrg) // TODO --- remove orgid from here and from middlware; 
 
-routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
-routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
+// routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
+// routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
+routes.route('/:orgId/:botId/bridge/:bridgeId').put(addorRemoveBridgeInChatBot); // update chatbot actions
+
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
 routes.route('/test').post(sendMessageUsingChatBot);
