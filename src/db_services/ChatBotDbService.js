@@ -18,50 +18,26 @@ const create = async chatBotData => {
   }
 };
 const addBridgeInChatBot = async (chatbotId, bridgeId) => {
-  try {
-    const updatedChatBot = await ChatBotModel.findByIdAndUpdate({
-      _id: chatbotId
-    }, {
-      $addToSet: {
-        bridge: new mongoose.Types.ObjectId(bridgeId)
-      }
-    }, {
-      new: true
-    });
-    return {
-      success: true,
-      chatBot: updatedChatBot
-    };
-  } catch (error) {
-    console.log("Error in creating chatbot:", error);
-    return {
-      success: false,
-      error: "Failed to create chatbot"
-    };
-  }
+    try {
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
+            { $addToSet: { bridge: new mongoose.Types.ObjectId(bridgeId) } },
+            { new: true },)
+        return { success: true, chatBot: updatedChatBot };
+    } catch (error) {
+        console.log("Error in creating chatbot:", error);
+        return { success: false, error: "Failed to create chatbot" };
+    }
 };
 const removeBridgeInChatBot = async (chatbotId, bridgeId) => {
-  try {
-    const updatedChatBot = await ChatBotModel.findByIdAndUpdate({
-      _id: chatbotId
-    }, {
-      $pull: {
-        bridge: bridgeId
-      }
-    }, {
-      new: true
-    });
-    return {
-      success: true,
-      chatBot: updatedChatBot
-    };
-  } catch (error) {
-    console.log("Error in creating chatbot:", error);
-    return {
-      success: false,
-      error: "Failed to create chatbot"
-    };
-  }
+    try {
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
+            { $pull: { bridge: bridgeId } },
+            { new: true },)
+        return { success: true, chatBot: updatedChatBot };
+    } catch (error) {
+        console.log("Error in creating chatbot:", error);
+        return { success: false, error: "Failed to create chatbot" };
+    }
 };
 const getAll = async org_id => {
   try {
@@ -80,26 +56,18 @@ const getAll = async org_id => {
     };
   }
 };
-const getOne = async botId => {
-  try {
-    const chatbot = await ChatBotModel.findById(botId);
-    if (!chatbot) {
-      return {
-        success: false,
-        error: "Chatbot not found"
-      };
+
+const getOne = async (botId) => {
+    try {
+        const chatbot = await ChatBotModel.findById(botId).populate('bridge');
+        if (!chatbot) {
+            return { success: false, error: "Chatbot not found" };
+        }
+        return { success: true, chatbot };
+    } catch (error) {
+        console.log("Error in fetching chatbot:", error);
+        return { success: false, error: "Failed to retrieve chatbot" };
     }
-    return {
-      success: true,
-      chatbot
-    };
-  } catch (error) {
-    console.log("Error in fetching chatbot:", error);
-    return {
-      success: false,
-      error: "Failed to retrieve chatbot"
-    };
-  }
 };
 const update = async (botId, chatBotData) => {
   try {
