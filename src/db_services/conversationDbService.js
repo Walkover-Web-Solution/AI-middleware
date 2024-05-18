@@ -58,7 +58,7 @@ async function getHistory(bridge_id, timestamp) {
 
 
 async function findMessage(org_id, thread_id, bridge_id) {
-  console.log(thread_id , bridge_id)
+  // console.log(thread_id , bridge_id)
   let conversations  = await models.pg.conversations.findAll({
       attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
       include: [{

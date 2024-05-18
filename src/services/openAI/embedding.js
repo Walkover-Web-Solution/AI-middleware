@@ -1,7 +1,7 @@
 import { createEmbeddings } from "./runModel.js";
 const embeddings = async (configuration, apikey) => {
   try {
-    console.log(configuration, apikey);
+    // console.log(configuration, apikey);
     const {
       success,
       response,
