@@ -11,8 +11,8 @@ routes.route('/:orgId/createResponse').post(createAllDefaultResponseInOrg); // T
 routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
 routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
-routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // delete chatbot
+routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
 routes.route('/test').post(sendMessageUsingChatBot);
-routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge);
+routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge) // get chatbot of bridge
 // routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
 export default routes;
