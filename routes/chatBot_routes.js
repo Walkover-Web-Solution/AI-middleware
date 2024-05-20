@@ -20,7 +20,7 @@ routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
 routes.route('/test').post(sendMessageUsingChatBot);
 routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge) // get chatbot of bridge
-routes.route('/login').post(chatBotTokenDecode,loginUser)
+routes.route('/loginuser').post(chatBotTokenDecode, loginUser)
 routes.route('/:botId/updateconfig').post(updateChatBotConfig)
 routes.route('/:orgId/createtoken').post(createOrgToken)
 // routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
