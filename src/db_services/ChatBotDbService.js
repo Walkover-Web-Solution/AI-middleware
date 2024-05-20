@@ -211,6 +211,34 @@ const updateResponseTypes = async (chatBotId, responseType, gridId) => {
     };
   }
 };
+
+async function getChatBotConfig(botId) {
+  return await ChatBotModel.findById({ _id: botId }).select('config');
+}
+
+async function updateChatbotConfig(botId , config) {
+  try {
+    const chatBotData = await InterfaceModel.findByIdAndUpdate(
+      {
+        _id: botId,
+      },
+      {
+        $set: {
+          config :config
+        },
+      },
+      {
+        new: true,
+      },
+    );
+    return {success : true , chatbotData :chatBotData}
+  }
+  catch(e){
+    return {success : false ,  error: e.message}
+  }
+  
+}
+
 export default {
   create,
   getAll,
@@ -221,5 +249,7 @@ export default {
   updateAction,
   updateResponseTypes,
   addBridgeInChatBot,
-  removeBridgeInChatBot
+  removeBridgeInChatBot,
+  getChatBotConfig,
+  updateChatbotConfig
 };

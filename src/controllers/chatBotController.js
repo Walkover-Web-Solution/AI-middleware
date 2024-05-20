@@ -3,6 +3,19 @@ import responsetypeService from "../db_services/responseTypeService.js";
 import configurationService from "../db_services/ConfigurationServices.js";
 import { filterDataOfBridgeOnTheBaseOfUI } from "../services/utils/getConfiguration.js"
 import responseTypeService from "../db_services/responseTypeService.js";
+import {getToken} from "../services/utils/usersServices.js";
+import ChatBotDbService from "../db_services/ChatBotDbService.js";
+import { nanoid, customAlphabet } from 'nanoid';
+
+const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+function generateIdentifier(length = 12, prefix = '', includeNumber = true) {
+    const alphabet = includeNumber ? alphabetSet : alphabetSet.slice(0, alphabetSet.length - 10);
+    if (alphabet) {
+      const custom_nanoid = customAlphabet(alphabet, length);
+      return `${prefix}${custom_nanoid()}`;
+    }
+    return `${prefix}${nanoid(length)}`;
+  }
 // const { filterDataOfBridgeOnTheBaseOfUI } = require('../services/utils/getConfiguration');
 
 
@@ -177,6 +190,41 @@ const getChatBotOfBridge = async (req, res) => {
     return res.status(bridges?.success ? 200 : 404).json(bridges);
 };
 
+const updateChatBotConfig =async (req, res) =>{
+    const { botId } = req.params;
+    const chatBot = await ChatBotDbService.updateChatbotConfig(botId , config)
+    return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
+}
+
+
+const loginUser = async (req, res) => {
+  try {
+    const { chatbot_id, project_id , user_id } = req.Interface;
+    let chatBotConfig = {};
+    if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
+    const dataToSend = {
+      config: chatBotConfig.config,
+      userId: user_id,
+      token: `Bearer ${getToken({ userId: user_id })}`,
+      chatbot_id,
+      project_id,
+    };
+    return res.status(200).json({data: dataToSend,success :true});
+   
+  } catch (error) {
+    return res.status(400).json({error:error ,success:false});
+
+  }
+};
+
+
+const createOrgToken = async (req, res) => {
+      const { orgId } = req.params;
+     const org = await responseTypeService.createOrgToken(orgId,generateIdentifier(14))
+      return res.status(org?.success ? 200 : 404).json(org.orgData);
+
+  };
+
 export {
     createChatBot,
     getAllChatBots,
@@ -191,6 +239,9 @@ export {
     addorRemoveResponseIdInBridge,
     sendMessageUsingChatBot,
     getChatBotOfBridge,
-    getChatBotOfBridgeFunction
+    getChatBotOfBridgeFunction,
+    loginUser,
+    updateChatBotConfig,
+    createOrgToken
     // updateChatBotResponse
 };

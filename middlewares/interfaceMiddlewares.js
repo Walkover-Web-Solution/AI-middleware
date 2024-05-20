@@ -1,26 +1,21 @@
 import jwt from 'jsonwebtoken';
-import { getOrganizationById } from '../services/proxyService.js';
+import responseTypeService from '../src/db_services/responseTypeService.js';
 
-const InterfaceTokenDecode = async (req, res, next) => {
+const chatBotTokenDecode = async (req, res, next) => {
   const token = req?.get('Authorization');
-  const { isAnonymousUser, interface_id } = req?.body;
-  if (!token && !isAnonymousUser) {
+  if (!token) {
     return res.status(498).json({ message: 'invalid token' });
-  }
-  if (isAnonymousUser) {
-    req.Interface = { interface_id };
-    return next();
   }
   try {
     const decodedToken = jwt.decode(token);
     let orgToken;
     if (decodedToken) {
-      const orgTokenFromDb = await getOrganizationById(decodedToken.org_id);
-      orgToken = orgTokenFromDb?.meta?.auth_token;
+      const orgTokenFromDb = await responseTypeService.getAll(orgId)
+      orgToken = orgTokenFromDb?.orgAcessToken;
       if (orgToken) {
         const checkToken = jwt.verify(token, orgToken);
         if (checkToken) {
-          req.Interface = checkToken;
+          req.chatBot = checkToken;
           return next();
         }
         return res.status(404).json({ message: 'unauthorized user' });
@@ -54,4 +49,4 @@ const InterfaceAuth = async (req, res, next) => { // todo pending
   }
 };
 
-export { InterfaceTokenDecode, InterfaceAuth };
+export { chatBotTokenDecode, InterfaceAuth };
