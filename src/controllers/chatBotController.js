@@ -113,7 +113,6 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
         // Determine the operation to perform
         const operation = type === 'add' ? 'addBridgeInChatBot' : 'removeBridgeInChatBot';
         const chatBot = await ChatbotDbService[operation](chatbotId, bridgeId);
-
         // Fetch and process bridge data
         const result = await configurationService.getBridgesWithSelectedData(bridgeId);
         if (result?.bridges?.bridgeType === "chatbot") {
