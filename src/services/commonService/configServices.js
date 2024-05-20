@@ -7,6 +7,7 @@ import { updateBridgeSchema } from "../../../validation/joi_validation/bridge.js
 import { filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
+import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -171,7 +172,13 @@ const getBridges = async (req, res) => {
     const {
       bridge_id
     } = req.params;
+    const {
+      org_id
+    } = req.body;
     const result = await configurationService.getBridgesWithSelectedData(bridge_id);
+    if (result?.bridges?.bridgeType === "chatbot") {
+      result.bridges.chatbotData = await getChatBotOfBridgeFunction(org_id, bridge_id);
+    }
     if (!result.success) {
       return res.status(400).json(result);
     }
@@ -238,6 +245,9 @@ const updateBridges = async (req, res) => {
     let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
     const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey, bridgeType, slugName);
     filterDataOfBridgeOnTheBaseOfUI(result, bridge_id);
+    if (result?.bridges?.bridgeType === "chatbot") {
+      result.bridges.chatbotData = await getChatBotOfBridgeFunction(org_id, bridge_id);
+    }
     if (result.success) {
       return res.status(200).json(result);
     }
