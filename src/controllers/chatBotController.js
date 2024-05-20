@@ -175,22 +175,6 @@ const getAllDefaultResponseInOrg = async (req, res) => {
     const result = await responseTypeService.getAll(orgId)
     return res.status(result.success ? 200 : 404).json(result);
 }
-const sendMessageUsingChatBot = async (req, res) => {
-    const {
-        orgId
-    } = req.body;
-    const {
-        slugName,
-        threadId
-    } = req.body;
-    const {
-        bridges
-    } = await configurationService.getBridgeBySlugname(orgId, slugName);
-    bridges?.responseRef?.responseTypes.forEach(response => {
-        console.log(response);
-    });
-    return res.status(bridges?.success ? 200 : 404).json(bridges);
-};
 // Core function
 const getChatBotOfBridgeFunction = async (orgId, bridgeId) => {
     const { bridges } = await configurationService.findChatbotOfBridge(orgId, bridgeId);
@@ -250,7 +234,6 @@ export {
     getAllDefaultResponseInOrg,
     addorRemoveBridgeInChatBot,
     addorRemoveResponseIdInBridge,
-    sendMessageUsingChatBot,
     getChatBotOfBridge,
     getChatBotOfBridgeFunction,
     loginUser,
