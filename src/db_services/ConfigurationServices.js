@@ -30,7 +30,8 @@ const getAllBridges = async org_id => {
       org_id: 1,
       "configuration.model": 1,
       "configuration.prompt": 1,
-      "configuration.input": 1
+      "configuration.input": 1,
+      bridgeType: 1
     });
     return {
       success: true,
@@ -262,17 +263,17 @@ const getBridgeBySlugname = async (orgId, slugName) => {
   }
 };
 const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
-    try {
-        const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
-            $pull: {
-                responseIds: responseId,
-            }
-        }, { new: true });
-        return { success: true, bridges: bridges };
-    } catch (error) {
-        console.log("error:", error);
-        return { success: false, error: "something went wrong!!" }
-    }
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+      $pull: {
+        responseIds: responseId,
+      }
+    }, { new: true });
+    return { success: true, bridges: bridges };
+  } catch (error) {
+    console.log("error:", error);
+    return { success: false, error: "something went wrong!!" }
+  }
 
 }
 
@@ -280,7 +281,7 @@ const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
 const findChatbotOfBridge = async (orgId, bridgeId) => {
   try {
     const bridges = await ChatBotModel.find({
-      orgId: orgId,
+      orgId: "6095",
       bridge: bridgeId
     });
     return {
