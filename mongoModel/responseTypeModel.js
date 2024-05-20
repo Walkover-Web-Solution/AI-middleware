@@ -21,6 +21,9 @@ const ResponseTypeSchema = new Schema({
   },
   orgId: {
     type: String
+  },
+  orgAcessToken :{
+    type : String
   }
 });
 export default mongoose.model('ResponseType', ResponseTypeSchema);
