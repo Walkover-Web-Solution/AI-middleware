@@ -53,7 +53,7 @@ const chatBotAuth = async (req, res, next) => { // todo pending
 };
 const sendDataMiddleware = async (req, res, next) => { // todo pending
   const {
-    orgId,
+    org_id,
     slugName,
     threadId,
     message
@@ -61,27 +61,30 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
   const {
     bridges,
     success
-  } = await ConfigurationServices.getBridgeBySlugname(orgId, slugName);
+  } = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
   let responseTypes = '';
-  const responseTypesJson = bridges?.responseRef?.responseTypes
-  Object.keys(responseTypesJson).forEach(responseId => {
+  const responseTypesJson = bridges?.responseRef?.responseTypes|| {}
+  Object.keys(responseTypesJson).forEach((responseId , i ) => {
     const responseComponents = {
       responseId: responseId,
       ...responseTypesJson[responseId]?.components
     }
     responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   });
+  console.log(bridges?._id,234567890)
   if (!success) return res.status(400).json({ message: 'some error occured' });
   req.body = {
-    bridge_id: bridges?._id,
+    org_id,
+    bridge_id: bridges?._id?.toString(),
     service: 'openai',
     user: message,
     thread_id: threadId,
     variables: { ...req.body.interfaceContextData, responseTypes, message },
-    rtlOptions: {
-      channel: threadId,
-      ttl: 1,
-    },
+    apikey: process.env.GPT_KEY, 
+    // rtlOptions: {
+    //   channel: threadId,
+    //   ttl: 1,
+    // },
   };
   return next();
 };
