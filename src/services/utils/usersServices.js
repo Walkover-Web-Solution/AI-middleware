@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 const generateToken = (tokenInfo) => {
   const token = jwt.sign(
     { ...tokenInfo },
-    process.env.TOKEN_SECRET_KEY,
+    process.env.JWT_TOKEN_SECRET,
     { expiresIn: '48h' },
   );
 
@@ -13,7 +13,7 @@ const generateToken = (tokenInfo) => {
 const getToken = (data) => {
   const token = jwt.sign(
     { ...data },
-    process.env.TOKEN_SECRET_KEY,
+    process.env.JWT_TOKEN_SECRET,
     { expiresIn: '48h' },
   );
 
