@@ -23,6 +23,7 @@ const getchat = async (req, res) => {
       configuration,
       service
     } = req.body;
+    const org_id = req.profile?.org?.id
     const model = configuration?.model;
     let usage,
       modelResponse = {},
@@ -96,7 +97,6 @@ const prochat = async (req, res) => {
     bridge_id,
     configuration,
     thread_id,
-    org_id,
     user,
     tool_call,
     service,
@@ -104,6 +104,7 @@ const prochat = async (req, res) => {
     RTLayer = null,
     playground = false
   } = req.body;
+  const org_id = req.profile?.org?.id
   let usage = {},
     modelResponse = {},
     customConfig = {};
@@ -436,6 +437,7 @@ const getCompletion = async (req, res) => {
       configuration,
       service
     } = req.body;
+    const org_id = req.profile?.org?.id
     const model = configuration?.model;
     let usage,
       modelResponse = {},
@@ -505,11 +507,11 @@ const proCompletion = async (req, res) => {
     apikey,
     bridge_id,
     configuration,
-    org_id,
     prompt,
     service,
     variables
   } = req.body;
+  const org_id = req.profile?.org?.id
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},
@@ -724,6 +726,7 @@ const getEmbeddings = async (req, res) => {
       configuration,
       service
     } = req.body;
+    const org_id = req.profile?.org?.id
     const model = configuration?.model;
     let usage,
       modelResponse = {},
@@ -792,10 +795,10 @@ const proEmbeddings = async (req, res) => {
     apikey,
     bridge_id,
     configuration,
-    org_id,
     input,
     service
   } = req.body;
+  const org_id = req.profile?.org?.id
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},

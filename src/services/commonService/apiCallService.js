@@ -7,9 +7,9 @@ const createsApi = async (req, res) => {
       payload,
       url,
       desc,
-      status,
-      org_id
+      status
     } = req.body;
+    const org_id = req.profile?.org?.id
     const {
       bridge_id
     } = req.params;

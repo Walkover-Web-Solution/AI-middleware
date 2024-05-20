@@ -48,9 +48,7 @@ const getThreads = async (req, res) => {
       thread_id,
       bridge_id
     } = req.params;
-    const {
-      org_id
-    } = req.body;
+    const org_id = req.profile?.org?.id
     const threads = await getThreadHistory(thread_id, org_id, bridge_id);
     if (threads?.success) {
       return res.status(200).json(threads);
@@ -69,9 +67,7 @@ const getMessageHistory = async (req, res) => {
     const {
       bridge_id
     } = req.params;
-    const {
-      org_id
-    } = req.body;
+    const org_id = req.profile?.org?.id
     const threads = await getAllThreads(bridge_id, org_id);
     if (threads?.success) {
       return res.status(200).json(threads);
@@ -105,10 +101,10 @@ const createBridges = async (req, res) => {
   try {
     let {
       configuration,
-      org_id,
       service,
       bridgeType
     } = req.body;
+    const org_id = req.profile?.org?.id
     service = service ? service.toLowerCase() : "";
     if (!(service in services)) {
       return res.status(400).json({
@@ -147,9 +143,7 @@ const createBridges = async (req, res) => {
 };
 const getAllBridges = async (req, res) => {
   try {
-    const {
-      org_id
-    } = req.body;
+    const org_id = req.profile?.org?.id
     const result = await configurationService.getAllBridges(org_id);
     if (result.success) {
       return res.status(200).json({
@@ -194,12 +188,12 @@ const updateBridges = async (req, res) => {
     } = req.params;
     let {
       configuration,
-      org_id,
       service,
       apikey,
       bridgeType,
       slugName
     } = req.body;
+    const org_id = req.profile?.org?.id
     try {
       await updateBridgeSchema.validateAsync({
         bridge_id,
@@ -255,9 +249,9 @@ const updateBridgeType = async (req, res) => {
       bridge_id
     } = req.params;
     let {
-      bridgeType,
-      org_id
+      bridgeType
     } = req.body;
+    const org_id = req.profile?.org?.id
     const result = await configurationService.updateBridgeType(bridge_id, org_id, bridgeType);
     if (result.success) {
       return res.status(200).json(result);
@@ -276,9 +270,7 @@ const deleteBridges = async (req, res) => {
     const {
       bridge_id
     } = req.params;
-    const {
-      org_id
-    } = req.body;
+    const org_id = req.profile?.org?.id
     const result = await configurationService.deleteBridge(bridge_id, org_id);
     if (result.success) {
       return res.status(200).json(result);

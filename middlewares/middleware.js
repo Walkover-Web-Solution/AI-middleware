@@ -10,20 +10,16 @@ const middleware = async (req, res, next) => {
     });
   }
   try {
-    const decodedToken = jwt.decode(token);
-    if (decodedToken) {
-      const checkToken = jwt.verify(token, process.env.SecretKey);
-      console.log("checkToken=>", checkToken);
+    const checkToken = jwt.verify(token, process.env.SecretKey);
+    if (checkToken) {
       if (checkToken) {
         req.profile = checkToken;
-        req.body.org_id = checkToken?.org?.id;
         return next();
       }
       return res.status(404).json({
         message: 'unauthorized user'
       });
     }
-    console.log("decodedToken=>", decodedToken);
     return res.status(401).json({
       message: 'unauthorized user '
     });

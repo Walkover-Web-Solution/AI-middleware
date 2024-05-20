@@ -20,6 +20,8 @@ function generateIdentifier(length = 12, prefix = '', includeNumber = true) {
 
 
 const createChatBot = async (req, res) => {
+    const { org_id } = req.params;
+    const { id: user_id } = req.profile.user;
     const result = await ChatbotDbService.create(req.body);
     return res.status(result.success ? 201 : 400).json(result);
 };
@@ -206,10 +208,10 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id , user_id ,org_id} = req.chatBot;
+        const { chatbot_id, user_id, org_id } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
-        if (chatBotConfig.orgId !==  org_id) return res.status(401).json({  success: false ,message:"chat bot id is no valid" });
+        if (chatBotConfig.orgId !== org_id) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
@@ -239,6 +241,8 @@ export {
     updateChatBot,
     deleteChatBot,
     updateDetails,
+    updateBridge,
+    deleteBridge,
     updateChatBotAction,
     createAllDefaultResponseInOrg,
     getAllDefaultResponseInOrg,
