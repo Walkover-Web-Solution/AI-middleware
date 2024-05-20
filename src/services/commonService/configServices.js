@@ -106,7 +106,8 @@ const createBridges = async (req, res) => {
     let {
       configuration,
       org_id,
-      service
+      service,
+      bridgeType
     } = req.body;
     service = service ? service.toLowerCase() : "";
     if (!(service in services)) {
@@ -127,7 +128,8 @@ const createBridges = async (req, res) => {
       org_id,
       name: configuration?.name,
       service: service,
-      apikey: helper.encrypt("")
+      apikey: helper.encrypt(""),
+      bridgeType
     });
     if (result.success) {
       return res.status(200).json({
