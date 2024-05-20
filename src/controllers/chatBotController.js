@@ -207,9 +207,10 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id , user_id } = req.chatBot;
+        const { chatbot_id , user_id ,org_id} = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
+        if (chatBotConfig.orgId !==  org_id) return res.status(401).json({  success: false ,message:"chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,

@@ -10,7 +10,7 @@ const chatBotTokenDecode = async (req, res, next) => {
     const decodedToken = jwt.decode(token);
     let orgToken;
     if (decodedToken) {
-      const {chatBot :orgTokenFromDb} = await responseTypeService.getAll(orgId)
+      const {chatBot :orgTokenFromDb} = await responseTypeService.getAll(decodedToken?.org_id)
       orgToken = orgTokenFromDb?.orgAcessToken;
       if (orgToken) {
         const checkToken = jwt.verify(token, orgToken);
