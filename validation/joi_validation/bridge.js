@@ -1,6 +1,8 @@
 import Joi from "joi";
 const updateBridgeSchema = Joi.object({
   bridge_id: Joi.string().alphanum().required(),
+  bridgeType: Joi.string().valid('chatbot', 'api'),
+  slugName: Joi.string().alphanum(),
   configuration: Joi.object({
     model: Joi.string().when('service', {
       is: 'google',
