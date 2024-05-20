@@ -512,6 +512,7 @@ const getCompletion = async (req, res) => {
 };
 const proCompletion = async (req, res) => {
   const startTime = Date.now();
+  let thread_id=uuidv1()
   let {
     apikey,
     bridge_id,
@@ -566,6 +567,7 @@ const proCompletion = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let historyParams;
     switch (service) {
       case "openai":
         configuration["prompt"] = configuration?.prompt ? configuration.prompt + "\n" + prompt : prompt;
@@ -587,9 +589,20 @@ const proCompletion = async (req, res) => {
             orgId: org_id,
             latency: Date.now() - startTime,
             success: false,
-            error: openAIResponse?.error
+            error: openAIResponse?.error,
+            variables: variables
           };
-          metrics_sevice.create([usage]);
+          metrics_sevice.create([usage], {
+            thread_id: thread_id,
+            user: prompt,
+            message: "",
+            org_id: org_id,
+            bridge_id: bridge_id,
+            model: configuration?.model,
+            channel: 'completion',
+            type: "error",
+            actor:  "user"
+          });
           if (rtlLayer) {
             rtlayer.message({
               ...req.body,
@@ -615,6 +628,17 @@ const proCompletion = async (req, res) => {
         usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
         usage["expectedCost"] = usage.inputTokens / 1000 * modelOutputConfig.usage[0].total_cost.input_cost + usage.outputTokens / 1000 * modelOutputConfig.usage[0].total_cost.output_cost;
+        historyParams = {
+          thread_id: thread_id,
+          user: prompt,
+          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+          org_id: org_id,
+          bridge_id: bridge_id,
+          model: configuration?.model,
+          channel: 'completion',
+          type: _.get(modelResponse, modelOutputConfig.message) == null ? "completion" : "assistant",
+          actor:"user"
+        }; 
         break;
       case "google":
         let geminiConfig = {
@@ -661,17 +685,16 @@ const proCompletion = async (req, res) => {
         break;
     }
     const endTime = Date.now();
-    const thread_id = uuidv1();
-    savehistory(thread_id, prompt, _.get(modelResponse, modelOutputConfig.message), org_id, bridge_id, configuration?.model, 'completion', "assistant");
     usage = {
       ...usage,
       service: service,
       model: model,
       orgId: org_id,
       latency: endTime - startTime,
-      success: true
+      success: true,
+      variables: variables
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -704,7 +727,17 @@ const proCompletion = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],{
+      thread_id: thread_id,
+      user: user,
+      message: "",
+      org_id: org_id,
+      bridge_id: bridge_id,
+      model: configuration?.model,
+      channel: 'completion',
+      type: "error",
+      actor:  "user"
+    });
     console.log("proCompletion common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
