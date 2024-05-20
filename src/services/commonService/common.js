@@ -799,6 +799,7 @@ const getEmbeddings = async (req, res) => {
 };
 const proEmbeddings = async (req, res) => {
   const startTime = Date.now();
+  let thread_id = uuidv1();
   let {
     apikey,
     bridge_id,
@@ -852,6 +853,8 @@ const proEmbeddings = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let historyParams;
+    
     switch (service) {
       case "openai":
         customConfig["input"] = input || "";
@@ -866,7 +869,17 @@ const proEmbeddings = async (req, res) => {
             success: false,
             error: response?.error
           };
-          metrics_sevice.create([usage]);
+          metrics_sevice.create([usage],{
+            thread_id: thread_id,
+            user: input,
+            message: "",
+            org_id: org_id,
+            bridge_id: bridge_id,
+            model: configuration?.model,
+            channel: 'embedding',
+            type: "error",
+            actor: "user"
+          });
           if (rtlLayer) {
             rtlayer.message({
               ...req.body,
@@ -892,6 +905,17 @@ const proEmbeddings = async (req, res) => {
         usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
         usage["expectedCost"] = usage.totalTokens / 1000 * modelOutputConfig.usage[0].total_cost;
+        historyParams = {
+          thread_id: thread_id,
+          user: input,
+          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+          org_id: org_id,
+          bridge_id: bridge_id || null,
+          model: configuration?.model,
+          channel: 'embedding',
+          type: _.get(modelResponse, modelOutputConfig.message) == null ? "embedding" : "assistant",
+          actor: input ? "user" : "tool"
+        }
         break;
       case "google":
         let geminiConfig = {
@@ -938,8 +962,6 @@ const proEmbeddings = async (req, res) => {
         break;
     }
     const endTime = Date.now();
-    const thread_id = uuidv1();
-    savehistory(thread_id, input, JSON.stringify(_.get(modelResponse, modelOutputConfig.message)), org_id, bridge_id, configuration?.model, 'embedding', "assistant");
     usage = {
       ...usage,
       service: service,
@@ -948,7 +970,7 @@ const proEmbeddings = async (req, res) => {
       latency: endTime - startTime,
       success: true
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -981,7 +1003,17 @@ const proEmbeddings = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],{
+      thread_id: thread_id,
+      user: input,
+      message: "",
+      org_id: org_id,
+      bridge_id: bridge_id,
+      model: configuration?.model,
+      channel: 'embedding',
+      type: "error",
+      actor: "user"
+    });
     console.log("proembeddings common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
