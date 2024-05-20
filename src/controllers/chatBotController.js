@@ -32,6 +32,12 @@ const getOneChatBot = async (req, res) => {
     const result = await ChatbotDbService.getOne(req.params.botId);
     return res.status(result.success ? 200 : 404).json(result);
 };
+const getViewOnlyChatBot = async (req, res) => {
+    const {org_id} = req.body;
+    const result = await ChatbotDbService.getOneChatBotViewOnly(req.params.botId , org_id);
+    const orgData = await responseTypeService.getAll( org_id);
+    return res.status(result.success ? 200 : 404).json({...result, responseTypes: orgData.chatBot.responseTypes});
+};
 const updateChatBot = async (req, res) => {
     const result = await ChatbotDbService.update(req.params.botId, req.body);
     return res.status(result.success ? 200 : 400).json(result);
@@ -214,7 +220,7 @@ const loginUser = async (req, res) => {
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id })}`,
+            token: `Bearer ${getToken({ userId: user_id ,org_id})}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
@@ -250,6 +256,7 @@ export {
     getChatBotOfBridgeFunction,
     loginUser,
     updateChatBotConfig,
-    createOrgToken
+    createOrgToken , 
+    getViewOnlyChatBot
     // updateChatBotResponse
 };
