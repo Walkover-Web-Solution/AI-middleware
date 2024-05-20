@@ -14,24 +14,35 @@ const create = async (chatBotData) => {
 };
 const addBridgeInChatBot = async (chatbotId, bridgeId) => {
     try {
-        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
-            { $addToSet: { bridge: new mongoose.Types.ObjectId(bridgeId) } },
-            { new: true },)
+        // Directly update and populate in one go, reducing to a single database operation
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate(
+            chatbotId,
+            { $addToSet: { bridge: bridgeId } }, // Assuming bridgeId is already a valid ObjectId or a string that can be implicitly converted
+            { new: true, populate: 'bridge' } // Use the populate option directly in findByIdAndUpdate
+        );
+
+        if (!updatedChatBot) {
+            console.log("Chatbot not found or bridge not added");
+            return { success: false, error: "Chatbot not found or bridge not added" };
+        }
+
         return { success: true, chatBot: updatedChatBot };
     } catch (error) {
-        console.log("Error in creating chatbot:", error);
-        return { success: false, error: "Failed to create chatbot" };
+        console.log("Error in adding bridge to chatbot:", error);
+        return { success: false, error: "Failed to add bridge to chatbot" };
     }
 };
 const removeBridgeInChatBot = async (chatbotId, bridgeId) => {
     try {
-        const updatedChatBot = await ChatBotModel.findByIdAndUpdate({ _id: chatbotId },
+        const updatedChatBot = await ChatBotModel.findByIdAndUpdate(
+            chatbotId,
             { $pull: { bridge: bridgeId } },
-            { new: true },)
+            { new: true }
+        ).populate('bridge'); // Populate all bridges after removing the specified one
         return { success: true, chatBot: updatedChatBot };
     } catch (error) {
-        console.log("Error in creating chatbot:", error);
-        return { success: false, error: "Failed to create chatbot" };
+        console.log("Error in removing bridge from chatbot:", error);
+        return { success: false, error: "Failed to remove bridge from chatbot" };
     }
 };
 
