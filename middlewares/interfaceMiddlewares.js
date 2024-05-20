@@ -27,7 +27,7 @@ const chatBotTokenDecode = async (req, res, next) => {
     return res.status(401).json({ message: 'unauthorized user ', token });
   }
 };
-const InterfaceAuth = async (req, res, next) => { // todo pending
+const chatBotAuth = async (req, res, next) => { // todo pending
   let token = req?.get('Authorization');
   token = token.split(' ')?.[1] || token;
   if (!token) {
@@ -36,9 +36,11 @@ const InterfaceAuth = async (req, res, next) => { // todo pending
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
-      const checkToken = jwt.verify(token, process.env.TOKEN_SECRET_KEY);
+      const checkToken = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
       if (checkToken) {
         req.profile = checkToken;
+        console.log(checkToken)
+        req.body.org_id = checkToken?.org_id;
         if (!checkToken.user) req.profile.viewOnly = true;
         return next();
       }
@@ -49,4 +51,4 @@ const InterfaceAuth = async (req, res, next) => { // todo pending
   }
 };
 
-export { chatBotTokenDecode, InterfaceAuth };
+export { chatBotTokenDecode, chatBotAuth };

@@ -39,7 +39,7 @@ const removeBridgeInChatBot = async (chatbotId, bridgeId) => {
     return { success: false, error: "Failed to create chatbot" };
   }
 };
-const getAll = async org_id => {
+const getAll = async (org_id) => {
   try {
     const chatbots = await ChatBotModel.find({
       orgId: org_id
@@ -57,9 +57,22 @@ const getAll = async org_id => {
   }
 };
 
-const getOne = async (botId) => {
+
+const getOne = async (botId ) => {
   try {
-    const chatbot = await ChatBotModel.findById(botId).populate('bridge');
+    const chatbot = await ChatBotModel.findById(botId).populate('bridge')
+    if (!chatbot) {
+      return { success: false, error: "Chatbot not found" };
+    }
+    return { success: true, chatbot };
+  } catch (error) {
+    console.log("Error in fetching chatbot:", error);
+    return { success: false, error: "Failed to retrieve chatbot" };
+  }
+};
+const getOneChatBotViewOnly = async (botId , orgId) => {
+  try {
+    const chatbot = await ChatBotModel.findOne({_id:botId}).select({orgId:1 , title:1 ,config:1})
     if (!chatbot) {
       return { success: false, error: "Chatbot not found" };
     }
@@ -251,5 +264,6 @@ export default {
   addBridgeInChatBot,
   removeBridgeInChatBot,
   getChatBotConfig,
-  updateChatbotConfig
+  updateChatbotConfig,
+  getOneChatBotViewOnly
 };

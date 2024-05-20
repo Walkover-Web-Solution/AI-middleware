@@ -1,10 +1,12 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, loginUser, sendMessageUsingChatBot, updateChatBot, updateChatBotAction, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
-import { chatBotTokenDecode } from "../middlewares/interfaceMiddlewares.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, sendMessageUsingChatBot, updateChatBot, updateChatBotAction, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
+import {chatBotAuth, chatBotTokenDecode } from "../middlewares/interfaceMiddlewares.js";
 const routes = express.Router();
 routes.route('/').post(createChatBot); // create chatbot
 routes.route('/:org_id/all').get(getAllChatBots); // get all chatbot
 routes.route('/:botId').get(getOneChatBot); // get one chatbot
+routes.route('/:botId/getchatbot').get(chatBotAuth,getViewOnlyChatBot); // get one chatbot
+
 routes.route('/:botId').put(updateChatBot); // update chatbot
 routes.route('/:botId/updateDetails').put(updateDetails); // update chatbot details
 routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
