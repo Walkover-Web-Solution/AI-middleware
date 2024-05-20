@@ -46,24 +46,32 @@ const updateChatBotAction = async (req, res) => {
 };
 
 const addorRemoveBridgeInChatBot = async (req, res) => {
-    const {type} = req.query
-    const chatbotId = req.params?.botId;
-    const orgId = req.params?.orgId;
-    const { bridgeId } = req.params;
-    const { bridges } = await configurationService.getBridges(bridgeId)
-    if (bridges.org_id != orgId) return res.status(401).json({ success: false, message: "invalid orgid" });
+    const { type } = req.query;
+    const { botId: chatbotId, orgId, bridgeId } = req.params;
 
-
-    if (type == 'add'){
-          const chatBot = await ChatbotDbService.addBridgeInChatBot(chatbotId, bridgeId)
-          return res.status(chatBot.success ? 200 : 404).json(chatBot);
-    }
-    else if (type == 'remove'){
-        const chatBot = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridgeId)
-            return res.status(chatBot.success ? 200 : 404).json(chatBot);
-    }
-    else {
+    // Validate operation type early
+    if (!['add', 'remove'].includes(type)) {
         return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
+    try {
+        // Determine the operation to perform
+        const operation = type === 'add' ? 'addBridgeInChatBot' : 'removeBridgeInChatBot';
+        const chatBot = await ChatbotDbService[operation](chatbotId, bridgeId);
+
+        // Fetch and process bridge data
+        const result = await configurationService.getBridgesWithSelectedData(bridgeId);
+        if (result?.bridges?.bridgeType === "chatbot") {
+            result.bridges.chatbotData = await getChatBotOfBridgeFunction(orgId, bridgeId);
+        }
+        filterDataOfBridgeOnTheBaseOfUI(result, bridgeId);
+
+        // Return the combined result
+        return res.status(chatBot.success ? 200 : 404).json({ chatBot, result });
+    } catch (error) {
+        // Handle any unexpected errors
+        console.error("Error in addorRemoveBridgeInChatBot:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 

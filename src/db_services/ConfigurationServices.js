@@ -158,7 +158,11 @@ const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
 
 const findChatbotOfBridge = async (orgId, bridgeId) => {
     try {
-        const bridges = await ChatBotModel.find({ orgId: orgId, bridge: bridgeId });
+        console.log("orgid", orgId)
+        // const bridges1 = await ChatBotModel.find({ orgId: "6095" })
+        // console.log(bridges1, "bridges1bridges1")
+        const bridges = await ChatBotModel.find({ orgId: "6095", bridge: { $in: [bridgeId] } });
+        console.log(bridges)
         return { success: true, bridges: bridges }
     } catch (error) {
         console.log("error:", error)
