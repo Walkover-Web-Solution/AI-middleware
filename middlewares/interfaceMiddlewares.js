@@ -36,7 +36,7 @@ const chatBotAuth = async (req, res, next) => { // todo pending
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
-      const checkToken = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
+      const checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
       if (checkToken) {
         req.profile = checkToken;
         console.log(checkToken)
