@@ -39,11 +39,14 @@ const removeBridgeInChatBot = async (chatbotId, bridgeId) => {
     return { success: false, error: "Failed to create chatbot" };
   }
 };
+
 const getAll = async org_id => {
   try {
-    const chatbots = await ChatBotModel.find({
-      orgId: org_id
-    });
+    // Assuming 'bridge' is the field to populate and it contains a 'name' field
+    const chatbots = await ChatBotModel.find({ orgId: org_id })
+      .populate('bridge', 'name') // Add 'name' to select only the name of the bridge
+      .exec(); // Execute the query
+
     return {
       success: true,
       chatbots
@@ -213,7 +216,7 @@ const updateResponseTypes = async (chatBotId, responseType, gridId) => {
 };
 
 async function getChatBotConfig(botId) {
-  return await ChatBotModel.findById({ _id: botId }).select({'config': 1,'orgId' :1});
+  return await ChatBotModel.findById({ _id: botId }).select({ 'config': 1, 'orgId': 1 });
 }
 
 async function updateChatbotConfig(botId, config) {
