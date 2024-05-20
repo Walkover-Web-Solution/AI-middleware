@@ -207,7 +207,7 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id, project_id, user_id } = req.Interface;
+        const { chatbot_id , user_id } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         const dataToSend = {
@@ -215,7 +215,6 @@ const loginUser = async (req, res) => {
             userId: user_id,
             token: `Bearer ${getToken({ userId: user_id })}`,
             chatbot_id,
-            project_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
 
