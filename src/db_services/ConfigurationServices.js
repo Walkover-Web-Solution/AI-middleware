@@ -45,7 +45,7 @@ const getAllBridges = async org_id => {
     };
   }
 };
-const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
+const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeType, slugName) => {
   try {
     const bridges = await configurationModel.findOneAndUpdate({
       _id: bridge_id,
@@ -54,7 +54,9 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
       configuration: configuration,
       name: configuration?.name,
       service: configuration?.service,
-      apikey: apikey
+      apikey: apikey,
+      bridgeType: bridgeType,
+      slugName: slugName
     }, {
       new: true,
       projection: {
