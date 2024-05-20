@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import responseTypeService from '../src/db_services/responseTypeService.js';
+import ConfigurationServices from '../src/db_services/ConfigurationServices.js';
 
 const chatBotTokenDecode = async (req, res, next) => {
   const token = req?.get('Authorization');
@@ -10,7 +11,7 @@ const chatBotTokenDecode = async (req, res, next) => {
     const decodedToken = jwt.decode(token);
     let orgToken;
     if (decodedToken) {
-      const {chatBot :orgTokenFromDb} = await responseTypeService.getAll(decodedToken?.org_id)
+      const { chatBot: orgTokenFromDb } = await responseTypeService.getAll(decodedToken?.org_id)
       orgToken = orgTokenFromDb?.orgAcessToken;
       if (orgToken) {
         const checkToken = jwt.verify(token, orgToken);
@@ -50,5 +51,39 @@ const chatBotAuth = async (req, res, next) => { // todo pending
     return res.status(401).json({ message: 'unauthorized user' });
   }
 };
+const sendDataMiddleware = async (req, res, next) => { // todo pending
+  const {
+    orgId,
+    slugName,
+    threadId,
+    message
+  } = req.body;
+  const {
+    bridges,
+    success
+  } = await ConfigurationServices.getBridgeBySlugname(orgId, slugName);
+  let responseTypes = '';
+  const responseTypesJson = bridges?.responseRef?.responseTypes
+  Object.keys(responseTypesJson).forEach(responseId => {
+    const responseComponents = {
+      responseId: responseId,
+      ...responseTypesJson[responseId]?.components
+    }
+    responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
+  });
+  if (!success) return res.status(400).json({ message: 'some error occured' });
+  req.body = {
+    bridge_id: bridges?._id,
+    service: 'openai',
+    user: message,
+    thread_id: threadId,
+    variables: { ...req.body.interfaceContextData, responseTypes, message },
+    rtlOptions: {
+      channel: threadId,
+      ttl: 1,
+    },
+  };
+  return next();
+};
 
-export { chatBotTokenDecode, chatBotAuth };
+export { chatBotTokenDecode, chatBotAuth, sendDataMiddleware };

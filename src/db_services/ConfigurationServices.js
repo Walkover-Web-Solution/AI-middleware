@@ -247,7 +247,7 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 // get bridge with slugname
 const getBridgeBySlugname = async (orgId, slugName) => {
   try {
-    console.log(orgId, slugName);
+    
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
