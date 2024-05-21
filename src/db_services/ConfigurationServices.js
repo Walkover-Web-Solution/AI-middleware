@@ -246,12 +246,12 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 
 // get bridge with slugname
 
-const getBridgeIdBySlugname = async (orgId, slugName) =>{
+const getBridgeIdBySlugname = async (orgId, slugName) => {
   try {
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).select({_id:1 ,slugName :1 })
+    }).select({ _id: 1, slugName: 1 })
     return {
       success: true,
       bridgeId: bridges._id
@@ -269,7 +269,7 @@ const getBridgeBySlugname = async (orgId, slugName) => {
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).populate('responseRef');
+    }).populate('responseRef').lean();
     return {
       success: true,
       bridges: bridges

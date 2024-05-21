@@ -54,18 +54,22 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
   const {
     org_id,
     slugName,
-    threadId: initialThreadId,
+    threadId,
     message,
   } = req.body;
+  const { user_id } = req.profile;
   const { botId: chatBotId } = req.params;
-  let threadId = initialThreadId;
+  let channelId = chatBotId + user_id;
+  if (threadId?.trim()) { channelId = chatBotId + threadId; }
+
   const {
     bridges,
     success
   } = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
+
   let responseTypes = '';
   const responseTypesJson = bridges?.responseRef?.responseTypes || {}
-  Object.keys(responseTypesJson).forEach((responseId, i) => {
+  bridges?.responseIds?.forEach((responseId, i) => {
     const responseComponents = {
       responseId: responseId,
       ...responseTypesJson[responseId]?.components
@@ -73,8 +77,7 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   });
   if (!success) return res.status(400).json({ message: 'some error occured' });
-  if (threadId?.trim()) { threadId = chatBotId + threadId; } else { threadId = chatBotId};
-  
+
   req.body = {
     org_id,
     bridge_id: bridges?._id?.toString(),
@@ -82,9 +85,9 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     user: message,
     thread_id: threadId,
     variables: { ...req.body.interfaceContextData, responseTypes, message },
-    apikey: process.env.GPT_KEY, 
+    apikey: process.env.GPT_KEY,
     rtlOptions: {
-      channel: threadId,
+      channel: channelId,
       ttl: 1,
     },
   };
