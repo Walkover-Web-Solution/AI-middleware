@@ -44,7 +44,7 @@ module.exports = {
       throw error;
     }
   },
-
+// eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
@@ -53,7 +53,6 @@ module.exports = {
       await queryInterface.removeColumn('raw_data', 'is_present', { transaction });
       await queryInterface.removeColumn('raw_data', 'variables', { transaction });
       await queryInterface.removeColumn('raw_data', 'chat_id', { transaction });
-
      
       await transaction.commit();
     } catch (error) {

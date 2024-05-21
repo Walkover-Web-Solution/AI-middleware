@@ -36,7 +36,7 @@ class conversationService {
     try {
       let threads = [];
       console.log("converstion=>", conversation);
-      const previousRole = "model";
+      let previousRole = "model";
       conversation.forEach(messages => {
         let chat = {};
         const role = messages.role;

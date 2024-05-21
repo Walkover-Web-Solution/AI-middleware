@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import assert from "assert";
 class Helper {
   static encrypt(text) {
     const algorithm = process.env.ALGORITHM;
