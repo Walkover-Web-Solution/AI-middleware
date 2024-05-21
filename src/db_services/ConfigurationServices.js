@@ -245,9 +245,27 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 };
 
 // get bridge with slugname
+
+const getBridgeIdBySlugname = async (orgId, slugName) =>{
+  try {
+    const bridges = await configurationModel.findOne({
+      slugName: slugName,
+      org_id: orgId
+    }).select({_id:1 ,slugName :1 })
+    return {
+      success: true,
+      bridgeId: bridges._id
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+}
 const getBridgeBySlugname = async (orgId, slugName) => {
   try {
-    console.log(orgId, slugName,2134)
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
@@ -312,5 +330,6 @@ export default {
   removeResponseIdinBridge,
   getBridgeBySlugname,
   findChatbotOfBridge,
-  updateBridgeType
+  updateBridgeType,
+  getBridgeIdBySlugname
 };

@@ -45,13 +45,19 @@ const getAIModels = async (req, res) => {
 };
 const getThreads = async (req, res) => {
   try {
+    let {bridge_id} = req.params
     const {
       thread_id,
-      bridge_id
+      bridge_slugName
     } = req.params;
     const {
       org_id
     } = req.body;
+    if (bridge_slugName){
+      console.log(bridge_slugName);
+       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id,bridge_slugName))?.bridgeId
+       bridge_id= bridge_id?.toString();
+    }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id);
     if (threads?.success) {
       return res.status(200).json(threads);
