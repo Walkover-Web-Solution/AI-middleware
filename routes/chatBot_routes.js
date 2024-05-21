@@ -22,7 +22,7 @@ routes.route('/:orgId/:botId/bridge/:bridgeId').put(addorRemoveBridgeInChatBot);
 
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
-routes.route('/sendMessage').post(chatBotAuth,sendDataMiddleware,common.prochat);
+routes.route('/:botId/sendMessage').post(chatBotAuth,sendDataMiddleware,common.prochat);
 routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge) // get chatbot of bridge
 routes.route('/loginuser').post(chatBotTokenDecode, loginUser)
 routes.route('/:botId/updateconfig').post(updateChatBotConfig)

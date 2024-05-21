@@ -40,7 +40,6 @@ const chatBotAuth = async (req, res, next) => { // todo pending
       const checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
       if (checkToken) {
         req.profile = checkToken;
-        console.log(checkToken)
         req.body.org_id = checkToken?.org_id;
         if (!checkToken.user) req.profile.viewOnly = true;
         return next();
@@ -55,9 +54,11 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
   const {
     org_id,
     slugName,
-    threadId,
-    message
+    threadId: initialThreadId,
+    message,
   } = req.body;
+  const { botId: chatBotId } = req.params;
+  let threadId = initialThreadId;
   const {
     bridges,
     success
@@ -71,8 +72,9 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     }
     responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   });
-  console.log(bridges?._id,234567890)
   if (!success) return res.status(400).json({ message: 'some error occured' });
+  if (threadId?.trim()) { threadId = chatBotId + threadId; } else { threadId = chatBotId};
+  
   req.body = {
     org_id,
     bridge_id: bridges?._id?.toString(),
@@ -81,10 +83,10 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     thread_id: threadId,
     variables: { ...req.body.interfaceContextData, responseTypes, message },
     apikey: process.env.GPT_KEY, 
-    // rtlOptions: {
-    //   channel: threadId,
-    //   ttl: 1,
-    // },
+    rtlOptions: {
+      channel: threadId,
+      ttl: 1,
+    },
   };
   return next();
 };

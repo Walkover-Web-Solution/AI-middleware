@@ -46,6 +46,7 @@ const getChatData = async chat_id => {
 };
 const getThreadHistory = async (thread_id, org_id, bridge_id) => {
   try {
+    console.log(org_id, thread_id, bridge_id,123454234)
     const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id);
     return {
       success: true,
