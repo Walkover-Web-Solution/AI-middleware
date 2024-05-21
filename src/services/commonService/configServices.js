@@ -45,7 +45,7 @@ const getAIModels = async (req, res) => {
 };
 const getThreads = async (req, res) => {
   try {
-    let {bridge_id} = req.params
+    let { bridge_id } = req.params
     const {
       thread_id,
       bridge_slugName
@@ -53,10 +53,9 @@ const getThreads = async (req, res) => {
     const {
       org_id
     } = req.body;
-    if (bridge_slugName){
-      console.log(bridge_slugName);
-       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id,bridge_slugName))?.bridgeId
-       bridge_id= bridge_id?.toString();
+    if (bridge_slugName) {
+      bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
+      bridge_id = bridge_id?.toString();
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id);
     if (threads?.success) {
