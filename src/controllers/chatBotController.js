@@ -169,6 +169,14 @@ const createAllDefaultResponseInOrg = async (req, res) => {
     const result = await responsetypeService.create(orgId);
     return res.status(result.success ? 200 : 404).json(result);
 };
+
+const updateAllDefaultResponseInOrg = async (req, res) => {
+    const orgId = req.params?.orgId;
+    const { responseJson } = req.body;
+    const result = await responsetypeService.update(orgId, responseJson);
+    return res.status(result.success ? 200 : 404).json(result);
+};
+
 const getAllDefaultResponseInOrg = async (req, res) => {
     const orgId = req.params?.orgId;
     const result = await responseTypeService.getAll(orgId)
@@ -230,6 +238,7 @@ export {
     updateDetails,
     updateChatBotAction,
     createAllDefaultResponseInOrg,
+    updateAllDefaultResponseInOrg,
     getAllDefaultResponseInOrg,
     addorRemoveBridgeInChatBot,
     addorRemoveResponseIdInBridge,
