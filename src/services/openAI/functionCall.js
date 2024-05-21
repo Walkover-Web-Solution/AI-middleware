@@ -37,7 +37,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             rtlayer.message({
                 body,
                 message: "Going to GPT",
-                function_call:true,
+                function_call:false,
                 success: true
             },body.rtlOptions).then((data) => {
                 //("RTLayer message sent", data);

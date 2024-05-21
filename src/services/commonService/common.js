@@ -387,6 +387,7 @@ const prochat = async (req, res) => {
     if (rtlLayer && !playground) {
       rtlayer.message({
         ...req.body,
+        function_call: false,
         response: modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
