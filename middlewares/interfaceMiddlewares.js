@@ -30,7 +30,7 @@ const chatBotTokenDecode = async (req, res, next) => {
 };
 const chatBotAuth = async (req, res, next) => { // todo pending
   let token = req?.get('Authorization');
-  token = token.split(' ')?.[1] || token;
+  token = token?.split(' ')?.[1] || token;
   if (!token) {
     return res.status(498).json({ message: 'invalid token' });
   }
@@ -63,15 +63,15 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     success
   } = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
   let responseTypes = '';
-  const responseTypesJson = bridges?.responseRef?.responseTypes|| {}
-  Object.keys(responseTypesJson).forEach((responseId , i ) => {
+  const responseTypesJson = bridges?.responseRef?.responseTypes || {}
+  Object.keys(responseTypesJson).forEach((responseId, i) => {
     const responseComponents = {
       responseId: responseId,
       ...responseTypesJson[responseId]?.components
     }
     responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   });
-  console.log(bridges?._id,234567890)
+  console.log(bridges?._id, 234567890)
   if (!success) return res.status(400).json({ message: 'some error occured' });
   req.body = {
     org_id,
@@ -80,7 +80,7 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     user: message,
     thread_id: threadId,
     variables: { ...req.body.interfaceContextData, responseTypes, message },
-    apikey: process.env.GPT_KEY, 
+    apikey: process.env.GPT_KEY,
     // rtlOptions: {
     //   channel: threadId,
     //   ttl: 1,
