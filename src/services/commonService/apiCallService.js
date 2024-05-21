@@ -26,13 +26,13 @@ const createsApi = async (req, res) => {
       let requiredParams = [];
       if (body) {
         const keys = Object.keys(body);
-        keys.forEach((key, index) => {
+        keys.forEach((key) => {
           const value = body[key];
           if (value === "your_value_here") {
             requiredParams.push(key);
           }
         });
-        const params = requiredParams.join();
+        // const params = requiredParams.join();
         axiosCode = `return axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
       let apiId = "";
@@ -51,7 +51,7 @@ const createsApi = async (req, res) => {
         });
       }
       const apiObjectID = response.apiObjectID;
-      const openApiFormat = createOpenAPI(endpoint, desc, requiredParams, []);
+      const openApiFormat = createOpenAPI(endpoint, desc, requiredParams);
       const result = await common.getAndUpdate(apiObjectID, bridge_id, org_id, openApiFormat.format, endpoint, requiredParams);
       if (result.success) {
         return res.status(200).json({
@@ -122,7 +122,7 @@ const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_descripti
     };
   }
 };
-const createOpenAPI= (endpoint,desc,required_fields=[],optional_fields=[])=>{
+const createOpenAPI= (endpoint,desc,required_fields=[])=>{
   try {
       let format={
           "type": "function",

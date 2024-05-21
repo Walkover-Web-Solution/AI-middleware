@@ -2,6 +2,7 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
     CREATE OR REPLACE FUNCTION insert_into_five_min_data(job_id int, config jsonb)
@@ -34,6 +35,7 @@ module.exports = {
 `)
 
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     let jobId = 0;
     await queryInterface.sequelize.query(`
