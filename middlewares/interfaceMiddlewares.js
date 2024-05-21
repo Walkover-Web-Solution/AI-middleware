@@ -85,7 +85,6 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     user: message,
     thread_id: threadId,
     variables: { ...req.body.interfaceContextData, responseTypes, message },
-    apikey: process.env.GPT_KEY,
     rtlOptions: {
       channel: channelId,
       ttl: 1,
