@@ -1,19 +1,20 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser , updateChatBot, updateChatBotAction, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
-import {chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../middlewares/interfaceMiddlewares.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotAction, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
+import { chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../middlewares/interfaceMiddlewares.js";
 import common from "../src/services/commonService/common.js";
 
 const routes = express.Router();
 routes.route('/').post(createChatBot); // create chatbot
 routes.route('/:org_id/all').get(getAllChatBots); // get all chatbot
 routes.route('/:botId').get(getOneChatBot); // get one chatbot
-routes.route('/:botId/getchatbot').get(chatBotAuth,getViewOnlyChatBot); // get one chatbot
+routes.route('/:botId/getchatbot').get(chatBotAuth, getViewOnlyChatBot); // get one chatbot
 
 routes.route('/:botId').put(updateChatBot); // update chatbot
 routes.route('/:botId/updateDetails').put(updateDetails); // update chatbot details
 routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
 
 routes.route('/:orgId/createResponse').post(createAllDefaultResponseInOrg) // TODO --- remove orgid from here and from middlware 
+routes.route('/:orgId/updateResponse').post(updateAllDefaultResponseInOrg) // TODO --- remove orgid from here and from middlware 
 routes.route('/:orgId/getAllResponse').get(getAllDefaultResponseInOrg) // TODO --- remove orgid from here and from middlware; 
 
 // routes.route('/:orgId/:botId/bridge/:bridgeId').put(updateBridge); // update chatbot actions
@@ -22,7 +23,7 @@ routes.route('/:orgId/:botId/bridge/:bridgeId').put(addorRemoveBridgeInChatBot);
 
 routes.route('/:botId').delete(deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(addorRemoveResponseIdInBridge); // done on frontend 
-routes.route('/:botId/sendMessage').post(chatBotAuth,sendDataMiddleware,common.prochat);
+routes.route('/:botId/sendMessage').post(chatBotAuth, sendDataMiddleware, common.prochat);
 routes.route('/:orgId/:bridgeId').get(getChatBotOfBridge) // get chatbot of bridge
 routes.route('/loginuser').post(chatBotTokenDecode, loginUser)
 routes.route('/:botId/updateconfig').post(updateChatBotConfig)

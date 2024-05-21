@@ -20,6 +20,28 @@ const create = async orgId => {
   }
 };
 
+
+const update = async (orgId, updateData) => {
+  try {
+    const temp = await responseTypeModel.findOneAndUpdate(
+      { orgId: orgId },
+      { $set: { responseTypes: updateData } },
+      { new: true, upsert: true } // upsert: true creates a new document if no matching document is found
+    );
+    console.log('Document updated:', temp);
+    return {
+      success: true,
+      chatBot: temp
+    };
+  } catch (error) {
+    console.error('Error updating document:', error);
+    return {
+      success: false,
+      error: "Failed to update response in org"
+    };
+  }
+};
+
 const getAll = async (orgId) => {
   try {
     const temp = await responseTypeModel.findOne({
@@ -77,5 +99,6 @@ export default {
   create,
   addResponseTypes,
   getAll,
-  createOrgToken
+  createOrgToken,
+  update
 };
