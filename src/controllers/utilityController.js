@@ -1,11 +1,10 @@
 
-
-
-
 const defaulResponseMigration = async (req, res) => {
 
-    
-
-    return res.status(result.success ? 201 : 400).json(result);
+    const result = [];
+    return res.status(200).json(result);
 
 }
+export {
+    defaulResponseMigration
+};
