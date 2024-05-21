@@ -37,8 +37,8 @@ const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id) => {
   const modelfunc = ModelsConfig[modelname];
   let modelConfig = modelfunc().configuration;
   for (const key in modelConfig) {
-    if (configuration.hasOwnProperty(key)) {
-      modelConfig[key].default = configuration[key];
+    if (Object.prototype.hasOwnProperty.call(configuration, key)) {
+       modelConfig[key].default = configuration[key];
     }
   }
   let customConfig = modelConfig;

@@ -154,7 +154,7 @@ const deleteBridge = async (bridge_id, org_id) => {
 };
 const updateToolsCalls = async (bridge_id, org_id, configuration, api_endpoints, api_call) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({
+    await configurationModel.findOneAndUpdate({
       _id: bridge_id,
       org_id: org_id
     }, {

@@ -8,7 +8,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
-        allowNull: false,
         primaryKey: true,
       },
       org_id: {
@@ -48,7 +47,7 @@ module.exports = {
       }
     });
   },
-
+// eslint-disable-next-line no-unused-vars
   async down (queryInterface, Sequelize) {
     await queryInterface.dropTable('raw_data');
   }
