@@ -1,7 +1,7 @@
 import { services } from "../../../config/models.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { chats } from "../openAI/chat.js";
-import { getThread, savehistory } from "../../controllers/conversationContoller.js";
+import { getThread } from "../../controllers/conversationContoller.js";
 import conversationService from "./createConversation.js";
 import { sendRequest } from "../utils/request.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
@@ -16,7 +16,6 @@ import {v1 as uuidv1} from 'uuid';
 
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
-
 const getchat = async (req, res) => {
   try {
     let {
@@ -25,8 +24,8 @@ const getchat = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    let usage,
-      modelResponse = {},
+    // let usage,
+    let modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["chat"].has(model))) {
@@ -39,7 +38,7 @@ const getchat = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      outputConfig: modelOutputConfig
+      // outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -60,7 +59,7 @@ const getchat = async (req, res) => {
             error: openAIResponse?.error
           });
         }
-        usage = modelResponse[modelOutputConfig["usage"]];
+        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
         let geminiConfig = {
@@ -110,6 +109,7 @@ const prochat = async (req, res) => {
     customConfig = {};
   let model = configuration?.model;
   let rtlLayer = false;
+  let webhook, headers;
   try {
     const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
     if (!getconfig.success) {
@@ -131,10 +131,9 @@ const prochat = async (req, res) => {
         error: "model or service does not exist!"
       });
     }
-    const {
-      webhook,
-      headers = {}
-    } = configuration;
+    webhook = configuration.webhook;
+    headers = configuration.headers || {};
+
     if ((rtlLayer || webhook) && !playground) {
       res.status(200).json({
         success: true,
@@ -449,8 +448,8 @@ const getCompletion = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    let usage,
-      modelResponse = {},
+    // let usage,
+    let modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["completion"].has(model))) {
@@ -463,7 +462,7 @@ const getCompletion = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      outputConfig: modelOutputConfig
+      // outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -482,7 +481,7 @@ const getCompletion = async (req, res) => {
             error: openAIResponse?.error
           });
         }
-        usage = modelResponse[modelOutputConfig["usage"]];
+        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
         let geminiConfig = {
@@ -523,6 +522,7 @@ const proCompletion = async (req, res) => {
     service,
     variables
   } = req.body;
+  let webhook, headers;
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},
@@ -547,10 +547,8 @@ const proCompletion = async (req, res) => {
         error: "model or service does not exist!"
       });
     }
-    const {
-      webhook,
-      headers = {}
-    } = configuration;
+    webhook = configuration.webhook;
+    headers = configuration.headers || {};
     if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
@@ -730,7 +728,7 @@ const proCompletion = async (req, res) => {
     };
     metrics_sevice.create([usage],{
       thread_id: thread_id,
-      user: user,
+      user: prompt,
       message: "",
       org_id: org_id,
       bridge_id: bridge_id,
@@ -770,8 +768,8 @@ const getEmbeddings = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    let usage,
-      modelResponse = {},
+    // let usage,
+    let  modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["embedding"].has(model))) {
@@ -784,7 +782,7 @@ const getEmbeddings = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      outputConfig: modelOutputConfig
+      // outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -802,7 +800,7 @@ const getEmbeddings = async (req, res) => {
             error: openAIResponse?.error
           });
         }
-        usage = modelResponse[modelOutputConfig["usage"]];
+        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
         let geminiConfig = {
@@ -842,6 +840,7 @@ const proEmbeddings = async (req, res) => {
     input,
     service
   } = req.body;
+  let webhook, headers;
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},
@@ -866,10 +865,8 @@ const proEmbeddings = async (req, res) => {
         error: "model or service does not exist!"
       });
     }
-    const {
-      webhook,
-      headers = {}
-    } = configuration;
+    webhook = configuration.webhook;
+    headers = configuration.headers || {};
     if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
