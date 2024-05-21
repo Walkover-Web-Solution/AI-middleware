@@ -1,5 +1,6 @@
 import responseTypeModel from "../../mongoModel/responseTypeModel.js";
 import defaultResponseJson from "../services/utils/defaultResponseConfig.js";
+
 const create = async orgId => {
   try {
     const temp = await responseTypeModel.create({
@@ -58,12 +59,12 @@ const createOrgToken = async (orgId, token) => {
       orgId: orgId
     }, {
       $set: {
-        orgAcessToken :  token
+        orgAcessToken: token
       }
     }, {
       new: true
     });
-   return {success : true , orgData }
+    return { success: true, orgData }
   } catch (error) {
     return {
       success: false,
