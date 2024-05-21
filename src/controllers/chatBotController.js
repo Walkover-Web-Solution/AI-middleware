@@ -25,7 +25,7 @@ const createChatBot = async (req, res) => {
 };
 const getAllChatBots = async (req, res) => {
     // const org_id = req.params.org_id;
-    const {orgId} = req.body
+    const { org_id: orgId } = req.body
     const result = await ChatbotDbService.getAll(orgId);
     return res.status(result.success ? 200 : 400).json(result);
 };
@@ -103,8 +103,8 @@ const updateChatBotAction = async (req, res) => {
 
 const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
-    const {orgId}= req.body
-    const { botId: chatbotId , bridgeId } = req.params;
+    const { orgId } = req.body
+    const { botId: chatbotId, bridgeId } = req.params;
 
     // Validate operation type early
     if (!['add', 'remove'].includes(type)) {
@@ -196,7 +196,7 @@ const getChatBotOfBridgeFunction = async (orgId, bridgeId) => {
 
 const getChatBotOfBridge = async (req, res) => {
     // const { orgId, bridgeId } = req.params;
-    const { orgId } =req.body
+    const { orgId } = req.body
     const { bridgeId } = req.params;
     const bridges = await getChatBotOfBridgeFunction(orgId, bridgeId);
     return res.status(bridges?.success ? 200 : 404).json(bridges);
@@ -232,13 +232,11 @@ const loginUser = async (req, res) => {
 
 const createOrgToken = async (req, res) => {
     // const { orgId } = req.params;
-    const { orgId } = req.body;
-
-    const {chatBot} = await responseTypeService.getAll(orgId);
+    const { org_id: orgId } = req.body;
+    const { chatBot } = await responseTypeService.getAll(orgId);
     if (chatBot?.orgAcessToken) return res.status(200).json(chatBot);
     const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14))
     return res.status(org?.success ? 200 : 404).json(org.orgData);
-
 };
 
 export {

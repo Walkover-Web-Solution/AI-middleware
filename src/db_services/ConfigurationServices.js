@@ -301,7 +301,7 @@ const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
 const findChatbotOfBridge = async (orgId, bridgeId) => {
   try {
     const bridges = await ChatBotModel.find({
-      orgId: "6095",
+      orgId: orgId,
       bridge: bridgeId
     });
     return {
