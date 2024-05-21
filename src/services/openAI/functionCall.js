@@ -40,9 +40,9 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 function_call:false,
                 success: true
             },body.rtlOptions).then((data) => {
-                //("RTLayer message sent", data);
+                console.log("RTLayer message sent", data);
             }).catch((error) => {
-                //("RTLayer message not sent", error);
+                console.log("RTLayer message not sent", error);
             });
         }
             const openAIResponse=await chats(configuration,apikey);
@@ -61,9 +61,9 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                         function_call:true,
                         success: true
                     },body.rtlOptions).then((data) => {
-                        //("RTLayer message sent", data);
+                        console.log("RTLayer message sent", data);
                     }).catch((error) => {
-                        //("RTLayer message not sent", error);
+                        console.log("RTLayer message not sent", error);
                     });
                 }
                 return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
@@ -73,14 +73,11 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         }
         return {success:false,error:"endpoint does not exist"}
 
-
     } catch (error) {
         console.log("function call error:",error);
         return {success:false,error:error.message}
     }
 }
-
-
 
 const fetchAxios=async (apiInfo)=>{
     const apiCall=await configurationService.getApiCallById(apiInfo.apiObjectID);
@@ -99,21 +96,20 @@ const axiosWork = async (data, axiosFunction) => {
     }
 };
 
-
-const checkFields = async ()=>{
-    const parseResponse = response;
-	const values = parseResponse.function_call.arguments;
-	// const required_fields = parseResponse.act.required_parameters;
-	let notPresent = [];
-	for (let i = 0; i < required_fields.length; i++) {
-		if (
-			!values.hasOwnProperty(required_fields[i]) ||
-			(values.hasOwnProperty(required_fields[i]) &&
-				values[required_fields[i]] == "")
-		) {
-			notPresent.push(required_fields[i]);
-		}
-	}
-	return notPresent;
-} 
+// const checkFields = async ()=>{
+//     const parseResponse = response;
+// 	const values = parseResponse.function_call.arguments;
+// 	// const required_fields = parseResponse.act.required_parameters;
+// 	let notPresent = [];
+// 	for (let i = 0; i < required_fields.length; i++) {
+// 		if (
+// 			!values.hasOwnProperty(required_fields[i]) ||
+// 			(values.hasOwnProperty(required_fields[i]) &&
+// 				values[required_fields[i]] == "")
+// 		) {
+// 			notPresent.push(required_fields[i]);
+// 		}
+// 	}
+// 	return notPresent;
+// } 
 export default functionCall;

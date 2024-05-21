@@ -68,7 +68,7 @@ async function create(dataset, historyParams) {
         created_at: new Date(),
         chat_id: DataObject.chat_id || null,
         variables: DataObject.variables || {},
-        is_present: DataObject.hasOwnProperty('prompt') ? true : false
+        is_present: Object.prototype.hasOwnProperty.call(DataObject, 'prompt')
       }));
       await postgres.pg.raw_data.bulkCreate(insertAiDataInPg);
       await timescale.raw_data.bulkCreate(insertAiData);

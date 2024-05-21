@@ -157,6 +157,7 @@ const getAllBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
+    console.error("getall bridge error=>",error.message);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -258,6 +259,7 @@ const deleteBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
+    console.error("delete bridge error => ", error.message)
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"

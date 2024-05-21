@@ -14,7 +14,7 @@ const updateBridgeSchema = Joi.object({
     webhook: Joi.string().allow('').optional()
   }).required(),
   service: Joi.string().valid('openai', 'google').required(),
-  apikey: Joi.string().regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/).optional().allow(''),
+  apikey: Joi.string().regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]*$/).optional().allow(''),
   org_id: Joi.string().pattern(/^\d+$/).required().allow('124dfgh67ghj').messages({
     'string.pattern.base': 'The input must contain only numeric characters'
   })

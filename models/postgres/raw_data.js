@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { Model, DataTypes } from "sequelize";
 export default ((sequelize, DataTypes) => {
   class raw_data extends Model {
