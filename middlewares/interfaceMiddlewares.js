@@ -30,7 +30,7 @@ const chatBotTokenDecode = async (req, res, next) => {
 };
 const chatBotAuth = async (req, res, next) => { // todo pending
   let token = req?.get('Authorization');
-  token = token.split(' ')?.[1] || token;
+  token = token?.split(' ')?.[1] || token;
   if (!token) {
     return res.status(498).json({ message: 'invalid token' });
   }
@@ -64,8 +64,8 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     success
   } = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
   let responseTypes = '';
-  const responseTypesJson = bridges?.responseRef?.responseTypes|| {}
-  Object.keys(responseTypesJson).forEach((responseId , i ) => {
+  const responseTypesJson = bridges?.responseRef?.responseTypes || {}
+  Object.keys(responseTypesJson).forEach((responseId, i) => {
     const responseComponents = {
       responseId: responseId,
       ...responseTypesJson[responseId]?.components
