@@ -33,10 +33,10 @@ const getOneChatBot = async (req, res) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 const getViewOnlyChatBot = async (req, res) => {
-    const {org_id} = req.body;
-    const result = await ChatbotDbService.getOneChatBotViewOnly(req.params.botId , org_id);
-    const orgData = await responseTypeService.getAll( org_id);
-    return res.status(result.success ? 200 : 404).json({...result, responseTypes: orgData.chatBot.responseTypes});
+    const { org_id } = req.body;
+    const result = await ChatbotDbService.getOneChatBotViewOnly(req.params.botId, org_id);
+    const orgData = await responseTypeService.getAll(org_id);
+    return res.status(result.success ? 200 : 404).json({ ...result, responseTypes: orgData.chatBot.responseTypes });
 };
 const updateChatBot = async (req, res) => {
     const result = await ChatbotDbService.update(req.params.botId, req.body);
@@ -205,6 +205,7 @@ const getChatBotOfBridge = async (req, res) => {
 
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
+    const { config } = req.body;
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
@@ -212,14 +213,14 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id , user_id ,org_id} = req.chatBot;
+        const { chatbot_id, user_id, org_id } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
-        if (chatBotConfig.orgId !==  org_id) return res.status(401).json({  success: false ,message:"chat bot id is no valid" });
+        if (chatBotConfig.orgId !== org_id) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id ,org_id})}`,
+            token: `Bearer ${getToken({ userId: user_id, org_id })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
@@ -255,7 +256,7 @@ export {
     getChatBotOfBridgeFunction,
     loginUser,
     updateChatBotConfig,
-    createOrgToken , 
+    createOrgToken,
     getViewOnlyChatBot
     // updateChatBotResponse
 };
