@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
-    required :true
+    required: true
   },
   service: {
     type: String,
@@ -43,8 +43,8 @@ const configuration = new mongoose.Schema({
     default: false
   },
   slugName: {
-    type: String ,
-    required: true 
+    type: String,
+    required: true
   },
   responseIds: {
     type: Array,
