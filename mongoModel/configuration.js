@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
-    required :true
+    required: true
   },
   service: {
     type: String,
@@ -43,8 +43,8 @@ const configuration = new mongoose.Schema({
     default: false
   },
   slugName: {
-    type: String ,
-    required: true 
+    type: String,
+    required: true
   },
   responseIds: {
     type: Array,
@@ -59,5 +59,5 @@ const configuration = new mongoose.Schema({
   }
 });
 configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
-const configurationModel = mongoose.model("configuration11", configuration);
+const configurationModel = mongoose.model("configuration", configuration);
 export default configurationModel;
