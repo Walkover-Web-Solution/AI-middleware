@@ -19,7 +19,9 @@ const getchat = async (req, res) => {
   try {
     let { apikey, configuration, service, variables = {}, tool_call = null } = req.body;
     const model = configuration?.model;
-    let usage, modelResponse = {}, customConfig = {};
+    // let usage,
+    let modelResponse = {},
+      customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
@@ -29,7 +31,10 @@ const getchat = async (req, res) => {
     }
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const modelfunc = ModelsConfig[modelname];
-    let { configuration: modelConfig, outputConfig: modelOutputConfig } = modelfunc();
+    let {
+      configuration: modelConfig,
+      // outputConfig: modelOutputConfig
+    } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
@@ -117,9 +122,7 @@ const prochat = async (req, res) => {
     customConfig = {};
   let model = configuration?.model;
   let rtlLayer = false;
-  let webhook = null;
-  let headers = {};
-
+  let webhook, headers;
   try {
     const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
     if (!getconfig.success) {
@@ -287,7 +290,8 @@ const prochat = async (req, res) => {
     if (rtlLayer && !playground) {
       rtlayer.message({
         ...req.body,
-        response: result.modelResponse,
+        function_call: false,
+        response: modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
         console.log("message sent", data);
@@ -342,8 +346,6 @@ const prochat = async (req, res) => {
   }
 };
 
-
-
 const getCompletion = async (req, res) => {
   try {
     let {
@@ -352,8 +354,8 @@ const getCompletion = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    let usage,
-      modelResponse = {},
+    // let usage,
+    let modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["completion"].has(model))) {
@@ -366,7 +368,7 @@ const getCompletion = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      outputConfig: modelOutputConfig
+      // outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -385,7 +387,7 @@ const getCompletion = async (req, res) => {
             error: openAIResponse?.error
           });
         }
-        usage = modelResponse[modelOutputConfig["usage"]];
+        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
         let geminiConfig = {
@@ -416,6 +418,7 @@ const getCompletion = async (req, res) => {
 };
 const proCompletion = async (req, res) => {
   const startTime = Date.now();
+  let thread_id=uuidv1()
   let {
     apikey,
     bridge_id,
@@ -425,6 +428,7 @@ const proCompletion = async (req, res) => {
     service,
     variables
   } = req.body;
+  let webhook, headers;
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},
@@ -449,10 +453,8 @@ const proCompletion = async (req, res) => {
         error: "model or service does not exist!"
       });
     }
-    const {
-      webhook,
-      headers = {}
-    } = configuration;
+    webhook = configuration.webhook;
+    headers = configuration.headers || {};
     if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
@@ -470,6 +472,7 @@ const proCompletion = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let historyParams;
     switch (service) {
       case "openai":
         configuration["prompt"] = configuration?.prompt ? configuration.prompt + "\n" + prompt : prompt;
@@ -491,9 +494,20 @@ const proCompletion = async (req, res) => {
             orgId: org_id,
             latency: Date.now() - startTime,
             success: false,
-            error: openAIResponse?.error
+            error: openAIResponse?.error,
+            variables: variables
           };
-          metrics_sevice.create([usage]);
+          metrics_sevice.create([usage], {
+            thread_id: thread_id,
+            user: prompt,
+            message: "",
+            org_id: org_id,
+            bridge_id: bridge_id,
+            model: configuration?.model,
+            channel: 'completion',
+            type: "error",
+            actor:  "user"
+          });
           if (rtlLayer) {
             rtlayer.message({
               ...req.body,
@@ -519,6 +533,17 @@ const proCompletion = async (req, res) => {
         usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
         usage["expectedCost"] = usage.inputTokens / 1000 * modelOutputConfig.usage[0].total_cost.input_cost + usage.outputTokens / 1000 * modelOutputConfig.usage[0].total_cost.output_cost;
+        historyParams = {
+          thread_id: thread_id,
+          user: prompt,
+          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+          org_id: org_id,
+          bridge_id: bridge_id,
+          model: configuration?.model,
+          channel: 'completion',
+          type: _.get(modelResponse, modelOutputConfig.message) == null ? "completion" : "assistant",
+          actor:"user"
+        }; 
         break;
       case "google":
         let geminiConfig = {
@@ -565,17 +590,16 @@ const proCompletion = async (req, res) => {
         break;
     }
     const endTime = Date.now();
-    const thread_id = uuidv1();
-    savehistory(thread_id, prompt, _.get(modelResponse, modelOutputConfig.message), org_id, bridge_id, configuration?.model, 'completion', "assistant");
     usage = {
       ...usage,
       service: service,
       model: model,
       orgId: org_id,
       latency: endTime - startTime,
-      success: true
+      success: true,
+      variables: variables
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -608,7 +632,17 @@ const proCompletion = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],{
+      thread_id: thread_id,
+      user: prompt,
+      message: "",
+      org_id: org_id,
+      bridge_id: bridge_id,
+      model: configuration?.model,
+      channel: 'completion',
+      type: "error",
+      actor:  "user"
+    });
     console.log("proCompletion common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
@@ -640,8 +674,8 @@ const getEmbeddings = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    let usage,
-      modelResponse = {},
+    // let usage,
+    let  modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["embedding"].has(model))) {
@@ -654,7 +688,7 @@ const getEmbeddings = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      outputConfig: modelOutputConfig
+      // outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -672,7 +706,7 @@ const getEmbeddings = async (req, res) => {
             error: openAIResponse?.error
           });
         }
-        usage = modelResponse[modelOutputConfig["usage"]];
+        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
         let geminiConfig = {
@@ -703,6 +737,7 @@ const getEmbeddings = async (req, res) => {
 };
 const proEmbeddings = async (req, res) => {
   const startTime = Date.now();
+  let thread_id = uuidv1();
   let {
     apikey,
     bridge_id,
@@ -711,6 +746,7 @@ const proEmbeddings = async (req, res) => {
     input,
     service
   } = req.body;
+  let webhook, headers;
   let model = configuration?.model;
   let usage = {},
     modelResponse = {},
@@ -735,10 +771,8 @@ const proEmbeddings = async (req, res) => {
         error: "model or service does not exist!"
       });
     }
-    const {
-      webhook,
-      headers = {}
-    } = configuration;
+    webhook = configuration.webhook;
+    headers = configuration.headers || {};
     if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
@@ -756,6 +790,8 @@ const proEmbeddings = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let historyParams;
+    
     switch (service) {
       case "openai":
         customConfig["input"] = input || "";
@@ -770,7 +806,17 @@ const proEmbeddings = async (req, res) => {
             success: false,
             error: response?.error
           };
-          metrics_sevice.create([usage]);
+          metrics_sevice.create([usage],{
+            thread_id: thread_id,
+            user: input,
+            message: "",
+            org_id: org_id,
+            bridge_id: bridge_id,
+            model: configuration?.model,
+            channel: 'embedding',
+            type: "error",
+            actor: "user"
+          });
           if (rtlLayer) {
             rtlayer.message({
               ...req.body,
@@ -796,6 +842,17 @@ const proEmbeddings = async (req, res) => {
         usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
         usage["expectedCost"] = usage.totalTokens / 1000 * modelOutputConfig.usage[0].total_cost;
+        historyParams = {
+          thread_id: thread_id,
+          user: input,
+          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
+          org_id: org_id,
+          bridge_id: bridge_id || null,
+          model: configuration?.model,
+          channel: 'embedding',
+          type: _.get(modelResponse, modelOutputConfig.message) == null ? "embedding" : "assistant",
+          actor: input ? "user" : "tool"
+        }
         break;
       case "google":
         let geminiConfig = {
@@ -842,8 +899,6 @@ const proEmbeddings = async (req, res) => {
         break;
     }
     const endTime = Date.now();
-    const thread_id = uuidv1();
-    savehistory(thread_id, input, JSON.stringify(_.get(modelResponse, modelOutputConfig.message)), org_id, bridge_id, configuration?.model, 'embedding', "assistant");
     usage = {
       ...usage,
       service: service,
@@ -852,7 +907,7 @@ const proEmbeddings = async (req, res) => {
       latency: endTime - startTime,
       success: true
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -885,7 +940,17 @@ const proEmbeddings = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage]);
+    metrics_sevice.create([usage],{
+      thread_id: thread_id,
+      user: input,
+      message: "",
+      org_id: org_id,
+      bridge_id: bridge_id,
+      model: configuration?.model,
+      channel: 'embedding',
+      type: "error",
+      actor: "user"
+    });
     console.log("proembeddings common error=>", error);
     if (rtlLayer) {
       rtlayer.message({

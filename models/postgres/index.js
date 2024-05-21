@@ -4,7 +4,6 @@ import path from 'path';
 import Sequelize from 'sequelize';
 import process from 'process';
 import * as url from 'url';
-const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 dotenv.config();
