@@ -224,6 +224,8 @@ const loginUser = async (req, res) => {
 
 const createOrgToken = async (req, res) => {
     const { orgId } = req.params;
+    const {chatBot} = await responseTypeService.getAll(orgId);
+    if (chatBot?.orgAcessToken) return res.status(200).json(chatBot);
     const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14))
     return res.status(org?.success ? 200 : 404).json(org.orgData);
 
