@@ -47,7 +47,6 @@ const getAll = async (orgId) => {
     const temp = await responseTypeModel.findOne({
       orgId: orgId,
     });
-    console.log('Document found:', temp);
     return { success: true, chatBot: temp };
   } catch (error) {
     return { success: false, error: "Failed to create response in org " };
