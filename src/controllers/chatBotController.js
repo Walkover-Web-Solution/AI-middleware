@@ -103,7 +103,7 @@ const updateChatBotAction = async (req, res) => {
 
 const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
-    const { orgId } = req.body
+    const { org_id:orgId } = req.body
     const { botId: chatbotId, bridgeId } = req.params;
 
     // Validate operation type early
@@ -142,7 +142,7 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
 // };
 const addorRemoveResponseIdInBridge = async (req, res) => { // why using status ??
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.orgId;
+    const orgId = req.body?.org_id;
     const { bridgeId } = req.params;
     const { responseId, responseJson, status } = req.body;
     if (!responseId) return res.status(400).json({ success: false, message: "responseId is required" });
@@ -169,14 +169,14 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
 
 const createAllDefaultResponseInOrg = async (req, res) => {
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.orgId;
+    const orgId = req.body?.org_id;
     const result = await responsetypeService.create(orgId);
     return res.status(result.success ? 200 : 404).json(result);
 };
 
 const updateAllDefaultResponseInOrg = async (req, res) => {
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.orgId;
+    const orgId = req.body?.org_id;
     const { responseJson } = req.body;
     const result = await responsetypeService.update(orgId, responseJson);
     return res.status(result.success ? 200 : 404).json(result);
@@ -184,7 +184,7 @@ const updateAllDefaultResponseInOrg = async (req, res) => {
 
 const getAllDefaultResponseInOrg = async (req, res) => {
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.orgId;
+    const orgId = req.body?.org_id;
     const result = await responseTypeService.getAll(orgId)
     return res.status(result.success ? 200 : 404).json(result);
 }
@@ -196,7 +196,7 @@ const getChatBotOfBridgeFunction = async (orgId, bridgeId) => {
 
 const getChatBotOfBridge = async (req, res) => {
     // const { orgId, bridgeId } = req.params;
-    const { orgId } = req.body
+    const { org_id: orgId } = req.body
     const { bridgeId } = req.params;
     const bridges = await getChatBotOfBridgeFunction(orgId, bridgeId);
     return res.status(bridges?.success ? 200 : 404).json(bridges);
