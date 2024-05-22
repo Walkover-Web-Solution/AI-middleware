@@ -2,7 +2,6 @@ class conversationService {
   static createOpenAIConversation = conversation => {
     try {
       let threads = [];
-      console.log("converstion=>", conversation);
       conversation.forEach(messages => {
         let chat = {};
         if (messages.role == "tool_calls") {
@@ -24,7 +23,7 @@ class conversationService {
         messages: threads
       };
     } catch (error) {
-      console.log("create conversation error=>", error);
+      console.error("create conversation error=>", error);
       return {
         success: false,
         error: error.message,
@@ -35,7 +34,6 @@ class conversationService {
   static createGeminiConversation = conversation => {
     try {
       let threads = [];
-      console.log("converstion=>", conversation);
       let previousRole = "model";
       conversation.forEach(messages => {
         let chat = {};
@@ -58,7 +56,7 @@ class conversationService {
         messages: threads
       };
     } catch (error) {
-      console.log("create conversation error=>", error);
+      console.error("create conversation error=>", error);
       return {
         success: false,
         error: error.message,

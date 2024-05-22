@@ -3,12 +3,10 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 async function runChat(configuration, api_key, service) {
   try {
-    console.log("running gemini", configuration, api_key);
     const genAI = new GoogleGenerativeAI(api_key);
     const model = genAI.getGenerativeModel({
       model: configuration?.model
     });
-    console.log(model);
     delete configuration?.generationConfig?.model;
     configuration.safetySettings = [{
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -23,7 +21,6 @@ async function runChat(configuration, api_key, service) {
       category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
       threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
     }];
-    console.log(configuration);
     switch (service) {
       case "chat":
         const chat = model.startChat({
@@ -33,7 +30,6 @@ async function runChat(configuration, api_key, service) {
         });
         const result = await chat.sendMessage(configuration?.user_input);
         const response = result.response;
-        console.log(response.text());
         const history = await chat.getHistory();
         const msgContent = {
           role: "user",
@@ -52,7 +48,6 @@ async function runChat(configuration, api_key, service) {
         } = await model.countTokens({
           contents: response.candidates[0].content
         });
-        console.log(response.text());
         return {
           success: true,
           modelResponse: response,
@@ -99,7 +94,7 @@ async function runChat(configuration, api_key, service) {
       error: "operation undefined!"
     };
   } catch (error) {
-    console.log("gemini error=>", error);
+    console.error("gemini error=>", error);
     return {
       success: false,
       error: error.message

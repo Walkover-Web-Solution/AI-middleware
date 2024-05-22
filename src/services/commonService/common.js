@@ -82,7 +82,7 @@ const getchat = async (req, res) => {
       response: modelResponse
     });
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -178,7 +178,6 @@ const prochat = async (req, res) => {
             });
           });
         }
-        console.log("conversation=>", conversation);
         customConfig["messages"] = [...prompt, ...conversation, !user ? tool_call : {
           role: "user",
           content: user
@@ -211,9 +210,10 @@ const prochat = async (req, res) => {
               error: openAIResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
+               // eslint-disable-next-line no-console
               console.log("message sent", data);
             }).catch(error => {
-              console.log("message not sent", error);
+              console.error("message not sent", error);
             });
             return;
           }
@@ -238,9 +238,10 @@ const prochat = async (req, res) => {
               function_call: true,
               success: true
             }, req.body.rtlOptions).then(data => {
+               // eslint-disable-next-line no-console
               console.log("RTLayer message sent", data);
             }).catch(error => {
-              console.log("RTLayer message not sent", error);
+              console.error("RTLayer message not sent", error);
             });
           }
           const functionCallRes = await functionCall(customConfig, apikey, bridge, _.get(modelResponse, modelOutputConfig.tools)[0], modelOutputConfig,0,rtlLayer, req.body, playground);
@@ -261,9 +262,10 @@ const prochat = async (req, res) => {
                 error: functionCallRes?.error,
                 success: false
               }, req.body.rtlOptions).then(data => {
+                // eslint-disable-next-line no-console
                 console.log("message sent", data);
               }).catch(error => {
-                console.log("message not sent", error);
+                console.error("message not sent", error);
               });
               return;
             }
@@ -327,9 +329,10 @@ const prochat = async (req, res) => {
               error: geminiResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
+              // eslint-disable-next-line no-console
               console.log("message sent", data);
             }).catch(error => {
-              console.log("message not sent", error);
+              console.error("message not sent", error);
             });
             return;
           }
@@ -390,9 +393,10 @@ const prochat = async (req, res) => {
         response: modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
+        // eslint-disable-next-line no-console
         console.log("message sent", data);
       }).catch(error => {
-        console.log("message not sent", error);
+        console.error("message not sent", error);
       });
       return;
     }
@@ -413,16 +417,17 @@ const prochat = async (req, res) => {
       error: error.message
     };
     metrics_sevice.create([usage]);
-    console.log("prochats common error=>", error);
+    console.error("prochats common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,
         error: error?.message,
         success: false
       }, req.body.rtlOptions).then(data => {
+        // eslint-disable-next-line no-console
         console.log("message sent", data);
       }).catch(error => {
-        console.log("message not sent", error);
+        console.error("message not sent", error);
       });
       return;
     }
@@ -472,7 +477,6 @@ const getCompletion = async (req, res) => {
     switch (service) {
       case "openai":
         customConfig["prompt"] = configuration?.prompt || "";
-        console.log(customConfig);
         const openAIResponse = await completion(customConfig, apikey);
         modelResponse = _.get(openAIResponse, "modelResponse", {});
         if (!openAIResponse?.success) {
@@ -503,7 +507,7 @@ const getCompletion = async (req, res) => {
       response: modelResponse
     });
   } catch (error) {
-    console.log("Get Completion common error=>", error);
+    console.error("Get Completion common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -578,7 +582,6 @@ const proCompletion = async (req, res) => {
             customConfig["prompt"] = customConfig.prompt.replace(regex, stringValue);
           });
         }
-        console.log(customConfig);
         const openAIResponse = await completion(customConfig, apikey);
         modelResponse = _.get(openAIResponse, "modelResponse", {});
         if (!openAIResponse?.success) {
@@ -737,7 +740,7 @@ const proCompletion = async (req, res) => {
       type: "error",
       actor:  "user"
     });
-    console.log("proCompletion common error=>", error);
+    console.error("proCompletion common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,
@@ -822,7 +825,7 @@ const getEmbeddings = async (req, res) => {
       response: modelResponse
     });
   } catch (error) {
-    console.log("proCompletion common error=>", error);
+    console.error("proCompletion common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -1045,7 +1048,7 @@ const proEmbeddings = async (req, res) => {
       type: "error",
       actor: "user"
     });
-    console.log("proembeddings common error=>", error);
+    console.error("proembeddings common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,
