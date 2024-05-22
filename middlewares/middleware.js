@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const middleware = async (req, res, next) => {
   const token = req?.get('Authorization');
-  console.log("token=>", token);
+  // console.log("token=>", token);
   if (!token) {
     return res.status(498).json({
       message: 'invalid token'
@@ -13,7 +13,7 @@ const middleware = async (req, res, next) => {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
       const checkToken = jwt.verify(token, process.env.SecretKey);
-      console.log("checkToken=>", checkToken);
+      // console.log("checkToken=>", checkToken);
       if (checkToken) {
         req.profile = checkToken;
         req.body.org_id = checkToken?.org?.id;
