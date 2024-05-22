@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const middleware = async (req, res, next) => {
   const token = req?.get('Authorization');
-  console.log("token=>", token);
   if (!token) {
     return res.status(498).json({
       message: 'invalid token'

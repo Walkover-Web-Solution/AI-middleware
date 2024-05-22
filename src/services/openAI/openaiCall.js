@@ -42,10 +42,7 @@ class UnifiedOpenAICase {
     prompt = Helper.replaceVariablesInPrompt(prompt, this.variables);
 
     this.customConfig["messages"] = [...prompt, ...conversation, this.user ? { role: "user", content: this.user } : this.tool_call];
-    console.log(555,this.customConfig["messages"]);
-    console.log(666, this.user);
     const openAIResponse = await chats(this.customConfig, this.apikey);
-    console.log(777,openAIResponse);
     let modelResponse = _.get(openAIResponse, "modelResponse", {});
 
     if (!openAIResponse?.success) {
@@ -76,9 +73,10 @@ class UnifiedOpenAICase {
           error: openAIResponse?.error,
           success: false
         }, this.req.body.rtlOptions).then(data => {
+          // eslint-disable-next-line no-console
           console.log("message sent", data);
         }).catch(error => {
-          console.log("message not sent", error);
+          console.error("message not sent", error);
         });
         return { success: false, error: openAIResponse?.error };
       }
@@ -94,7 +92,6 @@ class UnifiedOpenAICase {
       }
       return { success: false, error: openAIResponse?.error };
     }
-    console.log(this.apiCallavailable, this.bridge, this.playground);
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
@@ -104,9 +101,10 @@ class UnifiedOpenAICase {
           function_call: true,
           success: true
         }, this.req.body.rtlOptions).then(data => {
+          // eslint-disable-next-line no-console
           console.log("RTLayer message sent", data);
         }).catch(error => {
-          console.log("RTLayer message not sent", error);
+          console.error("RTLayer message not sent", error);
         });
       }
   
@@ -140,9 +138,10 @@ class UnifiedOpenAICase {
             error: functionCallRes?.error,
             success: false
           }, this.req.body.rtlOptions).then(data => {
+            // eslint-disable-next-line no-console
             console.log("message sent", data);
           }).catch(error => {
-            console.log("message not sent", error);
+            console.error("message not sent", error);
           });
           return { success: false, error: functionCallRes?.error };
         }
@@ -204,9 +203,10 @@ class UnifiedOpenAICase {
         response: modelResponse,
         success: true
       }, this.req.body.rtlOptions).then(data => {
+        // eslint-disable-next-line no-console
         console.log("message sent", data);
       }).catch(error => {
-        console.log("message not sent", error);
+        console.error("message not sent", error);
       });
       return { success: true, modelResponse, historyParams };
     }
