@@ -96,7 +96,7 @@ class UnifiedOpenAICase {
     }
     console.log(this.apiCallavailable, this.bridge, this.playground);
    
-    if (!_.get(modelResponse, this.modelOutputConfig.message) && this.apiCallavailable) {
+    if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
         this.rtlayer.message({
           ...this.req.body,
@@ -109,9 +109,7 @@ class UnifiedOpenAICase {
           console.log("RTLayer message not sent", error);
         });
       }
-    
   
-
       const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req?.body, this.playground);
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
 
@@ -191,7 +189,6 @@ class UnifiedOpenAICase {
        actor: this.user ? "user" : "tool"
       };
     
-      
     if (this.webhook) {
       await this.sendRequest(this.webhook, {
         success: true,
