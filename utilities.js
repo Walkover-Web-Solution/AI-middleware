@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 require('dotenv').config();
 function removeCircularReferences(obj) {
   const seen = new WeakSet();
@@ -12,13 +12,13 @@ function removeCircularReferences(obj) {
     return value;
   }));
 }
-function generateAuthToken(data) {
-  const token = jwt.sign({
-    data
-  }, process.env.JWT_TOKEN_SECRET);
-  return token;
-}
+// function generateAuthToken(data) {
+//   const token = jwt.sign({
+//     data
+//   }, process.env.JWT_TOKEN_SECRET);
+//   return token;
+// }
 export default {
   removeCircularReferences,
-  generateAuthToken
+  // generateAuthToken
 };
