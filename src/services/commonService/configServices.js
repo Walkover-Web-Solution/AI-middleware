@@ -133,6 +133,7 @@ const createBridges = async (req, res) => {
       configuration: configuration,
       org_id,
       name: configuration?.name,
+      slugName: configuration?.slugName,
       service: service,
       apikey: helper.encrypt(""),
       bridgeType
