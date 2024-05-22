@@ -18,7 +18,6 @@ const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const getchat = async (req, res) => {
   try {
     let { apikey, configuration, service, variables = {}, bridge_id } = req.body;
-    // let usage,
     let customConfig = {};
 
     const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
@@ -51,7 +50,7 @@ const getchat = async (req, res) => {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
-    }  //Make it modular
+    } 
     let params = {
       customConfig,
       configuration,
@@ -72,8 +71,6 @@ const getchat = async (req, res) => {
     let result;
     switch (service) {
       case "openai":
-        // result = await unifiedOpenAICase(params);
-       console.log(555,params);
         const openAIInstance = new UnifiedOpenAICase(params);
         result = await openAIInstance.execute();
         break;
@@ -108,6 +105,7 @@ const getchat = async (req, res) => {
 
 const prochat = async (req, res) => {
   const startTime = Date.now();
+  
   let {
     apikey,
     bridge_id = null,
@@ -141,7 +139,6 @@ const prochat = async (req, res) => {
     model = configuration?.model;
     rtlLayer = RTLayer != null ? RTLayer : getconfig.RTLayer;
     const bridge = getconfig.bridge;
-    const apiCallavailable = bridge?.is_api_call ?? false;
 
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
@@ -226,7 +223,7 @@ const prochat = async (req, res) => {
             error: geminiResponse?.error
           };
           metrics_sevice.create([usage]);
-          if (rtlLayer && !playground) {
+          if (rtlLayer) {
             rtlayer.message({
               ...req.body,
               error: geminiResponse?.error,
@@ -238,7 +235,7 @@ const prochat = async (req, res) => {
             });
             return;
           }
-          if (webhook && !playground) {
+          if (webhook) {
             await sendRequest(webhook, {
               error: geminiResponse?.error,
               success: false,
@@ -281,7 +278,7 @@ const prochat = async (req, res) => {
       prompt: configuration.prompt
     };
     metrics_sevice.create([usage], result.historyParams);
-    if (webhook && !playground) {
+    if (webhook) {
       await sendRequest(webhook, {
         success: true,
         response: result.modelResponse,
@@ -289,7 +286,7 @@ const prochat = async (req, res) => {
       }, 'POST', headers);
       return;
     }
-    if (rtlLayer && !playground) {
+    if (rtlLayer) {
       rtlayer.message({
         ...req.body,
         function_call: false,
