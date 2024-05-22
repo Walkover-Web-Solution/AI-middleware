@@ -17,7 +17,7 @@ const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
 const getchat = async (req, res) => {
   try {
-    let { apikey, configuration, service, variables = {}, bridge_id = null, } = req.body;
+    let { apikey, configuration, service, variables = {}, bridge_id } = req.body;
     // let usage,
     let customConfig = {};
 
@@ -34,6 +34,7 @@ const getchat = async (req, res) => {
     const model = configuration?.model;
     const bridge = getconfig.bridge;
     service = service ? service.toLowerCase() : "";
+
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
         success: false,
@@ -44,36 +45,27 @@ const getchat = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-       outputConfig: modelOutputConfig
+      outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
-    }
+    }  //Make it modular
     let params = {
       customConfig,
       configuration,
       apikey,
       variables,
       user: configuration?.user?.content || "",
-      tool_call : null,
       startTime: Date.now(),
       org_id: null,
-      bridge_id: req.body || null,
+      bridge_id: req.body.bridge_id || null,
       bridge: bridge || null,
-      thread_id: null,
       model,
       service,
-      rtlLayer: null,
-      req,
       modelOutputConfig,
-      apiCallavailable: bridge?.is_api_call ?? false,
       playground: true,
-      metrics_sevice: null,
-      sendRequest: null,
-      rtlayer: null,
-      webhook: null
     };
     console.log(555,params);
 
@@ -126,8 +118,7 @@ const prochat = async (req, res) => {
     tool_call = null,
     service,
     variables = {},
-    RTLayer = null,
-    playground = false
+    RTLayer = null
   } = req.body;
 
   let usage = {},
@@ -161,7 +152,7 @@ const prochat = async (req, res) => {
 
     webhook = configuration?.webhook;
     headers = configuration?.headers;
-    if ((rtlLayer || webhook) && !playground) {
+    if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
         message: "Will got response over your configured means."
@@ -196,17 +187,15 @@ const prochat = async (req, res) => {
       startTime,
       org_id,
       bridge_id,
+      bridge,
       thread_id,
       model,
       service,
       rtlLayer,
       req,
-      res,
       modelOutputConfig,
-      apiCallavailable,
-      playground,
+      playground: false,
       metrics_sevice,
-      sendRequest,
       rtlayer: rtlLayer,
       webhook
     };

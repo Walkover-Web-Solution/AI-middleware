@@ -24,7 +24,7 @@ class UnifiedOpenAICase {
     this.rtlLayer = params.rtlLayer;
     this.req = params.req; 
     this.modelOutputConfig = params.modelOutputConfig;
-    this.apiCallavailable = params.apiCallavailable;
+    this.apiCallavailable =  params.bridge?.is_api_call ?? false;
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
@@ -49,6 +49,7 @@ class UnifiedOpenAICase {
     let modelResponse = _.get(openAIResponse, "modelResponse", {});
 
     if (!openAIResponse?.success) {
+      if(!this.playground){
       let usage = {
         service: this.service,
         model: this.model,
@@ -69,7 +70,7 @@ class UnifiedOpenAICase {
         actor: this.user ? "user" : "tool"
       });
 
-      if (this.rtlLayer && !this.playground) {
+      if (this.rtlLayer) {
         this.rtlayer.message({
           ...this.req.body,
           error: openAIResponse?.error,
@@ -81,7 +82,7 @@ class UnifiedOpenAICase {
         });
         return { success: false, error: openAIResponse?.error };
       }
-      if (this.webhook && !this.playground) {
+      if (this.webhook) {
         await this.sendRequest(this.webhook, {
           error: openAIResponse?.error,
           success: false,
@@ -89,9 +90,12 @@ class UnifiedOpenAICase {
         }, 'POST', this.headers);
         return { success: false, error: openAIResponse?.error };
       }
+      
+      }
       return { success: false, error: openAIResponse?.error };
     }
-    if(!this.playground){
+    console.log(this.apiCallavailable, this.bridge, this.playground);
+   
     if (!_.get(modelResponse, this.modelOutputConfig.message) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
         this.rtlayer.message({
@@ -105,10 +109,10 @@ class UnifiedOpenAICase {
           console.log("RTLayer message not sent", error);
         });
       }
-    }
-  }
+    
+  
 
-      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req.body, this.playground);
+      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req?.body, this.playground);
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
 
       if (!functionCallRes?.success) {
@@ -162,7 +166,7 @@ class UnifiedOpenAICase {
       _.set(modelResponse, this.modelOutputConfig.usage[0].total_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].total_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens));
       _.set(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].prompt_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens));
       _.set(modelResponse, this.modelOutputConfig.usage[0].completion_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].completion_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens));
-
+    }
     // let usage = {
     //   service: this.service,
     //   model: this.model,
@@ -175,7 +179,6 @@ class UnifiedOpenAICase {
     //   expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
     // };
    if(!this.playground){
-
      historyParams = {
        thread_id: this.thread_id,
        user: this.user ? this.user : JSON.stringify(this.tool_call),
@@ -187,9 +190,9 @@ class UnifiedOpenAICase {
        type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
        actor: this.user ? "user" : "tool"
       };
-    }
+    
       
-    if (this.webhook && !this.playground) {
+    if (this.webhook) {
       await this.sendRequest(this.webhook, {
         success: true,
         response: modelResponse,
@@ -198,7 +201,7 @@ class UnifiedOpenAICase {
       return { success: true, modelResponse, historyParams };
     }
 
-    if (this.rtlLayer && !this.playground) {
+    if (this.rtlLayer) {
       this.rtlayer.message({
         ...this.req.body,
         response: modelResponse,
@@ -210,6 +213,7 @@ class UnifiedOpenAICase {
       });
       return { success: true, modelResponse, historyParams };
     }
+  }
 
     return { success: true, modelResponse, historyParams };
   }
