@@ -1,7 +1,6 @@
 import OpenAIInitializer from "./openaiInitializerService.js";
 const runModel = async (configuration, chat = true, apiKey) => {
   try {
-    // console.log(configuration);
     const OpenAIConfig = new OpenAIInitializer(apiKey);
     const openAI = OpenAIConfig.getOpenAIService();
     let response;
@@ -22,7 +21,7 @@ const runModel = async (configuration, chat = true, apiKey) => {
       response: response
     };
   } catch (error) {
-    console.log("runmodel error=>", error);
+    console.error("runmodel error=>", error);
     return {
       success: false,
       error: error.message
@@ -31,7 +30,6 @@ const runModel = async (configuration, chat = true, apiKey) => {
 };
 const createEmbeddings = async (configuration, apiKey) => {
   try {
-    // console.log(configuration);
     const OpenAIConfig = new OpenAIInitializer(apiKey);
     const openAI = OpenAIConfig.getOpenAIService();
     const response = await openAI.embeddings.create({
@@ -42,7 +40,7 @@ const createEmbeddings = async (configuration, apiKey) => {
       response: response
     };
   } catch (error) {
-    console.log("runmodel error=>", error);
+    console.error("runmodel error=>", error);
     return {
       success: false,
       error: error.message

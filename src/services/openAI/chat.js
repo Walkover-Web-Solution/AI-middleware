@@ -2,7 +2,6 @@ import { runModel } from "./runModel.js";
 
 const chats = async (configuration, apikey) => {
   try {
-    // console.log(configuration, apikey);
     const {
       success,
       response,
@@ -19,7 +18,7 @@ const chats = async (configuration, apikey) => {
       modelResponse: response
     };
   } catch (error) {
-    console.log("chats error=>", error);
+    console.error("chats error=>", error);
     return {
       success: false,
       error: error.message
