@@ -1,5 +1,6 @@
-import timescale from "./../../models/timescale/index.js";
-import postgres from "./../../models/index.js";
+import combinedModels  from "./../../models/index.js";
+const postgres =combinedModels.pg
+const timescale = combinedModels.timescale
 import Sequelize from "sequelize";
 import { savehistory } from "./../controllers/conversationContoller.js";
 function startOfToday() {
