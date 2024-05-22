@@ -35,6 +35,9 @@ const createsApi = async (req, res) => {
         // const params = requiredParams.join();
         axiosCode = `return axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
+      else {
+        axiosCode = `return axios({url:'${url}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+      }
       let apiId = "";
       const apiCallData = await apiCallModel.findOne({
         endpoint: endpoint,
@@ -122,43 +125,43 @@ const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_descripti
     };
   }
 };
-const createOpenAPI= (endpoint,desc,required_fields=[])=>{
+const createOpenAPI = (endpoint, desc, required_fields = []) => {
   try {
-      let format={
-          "type": "function",
+    let format = {
+      "type": "function",
       "function": {
-          "name": endpoint,
-          "description": desc
+        "name": endpoint,
+        "description": desc
       }
-  };
-  let parameters={
-          "type": "object",
-          "properties": {
-              // "location": {
-              //     "type": "string",
-              //     "description": "The city and state, e.g. San Francisco, CA",
-              // },
-              // "format": {
-              //     "type": "string",
-              //     "enum": ["celsius", "fahrenheit"],
-              //     "description": "The temperature unit to use. Infer this from the users location.",
-              // },
-          },
-          "required": required_fields,
-  };
-  let properties={}
-  for(const field of required_fields){
-      properties[field]={"type": "string"}
-  }
-  if(required_fields.length>0){
-      format.function["parameters"]=parameters;
-      format.function.parameters.properties=properties;
-  }
-  return {success:true,format};
+    };
+    let parameters = {
+      "type": "object",
+      "properties": {
+        // "location": {
+        //     "type": "string",
+        //     "description": "The city and state, e.g. San Francisco, CA",
+        // },
+        // "format": {
+        //     "type": "string",
+        //     "enum": ["celsius", "fahrenheit"],
+        //     "description": "The temperature unit to use. Infer this from the users location.",
+        // },
+      },
+      "required": required_fields,
+    };
+    let properties = {}
+    for (const field of required_fields) {
+      properties[field] = { "type": "string" }
+    }
+    if (required_fields.length > 0) {
+      format.function["parameters"] = parameters;
+      format.function.parameters.properties = properties;
+    }
+    return { success: true, format };
   } catch (error) {
-      return { success: false, error: error };
+    return { success: false, error: error };
   }
-  
+
 }
 export default {
   createsApi
