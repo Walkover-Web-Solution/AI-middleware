@@ -12,7 +12,7 @@ import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
 import functionCall from "../openAI/functionCall.js";
 import RTLayer from 'rtlayer-node';
-
+import {v1 as uuidv1} from 'uuid'
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
 

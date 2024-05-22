@@ -245,13 +245,31 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 };
 
 // get bridge with slugname
-const getBridgeBySlugname = async (orgId, slugName) => {
+
+const getBridgeIdBySlugname = async (orgId, slugName) => {
   try {
-    console.log(orgId, slugName);
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).populate('responseRef');
+    }).select({ _id: 1, slugName: 1 })
+    return {
+      success: true,
+      bridgeId: bridges._id
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+}
+const getBridgeBySlugname = async (orgId, slugName) => {
+  try {
+    const bridges = await configurationModel.findOne({
+      slugName: slugName,
+      org_id: orgId
+    }).populate('responseRef').lean();
     return {
       success: true,
       bridges: bridges
@@ -283,7 +301,7 @@ const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
 const findChatbotOfBridge = async (orgId, bridgeId) => {
   try {
     const bridges = await ChatBotModel.find({
-      orgId: "6095",
+      orgId: orgId,
       bridge: bridgeId
     });
     return {
@@ -312,5 +330,6 @@ export default {
   removeResponseIdinBridge,
   getBridgeBySlugname,
   findChatbotOfBridge,
-  updateBridgeType
+  updateBridgeType,
+  getBridgeIdBySlugname
 };

@@ -20,6 +20,7 @@ const ResponseTypeSchema = new Schema({
     of: ReponseMappingSchema
   },
   orgId: {
+    unique : true ,
     type: String
   },
   orgAcessToken :{

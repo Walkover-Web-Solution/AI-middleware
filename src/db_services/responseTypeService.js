@@ -1,5 +1,6 @@
 import responseTypeModel from "../../mongoModel/responseTypeModel.js";
 import defaultResponseJson from "../services/utils/defaultResponseConfig.js";
+
 const create = async orgId => {
   try {
     const temp = await responseTypeModel.create({
@@ -19,12 +20,33 @@ const create = async orgId => {
   }
 };
 
+
+const update = async (orgId, updateData) => {
+  try {
+    const temp = await responseTypeModel.findOneAndUpdate(
+      { orgId: orgId },
+      { $set: { responseTypes: updateData } },
+      { new: true, upsert: true } // upsert: true creates a new document if no matching document is found
+    );
+    console.log('Document updated:', temp);
+    return {
+      success: true,
+      chatBot: temp
+    };
+  } catch (error) {
+    console.error('Error updating document:', error);
+    return {
+      success: false,
+      error: "Failed to update response in org"
+    };
+  }
+};
+
 const getAll = async (orgId) => {
   try {
     const temp = await responseTypeModel.findOne({
       orgId: orgId,
     });
-    console.log('Document found:', temp);
     return { success: true, chatBot: temp };
   } catch (error) {
     return { success: false, error: "Failed to create response in org " };
@@ -58,12 +80,12 @@ const createOrgToken = async (orgId, token) => {
       orgId: orgId
     }, {
       $set: {
-        orgAcessToken :  token
+        orgAcessToken: token
       }
     }, {
       new: true
     });
-   return {success : true , orgData }
+    return { success: true, orgData }
   } catch (error) {
     return {
       success: false,
@@ -76,5 +98,6 @@ export default {
   create,
   addResponseTypes,
   getAll,
-  createOrgToken
+  createOrgToken,
+  update
 };

@@ -87,7 +87,6 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
         success
       } = await chatbotDbService.deleteLastThread(org_id, thread_id, bridge_id);
       chatToSave = chatToSave.slice(-1);
-      console.log("hey deleted");
       if (!success) {
         // return { success:true,message: "successfully deleted last chat and saved bot response!" }
         return {
@@ -96,7 +95,6 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
         };
       }
     }
-    console.log("chatToSave", chatToSave);
     const result = await chatbotDbService.createBulk(chatToSave);
     console.log("conversation result==>", result);
     return {
