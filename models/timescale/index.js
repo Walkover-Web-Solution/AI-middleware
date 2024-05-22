@@ -23,13 +23,13 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
             rejectUnauthorized: false
         }
     },
+     // eslint-disable-next-line no-console
     logging: console.log
 });
 
 const dbservice = async () => {
   try {
     await sequelize.sync();
-    console.log('Connection of timescale has been established successfully.', 2);
   } catch (error) {
     console.error('Unable to connect to the database:', error,444);
       }
@@ -58,6 +58,6 @@ await fs.promises
   db.Sequelize = Sequelize;
   
 } catch (error) {
-  console.log('Error while connecting to the Timescaledb:',error);
+  console.error('Error while connecting to the Timescaledb:',error);
 }
   export default db;

@@ -58,7 +58,6 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 async function findMessage(org_id, thread_id, bridge_id) {
-  // console.log(thread_id , bridge_id)
   let conversations  = await models.pg.conversations.findAll({
       attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
       include: [{
@@ -125,7 +124,6 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
               created_at: new Date(),
               updated_at: new Date() 
           });
-      console.log('System prompt saved successfully.');
   } catch (error) {
       console.error('Error storing system prompt:', error);
   }
