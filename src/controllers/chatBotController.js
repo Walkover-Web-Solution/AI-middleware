@@ -103,7 +103,7 @@ const updateChatBotAction = async (req, res) => {
 
 const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
-    const { org_id:orgId } = req.body
+    const { org_id: orgId } = req.body
     const { botId: chatbotId, bridgeId } = req.params;
 
     // Validate operation type early
@@ -120,7 +120,7 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
         if (result?.bridges?.bridgeType === "chatbot") {
             result.bridges.chatbotData = await getChatBotOfBridgeFunction(orgId, bridgeId);
         }
-        filterDataOfBridgeOnTheBaseOfUI(result, bridgeId);
+        filterDataOfBridgeOnTheBaseOfUI(result, bridgeId, false);
 
         // Return the combined result
         return res.status(chatBot.success ? 200 : 404).json({ chatBot, result });
@@ -161,7 +161,7 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
         return res.status(400).json({ success: false, message: "Invalid status value" });
     }
 
-    filterDataOfBridgeOnTheBaseOfUI(result, bridgeId)
+    filterDataOfBridgeOnTheBaseOfUI(result, bridgeId, false)
 
     return res.status(result.success ? 200 : 404).json(result?.bridges);
 }
