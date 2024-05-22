@@ -40,7 +40,6 @@ async function create(dataset, historyParams) {
       const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor);
       let ChatId = result.result[0].dataValues.id;
       dataset[0].chat_id = ChatId;
-      console.log("dataset", dataset);
       const insertAiData = dataset.map(DataObject => ({
         org_id: DataObject.orgId,
         authkey_name: DataObject.authkeyName || 'not_found',
@@ -74,7 +73,7 @@ async function create(dataset, historyParams) {
       await timescale.raw_data.bulkCreate(insertAiData);
   } catch (error) {
     // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);
-    console.log('Error during bulk insert of Ai middleware', error);
+    console.error('Error during bulk insert of Ai middleware', error);
   }
 }
 export default {
