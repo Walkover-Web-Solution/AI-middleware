@@ -17,12 +17,12 @@ class UnifiedOpenAICase {
     this.startTime = params.startTime;
     this.org_id = params.org_id;
     this.bridge_id = params.bridge_id;
+    this.bridge = params.bridge;
     this.thread_id = params.thread_id;
     this.model = params.model;
     this.service = params.service;
     this.rtlLayer = params.rtlLayer;
-    this.req = params.req;  ///
-    this.res = params.res;  ///
+    this.req = params.req; 
     this.modelOutputConfig = params.modelOutputConfig;
     this.apiCallavailable = params.apiCallavailable;
     this.playground = params.playground;
@@ -42,7 +42,10 @@ class UnifiedOpenAICase {
     prompt = Helper.replaceVariablesInPrompt(prompt, this.variables);
 
     this.customConfig["messages"] = [...prompt, ...conversation, this.user ? { role: "user", content: this.user } : this.tool_call];
+    console.log(555,this.customConfig["messages"]);
+    console.log(666, this.user);
     const openAIResponse = await chats(this.customConfig, this.apikey);
+    console.log(777,openAIResponse);
     let modelResponse = _.get(openAIResponse, "modelResponse", {});
 
     if (!openAIResponse?.success) {
@@ -88,7 +91,7 @@ class UnifiedOpenAICase {
       }
       return { success: false, error: openAIResponse?.error };
     }
-
+    if(!this.playground){
     if (!_.get(modelResponse, this.modelOutputConfig.message) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
         this.rtlayer.message({
@@ -102,6 +105,8 @@ class UnifiedOpenAICase {
           console.log("RTLayer message not sent", error);
         });
       }
+    }
+  }
 
       const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req.body, this.playground);
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
@@ -116,15 +121,15 @@ class UnifiedOpenAICase {
           error: functionCallRes?.error
         };
         this.metrics_sevice.create([usage],{
-          thread_id: thread_id,
-          user: user ? user : JSON.stringify(tool_call),
+          thread_id: this.thread_id,
+          user: this.user ? this.user : JSON.stringify(this.tool_call),
           message: "",
-          org_id: org_id,
-          bridge_id: bridge_id,
-          model: configuration?.model,
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
           channel: 'chat',
           type: "error",
-          actor: user ? "user" : "tool"
+          actor: this.user ? "user" : "tool"
         });
 
         if (this.rtlLayer && !this.playground) {
@@ -157,32 +162,33 @@ class UnifiedOpenAICase {
       _.set(modelResponse, this.modelOutputConfig.usage[0].total_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].total_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens));
       _.set(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].prompt_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens));
       _.set(modelResponse, this.modelOutputConfig.usage[0].completion_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].completion_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens));
+
+    // let usage = {
+    //   service: this.service,
+    //   model: this.model,
+    //   orgId: this.org_id,
+    //   latency: Date.now() - this.startTime,
+    //   success: true,
+    //   totalTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens),
+    //   inputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens),
+    //   outputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens),
+    //   expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
+    // };
+   if(!this.playground){
+
+     historyParams = {
+       thread_id: this.thread_id,
+       user: this.user ? this.user : JSON.stringify(this.tool_call),
+       message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
+       org_id: this.org_id,
+       bridge_id: this.bridge_id,
+       model: this.configuration?.model,
+       channel: 'chat',
+       type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
+       actor: this.user ? "user" : "tool"
+      };
     }
-
-    let usage = {
-      service: this.service,
-      model: this.model,
-      orgId: this.org_id,
-      latency: Date.now() - this.startTime,
-      success: true,
-      totalTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens),
-      inputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens),
-      outputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens),
-      expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
-    };
-
-    historyParams = {
-      thread_id: this.thread_id,
-      user: this.user ? this.user : JSON.stringify(this.tool_call),
-      message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
-      org_id: this.org_id,
-      bridge_id: this.bridge_id,
-      model: this.configuration?.model,
-      channel: 'chat',
-      type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
-      actor: this.user ? "user" : "tool"
-    };
-
+      
     if (this.webhook && !this.playground) {
       await this.sendRequest(this.webhook, {
         success: true,

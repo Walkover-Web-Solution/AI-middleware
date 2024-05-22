@@ -1,6 +1,6 @@
 import { services } from "../../../config/models.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
-import { getThread, savehistory } from "../../controllers/conversationContoller.js";
+import { getThread } from "../../controllers/conversationContoller.js";
 import conversationService from "./createConversation.js";
 import { sendRequest } from "../utils/request.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
@@ -17,11 +17,22 @@ const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
 const getchat = async (req, res) => {
   try {
-    let { apikey, configuration, service, variables = {}, tool_call = null } = req.body;
-    const model = configuration?.model;
+    let { apikey, configuration, service, variables = {}, bridge_id = null, } = req.body;
     // let usage,
-    let modelResponse = {},
-      customConfig = {};
+    let customConfig = {};
+
+    const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
+    if (!getconfig.success) {
+      return res.status(400).json({
+        success: false,
+        error: getconfig.error
+      });
+    }
+    configuration = getconfig.configuration;
+    service = getconfig.service;
+    apikey = getconfig.apikey;
+    const model = configuration?.model;
+    const bridge = getconfig.bridge;
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
@@ -33,7 +44,7 @@ const getchat = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      // outputConfig: modelOutputConfig
+       outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
@@ -45,30 +56,32 @@ const getchat = async (req, res) => {
       configuration,
       apikey,
       variables,
-      user: configuration["user"],
-      tool_call,
+      user: configuration?.user?.content || "",
+      tool_call : null,
       startTime: Date.now(),
       org_id: null,
-      bridge_id: null,
+      bridge_id: req.body || null,
+      bridge: bridge || null,
       thread_id: null,
       model,
       service,
       rtlLayer: null,
       req,
-      res,
       modelOutputConfig,
-      apiCallavailable: false,
-      playground: false,
+      apiCallavailable: bridge?.is_api_call ?? false,
+      playground: true,
       metrics_sevice: null,
       sendRequest: null,
       rtlayer: null,
       webhook: null
     };
+    console.log(555,params);
 
     let result;
     switch (service) {
       case "openai":
         // result = await unifiedOpenAICase(params);
+       console.log(555,params);
         const openAIInstance = new UnifiedOpenAICase(params);
         result = await openAIInstance.execute();
         break;
@@ -79,7 +92,7 @@ const getchat = async (req, res) => {
           user_input: configuration?.user
         };
         const geminiResponse = await runChat(geminiConfig, apikey, "chat");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
+        // modelResponse = _.get(geminiResponse, "modelResponse", {});
         if (!geminiResponse?.success) {
           return res.status(400).json({
             success: false,
@@ -164,7 +177,6 @@ const prochat = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
-
     if (thread_id) {
       const result = await getThread(thread_id, org_id, bridge_id);
       if (result.success) {
@@ -200,6 +212,7 @@ const prochat = async (req, res) => {
     };
 
     let result;
+    
     switch (service) {
       case "openai":
         const openAIInstance = new UnifiedOpenAICase(params);
@@ -253,17 +266,17 @@ const prochat = async (req, res) => {
         usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
         usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
-        historyParams = {
-          thread_id: thread_id,
-          user: user,
-          message: _.get(modelResponse, modelOutputConfig.message),
-          org_id: org_id,
-          bridge_id: bridge_id,
-          model: configuration?.model,
-          channel: 'chat',
-          type: "model",
-          actor: "user"
-        };
+        // historyParams = {
+        //   thread_id: thread_id,
+        //   user: user,
+        //   message: _.get(modelResponse, modelOutputConfig.message),
+        //   org_id: org_id,
+        //   bridge_id: bridge_id,
+        //   model: configuration?.model,
+        //   channel: 'chat',
+        //   type: "model",
+        //   actor: "user"
+        // };
         break;
     }
 
