@@ -166,8 +166,8 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
 }
 
 const createAllDefaultResponseInOrg = async (req, res) => {
-    // const orgId = req.params?.orgId;
-    const orgId = req.body?.org_id;
+    const orgId = req.params?.orgId;
+    // const orgId = req.body?.org_id;
     const result = await responsetypeService.create(orgId);
     return res.status(result.success ? 200 : 404).json(result);
 };
