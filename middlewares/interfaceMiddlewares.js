@@ -47,7 +47,7 @@ const chatBotAuth = async (req, res, next) => { // todo pending
     }
     return res.status(401).json({ message: 'unauthorized user' });
   } catch (e) {
-    return res.status(401).json({ message: 'unauthorized user' ,error :e });
+    return res.status(401).json({ message: 'unauthorized user', error: e });
   }
 };
 const sendDataMiddleware = async (req, res, next) => { // todo pending

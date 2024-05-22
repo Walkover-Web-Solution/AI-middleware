@@ -14,7 +14,7 @@ const create = async orgId => {
   } catch (error) {
     return {
       success: false,
-      error: "Failed to create response in org " +error
+      error: "Failed to create response in org " + error
     };
   }
 };
@@ -47,7 +47,7 @@ const getAll = async (orgId) => {
     });
     return { success: true, chatBot: temp };
   } catch (error) {
-    return { success: false, error: "Failed to create response in org "+error };
+    return { success: false, error: "Failed to create response in org " + error };
   }
 };
 
@@ -67,7 +67,7 @@ const addResponseTypes = async (orgId, responseId, responseJson) => {
   } catch (error) {
     return {
       success: false,
-      error: "Failed to add response in org "+error
+      error: "Failed to add response in org " + error
     };
   }
 };

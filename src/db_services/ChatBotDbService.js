@@ -71,7 +71,7 @@ const getOne = async (botId) => {
     return { success: false, error: "Failed to retrieve chatbot" };
   }
 };
-const getOneChatBotViewOnly = async (botId) => {
+const getOneChatBotViewOnly = async (botId, orgId) => {
   try {
     const chatbot = await ChatBotModel.findOne({ _id: botId }).select({ orgId: 1, title: 1, config: 1 })
     if (!chatbot) {

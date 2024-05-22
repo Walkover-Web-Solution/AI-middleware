@@ -166,7 +166,7 @@ const getAllBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
-    console.error("getall bridge error=>",error.message);
+    console.error("getall bridge error=>", error.message);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -251,7 +251,7 @@ const updateBridges = async (req, res) => {
     await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
     let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
     const result = await configurationService.updateBridges(bridge_id, prev_configuration, org_id, apikey, bridgeType, slugName);
-    filterDataOfBridgeOnTheBaseOfUI(result, bridge_id);
+    filterDataOfBridgeOnTheBaseOfUI(result, bridge_id, false);
     if (result?.bridges?.bridgeType === "chatbot") {
       result.bridges.chatbotData = await getChatBotOfBridgeFunction(org_id, bridge_id);
     }
