@@ -22,7 +22,7 @@ routes.route('/:orgId/getAllResponse').get(middleware, getAllDefaultResponseInOr
 // routes.route('/:orgId/:botId/bridge/:bridgeId').delete(deleteBridge); // update chatbot actions
 routes.route('/:orgId/:botId/bridge/:bridgeId').put(middleware, addorRemoveBridgeInChatBot); // update chatbot actions
 
-routes.route('/:botId').delete(deleteChatBot); // delete chatbot
+routes.route('/:botId').delete(middleware, deleteChatBot); // delete chatbot
 routes.route('/:orgId/addresponseid/bridge/:bridgeId').post(middleware, addorRemoveResponseIdInBridge); // done on frontend 
 routes.route('/:botId/sendMessage').post(chatBotAuth, sendDataMiddleware, common.prochat);
 routes.route('/:orgId/:bridgeId').get(middleware, getChatBotOfBridge) // get chatbot of bridge
