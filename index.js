@@ -10,6 +10,7 @@ import metrisRoutes from "./routes/metrics_routes.js";
 import utlilityRoutes from "./routes/utlility_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
 import userController from "./routes/user_route.js";
+import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
   maxAge: 86400,
