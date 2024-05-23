@@ -35,6 +35,9 @@ const createsApi = async (req, res) => {
         // const params = requiredParams.join();
         axiosCode = `return axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
+      else{
+      axiosCode = `return axios({url:'${url}',method:'post',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+      }
       let apiId = "";
       const apiCallData = await apiCallModel.findOne({
         endpoint: endpoint,

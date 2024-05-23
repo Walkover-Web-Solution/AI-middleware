@@ -17,9 +17,9 @@ const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
 const getchat = async (req, res) => {
   try {
-    let { apikey, configuration, service, variables = {}, bridge_id } = req.body;
+    let { apikey, configuration, service, variables = {} } = req.body;
     let customConfig = {};
-
+    const bridge_id = req.params.bridge_id;
     const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
     if (!getconfig.success) {
       return res.status(400).json({
@@ -59,7 +59,7 @@ const getchat = async (req, res) => {
       user: configuration?.user?.content || "",
       startTime: Date.now(),
       org_id: null,
-      bridge_id: req.body.bridge_id || null,
+      bridge_id: req.params.bridge_id || null,
       bridge: bridge || null,
       model,
       service,
@@ -101,6 +101,7 @@ const getchat = async (req, res) => {
     });
   }
 };
+
 
 const prochat = async (req, res) => {
   const startTime = Date.now();

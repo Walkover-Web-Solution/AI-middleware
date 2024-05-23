@@ -14,8 +14,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
-            const args = JSON.parse(tools_call.function.arguments);
-            //("arguments",args);
+            const args = JSON.parse(tools_call.function.arguments ||"{}");
             const apiResponse=await axiosWork(args,axios);
 
             const funcResponseData={
@@ -85,8 +84,8 @@ const fetchAxios=async (apiInfo)=>{
 const axiosWork = async (data, axiosFunction) => {
     // Dynamically create a function using new Function()
     const createFunction = new Function('axios','data', axiosFunction);
-    const axiosCall =await createFunction(axios,data);
     try {
+        const axiosCall =await createFunction(axios,{});
         return axiosCall.data;
     } catch (err) {
         console.error("error", err.message);
