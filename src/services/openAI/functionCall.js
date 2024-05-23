@@ -84,8 +84,8 @@ const fetchAxios=async (apiInfo)=>{
 const axiosWork = async (data, axiosFunction) => {
     // Dynamically create a function using new Function()
     const createFunction = new Function('axios','data', axiosFunction);
+    const axiosCall =await createFunction(axios,data);
     try {
-        const axiosCall =await createFunction(axios,{});
         return axiosCall.data;
     } catch (err) {
         console.error("error", err.message);
