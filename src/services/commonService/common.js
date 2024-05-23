@@ -132,6 +132,7 @@ const prochat = async (req, res) => {
         error: getconfig.error
       });
     }
+    let historyParams;
     configuration = getconfig.configuration;
     service = getconfig.service;
     apikey = getconfig.apikey;
