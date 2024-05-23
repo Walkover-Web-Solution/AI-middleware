@@ -52,7 +52,7 @@ async function getHistory(bridge_id, timestamp) {
 
     return { success: true, system_prompt: history[0].system_prompt };
   } catch (error) {
-    console.error("get history system prompt error=>",error)
+    console.error("get history system prompt error=>", error)
     return { success: false, message: "Prompt not found" };
   }
 }
@@ -124,7 +124,6 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
       created_at: new Date(),
       updated_at: new Date()
     });
-    console.log('System prompt saved successfully.');
   } catch (error) {
     console.error('Error storing system prompt:', error);
   }

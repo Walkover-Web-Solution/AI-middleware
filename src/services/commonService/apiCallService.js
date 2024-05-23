@@ -35,6 +35,9 @@ const createsApi = async (req, res) => {
         // const params = requiredParams.join();
         axiosCode = `return axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
+      else {
+        axiosCode = `return axios({url:'${url}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+      }
       let apiId = "";
       const apiCallData = await apiCallModel.findOne({
         endpoint: endpoint,
@@ -115,7 +118,7 @@ const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_descripti
       apiObjectID: newApi.id
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: error
@@ -154,7 +157,6 @@ const createOpenAPI = (endpoint, desc, required_fields = []) => {
       format.function["parameters"] = parameters;
       format.function.parameters.properties = properties;
     }
-    console.log("api call format", format);
     return { success: true, format };
   } catch (error) {
     return { success: false, error: error };

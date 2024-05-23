@@ -1,7 +1,6 @@
 import { createEmbeddings } from "./runModel.js";
 const embeddings = async (configuration, apikey) => {
   try {
-    console.log(configuration, apikey);
     const {
       success,
       response,
@@ -18,7 +17,7 @@ const embeddings = async (configuration, apikey) => {
       modelResponse: response
     };
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return;
   }
 };
