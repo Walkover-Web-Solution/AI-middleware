@@ -14,8 +14,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
-            const args = JSON.parse(tools_call.function.arguments);
-            //("arguments",args);
+            const args = JSON.parse(tools_call.function.arguments ||"{}");
             const apiResponse=await axiosWork(args,axios);
 
             const funcResponseData={
