@@ -75,7 +75,7 @@ class UnifiedOpenAICase {
           error: openAIResponse?.error,
           success: false
         }, this.req.body.rtlOptions).then(data => {
-          // eslint-disable-next-line no-console
+           
           console.log("message sent", data);
         }).catch(error => {
           console.error("message not sent", error);
@@ -103,7 +103,7 @@ class UnifiedOpenAICase {
           function_call: true,
           success: true
         }, this.req.body.rtlOptions).then(data => {
-          // eslint-disable-next-line no-console
+           
           console.log("RTLayer message sent", data);
         }).catch(error => {
           console.error("RTLayer message not sent", error);
@@ -140,7 +140,7 @@ class UnifiedOpenAICase {
             error: functionCallRes?.error,
             success: false
           }, this.req.body.rtlOptions).then(data => {
-            // eslint-disable-next-line no-console
+             
             console.log("message sent", data);
           }).catch(error => {
             console.error("message not sent", error);
@@ -200,7 +200,7 @@ class UnifiedOpenAICase {
         response: modelResponse,
         success: true
       }, this.req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
