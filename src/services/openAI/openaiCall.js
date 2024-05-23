@@ -29,6 +29,7 @@ class UnifiedOpenAICase {
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
     this.rtlayer = params.rtlayer;
+    this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
   }
@@ -69,7 +70,7 @@ class UnifiedOpenAICase {
       });
 
       if (this.rtlLayer) {
-        this.rtlayer.message({
+        this.RTLayer.message({
           ...this.req.body,
           error: openAIResponse?.error,
           success: false
@@ -96,7 +97,7 @@ class UnifiedOpenAICase {
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
-        this.rtlayer.message({
+        this.RTLayer.message({
           ...this.req.body,
           message: "Function call",
           function_call: true,
@@ -134,7 +135,7 @@ class UnifiedOpenAICase {
         });
 
         if (this.rtlLayer && !this.playground) {
-          this.rtlayer.message({
+          this.RTLayer.message({
             ...this.req.body,
             error: functionCallRes?.error,
             success: false
@@ -194,7 +195,7 @@ class UnifiedOpenAICase {
     }
 
     if (this.rtlLayer) {
-      this.rtlayer.message({
+      this.RTLayer.message({
         ...this.req.body,
         response: modelResponse,
         success: true
