@@ -131,6 +131,7 @@ const prochat = async (req, res) => {
         error: getconfig.error
       });
     }
+    let historyParams;
     configuration = getconfig.configuration;
     service = getconfig.service;
     apikey = getconfig.apikey;
@@ -186,7 +187,7 @@ const prochat = async (req, res) => {
       thread_id,
       model,
       service,
-      // rtlLayer,
+      RTLayer:rtlayer,
       req,
       modelOutputConfig,
       playground: false,
@@ -231,7 +232,7 @@ const prochat = async (req, res) => {
               error: geminiResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
-              // eslint-disable-next-line no-console
+               
               console.log("message sent", data);
             }).catch(error => {
               console.error("message not sent", error);
@@ -255,17 +256,18 @@ const prochat = async (req, res) => {
         usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
         usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
-        // historyParams = {
-        //   thread_id: thread_id,
-        //   user: user,
-        //   message: _.get(modelResponse, modelOutputConfig.message),
-        //   org_id: org_id,
-        //   bridge_id: bridge_id,
-        //   model: configuration?.model,
-        //   channel: 'chat',
-        //   type: "model",
-        //   actor: "user"
-        // };
+       // eslint-disable-next-line no-unused-vars
+        historyParams = {
+          thread_id: thread_id,
+          user: user,
+          message: _.get(modelResponse, modelOutputConfig.message),
+          org_id: org_id,
+          bridge_id: bridge_id,
+          model: configuration?.model,
+          channel: 'chat',
+          type: "model",
+          actor: "user"
+        };
         break;
     }
 
@@ -293,10 +295,10 @@ const prochat = async (req, res) => {
       rtlayer.message({
         ...req.body,
         function_call: false,
-        response: modelResponse,
+        response: result.modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
@@ -327,7 +329,7 @@ const prochat = async (req, res) => {
         error: error?.message,
         success: false
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
