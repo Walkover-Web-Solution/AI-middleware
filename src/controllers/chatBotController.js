@@ -24,7 +24,7 @@ const createChatBot = async (req, res) => {
 };
 const getAllChatBots = async (req, res) => {
     // const org_id = req.params.org_id;
-    const { org_id: orgId } = req.body
+    const { orgId } = req.body
     const result = await ChatbotDbService.getAll(orgId);
     return res.status(result.success ? 200 : 400).json(result);
 };
