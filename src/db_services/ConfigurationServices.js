@@ -11,7 +11,7 @@ const createBridges = async configuration => {
       bridge: result
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -38,7 +38,7 @@ const getAllBridges = async org_id => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -73,7 +73,7 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeTyp
       bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -113,7 +113,7 @@ const getBridges = async bridge_id => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -136,7 +136,7 @@ const getBridgesWithSelectedData = async bridge_id => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -154,7 +154,7 @@ const getBridgesByName = async (name, org_id) => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -172,7 +172,7 @@ const deleteBridge = async (bridge_id, org_id) => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -195,7 +195,7 @@ const updateToolsCalls = async (bridge_id, org_id, configuration, api_endpoints,
       message: "bridge updated successfully"
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -210,7 +210,7 @@ const getApiCallById = async apiId => {
       apiCall: apiCall
     };
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"

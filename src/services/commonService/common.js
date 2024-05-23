@@ -1,6 +1,5 @@
 import { services } from "../../../config/models.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
-import { chats } from "../openAI/chat.js";
 import { getThread } from "../../controllers/conversationContoller.js";
 import conversationService from "./createConversation.js";
 import { sendRequest } from "../utils/request.js";
@@ -10,23 +9,31 @@ import { completion } from "../openAI/completion.js";
 import { embeddings } from "../openAI/embedding.js";
 import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
-import functionCall from "../openAI/functionCall.js";
 import RTLayer from 'rtlayer-node';
-import { v1 as uuidv1 } from 'uuid'
+import { v1 as uuidv1 } from 'uuid';
+import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
+
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
 const getchat = async (req, res) => {
   try {
-    let {
-      apikey,
-      configuration,
-      service
-    } = req.body;
+    let { apikey, configuration, service, variables = {} } = req.body;
+    let customConfig = {};
+    const bridge_id = req.params.bridge_id;
+    const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
+    if (!getconfig.success) {
+      return res.status(400).json({
+        success: false,
+        error: getconfig.error
+      });
+    }
+    configuration = getconfig.configuration;
+    service = getconfig.service;
+    apikey = getconfig.apikey;
     const model = configuration?.model;
-    // let usage,
-    let modelResponse = {},
-      customConfig = {};
+    const bridge = getconfig.bridge;
     service = service ? service.toLowerCase() : "";
+
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
         success: false,
@@ -37,28 +44,34 @@ const getchat = async (req, res) => {
     const modelfunc = ModelsConfig[modelname];
     let {
       configuration: modelConfig,
-      // outputConfig: modelOutputConfig
+      outputConfig: modelOutputConfig
     } = modelfunc();
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let params = {
+      customConfig,
+      configuration,
+      apikey,
+      variables,
+      user: configuration?.user?.content || "",
+      startTime: Date.now(),
+      org_id: null,
+      bridge_id: req.params.bridge_id || null,
+      bridge: bridge || null,
+      model,
+      service,
+      modelOutputConfig,
+      playground: true,
+    };
+
+    let result;
     switch (service) {
       case "openai":
-        let prompt = configuration.prompt ?? [];
-        prompt = Array.isArray(prompt) ? prompt : [prompt];
-        const conversation = configuration?.conversation || [];
-        customConfig["messages"] = [...prompt, ...conversation, configuration["user"]];
-        const openAIResponse = await chats(customConfig, apikey);
-        modelResponse = _.get(openAIResponse, "modelResponse", {});
-        if (!openAIResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: openAIResponse?.error
-          });
-        }
-        // usage = modelResponse[modelOutputConfig["usage"]];
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result = await openAIInstance.execute();
         break;
       case "google":
         let geminiConfig = {
@@ -67,7 +80,7 @@ const getchat = async (req, res) => {
           user_input: configuration?.user
         };
         const geminiResponse = await runChat(geminiConfig, apikey, "chat");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
+        // modelResponse = _.get(geminiResponse, "modelResponse", {});
         if (!geminiResponse?.success) {
           return res.status(400).json({
             success: false,
@@ -78,10 +91,10 @@ const getchat = async (req, res) => {
     }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -90,19 +103,20 @@ const getchat = async (req, res) => {
 };
 const prochat = async (req, res) => {
   const startTime = Date.now();
+
   let {
     apikey,
-    bridge_id,
+    bridge_id = null,
     configuration,
-    thread_id,
-    org_id,
-    user,
-    tool_call,
+    thread_id = null,
+    org_id = null,
+    user = null,
+    tool_call = null,
     service,
-    variables,
-    RTLayer = null,
-    playground = false
+    variables = {},
+    RTLayer = null
   } = req.body;
+
   let usage = {},
     modelResponse = {},
     customConfig = {};
@@ -117,34 +131,34 @@ const prochat = async (req, res) => {
         error: getconfig.error
       });
     }
+    let historyParams;
     configuration = getconfig.configuration;
     service = getconfig.service;
     apikey = getconfig.apikey;
     model = configuration?.model;
     rtlLayer = RTLayer != null ? RTLayer : getconfig.RTLayer;
     const bridge = getconfig.bridge;
-    const apiCallavailable = bridge?.is_api_call ?? false;
+
     if (!(service in services && services[service]["chat"].has(model))) {
       return res.status(400).json({
         success: false,
         error: "model or service does not exist!"
       });
     }
-    webhook = configuration.webhook;
-    headers = configuration.headers || {};
 
-    if ((rtlLayer || webhook) && !playground) {
+    webhook = configuration?.webhook;
+    headers = configuration?.headers;
+    if (rtlLayer || webhook) {
       res.status(200).json({
         success: true,
-        message: "Will got reponse over your configured means."
+        message: "Will got response over your configured means."
       });
     }
+
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const modelfunc = ModelsConfig[modelname];
-    let {
-      configuration: modelConfig,
-      outputConfig: modelOutputConfig
-    } = modelfunc();
+    let { configuration: modelConfig, outputConfig: modelOutputConfig } = modelfunc();
+
     for (const key in modelConfig) {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
@@ -153,153 +167,45 @@ const prochat = async (req, res) => {
     if (thread_id) {
       const result = await getThread(thread_id, org_id, bridge_id);
       if (result.success) {
-        // let conversation = createConversation(result.data);
         configuration["conversation"] = result?.data ? result.data : [];
       }
     } else {
       thread_id = uuidv1();
     }
-    let historyParams;
+
+    let params = {
+      customConfig,
+      configuration,
+      apikey,
+      variables,
+      user,
+      tool_call,
+      startTime,
+      org_id,
+      bridge_id,
+      bridge,
+      thread_id,
+      model,
+      service,
+      RTLayer:rtlayer,
+      req,
+      modelOutputConfig,
+      playground: false,
+      metrics_sevice,
+      rtlayer: rtlLayer,
+      webhook,
+      RTLLayer:rtlayer
+    };
+
+    let result;
+
     switch (service) {
       case "openai":
-        const conversation = configuration?.conversation ? conversationService.createOpenAIConversation(configuration.conversation).messages : [];
-        let prompt = configuration.prompt ?? [];
-        prompt = Array.isArray(prompt) ? prompt : [prompt];
-        if (variables && Object.keys(variables).length > 0) {
-          Object.entries(variables).forEach(([key, value]) => {
-            const stringValue = JSON.stringify(value);
-            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-            prompt = prompt.map(item => {
-              if (item && "content" in item) {
-                item.content = item.content.replace(regex, stringValue);
-                return item;
-              }
-            });
-          });
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result = await openAIInstance.execute();
+        if (!result?.success) {
+          return res.status(400).json(result);
         }
-        console.log("conversation=>", conversation);
-        customConfig["messages"] = [...prompt, ...conversation, !user ? tool_call : {
-          role: "user",
-          content: user
-        }];
-        const openAIResponse = await chats(customConfig, apikey);
-        modelResponse = _.get(openAIResponse, "modelResponse", {});
-        if (!openAIResponse?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: openAIResponse?.error
-          };
-          metrics_sevice.create([usage], {
-            thread_id: thread_id,
-            user: user ? user : JSON.stringify(tool_call),
-            message: "",
-            org_id: org_id,
-            bridge_id: bridge_id,
-            model: configuration?.model,
-            channel: 'chat',
-            type: "error",
-            actor: user ? "user" : "tool"
-          });
-          if (rtlLayer && !playground) {
-            rtlayer.message({
-              ...req.body,
-              error: openAIResponse?.error,
-              success: false
-            }, req.body.rtlOptions).then(data => {
-              console.log("message sent", data);
-            }).catch(error => {
-              console.log("message not sent", error);
-            });
-            return;
-          }
-          if (webhook && !playground) {
-            await sendRequest(webhook, {
-              error: openAIResponse?.error,
-              success: false,
-              ...req.body
-            }, 'POST', headers);
-            return;
-          }
-          return res.status(400).json({
-            success: false,
-            error: openAIResponse?.error
-          });
-        }
-        if (!_.get(modelResponse, modelOutputConfig.message) && apiCallavailable) {
-          if (rtlLayer && !playground) {
-            rtlayer.message({
-              ...req.body,
-              message: "Function call",
-              function_call: true,
-              success: true
-            }, req.body.rtlOptions).then(data => {
-              console.log("RTLayer message sent", data);
-            }).catch(error => {
-              console.log("RTLayer message not sent", error);
-            });
-          }
-          const functionCallRes = await functionCall(customConfig, apikey, bridge, _.get(modelResponse, modelOutputConfig.tools)[0], modelOutputConfig, 0, rtlLayer, req.body, playground);
-          const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
-          if (!functionCallRes?.success) {
-            usage = {
-              service: service,
-              model: model,
-              orgId: org_id,
-              latency: Date.now() - startTime,
-              success: false,
-              error: functionCallRes?.error
-            };
-            metrics_sevice.create([usage]);
-            if (rtlLayer && !playground) {
-              rtlayer.message({
-                ...req.body,
-                error: functionCallRes?.error,
-                success: false
-              }, req.body.rtlOptions).then(data => {
-                console.log("message sent", data);
-              }).catch(error => {
-                console.log("message not sent", error);
-              });
-              return;
-            }
-            if (webhook && !playground) {
-              await sendRequest(webhook, {
-                error: functionCallRes?.error,
-                success: false,
-                ...req.body
-              }, 'POST', headers);
-              return;
-            }
-            return res.status(400).json({
-              success: false,
-              error: functionCallRes?.error
-            });
-          }
-          _.set(modelResponse, modelOutputConfig.message, _.get(funcModelResponse, modelOutputConfig.message));
-          _.set(modelResponse, modelOutputConfig.tools, _.get(funcModelResponse, modelOutputConfig.tools));
-          _.set(modelResponse, modelOutputConfig.usage[0].total_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].total_tokens) + _.get(modelResponse, modelOutputConfig.usage[0].total_tokens));
-          _.set(modelResponse, modelOutputConfig.usage[0].prompt_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].prompt_tokens) + _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens));
-          _.set(modelResponse, modelOutputConfig.usage[0].completion_tokens, _.get(funcModelResponse, modelOutputConfig.usage[0].completion_tokens) + _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens));
-        }
-        usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
-        usage["expectedCost"] = usage.inputTokens / 1000 * modelOutputConfig.usage[0].total_cost.input_cost + usage.outputTokens / 1000 * modelOutputConfig.usage[0].total_cost.output_cost;
-        historyParams = {
-          thread_id: thread_id,
-          user: user ? user : JSON.stringify(tool_call),
-          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
-          org_id: org_id,
-          bridge_id: bridge_id,
-          model: configuration?.model,
-          channel: 'chat',
-          type: _.get(modelResponse, modelOutputConfig.message) == null ? "tool_calls" : "assistant",
-          actor: user ? "user" : "tool"
-        };
         break;
       case "google":
         let geminiConfig = {
@@ -320,19 +226,20 @@ const prochat = async (req, res) => {
             error: geminiResponse?.error
           };
           metrics_sevice.create([usage]);
-          if (rtlLayer && !playground) {
+          if (rtlLayer) {
             rtlayer.message({
               ...req.body,
               error: geminiResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
+               
               console.log("message sent", data);
             }).catch(error => {
-              console.log("message not sent", error);
+              console.error("message not sent", error);
             });
             return;
           }
-          if (webhook && !playground) {
+          if (webhook) {
             await sendRequest(webhook, {
               error: geminiResponse?.error,
               success: false,
@@ -349,6 +256,7 @@ const prochat = async (req, res) => {
         usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
         usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
         usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
+       // eslint-disable-next-line no-unused-vars
         historyParams = {
           thread_id: thread_id,
           user: user,
@@ -362,9 +270,10 @@ const prochat = async (req, res) => {
         };
         break;
     }
+
     const endTime = Date.now();
     usage = {
-      ...usage,
+      ...result?.usage,
       service: service,
       model: model,
       orgId: org_id,
@@ -373,31 +282,32 @@ const prochat = async (req, res) => {
       variables: variables,
       prompt: configuration.prompt
     };
-    metrics_sevice.create([usage], historyParams);
-    if (webhook && !playground) {
+    metrics_sevice.create([usage], result.historyParams);
+    if (webhook) {
       await sendRequest(webhook, {
         success: true,
-        response: modelResponse,
+        response: result.modelResponse,
         ...req.body
       }, 'POST', headers);
       return;
     }
-    if (rtlLayer && !playground) {
+    if (rtlLayer) {
       rtlayer.message({
         ...req.body,
         function_call: false,
-        response: modelResponse,
+        response: result.modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
+         
         console.log("message sent", data);
       }).catch(error => {
-        console.log("message not sent", error);
+        console.error("message not sent", error);
       });
       return;
     }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
     const endTime = Date.now();
@@ -412,16 +322,17 @@ const prochat = async (req, res) => {
       error: error.message
     };
     metrics_sevice.create([usage]);
-    console.log("prochats common error=>", error);
+    console.error("prochats common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,
         error: error?.message,
         success: false
       }, req.body.rtlOptions).then(data => {
+         
         console.log("message sent", data);
       }).catch(error => {
-        console.log("message not sent", error);
+        console.error("message not sent", error);
       });
       return;
     }
@@ -439,6 +350,7 @@ const prochat = async (req, res) => {
     });
   }
 };
+
 const getCompletion = async (req, res) => {
   try {
     let {
@@ -471,7 +383,6 @@ const getCompletion = async (req, res) => {
     switch (service) {
       case "openai":
         customConfig["prompt"] = configuration?.prompt || "";
-        console.log(customConfig);
         const openAIResponse = await completion(customConfig, apikey);
         modelResponse = _.get(openAIResponse, "modelResponse", {});
         if (!openAIResponse?.success) {
@@ -502,7 +413,7 @@ const getCompletion = async (req, res) => {
       response: modelResponse
     });
   } catch (error) {
-    console.log("Get Completion common error=>", error);
+    console.error("Get Completion common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -577,7 +488,6 @@ const proCompletion = async (req, res) => {
             customConfig["prompt"] = customConfig.prompt.replace(regex, stringValue);
           });
         }
-        console.log(customConfig);
         const openAIResponse = await completion(customConfig, apikey);
         modelResponse = _.get(openAIResponse, "modelResponse", {});
         if (!openAIResponse?.success) {
@@ -736,7 +646,7 @@ const proCompletion = async (req, res) => {
       type: "error",
       actor: "user"
     });
-    console.log("proCompletion common error=>", error);
+    console.error("proCompletion common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,
@@ -821,7 +731,7 @@ const getEmbeddings = async (req, res) => {
       response: modelResponse
     });
   } catch (error) {
-    console.log("proCompletion common error=>", error);
+    console.error("proCompletion common error=>", error);
     return res.status(400).json({
       success: false,
       error: error.message
@@ -1044,7 +954,7 @@ const proEmbeddings = async (req, res) => {
       type: "error",
       actor: "user"
     });
-    console.log("proembeddings common error=>", error);
+    console.error("proembeddings common error=>", error);
     if (rtlLayer) {
       rtlayer.message({
         ...req.body,

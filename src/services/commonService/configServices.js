@@ -17,7 +17,6 @@ const getAIModels = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    console.log(services[service]["models"].values());
     let modelInfo = {};
     for (const model of services[service]["models"].values()) {
       const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
@@ -36,7 +35,7 @@ const getAIModels = async (req, res) => {
       modelInfo: modelInfo
     });
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -63,7 +62,7 @@ const getThreads = async (req, res) => {
     }
     return res.status(400).json(threads);
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -84,7 +83,7 @@ const getMessageHistory = async (req, res) => {
     }
     return res.status(400).json(threads);
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -100,7 +99,7 @@ const getSystemPromptHistory = async (req, res) => {
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
     return res.status(200).json(result);
   } catch (error) {
-    console.log("error occured", error);
+    console.error("error occured", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!"
@@ -145,7 +144,7 @@ const createBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -194,7 +193,7 @@ const getBridges = async (req, res) => {
       ...result
     });
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -281,7 +280,7 @@ const updateBridgeType = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
@@ -338,7 +337,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     result.tools_call = tools_call;
     return result;
   } catch (error) {
-    console.log("error:", error);
+    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
