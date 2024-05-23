@@ -9,6 +9,8 @@ import config from "./config/config.js";
 import metrisRoutes from "./routes/metrics_routes.js";
 import utlilityRoutes from "./routes/utlility_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
+import userOrgLocalController from "./routes/userOrgLocal_route.js";
+import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
   maxAge: 86400,
@@ -33,6 +35,7 @@ app.use('/api/v1/model', modelController);
 app.use('/api/v1/config', configurationController);
 app.use('/utility', utlilityRoutes);
 app.use('/chatbot', chatbot);
+app.use('/user', userOrgLocalController);
 
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
