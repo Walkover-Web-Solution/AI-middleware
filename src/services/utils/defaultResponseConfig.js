@@ -4,7 +4,7 @@ const defaultResponseJson = {
     "components": {
       "Typography": {
         "type": "Typography",
-        "key": "Typography13796",
+        "key": "Typography",
         "props": {
           "variant": "bold",
           "children": "I'm a text component.",
@@ -18,7 +18,7 @@ const defaultResponseJson = {
     "components": {
       "TextField": {
         "type": "TextField",
-        "key": "TextField42878",
+        "key": "TextField",
         "props": {
           "label": "",
           "variant": "outlined",
@@ -31,11 +31,11 @@ const defaultResponseJson = {
     }
   },
   "Response3": {
-    "description": "button",
+    "description": "When user asks for button",
     "components": {
       "Button": {
         "type": "Button",
-        "key": "Button08759",
+        "key": "Button",
         "props": {
           "variant": "outlined",
           "color": "error",
@@ -46,11 +46,11 @@ const defaultResponseJson = {
     }
   },
   "Response4": {
-    "description": "Table",
+    "description": "When user asks for any Table related data",
     "components": {
       "Table": {
         "type": "Table",
-        "key": "Table37374",
+        "key": "Table",
         "props": {
           "columns": [],
           "data": [
@@ -80,11 +80,11 @@ const defaultResponseJson = {
     }
   },
   "Response5": {
-    "description": "Radio",
+    "description": "When user asks for any options/Radio",
     "components": {
       "Radio": {
         "type": "Radio",
-        "key": "Radio33518",
+        "key": "Radio",
         "props": {
           "color": "primary",
           "name": "Radio",
@@ -99,11 +99,11 @@ const defaultResponseJson = {
     }
   },
   "Response6": {
-    "description": "Checkbox",
+    "description": "when user asks to choose multiple fields/Checkboxses",
     "components": {
       "Checkbox": {
         "type": "Checkbox",
-        "key": "Checkbox49850",
+        "key": "Checkbox",
         "props": {
           "color": "primary",
           "defaultChecked": false,
@@ -113,11 +113,11 @@ const defaultResponseJson = {
     }
   },
   "Response7": {
-    "description": "Icon",
+    "description": "when user want any Icon or image",
     "components": {
       "Icon": {
         "type": "Icon",
-        "key": "Icon66334",
+        "key": "Icon",
         "props": {
           "variant": "square",
           "src": "https://cdn2.hubspot.net/hubfs/53/image8-2.jpg"
