@@ -71,8 +71,7 @@ const getOne = async (botId) => {
     return { success: false, error: "Failed to retrieve chatbot" };
   }
 };
-// eslint-disable-next-line no-unused-vars
-const getOneChatBotViewOnly = async (botId, orgId) => {
+const getOneChatBotViewOnly = async (botId) => {
   try {
     const chatbot = await ChatBotModel.findOne({ _id: botId }).select({ orgId: 1, title: 1, config: 1 })
     if (!chatbot) {
