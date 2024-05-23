@@ -9,6 +9,8 @@ import config from "./config/config.js";
 import metrisRoutes from "./routes/metrics_routes.js";
 import utlilityRoutes from "./routes/utlility_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
+import './ttl.js'
+
 app.use(cors({
   origin: '*',
   maxAge: 86400,
