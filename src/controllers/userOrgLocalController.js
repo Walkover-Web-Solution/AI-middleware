@@ -10,28 +10,22 @@ function generateAuthToken(user, org) {
 
 }
 
-const createUser = async (req, res) => {
-    if (process.env.ENVIROMENT === 'local') {
+const userOrgLocalToken = async (req, res) => {
+    if (process.env.ENVIROMENT !== 'local')  res.status(404).send()
         const { userId, orgId, orgName, userName } = req.body;
         const token = generateAuthToken({ id: userId, name: userName || '' }, { id: orgId, name: orgName || '' })
         res.status(200).json({ token });
-    } else {
-        res.status(404).send()
-    }
 }
 
-const switchUser = async (req, res) => {
-    if (process.env.ENVIROMENT === 'local') {
+const switchUserOrgLocal = async (req, res) => {
+    if (process.env.ENVIROMENT !== 'local')  res.status(404).send()
         const { orgId, orgName } = req.body;
         const { user } = req.profile
         const token = generateAuthToken(user, { id: orgId, name: orgName || '' })
         res.status(200).json({ token });
-    } else {
-        res.status(404).send()
-    }
 }
 
 export {
-    createUser,
-    switchUser
+    userOrgLocalToken,
+    switchUserOrgLocal
 }
