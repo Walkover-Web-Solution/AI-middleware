@@ -22,7 +22,7 @@ class UnifiedOpenAICase {
     this.thread_id = params.thread_id;
     this.model = params.model;
     this.service = params.service;
-    this.rtlLayer = params.rtlLayer;
+    this.rtlLayer = params.rtlayer;
     this.req = params.req; 
     this.modelOutputConfig = params.modelOutputConfig;
     this.apiCallavailable =  params.bridge?.is_api_call ?? false;
@@ -30,7 +30,7 @@ class UnifiedOpenAICase {
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
     // rtlayer = params.rtlayer;
-    // this.RTLayer=params.RTLayer;
+    this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
   }
