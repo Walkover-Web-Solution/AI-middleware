@@ -5,20 +5,6 @@ import ModelsConfig from "../../configs/modelConfiguration.js";
 const getConfiguration = async (configuration, service, bridge_id, api_key) => {
   let RTLayer = false;
   let bridge;
-  // const result = await configurationService.getBridges(bridge_id);
-  // if (!result.success) {
-  //   return {
-  //     success: false,
-  //     error: "bridge_id does not exist"
-  //   };
-  // }
-  // configuration = configuration? configuration : result?.bridges?.configuration;
-  // service = service || (result?.bridges?.service ? result.bridges.service.toLowerCase() : "");
-  // api_key = api_key ? api_key : helper.decrypt(result?.bridges?.apikey);
-  // RTLayer = configuration?.RTLayer ? true : false;
-  // bridge = result?.bridges;
-
-  //  service = service ? service.toLowerCase() : "";
   const result = await configurationService.getBridges(bridge_id);
   if (!result.success) {
     return {
@@ -33,8 +19,6 @@ const getConfiguration = async (configuration, service, bridge_id, api_key) => {
   bridge = result?.bridges;
 
 service = service ? service.toLowerCase() : "";
-
-console.log(12345678,configuration,"\n bridges===>",bridge)
 
   return {
     success: true,

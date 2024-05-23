@@ -35,6 +35,7 @@ class UnifiedOpenAICase {
 
   async execute() {
     let historyParams = {};
+    let usage;
     let prompt = this.configuration.prompt ?? [];
     prompt = Array.isArray(prompt) ? prompt : [prompt];
     const conversation = this.configuration?.conversation ? conversationService.createOpenAIConversation(this.configuration.conversation).messages : [];
@@ -47,7 +48,7 @@ class UnifiedOpenAICase {
 
     if (!openAIResponse?.success) {
       if(!this.playground){
-      let usage = {
+      usage = {
         service: this.service,
         model: this.model,
         orgId: this.org_id,
@@ -112,7 +113,7 @@ class UnifiedOpenAICase {
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
 
       if (!functionCallRes?.success) {
-        let usage = {
+        usage = {
           service: this.service,
           model: this.model,
           orgId: this.org_id,
@@ -164,17 +165,12 @@ class UnifiedOpenAICase {
       _.set(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].prompt_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens));
       _.set(modelResponse, this.modelOutputConfig.usage[0].completion_tokens, _.get(funcModelResponse, this.modelOutputConfig.usage[0].completion_tokens) + _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens));
     }
-    // let usage = {
-    //   service: this.service,
-    //   model: this.model,
-    //   orgId: this.org_id,
-    //   latency: Date.now() - this.startTime,
-    //   success: true,
-    //   totalTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens),
-    //   inputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens),
-    //   outputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens),
-    //   expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
-    // };
+    usage = {
+      totalTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens),
+      inputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens),
+      outputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens),
+      expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
+    };
    if(!this.playground){
      historyParams = {
        thread_id: this.thread_id,
@@ -194,7 +190,7 @@ class UnifiedOpenAICase {
         response: modelResponse,
         ...this.req.body
       }, 'POST', this.headers);
-      return { success: true, modelResponse, historyParams };
+      return { success: true, modelResponse, historyParams, usage};
     }
 
     if (this.rtlLayer) {
@@ -208,11 +204,11 @@ class UnifiedOpenAICase {
       }).catch(error => {
         console.error("message not sent", error);
       });
-      return { success: true, modelResponse, historyParams };
+      return { success: true, modelResponse, historyParams,usage};
     }
   }
 
-    return { success: true, modelResponse, historyParams };
+    return { success: true, modelResponse, historyParams, usage };
   }
 }
 
