@@ -7,17 +7,14 @@ import axios from "axios";
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0,rtlLayer=false,body={},playground=false)=>{
     try {
-        console.log("tools_call=>",tools_call);
         
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
-        console.log("apiName",apiName);
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
-            const args = JSON.parse(tools_call.function.arguments);
-            //("arguments",args);
+            const args = JSON.parse(tools_call.function.arguments ||"{}");
             const apiResponse=await axiosWork(args,axios);
 
             const funcResponseData={
@@ -26,8 +23,6 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 name: apiName,
                 content: JSON.stringify(apiResponse),
             }
-            console.log("funcResponseData",funcResponseData);
-            console.log("tools_call",JSON.stringify(tools_call));
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
             // //("configuration",configuration);
@@ -40,9 +35,10 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 function_call:false,
                 success: true
             },body.rtlOptions).then((data) => {
+                 
                 console.log("RTLayer message sent", data);
             }).catch((error) => {
-                console.log("RTLayer message not sent", error);
+                console.error("RTLayer message not sent", error);
             });
         }
             const openAIResponse=await chats(configuration,apikey);
@@ -61,9 +57,10 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                         function_call:true,
                         success: true
                     },body.rtlOptions).then((data) => {
+                         
                         console.log("RTLayer message sent", data);
                     }).catch((error) => {
-                        console.log("RTLayer message not sent", error);
+                        console.error("RTLayer message not sent", error);
                     });
                 }
                 return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
@@ -74,7 +71,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
         return {success:false,error:"endpoint does not exist"}
 
     } catch (error) {
-        console.log("function call error:",error);
+        console.error("function call error:",error);
         return {success:false,error:error.message}
     }
 }

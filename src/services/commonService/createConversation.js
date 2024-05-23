@@ -23,7 +23,7 @@ class conversationService {
         messages: threads
       };
     } catch (error) {
-      console.log("create conversation error=>", error);
+      console.error("create conversation error=>", error);
       return {
         success: false,
         error: error.message,
@@ -56,7 +56,7 @@ class conversationService {
         messages: threads
       };
     } catch (error) {
-      console.log("create conversation error=>", error);
+      console.error("create conversation error=>", error);
       return {
         success: false,
         error: error.message,
