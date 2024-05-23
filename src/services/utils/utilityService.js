@@ -192,7 +192,7 @@ const addVariableIntoCode = ({ code, variable }) => {
 
 const checkCodeValidity = (codeString) => {
   try {
-    // eslint-disable-next-line no-eval
+     
     eval(codeString);
     return { success: true, message: 'The code is valid.' };
   } catch (e) {
@@ -206,7 +206,7 @@ const checkCodeValidity = (codeString) => {
 const evalVariableAndCodeFromContext = (code = '', context = {}) => {
   try {
     if (!code || !context) return { message: '', success: false };
-    // eslint-disable-next-line no-new-func
+     
     const myFunction = new Function('context', code);
     const data = myFunction(context);
     return { message: data, success: true };

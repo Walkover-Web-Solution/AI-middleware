@@ -37,6 +37,6 @@ app.use('/chatbot', chatbot);
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
+   
   console.log(`Server is running on port ${PORT}`);
 });

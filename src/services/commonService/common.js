@@ -232,7 +232,7 @@ const prochat = async (req, res) => {
               error: geminiResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
-              // eslint-disable-next-line no-console
+               
               console.log("message sent", data);
             }).catch(error => {
               console.error("message not sent", error);
@@ -298,7 +298,7 @@ const prochat = async (req, res) => {
         response: result.modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
@@ -329,7 +329,7 @@ const prochat = async (req, res) => {
         error: error?.message,
         success: false
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);

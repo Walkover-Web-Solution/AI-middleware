@@ -35,7 +35,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 function_call:false,
                 success: true
             },body.rtlOptions).then((data) => {
-                // eslint-disable-next-line no-console
+                 
                 console.log("RTLayer message sent", data);
             }).catch((error) => {
                 console.error("RTLayer message not sent", error);
@@ -57,7 +57,7 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                         function_call:true,
                         success: true
                     },body.rtlOptions).then((data) => {
-                        // eslint-disable-next-line no-console
+                         
                         console.log("RTLayer message sent", data);
                     }).catch((error) => {
                         console.error("RTLayer message not sent", error);

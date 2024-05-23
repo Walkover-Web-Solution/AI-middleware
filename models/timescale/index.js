@@ -23,7 +23,7 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
             rejectUnauthorized: false
         }
     },
-     // eslint-disable-next-line no-console
+      
     logging: console.log
 });
 
