@@ -22,7 +22,7 @@ try {
     useUnifiedTopology: true
   });
 } catch (err) {
-  console.log('database connection error: ', err.message);
+  console.error('database connection error: ', err.message);
   // logger.error('database connection error: ' + err.message);
 }
 
@@ -37,5 +37,6 @@ app.use('/chatbot', chatbot);
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server is running on port ${PORT}`);
 });

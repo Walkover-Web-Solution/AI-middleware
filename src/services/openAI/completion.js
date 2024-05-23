@@ -1,7 +1,6 @@
 import { runModel } from "./runModel.js";
 const completion = async (configuration, apikey) => {
   try {
-    console.log(configuration, apikey);
     const {
       success,
       response,
@@ -18,7 +17,7 @@ const completion = async (configuration, apikey) => {
       modelResponse: response
     };
   } catch (error) {
-    console.log("common error=>", error);
+    console.error("common error=>", error);
     return {
       success: false,
       error: error.message
