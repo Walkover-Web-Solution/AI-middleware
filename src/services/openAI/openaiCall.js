@@ -22,15 +22,16 @@ class UnifiedOpenAICase {
     this.model = params.model;
     this.service = params.service;
     this.rtlLayer = params.rtlLayer;
-    this.req = params.req; 
+    this.req = params.req;
     this.modelOutputConfig = params.modelOutputConfig;
-    this.apiCallavailable =  params.bridge?.is_api_call ?? false;
+    this.apiCallavailable = params.bridge?.is_api_call ?? false;
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
     this.rtlayer = params.rtlayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
+    this.RTLLayer = params.RTLLayer;
   }
 
   async execute() {
@@ -47,56 +48,56 @@ class UnifiedOpenAICase {
     let modelResponse = _.get(openAIResponse, "modelResponse", {});
 
     if (!openAIResponse?.success) {
-      if(!this.playground){
-      usage = {
-        service: this.service,
-        model: this.model,
-        orgId: this.org_id,
-        latency: Date.now() - this.startTime,
-        success: false,
-        error: openAIResponse?.error
-      };
-      this.metrics_sevice.create([usage], {
-        thread_id: this.thread_id,
-        user: this.user ? this.user : JSON.stringify(this.tool_call),
-        message: "",
-        org_id: this.org_id,
-        bridge_id: this.bridge_id,
-        model: this.configuration?.model,
-        channel: 'chat',
-        type: "error",
-        actor: this.user ? "user" : "tool"
-      });
-
-      if (this.rtlLayer) {
-        this.rtlayer.message({
-          ...this.req.body,
-          error: openAIResponse?.error,
-          success: false
-        }, this.req.body.rtlOptions).then(data => {
-          // eslint-disable-next-line no-console
-          console.log("message sent", data);
-        }).catch(error => {
-          console.error("message not sent", error);
-        });
-        return { success: false, error: openAIResponse?.error };
-      }
-      if (this.webhook) {
-        await this.sendRequest(this.webhook, {
-          error: openAIResponse?.error,
+      if (!this.playground) {
+        usage = {
+          service: this.service,
+          model: this.model,
+          orgId: this.org_id,
+          latency: Date.now() - this.startTime,
           success: false,
-          ...this.req.body
-        }, 'POST', this.headers);
-        return { success: false, error: openAIResponse?.error };
-      }
-      
+          error: openAIResponse?.error
+        };
+        this.metrics_sevice.create([usage], {
+          thread_id: this.thread_id,
+          user: this.user ? this.user : JSON.stringify(this.tool_call),
+          message: "",
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'chat',
+          type: "error",
+          actor: this.user ? "user" : "tool"
+        });
+
+        if (this.rtlLayer) {
+          this.RTLLayer.message({
+            ...this.req.body,
+            error: openAIResponse?.error,
+            success: false
+          }, this.req.body.rtlOptions).then(data => {
+            // eslint-disable-next-line no-console
+            console.log("message sent", data);
+          }).catch(error => {
+            console.error("message not sent", error);
+          });
+          return { success: false, error: openAIResponse?.error };
+        }
+        if (this.webhook) {
+          await this.sendRequest(this.webhook, {
+            error: openAIResponse?.error,
+            success: false,
+            ...this.req.body
+          }, 'POST', this.headers);
+          return { success: false, error: openAIResponse?.error };
+        }
+
       }
       return { success: false, error: openAIResponse?.error };
     }
-   
+
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
-        this.rtlayer.message({
+         this.RTLLayer.message({
           ...this.req.body,
           message: "Function call",
           function_call: true,
@@ -108,7 +109,7 @@ class UnifiedOpenAICase {
           console.error("RTLayer message not sent", error);
         });
       }
-  
+
       const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req?.body, this.playground);
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
 
@@ -121,7 +122,7 @@ class UnifiedOpenAICase {
           success: false,
           error: functionCallRes?.error
         };
-        this.metrics_sevice.create([usage],{
+        this.metrics_sevice.create([usage], {
           thread_id: this.thread_id,
           user: this.user ? this.user : JSON.stringify(this.tool_call),
           message: "",
@@ -134,7 +135,7 @@ class UnifiedOpenAICase {
         });
 
         if (this.rtlLayer && !this.playground) {
-          this.rtlayer.message({
+           this.RTLLayer.message({
             ...this.req.body,
             error: functionCallRes?.error,
             success: false
@@ -171,42 +172,42 @@ class UnifiedOpenAICase {
       outputTokens: _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens),
       expectedCost: (_.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost) + (_.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens) / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost)
     };
-   if(!this.playground){
-     historyParams = {
-       thread_id: this.thread_id,
-       user: this.user ? this.user : JSON.stringify(this.tool_call),
-       message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
-       org_id: this.org_id,
-       bridge_id: this.bridge_id,
-       model: this.configuration?.model,
-       channel: 'chat',
-       type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
-       actor: this.user ? "user" : "tool"
+    if (!this.playground) {
+      historyParams = {
+        thread_id: this.thread_id,
+        user: this.user ? this.user : JSON.stringify(this.tool_call),
+        message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
+        org_id: this.org_id,
+        bridge_id: this.bridge_id,
+        model: this.configuration?.model,
+        channel: 'chat',
+        type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
+        actor: this.user ? "user" : "tool"
       };
-    
-    if (this.webhook) {
-      await this.sendRequest(this.webhook, {
-        success: true,
-        response: modelResponse,
-        ...this.req.body
-      }, 'POST', this.headers);
-      return { success: true, modelResponse, historyParams, usage};
-    }
 
-    if (this.rtlLayer) {
-      this.rtlayer.message({
-        ...this.req.body,
-        response: modelResponse,
-        success: true
-      }, this.req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
-        console.log("message sent", data);
-      }).catch(error => {
-        console.error("message not sent", error);
-      });
-      return { success: true, modelResponse, historyParams,usage};
+      if (this.webhook) {
+        await this.sendRequest(this.webhook, {
+          success: true,
+          response: modelResponse,
+          ...this.req.body
+        }, 'POST', this.headers);
+        return { success: true, modelResponse, historyParams, usage };
+      }
+
+      if (this.rtlLayer) {
+         this.RTLLayer.message({
+          ...this.req.body,
+          response: modelResponse,
+          success: true
+        }, this.req.body.rtlOptions).then(data => {
+          // eslint-disable-next-line no-console
+          console.log("message sent", data);
+        }).catch(error => {
+          console.error("message not sent", error);
+        });
+        return { success: true, modelResponse, historyParams, usage };
+      }
     }
-  }
 
     return { success: true, modelResponse, historyParams, usage };
   }
