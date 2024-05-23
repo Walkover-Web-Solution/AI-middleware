@@ -33,7 +33,6 @@ const createInterface = async (req, res, next) => {
   } catch (err) {
     console.error(err);
     throw new BadRequestError('interface creation failed!', { err });
-    // res.status(400).json(prepareErrorResponse({ message: 'Some Error on Server', data: { err } }));
   }
 };
 const getInterfaceById = async (req, res, next) => {
@@ -49,11 +48,9 @@ const getInterfaceById = async (req, res, next) => {
     const data = await interfaceDbService.getInterfaceById(identifier, viewOnly);
     res.locals.responseData = { statusCode: StatusCodes.OK, data, message: `Successfully Find Flow with Id: ${identifier}` };
     next();
-    // res.status(200).json(prepareSuccessResponse({ data, message: 'Successfully Find Script' }));
   } catch (err) {
     console.error(err);
     throw new BadRequestError('can\'t get requested interface', { err });
-    // res.status(400).json(prepareErrorResponse({ message: 'Some Error on Server', data: { err } }));
   }
 };
 const getAllInterfacesByProjectId = async (req, res, next) => {
