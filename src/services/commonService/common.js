@@ -186,13 +186,14 @@ const prochat = async (req, res) => {
       thread_id,
       model,
       service,
-      rtlLayer,
+      // rtlLayer,
       req,
       modelOutputConfig,
       playground: false,
       metrics_sevice,
       rtlayer: rtlLayer,
-      webhook
+      webhook,
+      RTLLayer:rtlayer
     };
 
     let result;
