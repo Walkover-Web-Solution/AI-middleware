@@ -5,7 +5,8 @@ import conversationService from "../commonService/createConversation.js";
 import _ from "lodash";
 import functionCall from "./functionCall.js";
 import Helper from "../utils/helper.js";
-
+import RTLayer from 'rtlayer-node';
+const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 class UnifiedOpenAICase {
   constructor(params) {
     this.customConfig = params.customConfig;
@@ -21,14 +22,14 @@ class UnifiedOpenAICase {
     this.thread_id = params.thread_id;
     this.model = params.model;
     this.service = params.service;
-    this.rtlLayer = params.rtlLayer;
+    this.rtlLayer = params.rtlayer;
     this.req = params.req; 
     this.modelOutputConfig = params.modelOutputConfig;
     this.apiCallavailable =  params.bridge?.is_api_call ?? false;
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
-    this.rtlayer = params.rtlayer;
+    // rtlayer = params.rtlayer;
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
@@ -70,7 +71,7 @@ class UnifiedOpenAICase {
       });
 
       if (this.rtlLayer) {
-        this.RTLayer.message({
+        rtlayer.message({
           ...this.req.body,
           error: openAIResponse?.error,
           success: false
@@ -97,7 +98,7 @@ class UnifiedOpenAICase {
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
-        this.RTLayer.message({
+        rtlayer.message({
           ...this.req.body,
           message: "Function call",
           function_call: true,
@@ -110,7 +111,7 @@ class UnifiedOpenAICase {
         });
       }
   
-      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req?.body, this.playground);
+      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlLayer, this.req?.body, this.playground);
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
 
       if (!functionCallRes?.success) {
@@ -135,7 +136,7 @@ class UnifiedOpenAICase {
         });
 
         if (this.rtlLayer && !this.playground) {
-          this.RTLayer.message({
+          rtlayer.message({
             ...this.req.body,
             error: functionCallRes?.error,
             success: false
@@ -195,7 +196,7 @@ class UnifiedOpenAICase {
     }
 
     if (this.rtlLayer) {
-      this.RTLayer.message({
+      rtlayer.message({
         ...this.req.body,
         response: modelResponse,
         success: true
