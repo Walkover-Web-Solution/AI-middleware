@@ -72,6 +72,9 @@ const getchat = async (req, res) => {
       case "openai":
         const openAIInstance = new UnifiedOpenAICase(params);
         result = await openAIInstance.execute();
+        if (!result?.success) {
+          return res.status(400).json(result);
+        }
         break;
       case "google":
         let geminiConfig = {
