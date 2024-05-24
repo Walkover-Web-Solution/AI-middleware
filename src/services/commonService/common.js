@@ -114,7 +114,8 @@ const prochat = async (req, res) => {
     tool_call = null,
     service,
     variables = {},
-    RTLayer = null
+    RTLayer = null,
+    template_id=null
   } = req.body;
 
   let usage = {},
@@ -124,7 +125,7 @@ const prochat = async (req, res) => {
   let rtlLayer = false;
   let webhook, headers;
   try {
-    const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
+    const getconfig = await getConfiguration(configuration, service, bridge_id, apikey,template_id);
     if (!getconfig.success) {
       return res.status(400).json({
         success: false,
@@ -135,6 +136,7 @@ const prochat = async (req, res) => {
     configuration = getconfig.configuration;
     service = getconfig.service;
     apikey = getconfig.apikey;
+    let template = getconfig.template;
     model = configuration?.model;
     rtlLayer = RTLayer != null ? RTLayer : getconfig.RTLayer;
     const bridge = getconfig.bridge;
@@ -193,7 +195,8 @@ const prochat = async (req, res) => {
       playground: false,
       metrics_sevice,
       rtlayer: rtlLayer,
-      webhook
+      webhook,
+      template
     };
 
     let result;

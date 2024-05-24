@@ -1,5 +1,6 @@
 import { configurationModel } from "../../mongoModel/configuration.js";
 import { apiCallModel } from '../../mongoModel/apiCall.js'
+import { templateModel } from "../../mongoModel/template.js";
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
@@ -190,6 +191,14 @@ const getApiCallById = async apiId => {
     };
   }
 };
+const gettemplateById = async template_id =>{
+  try {
+    return await templateModel.findById(template_id)
+  } catch (error) {
+    console.error("template_id error=>",error);
+    return null;
+  }
+}
 export default {
   createBridges,
   getAllBridges,
@@ -199,5 +208,6 @@ export default {
   deleteBridge,
   updateToolsCalls,
   getApiCallById,
-  getBridgesWithSelectedData
+  getBridgesWithSelectedData,
+  gettemplateById
 };
