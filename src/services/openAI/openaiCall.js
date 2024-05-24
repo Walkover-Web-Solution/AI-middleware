@@ -33,6 +33,7 @@ class UnifiedOpenAICase {
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
+    this.template=params.template;
   }
 
   async execute() {
@@ -41,9 +42,8 @@ class UnifiedOpenAICase {
     let prompt = this.configuration.prompt ?? [];
     prompt = Array.isArray(prompt) ? prompt : [prompt];
     const conversation = this.configuration?.conversation ? conversationService.createOpenAIConversation(this.configuration.conversation).messages : [];
-
     prompt = Helper.replaceVariablesInPrompt(prompt, this.variables);
-
+    prompt =this.template ? Helper.replaceVariablesInPrompt([{"role":"system","content":this.template}], {system_prompt:prompt[0]?.content,...this.variables}) :  prompt; 
     this.customConfig["messages"] = [...prompt, ...conversation, this.user ? { role: "user", content: this.user } : this.tool_call];
     const openAIResponse = await chats(this.customConfig, this.apikey);
     let modelResponse = _.get(openAIResponse, "modelResponse", {});
@@ -76,7 +76,7 @@ class UnifiedOpenAICase {
           error: openAIResponse?.error,
           success: false
         }, this.req.body.rtlOptions).then(data => {
-           
+          // eslint-disable-next-line no-console
           console.log("message sent", data);
         }).catch(error => {
           console.error("message not sent", error);
@@ -104,7 +104,7 @@ class UnifiedOpenAICase {
           function_call: true,
           success: true
         }, this.req.body.rtlOptions).then(data => {
-           
+          // eslint-disable-next-line no-console
           console.log("RTLayer message sent", data);
         }).catch(error => {
           console.error("RTLayer message not sent", error);
@@ -141,7 +141,7 @@ class UnifiedOpenAICase {
             error: functionCallRes?.error,
             success: false
           }, this.req.body.rtlOptions).then(data => {
-             
+            // eslint-disable-next-line no-console
             console.log("message sent", data);
           }).catch(error => {
             console.error("message not sent", error);
@@ -201,7 +201,7 @@ class UnifiedOpenAICase {
         response: modelResponse,
         success: true
       }, this.req.body.rtlOptions).then(data => {
-         
+        // eslint-disable-next-line no-console
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
