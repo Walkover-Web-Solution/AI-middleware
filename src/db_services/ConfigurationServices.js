@@ -1,5 +1,6 @@
-import { configurationModel } from "../../mongoModel/configuration.js";
-import { apiCallModel } from '../../mongoModel/apiCall.js'
+import configurationModel from "../../mongoModel/configuration.js";
+import apiCallModel from "../../mongoModel/apiCall.js";
+import ChatBotModel from "../../mongoModel/chatBotModel.js";
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
@@ -29,7 +30,8 @@ const getAllBridges = async org_id => {
       org_id: 1,
       "configuration.model": 1,
       "configuration.prompt": 1,
-      "configuration.input": 1
+      "configuration.input": 1,
+      bridgeType: 1
     });
     return {
       success: true,
@@ -43,7 +45,7 @@ const getAllBridges = async org_id => {
     };
   }
 };
-const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
+const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeType, slugName) => {
   try {
     const bridges = await configurationModel.findOneAndUpdate({
       _id: bridge_id,
@@ -52,7 +54,9 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
       configuration: configuration,
       name: configuration?.name,
       service: configuration?.service,
-      apikey: apikey
+      apikey: apikey,
+      bridgeType: bridgeType,
+      slugName: slugName
     }, {
       new: true,
       projection: {
@@ -73,6 +77,29 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey) => {
     return {
       success: false,
       error: "something went wrong!!"
+    };
+  }
+};
+const updateBridgeType = async (bridge_id, org_id, bridgeType) => {
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({
+      _id: bridge_id,
+      org_id: org_id
+    }, {
+      bridgeType: bridgeType
+    }, {
+      new: true
+    });
+    return {
+      success: true,
+      message: "bridge type updated successfully",
+      bridges: bridges
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong in updating bridge type!!"
     };
   }
 };
@@ -190,6 +217,104 @@ const getApiCallById = async apiId => {
     };
   }
 };
+const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId) => {
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({
+      _id: bridgeId
+    }, {
+      $addToSet: {
+        responseIds: responseId
+      },
+      $set: {
+        responseRef: responseRefId
+      }
+    }, {
+      new: true
+    });
+    return {
+      success: true,
+      bridges: bridges
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
+
+// get bridge with slugname
+
+const getBridgeIdBySlugname = async (orgId, slugName) => {
+  try {
+    const bridges = await configurationModel.findOne({
+      slugName: slugName,
+      org_id: orgId
+    }).select({ _id: 1, slugName: 1 })
+    return {
+      success: true,
+      bridgeId: bridges._id
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+}
+const getBridgeBySlugname = async (orgId, slugName) => {
+  try {
+    const bridges = await configurationModel.findOne({
+      slugName: slugName,
+      org_id: orgId
+    }).populate('responseRef').lean();
+    return {
+      success: true,
+      bridges: bridges
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
+const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+      $pull: {
+        responseIds: responseId,
+      }
+    }, { new: true });
+    return { success: true, bridges: bridges };
+  } catch (error) {
+    console.log("error:", error);
+    return { success: false, error: "something went wrong!!" }
+  }
+
+}
+
+const findChatbotOfBridge = async (orgId, bridgeId) => {
+  try {
+    const bridges = await ChatBotModel.find({
+      orgId: orgId,
+      bridge: bridgeId
+    });
+    return {
+      success: true,
+      bridges: bridges
+    };
+  } catch (error) {
+    console.log("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
 export default {
   createBridges,
   getAllBridges,
@@ -199,5 +324,11 @@ export default {
   deleteBridge,
   updateToolsCalls,
   getApiCallById,
-  getBridgesWithSelectedData
+  getBridgesWithSelectedData,
+  addResponseIdinBridge,
+  removeResponseIdinBridge,
+  getBridgeBySlugname,
+  findChatbotOfBridge,
+  updateBridgeType,
+  getBridgeIdBySlugname
 };

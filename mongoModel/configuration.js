@@ -2,11 +2,17 @@ import mongoose from "mongoose";
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
-    default: ""
+    required: true
   },
   service: {
     type: String,
     default: ""
+  },
+  bridgeType: {
+    type: String,
+    enum: ['api', 'chatbot'],
+    required: true,
+    default: 'chatbot'
   },
   name: {
     type: String,
@@ -35,9 +41,23 @@ const configuration = new mongoose.Schema({
   is_api_call: {
     type: Boolean,
     default: false
+  },
+  slugName: {
+    type: String,
+    required: true
+  },
+  responseIds: {
+    type: Array,
+    default: []
+  },
+  responseRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ResponseType'
+  },
+  defaultQuestions: {
+    type: Array
   }
 });
+configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
 const configurationModel = mongoose.model("configuration", configuration);
-export  {
-  configurationModel
-};
+export default configurationModel;

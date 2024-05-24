@@ -52,31 +52,31 @@ async function getHistory(bridge_id, timestamp) {
 
     return { success: true, system_prompt: history[0].system_prompt };
   } catch (error) {
-    console.error("get history system prompt error=>",error)
+    console.error("get history system prompt error=>", error)
     return { success: false, message: "Prompt not found" };
   }
 }
 
 async function findMessage(org_id, thread_id, bridge_id) {
-  let conversations  = await models.pg.conversations.findAll({
-      attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
-      include: [{
-        model: models.pg.raw_data,
-        as: 'raw_data',
-        attributes: ['*'],
-        required: false,
-        'on': {
-          'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
-        }
-      }],
-      where: {
-        org_id: org_id,
-        thread_id: thread_id,
-        bridge_id: bridge_id
-      },
-      order: [['id', 'DESC']],
-      raw: true
-    });
+  let conversations = await models.pg.conversations.findAll({
+    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
+    include: [{
+      model: models.pg.raw_data,
+      as: 'raw_data',
+      attributes: ['*'],
+      required: false,
+      'on': {
+        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+      }
+    }],
+    where: {
+      org_id: org_id,
+      thread_id: thread_id,
+      bridge_id: bridge_id
+    },
+    order: [['id', 'DESC']],
+    raw: true
+  });
 
   conversations = conversations.reverse();
   return conversations;
@@ -117,15 +117,15 @@ async function findAllThreads(bridge_id, org_id) {
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
   try {
-          await models.pg.system_prompt_versionings.create({
-              system_prompt: promptText,
-              org_id: orgId,
-              bridge_id: bridgeId,
-              created_at: new Date(),
-              updated_at: new Date() 
-          });
+    await models.pg.system_prompt_versionings.create({
+      system_prompt: promptText,
+      org_id: orgId,
+      bridge_id: bridgeId,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
   } catch (error) {
-      console.error('Error storing system prompt:', error);
+    console.error('Error storing system prompt:', error);
   }
 }
 

@@ -10,8 +10,8 @@ import { embeddings } from "../openAI/embedding.js";
 import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
 import RTLayer from 'rtlayer-node';
-import {v1 as uuidv1} from 'uuid';
-import  {UnifiedOpenAICase}  from '../openAI/openaiCall.js';
+import { v1 as uuidv1 } from 'uuid';
+import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 
@@ -50,7 +50,7 @@ const getchat = async (req, res) => {
       if (modelConfig[key]["level"] == 2 || key in configuration) {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
-    } 
+    }
     let params = {
       customConfig,
       configuration,
@@ -103,7 +103,7 @@ const getchat = async (req, res) => {
 };
 const prochat = async (req, res) => {
   const startTime = Date.now();
-  
+
   let {
     apikey,
     bridge_id = null,
@@ -193,16 +193,17 @@ const prochat = async (req, res) => {
       playground: false,
       metrics_sevice,
       rtlayer: rtlLayer,
-      webhook
+      webhook,
+      RTLLayer:rtlayer
     };
 
     let result;
-    
+
     switch (service) {
       case "openai":
         const openAIInstance = new UnifiedOpenAICase(params);
         result = await openAIInstance.execute();
-        if(!result?.success){
+        if (!result?.success) {
           return res.status(400).json(result);
         }
         break;
@@ -231,7 +232,7 @@ const prochat = async (req, res) => {
               error: geminiResponse?.error,
               success: false
             }, req.body.rtlOptions).then(data => {
-              // eslint-disable-next-line no-console
+               
               console.log("message sent", data);
             }).catch(error => {
               console.error("message not sent", error);
@@ -297,7 +298,7 @@ const prochat = async (req, res) => {
         response: result.modelResponse,
         success: true
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
@@ -328,7 +329,7 @@ const prochat = async (req, res) => {
         error: error?.message,
         success: false
       }, req.body.rtlOptions).then(data => {
-        // eslint-disable-next-line no-console
+         
         console.log("message sent", data);
       }).catch(error => {
         console.error("message not sent", error);
@@ -421,7 +422,7 @@ const getCompletion = async (req, res) => {
 };
 const proCompletion = async (req, res) => {
   const startTime = Date.now();
-  let thread_id=uuidv1()
+  let thread_id = uuidv1()
   let {
     apikey,
     bridge_id,
@@ -508,7 +509,7 @@ const proCompletion = async (req, res) => {
             model: configuration?.model,
             channel: 'completion',
             type: "error",
-            actor:  "user"
+            actor: "user"
           });
           if (rtlLayer) {
             rtlayer.message({
@@ -544,8 +545,8 @@ const proCompletion = async (req, res) => {
           model: configuration?.model,
           channel: 'completion',
           type: _.get(modelResponse, modelOutputConfig.message) == null ? "completion" : "assistant",
-          actor:"user"
-        }; 
+          actor: "user"
+        };
         break;
       case "google":
         let geminiConfig = {
@@ -601,7 +602,7 @@ const proCompletion = async (req, res) => {
       success: true,
       variables: variables
     };
-    metrics_sevice.create([usage],historyParams);
+    metrics_sevice.create([usage], historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -634,7 +635,7 @@ const proCompletion = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage],{
+    metrics_sevice.create([usage], {
       thread_id: thread_id,
       user: prompt,
       message: "",
@@ -643,7 +644,7 @@ const proCompletion = async (req, res) => {
       model: configuration?.model,
       channel: 'completion',
       type: "error",
-      actor:  "user"
+      actor: "user"
     });
     console.error("proCompletion common error=>", error);
     if (rtlLayer) {
@@ -677,7 +678,7 @@ const getEmbeddings = async (req, res) => {
     } = req.body;
     const model = configuration?.model;
     // let usage,
-    let  modelResponse = {},
+    let modelResponse = {},
       customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["embedding"].has(model))) {
@@ -793,7 +794,7 @@ const proEmbeddings = async (req, res) => {
       }
     }
     let historyParams;
-    
+
     switch (service) {
       case "openai":
         customConfig["input"] = input || "";
@@ -808,7 +809,7 @@ const proEmbeddings = async (req, res) => {
             success: false,
             error: response?.error
           };
-          metrics_sevice.create([usage],{
+          metrics_sevice.create([usage], {
             thread_id: thread_id,
             user: input,
             message: "",
@@ -909,7 +910,7 @@ const proEmbeddings = async (req, res) => {
       latency: endTime - startTime,
       success: true
     };
-    metrics_sevice.create([usage],historyParams);
+    metrics_sevice.create([usage], historyParams);
     if (webhook) {
       await sendRequest(webhook, {
         success: true,
@@ -942,7 +943,7 @@ const proEmbeddings = async (req, res) => {
       success: false,
       error: error.message
     };
-    metrics_sevice.create([usage],{
+    metrics_sevice.create([usage], {
       thread_id: thread_id,
       user: input,
       message: "",
