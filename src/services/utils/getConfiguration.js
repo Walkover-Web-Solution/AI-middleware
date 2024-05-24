@@ -29,7 +29,7 @@ service = service ? service.toLowerCase() : "";
     RTLayer: RTLayer
   };
 };
-const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id) => {
+const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
   const configuration = result?.bridges?.configuration;
   const type = result.bridges.configuration?.type ? result.bridges.configuration.type : '';
   const model = configuration?.model ? configuration.model : '';
@@ -47,9 +47,12 @@ const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id) => {
       customConfig[keys] = modelConfig[keys] ? customConfig[keys] : configuration[keys];
     }
   }
+
   result.bridges.apikey = helper.decrypt(result.bridges.apikey);
-  const embed_token = token.generateToken(bridge_id);
-  result.bridges.embed_token = embed_token;
+  if (update) {
+    const embed_token = token.generateToken(bridge_id);
+    result.bridges.embed_token = embed_token;
+  }
   result.bridges.type = type;
   result.bridges.configuration = customConfig;
 };
