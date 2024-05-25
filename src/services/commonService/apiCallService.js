@@ -1,4 +1,4 @@
-import apiCallModel from "../../../mongoModel/apiCall.js";
+import apiCallModel from "../../mongoModel/apiCall.js";
 import common from "../../services/commonService/configServices.js";
 const createsApi = async (req, res) => {
   try {

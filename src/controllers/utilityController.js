@@ -1,6 +1,6 @@
 import axios from "axios";
 import responseTypeService from "../db_services/responseTypeService.js";
-import configurationModel from "../../mongoModel/configuration.js";
+import configurationModel from "../mongoModel/configuration.js";
 import { customAlphabet, nanoid } from "nanoid";
 
 const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';

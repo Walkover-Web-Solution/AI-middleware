@@ -1,5 +1,5 @@
-import ChatBotModel from "../../mongoModel/chatBotModel.js";
-import ActionModel from "../../mongoModel/actionModel.js";
+import ChatBotModel from "../mongoModel/chatBotModel.js";
+import ActionModel from "../mongoModel/actionModel.js";
 import mongoose from "mongoose";
 const create = async chatBotData => {
   try {
