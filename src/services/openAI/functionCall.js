@@ -8,7 +8,6 @@ const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const functionCall= async (data)=>{
     try {
         let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false} = data;
-        console.log(configuration," ", apikey, " ",bridge, " ",tools_call, " ",outputConfig, "  ",l, "    ",rtlLayer, "    ",body, "   ",playground);
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
