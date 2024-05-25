@@ -91,7 +91,7 @@ class UnifiedOpenAICase {
         }, 'POST', this.headers);
         return { success: false, error: openAIResponse?.error };
       }
-      
+    
       }
       return { success: false, error: openAIResponse?.error };
     }
@@ -110,9 +110,8 @@ class UnifiedOpenAICase {
           console.error("RTLayer message not sent", error);
         });
       }
-  
-      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlLayer, this.req?.body, this.playground);
-      const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
+      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground});
+      const funcModelResponse = _.get(functionCallRes, "modelResponse", {}); 
 
       if (!functionCallRes?.success) {
         usage = {
