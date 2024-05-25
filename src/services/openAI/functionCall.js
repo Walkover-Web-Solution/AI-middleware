@@ -47,7 +47,7 @@ const functionCall= async (data)=>{
                 //("openAIResponse errror",openAIResponse);
                 return {success:false,error:openAIResponse?.error}
             }
-            if(_.get(modelResponse, this.modelOutputConfig.tools) && l<=3){
+            if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
                 if(rtlLayer && !playground){
                     rtlayer.message({
