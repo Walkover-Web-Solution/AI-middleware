@@ -5,18 +5,7 @@ import { filterDataOfBridgeOnTheBaseOfUI } from "../services/utils/getConfigurat
 import responseTypeService from "../db_services/responseTypeService.js";
 import { getToken } from "../services/utils/usersServices.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
-import { nanoid, customAlphabet } from 'nanoid';
-
-const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-function generateIdentifier(length = 12, prefix = '', includeNumber = true) {
-    const alphabet = includeNumber ? alphabetSet : alphabetSet.slice(0, alphabetSet.length - 10);
-    if (alphabet) {
-        const custom_nanoid = customAlphabet(alphabet, length);
-        return `${prefix}${custom_nanoid()}`;
-    }
-    return `${prefix}${nanoid(length)}`;
-}
-// const { filterDataOfBridgeOnTheBaseOfUI } = require('../services/utils/getConfiguration');
+import { generateIdentifier } from "../services/utils/utilityService.js";
 
 const createChatBot = async (req, res) => {
     const result = await ChatbotDbService.create(req.body);
