@@ -185,29 +185,6 @@ class UnifiedOpenAICase {
        type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
        actor: this.user ? "user" : "tool"
       };
-    
-    if (this.webhook) {
-      await this.sendRequest(this.webhook, {
-        success: true,
-        response: modelResponse,
-        ...this.req.body
-      }, 'POST', this.headers);
-      return { success: true, modelResponse, historyParams, usage};
-    }
-
-    if (this.rtlLayer) {
-      rtlayer.message({
-        ...this.req.body,
-        response: modelResponse,
-        success: true
-      }, this.req.body.rtlOptions).then(data => {
-         
-        console.log("message sent", data);
-      }).catch(error => {
-        console.error("message not sent", error);
-      });
-      return { success: true, modelResponse, historyParams,usage};
-    }
   }
 
     return { success: true, modelResponse, historyParams, usage };
