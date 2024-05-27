@@ -1,3 +1,4 @@
+import 'express-async-errors';
 import express from "express";
 import cors from "cors";
 import modelController from "./controllers/modelController.js";
@@ -10,6 +11,9 @@ import metrisRoutes from "../routes/metrics_routes.js";
 import utlilityRoutes from "../routes/utlility_routes.js";
 import chatbot from "../routes/chatBot_routes.js";
 import userOrgLocalController from "../routes/userOrgLocal_route.js";
+import notFoundMiddleware from './middlewares/notFound.js';
+import errorHandlerMiddleware from './middlewares/errorHandler.js';
+import responseMiddleware from './middlewares/responseMiddleware.js';
 import('../services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -39,6 +43,10 @@ app.use('/user', userOrgLocalController);
 
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
+
+app.use(responseMiddleware); // send response
+app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
+app.use(errorHandlerMiddleware);
 app.listen(PORT, () => {
    
   console.log(`Server is running on port ${PORT}`);
