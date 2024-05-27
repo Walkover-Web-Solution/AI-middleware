@@ -5,7 +5,8 @@ import conversationService from "../commonService/createConversation.js";
 import _ from "lodash";
 import functionCall from "./functionCall.js";
 import Helper from "../utils/helper.js";
-
+import RTLayer from 'rtlayer-node';
+const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 class UnifiedOpenAICase {
   constructor(params) {
     this.customConfig = params.customConfig;
@@ -21,14 +22,14 @@ class UnifiedOpenAICase {
     this.thread_id = params.thread_id;
     this.model = params.model;
     this.service = params.service;
-    this.rtlLayer = params.rtlLayer;
+    this.rtlLayer = params.rtlayer;
     this.req = params.req; 
     this.modelOutputConfig = params.modelOutputConfig;
     this.apiCallavailable =  params.bridge?.is_api_call ?? false;
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
-    this.rtlayer = params.rtlayer;
+    // rtlayer = params.rtlayer;
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
@@ -70,7 +71,7 @@ class UnifiedOpenAICase {
       });
 
       if (this.rtlLayer) {
-        this.RTLayer.message({
+        rtlayer.message({
           ...this.req.body,
           error: openAIResponse?.error,
           success: false
@@ -90,14 +91,14 @@ class UnifiedOpenAICase {
         }, 'POST', this.headers);
         return { success: false, error: openAIResponse?.error };
       }
-      
+    
       }
       return { success: false, error: openAIResponse?.error };
     }
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
       if (this.rtlLayer && !this.playground) {
-        this.RTLayer.message({
+        rtlayer.message({
           ...this.req.body,
           message: "Function call",
           function_call: true,
@@ -109,9 +110,8 @@ class UnifiedOpenAICase {
           console.error("RTLayer message not sent", error);
         });
       }
-  
-      const functionCallRes = await functionCall(this.customConfig, this.apikey, this.bridge, _.get(modelResponse, this.modelOutputConfig.tools)[0], this.modelOutputConfig, this.rtlayer, this.req?.body, this.playground);
-      const funcModelResponse = _.get(functionCallRes, "modelResponse", {});
+      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground});
+      const funcModelResponse = _.get(functionCallRes, "modelResponse", {}); 
 
       if (!functionCallRes?.success) {
         usage = {
@@ -135,7 +135,7 @@ class UnifiedOpenAICase {
         });
 
         if (this.rtlLayer && !this.playground) {
-          this.RTLayer.message({
+          rtlayer.message({
             ...this.req.body,
             error: functionCallRes?.error,
             success: false
@@ -184,29 +184,6 @@ class UnifiedOpenAICase {
        type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
        actor: this.user ? "user" : "tool"
       };
-    
-    if (this.webhook) {
-      await this.sendRequest(this.webhook, {
-        success: true,
-        response: modelResponse,
-        ...this.req.body
-      }, 'POST', this.headers);
-      return { success: true, modelResponse, historyParams, usage};
-    }
-
-    if (this.rtlLayer) {
-      this.RTLayer.message({
-        ...this.req.body,
-        response: modelResponse,
-        success: true
-      }, this.req.body.rtlOptions).then(data => {
-         
-        console.log("message sent", data);
-      }).catch(error => {
-        console.error("message not sent", error);
-      });
-      return { success: true, modelResponse, historyParams,usage};
-    }
   }
 
     return { success: true, modelResponse, historyParams, usage };
