@@ -1,4 +1,4 @@
-import { getUserOrgMapping, switchOrganization } from '../services/proxyService.js';
+import { getUserOrgMapping, switchOrganization } from '../../services/proxyService.js';
 
 async function userOrgAccessCheck(req, res, next) {
   const { params, profile } = req;
