@@ -121,13 +121,25 @@ const createBridges = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    const data = await configurationService.getBridgesByName(configuration?.name, org_id);
-    if (data.success && data.bridges) {
+
+    // Check if the bridge name is unique
+    const nameData = await configurationService.getBridgesByName(configuration?.name, org_id);
+    if (nameData.success && nameData.bridges) {
       return res.status(400).json({
         success: false,
         error: "bridge Name already exists! please choose unique one"
       });
     }
+
+    // Check if the slugName is unique
+    const slugData = await configurationService.getBridgesBySlugName(configuration?.slugName, org_id);
+    if (slugData.success && slugData.bridges) {
+      return res.status(400).json({
+        success: false,
+        error: "slugName already exists! please choose unique one"
+      });
+    }
+
     const result = await configurationService.createBridges({
       configuration: configuration,
       org_id,
