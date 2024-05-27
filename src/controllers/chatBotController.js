@@ -183,7 +183,11 @@ const updateAllDefaultResponseInOrg = async (req, res) => {
 const getAllDefaultResponseInOrg = async (req, res) => {
     // const orgId = req.params?.orgId;
     const orgId = req.body?.org_id;
-    const result = await responseTypeService.getAll(orgId)
+    let result;
+    result = await responseTypeService.getAll(orgId);
+    if (result.chatBot === null) {
+        result = await responsetypeService.create(orgId);
+    }
     return res.status(result.success ? 200 : 404).json(result);
 }
 // Core function

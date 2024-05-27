@@ -47,7 +47,7 @@ const functionCall= async (data)=>{
                 //("openAIResponse errror",openAIResponse);
                 return {success:false,error:openAIResponse?.error}
             }
-            if(!_.get(modelResponse, outputConfig.message) && l<=3){
+            if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
                 if(rtlLayer && !playground){
                     rtlayer.message({
@@ -62,7 +62,10 @@ const functionCall= async (data)=>{
                         console.error("RTLayer message not sent", error);
                     });
                 }
-                return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
+
+                data.l=data.l+1;
+                data.tools_call= _.get(modelResponse, outputConfig.tools)[0];
+                return await functionCall(data);
             }
             //(openAIResponse);
             return openAIResponse;
