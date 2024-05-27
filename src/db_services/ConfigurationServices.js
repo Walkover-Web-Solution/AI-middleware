@@ -161,6 +161,24 @@ const getBridgesByName = async (name, org_id) => {
     };
   }
 };
+const getBridgesBySlugName = async (slugName, org_id) => {
+  try {
+    const bridges = await configurationModel.findOne({
+      slugName: slugName,
+      org_id: org_id
+    });
+    return {
+      success: true,
+      bridges: bridges
+    };
+  } catch (error) {
+    console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
 const deleteBridge = async (bridge_id, org_id) => {
   try {
     const bridges = await configurationModel.findOneAndDelete({
@@ -330,5 +348,6 @@ export default {
   getBridgeBySlugname,
   findChatbotOfBridge,
   updateBridgeType,
-  getBridgeIdBySlugname
+  getBridgeIdBySlugname,
+  getBridgesBySlugName
 };
