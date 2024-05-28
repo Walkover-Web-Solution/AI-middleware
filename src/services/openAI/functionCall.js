@@ -1,10 +1,10 @@
 import { chats } from "./chat.js";
 import _ from 'lodash';
 import configurationService from "../../db_services/ConfigurationServices.js";
-import RTLayer from 'rtlayer-node';
 import axios from "axios";
+import { ResponseSender } from "../utils/customRes.js";
+const responseSender = new ResponseSender(process.env.RTLAYER_AUTH);
 
-const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const functionCall= async (data)=>{
     try {
         let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false} = data;
@@ -29,16 +29,7 @@ const functionCall= async (data)=>{
             // //(configuration.messages,": messages","\n tools call:",tools_call);
             //rtlayer going to gpt
             if(rtlLayer && !playground){
-            rtlayer.message({
-                body,
-                message: "Going to GPT",
-                function_call:false,
-                success: true
-            },body.rtlOptions).then((data) => {
-                console.log("RTLayer message sent", data);
-            }).catch((error) => {
-                console.error("RTLayer message not sent", error);
-            });
+            await responseSender.sendResponse('rtlayer', {function_call: false, success: true, message: "Going to GPT"}, body, {});
         }
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
@@ -50,17 +41,7 @@ const functionCall= async (data)=>{
             if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
                 if(rtlLayer && !playground){
-                    rtlayer.message({
-                        ...body,
-                        message: "sending the next fuction call",
-                        function_call:true,
-                        success: true
-                    },body.rtlOptions).then((data) => {
-                         
-                        console.log("RTLayer message sent", data);
-                    }).catch((error) => {
-                        console.error("RTLayer message not sent", error);
-                    });
+                    await responseSender.sendResponse('rtlayer', {function_call: true, success: true, message: "sending the next fuction call"}, body, {});
                 }
 
                 data.l=data.l+1;
