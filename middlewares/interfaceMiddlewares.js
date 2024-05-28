@@ -57,9 +57,9 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     threadId,
     message,
   } = req.body;
-  const { user_id } = req.profile;
+  const { userId } = req.profile;
   const { botId: chatBotId } = req.params;
-  let channelId = chatBotId + user_id;
+  let channelId = chatBotId + userId;
   if (threadId?.trim()) { channelId = chatBotId + threadId; }
 
   const {
