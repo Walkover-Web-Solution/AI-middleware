@@ -118,26 +118,25 @@ const createBridges = async (req, res) => {
     if (!(service in services)) {
       return res.status(400).json({
         success: false,
-        error: "service does not exist!"
+        error: "The specified service does not exist!"
       });
     }
 
-    // Check if the bridge name is unique
-    const nameData = await configurationService.getBridgesByName(configuration?.name, org_id);
-    if (nameData.success && nameData.bridges) {
-      return res.status(400).json({
-        success: false,
-        error: "bridge Name already exists! please choose unique one"
-      });
-    }
-
-    // Check if the slugName is unique
-    const slugData = await configurationService.getBridgesBySlugName(configuration?.slugName, org_id);
-    if (slugData.success && slugData.bridges) {
-      return res.status(400).json({
-        success: false,
-        error: "slugName already exists! please choose unique one"
-      });
+    // Check if the bridge name and slugName are unique
+    const bridgeData = await configurationService.getBridgesBySlugNameAndName(configuration?.slugName, configuration?.name, org_id);
+    if (bridgeData.success && bridgeData.bridges) {
+      if (bridgeData.bridges.name === configuration?.name) {
+        return res.status(400).json({
+          success: false,
+          error: "Bridge name already exists! Please choose a unique one."
+        });
+      }
+      if (bridgeData.bridges.slugName === configuration?.slugName) {
+        return res.status(400).json({
+          success: false,
+          error: "Slug name already exists! Please choose a unique one."
+        });
+      }
     }
 
     const result = await configurationService.createBridges({
@@ -159,7 +158,7 @@ const createBridges = async (req, res) => {
     console.error("common error=>", error);
     return res.status(400).json({
       success: false,
-      error: "something went wrong!!"
+      error: "An unexpected error occurred while creating the bridge. Please try again later."
     });
   }
 };
@@ -271,9 +270,10 @@ const updateBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
+    console.log("tanishjain", error)
     return res.status(422).json({
       success: false,
-      error: error.details
+      error: error.message
     });
   }
 };
