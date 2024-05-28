@@ -29,7 +29,13 @@ const functionCall= async (data)=>{
             // //(configuration.messages,": messages","\n tools call:",tools_call);
             //rtlayer going to gpt
             if(rtlLayer && !playground){
-            await responseSender.sendResponse('rtlayer', {function_call: false, success: true, message: "Going to GPT"}, body, {});
+            //await responseSender.sendResponse('rtlayer', {function_call: false, success: true, message: "Going to GPT"}, body, {});
+            responseSender.sendResponse({
+                method: 'rtlayer',
+                data: { function_call: true, success: true, message: "Going to GPT" },
+                reqBody: body,
+                headers: {}
+              });
         }
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
@@ -41,7 +47,13 @@ const functionCall= async (data)=>{
             if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
                 if(rtlLayer && !playground){
-                    await responseSender.sendResponse('rtlayer', {function_call: true, success: true, message: "sending the next fuction call"}, body, {});
+                    //await responseSender.sendResponse('rtlayer', {function_call: true, success: true, message: "sending the next fuction call"}, body, {});
+                    responseSender.sendResponse({
+                        method: 'rtlayer',
+                        data: { function_call: true, success: true, message: "sending the next fuction call" },
+                        reqBody: body,
+                        headers: {}
+                      });
                 }
 
                 data.l=data.l+1;

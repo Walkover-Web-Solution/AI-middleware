@@ -6,10 +6,10 @@ class ResponseSender {
     this.rtlayer = new RTLayer.default(auth);
   }
 
-  async sendResponse(method, data, reqBody, headers) {
+  async sendResponse({webhook, method, data, reqBody, headers }) {
     switch (method) {
       case 'webhook':
-        await sendRequest(reqBody.configuration?.webhook, 
+        await sendRequest(webhook, 
         { ...reqBody, ...data }, 
         'POST', 
         headers);
@@ -17,7 +17,7 @@ class ResponseSender {
       case 'rtlayer':
         await this.rtlayer.message(
           { ...reqBody, ...data },
-          {}
+          {"id" : "husain"}
         );
         break;
       default:
