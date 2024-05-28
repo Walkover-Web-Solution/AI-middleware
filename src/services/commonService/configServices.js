@@ -270,7 +270,6 @@ const updateBridges = async (req, res) => {
     }
     return res.status(400).json(result);
   } catch (error) {
-    console.log("tanishjain", error)
     return res.status(422).json({
       success: false,
       error: error.message
