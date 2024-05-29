@@ -6,26 +6,21 @@ class ResponseSender {
     this.rtlayer = new RTLayer.default(auth);
   }
 
-  async sendResponse({webhook, method, data, reqBody, headers }) {
-    switch (method) {
-      case 'webhook':
-        await sendRequest(webhook, 
+  async sendResponse({ rtlLayer, webhook, data, reqBody, headers }) {
+    if (rtlLayer) {
+      await this.rtlayer.message(
+        { ...reqBody, ...data },
+        {"id":"husain"}
+      );
+    }
+    if (webhook) {
+      await sendRequest(webhook, 
         { ...reqBody, ...data }, 
         'POST', 
-        headers);
-        break;
-      case 'rtlayer':
-        await this.rtlayer.message(
-          { ...reqBody, ...data },
-          {"id" : "husain"}
-        );
-        break;
-      default:
-        throw new Error('Invalid method');
+        headers
+      );
     }
   }
 }
 
-export { 
-    ResponseSender
-}
+export { ResponseSender };
