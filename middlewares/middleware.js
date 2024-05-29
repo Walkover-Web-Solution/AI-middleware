@@ -11,10 +11,11 @@ const middleware = async (req, res, next) => {
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
-      const checkToken = jwt.verify(token, process.env.SecretKey);
+      let checkToken = jwt.verify(token, process.env.SecretKey);
       if (checkToken) {
+        checkToken.org.id = checkToken.org.id.toString()
         req.profile = checkToken;
-        req.body.org_id = checkToken?.org?.id;
+        req.body.org_id = checkToken?.org?.id.toString();
         return next();
       }
       return res.status(404).json({

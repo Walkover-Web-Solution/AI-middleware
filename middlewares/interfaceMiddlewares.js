@@ -37,10 +37,12 @@ const chatBotAuth = async (req, res, next) => { // todo pending
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
-      const checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
+      let checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
       if (checkToken) {
+
+        checkToken.org_id = checkToken.org_id.toString()
         req.profile = checkToken;
-        req.body.org_id = checkToken?.org_id;
+        req.body.org_id = checkToken?.org_id?.toString();
         if (!checkToken.user) req.profile.viewOnly = true;
         return next();
       }

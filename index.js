@@ -40,6 +40,6 @@ app.use('/user', userOrgLocalController);
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
 app.listen(PORT, () => {
-   
+
   console.log(`Server is running on port ${PORT}`);
 });
