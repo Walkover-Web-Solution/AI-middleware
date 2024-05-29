@@ -230,27 +230,13 @@ const prochat = async (req, res) => {
             error: geminiResponse?.error
           };
           metrics_sevice.create([usage]);
-          if (rtlLayer) {
-            // await responseSender.sendResponse('rtlayer', { success: false,  error: geminiResponse?.error, }, req.body, headers);
-            responseSender.sendResponse({
-              method: 'rtlayer',
-              data: { success: false, error: geminiResponse?.error },
-              reqBody: req.body,
-              headers: {}
-            });
-            return;
-          }
-          if (webhook) {
-            // await responseSender.sendResponse('webhook', {   error: geminiResponse?.error, success: false }, req.body, headers);
-            responseSender.sendResponse({
-              webhook : webhook,
-              method: 'webhook',
-              data: { success: false, error: geminiResponse?.error },
-              reqBody: req.body,
-              headers: headers
-            });
-            return;
-          }
+          responseSender.sendResponse({
+            rtlLayer,
+            webhook,
+            data:  { success: false, error: geminiResponse?.error },
+            reqBody: req.body,
+            headers: headers || {}
+          });
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -287,26 +273,13 @@ const prochat = async (req, res) => {
       prompt: configuration.prompt
     };
     metrics_sevice.create([usage], result.historyParams);
-    if (webhook) {
-      // await responseSender.sendResponse('webhook', { response: result.modelResponse, success: true }, req.body, headers);
-        responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data: { response: result.modelResponse, success: true },
-        reqBody: req.body,
-        headers: headers
-      });
-    }
-    if (rtlLayer) {
-      // await responseSender.sendResponse('rtlayer', { success: true, function_call: false, response: result.modelResponse, }, req.body, headers);
-        responseSender.sendResponse({
-        method: 'rtlayer',
-        data: { response: result.modelResponse, success: true },
-        reqBody: req.body,
-        headers: {}
-      });
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data: { response: result.modelResponse, success: true },
+      reqBody: req.body,
+      headers: headers || {}
+    });
     return res.status(200).json({
       success: true,
       response: result.modelResponse
@@ -325,27 +298,14 @@ const prochat = async (req, res) => {
     };
     metrics_sevice.create([usage]);
     console.error("prochats common error=>", error);
-    if (rtlLayer) {
-      // await responseSender.sendResponse('rtlayer', { error: error?.message, success: false }, req.body, headers);
-      responseSender.sendResponse({
-        method: 'rtlayer',
-        data: {  error: error?.message, success: false },
-        reqBody: req.body,
-        headers: {}
-      });
-      return;
-    }
-    if (webhook) {
-      // await responseSender.sendResponse('webhook', { error: error?.message, success: false }, req.body, headers);
-      responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data: { error: error?.message, success: false },
-        reqBody: req.body,
-        headers: headers
-      });
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data:  { error: error?.message, success: false },
+      reqBody: req.body,
+      headers: headers || {}
+    });
+    
     return res.status(400).json({
       success: false,
       error: error.message
@@ -513,28 +473,13 @@ const proCompletion = async (req, res) => {
             type: "error",
             actor: "user"
           });
-          if (rtlLayer) {
-            responseSender.sendResponse({
-              method: 'rtlayer',
-              data: { error: openAIResponse?.error, success: false},
-              reqBody: req.body,
-              headers: {}
-            });
-            // await responseSender.sendResponse('rtlayer', { error: openAIResponse?.error, success: false}, req.body, {});
-            return;
-          }
-          if (webhook) {
-            responseSender.sendResponse({
-              webhook : webhook,
-              method: 'webhook',
-              data: { error: openAIResponse?.error, success: false },
-              reqBody: req.body,
-              headers: headers
-            });
-        
-              // await responseSender.sendResponse('webhook', {  error: openAIResponse?.error, success: false }, req.body, headers);
-            return;
-          }
+          responseSender.sendResponse({
+            rtlLayer,
+            webhook,
+            data:  { error: openAIResponse?.error, success: false},
+            reqBody: req.body,
+            headers: headers || {}
+          });
           return res.status(400).json({
             success: false,
             error: openAIResponse?.error
@@ -573,27 +518,13 @@ const proCompletion = async (req, res) => {
             error: geminiResponse?.error
           };
           metrics_sevice.create([usage]);
-          if (rtlLayer) {
-            responseSender.sendResponse({
-              method: 'rtlayer',
-              data: { success: false, error: geminiResponse?.error },
-              reqBody: req.body,
-              headers: {}
-            });
-           // await responseSender.sendResponse('rtlayer', { error: geminiResponse?.error, success: false}, req.body, {});
-            return;
-          }
-          if (webhook) {
-            responseSender.sendResponse({
-              webhook : webhook,
-              method: 'webhook',
-              data: {  error: geminiResponse?.error, success: false },
-              reqBody: req.body,
-              headers: headers
-            });
-            // await responseSender.sendResponse('webhook', {  error: geminiResponse?.error, success: false }, req.body, headers);
-            return;
-          }
+          responseSender.sendResponse({
+            rtlLayer,
+            webhook,
+            data:  {error: geminiResponse?.error, success: false },
+            reqBody: req.body,
+            headers: headers || {}
+          });
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -616,27 +547,13 @@ const proCompletion = async (req, res) => {
       variables: variables
     };
     metrics_sevice.create([usage], historyParams);
-    if (webhook) {
-       responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data:{ response: modelResponse, success: true },
-        reqBody: req.body,
-        headers: headers
-      });
-      // await responseSender.sendResponse('webhook', {  response: modelResponse, success: true }, req.body, headers);
-      return;
-    }
-    if (rtlLayer) {
-       responseSender.sendResponse({
-        method: 'rtlayer',
-        data:  {  response: modelResponse, success: true },
-        reqBody: req.body,
-        headers: {}
-      });
-      // await responseSender.sendResponse('rtlayer', {  response: modelResponse, success: true }, req.body, {});
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data:  { response: modelResponse, success: true },
+      reqBody: req.body,
+      headers: headers || {}
+    });
     return res.status(200).json({
       success: true,
       response: modelResponse
@@ -665,27 +582,13 @@ const proCompletion = async (req, res) => {
       actor: "user"
     });
     console.error("proCompletion common error=>", error);
-    if (rtlLayer) {
-      responseSender.sendResponse({
-        method: 'rtlayer',
-        data:  {  error: error?.message, success: false},
-        reqBody: req.body,
-        headers: {}
-      });
-      // await responseSender.sendResponse('rtlayer', {  error: error?.message, success: false}, req.body, {});
-      return;
-    }
-    if (webhook) {
-      responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data:  {  error: error?.message, success: false},
-        reqBody: req.body,
-        headers: headers
-      });
-      // await responseSender.sendResponse('webhook', { error: error?.message, success: false }, req.body, headers);
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data: {  error: error?.message, success: false},
+      reqBody: req.body,
+      headers: headers || {}
+    });
     return res.status(400).json({
       success: false,
       error: error.message
@@ -843,27 +746,13 @@ const proEmbeddings = async (req, res) => {
             type: "error",
             actor: "user"
           });
-          if (rtlLayer) {
-            responseSender.sendResponse({
-              method: 'rtlayer',
-              data:  { error: response?.error, success: false},
-              reqBody: req.body,
-              headers: {}
-            });
-            // await responseSender.sendResponse('rtlayer', {  error: response?.error, success: false}, req.body, {});
-            return;
-          }
-          if (webhook) {
-            responseSender.sendResponse({
-              webhook : webhook,
-              method: 'webhook',
-              data:   { error: response?.error, success: false },
-              reqBody: req.body,
-              headers: headers
-            });
-            // await responseSender.sendResponse('webhook', { error: response?.error, success: false }, req.body, headers);
-            return;
-          }
+          responseSender.sendResponse({
+            rtlLayer,
+            webhook,
+            data:   { error: response?.error, success: false },
+            reqBody: req.body,
+            headers: headers || {}
+          });
           return res.status(400).json({
             success: false,
             error: response?.error
@@ -902,27 +791,13 @@ const proEmbeddings = async (req, res) => {
             error: geminiResponse?.error
           };
           metrics_sevice.create([usage]);
-          if (rtlLayer) {
-            responseSender.sendResponse({
-              method: 'rtlayer',
-              data:   {  error: geminiResponse?.error, success: false},
-              reqBody: req.body,
-              headers: {}
-            });
-            // await responseSender.sendResponse('rtlayer', {  error: geminiResponse?.error, success: false}, req.body, {});
-            return;
-          }
-          if (webhook) {
-            responseSender.sendResponse({
-              webhook : webhook,
-              method: 'webhook',
-              data:  { error: geminiResponse?.error, success: false },
-              reqBody: req.body,
-              headers: headers
-            });
-            // await responseSender.sendResponse('webhook', {  error: geminiResponse?.error, success: false }, req.body, headers);
-            return;
-          }
+          responseSender.sendResponse({
+            rtlLayer,
+            webhook,
+            data: { error: geminiResponse?.error, success: false },
+            reqBody: req.body,
+            headers: headers || {}
+          });
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -944,37 +819,13 @@ const proEmbeddings = async (req, res) => {
       success: true
     };
     metrics_sevice.create([usage], historyParams);
-    if (webhook) {
-      // await sendRequest(webhook, {
-      //   success: true,
-      //   response: modelResponse,
-      //   ...req.body
-      // }, 'POST', headers);
-      responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data: { response: modelResponse, success: true },
-        reqBody: req.body,
-        headers: headers
-      });
-      await responseSender.sendResponse('webhook', { response: modelResponse, success: true }, req.body, headers);
-      return;
-    }
-    if (rtlLayer) {
-      // rtlayer.message({
-      //   ...req.body,
-      //   response: modelResponse,
-      //   success: false
-      // }, req.body.rtlOptions);
-      responseSender.sendResponse({
-        method: 'rtlayer',
-        data:  { response: modelResponse, success: true},
-        reqBody: req.body,
-        headers: {}
-      });
-      // await responseSender.sendResponse('rtlayer', { response: modelResponse, success: true}, req.body, {});
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data:   { response: modelResponse, success: true},
+      reqBody: req.body,
+      headers: headers || {}
+    });
     return res.status(200).json({
       success: true,
       response: modelResponse
@@ -1003,37 +854,13 @@ const proEmbeddings = async (req, res) => {
       actor: "user"
     });
     console.error("proembeddings common error=>", error);
-    if (rtlLayer) {
-      // rtlayer.message({
-      //   ...req.body,
-      //   error: error.message,
-      //   success: false
-      // }, req.body.rtlOptions);
-      responseSender.sendResponse({
-        method: 'rtlayer',
-        data:  {  error: error?.message, success: false},
-        reqBody: req.body,
-        headers: headers
-      });
-      // await responseSender.sendResponse('rtlayer', { error: error.message, success: false}, req.body, {});
-      return;
-    }
-    if (webhook) {
-      // await sendRequest(webhook, {
-      //   error: error?.message,
-      //   success: false,
-      //   ...req.body
-      // }, 'POST', headers);
-      responseSender.sendResponse({
-        webhook : webhook,
-        method: 'webhook',
-        data:  {  error: error?.message, success: false},
-        reqBody: req.body,
-        headers: headers
-      });
-      // await responseSender.sendResponse('webhook', {  error: error?.message, success: false }, req.body, headers);
-      return;
-    }
+    responseSender.sendResponse({
+      rtlLayer,
+      webhook,
+      data:  { error: error?.message, success: false},
+      reqBody: req.body,
+      headers: headers || {}
+    });
     return res.status(400).json({
       success: false,
       error: error.message
