@@ -2,8 +2,8 @@ import { sendRequest } from "./request.js";
 import RTLayer from 'rtlayer-node';
 
 class ResponseSender {
-  constructor(auth) {
-    this.rtlayer = new RTLayer.default(auth);
+  constructor() {
+    this.rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH);
   }
 
   async sendResponse({ rtlLayer, webhook, data, reqBody, headers }) {
@@ -20,6 +20,7 @@ class ResponseSender {
         headers
       );
     }
+    return;
   }
 }
 

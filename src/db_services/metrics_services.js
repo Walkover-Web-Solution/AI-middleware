@@ -70,7 +70,7 @@ async function create(dataset, historyParams) {
         variables: DataObject.variables || {},
         is_present: Object.prototype.hasOwnProperty.call(DataObject, 'prompt')
       }));
-      await postgres.pg.raw_data.bulkCreate(insertAiDataInPg);
+      await postgres.raw_data.bulkCreate(insertAiDataInPg);
       await timescale.raw_data.bulkCreate(insertAiData);
   } catch (error) {
     // throw new BadRequestError('Error during bulk insert of Ai middleware', error.details);

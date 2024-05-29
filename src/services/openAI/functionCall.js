@@ -3,7 +3,7 @@ import _ from 'lodash';
 import configurationService from "../../db_services/ConfigurationServices.js";
 import axios from "axios";
 import { ResponseSender } from "../utils/customRes.js";
-const responseSender = new ResponseSender(process.env.RTLAYER_AUTH);
+const responseSender = new ResponseSender();
 
 const functionCall= async (data)=>{
     try {
@@ -25,17 +25,8 @@ const functionCall= async (data)=>{
             }
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
-            // //("configuration",configuration);
-            // //(configuration.messages,": messages","\n tools call:",tools_call);
             //rtlayer going to gpt
             if(!playground){
-            //await responseSender.sendResponse('rtlayer', {function_call: false, success: true, message: "Going to GPT"}, body, {});
-            // responseSender.sendResponse({
-            //     method: 'rtlayer',
-            //     data: { function_call: true, success: true, message: "Going to GPT" },
-            //     reqBody: body,
-            //     headers: {}
-            //   });
               responseSender.sendResponse({
                 rtlLayer,
                 data: { function_call: true, success: true, message: "Going to GPT" },
@@ -55,13 +46,6 @@ const functionCall= async (data)=>{
             if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
                 if(!playground){
-                    //await responseSender.sendResponse('rtlayer', {function_call: true, success: true, message: "sending the next fuction call"}, body, {});
-                    // responseSender.sendResponse({
-                    //     method: 'rtlayer',
-                    //     data: { function_call: true, success: true, message: "sending the next fuction call" },
-                    //     reqBody: body,
-                    //     headers: {}
-                    //   });
                       responseSender.sendResponse({
                         rtlLayer,
                         data: { function_call: true, success: true, message: "sending the next fuction call" },
