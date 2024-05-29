@@ -48,6 +48,6 @@ app.use(responseMiddleware); // send response
 app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
 app.use(errorHandlerMiddleware);
 app.listen(PORT, () => {
-   
+
   console.log(`Server is running on port ${PORT}`);
 });
