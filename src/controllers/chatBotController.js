@@ -23,9 +23,9 @@ const createChatBot = async (req, res) => {
     return res.status(result.success ? 201 : 400).json(result);
 };
 const getAllChatBots = async (req, res) => {
-    const orgId = req.params.org_id;
-    if (!orgId) throw new Error('orgId is mandatory');
-    const result = await ChatbotDbService.getAll(orgId);
+    const org_id = req.params.orgId;
+    if (!org_id) throw new Error('orgId is mandatory');
+    const result = await ChatbotDbService.getAll(org_id);
     return res.status(result.success ? 200 : 400).json(result);
 };
 const getOneChatBot = async (req, res) => {
@@ -146,9 +146,14 @@ const updateAllDefaultResponseInOrg = async (req, res) => {
 };
 
 const getAllDefaultResponseInOrg = async (req, res) => {
+    // const orgId = req.params?.orgId;
     const orgId = req.profile?.org.id;
     if (!orgId) throw new Error('orgId is required')
-    const result = await responseTypeService.getAll(orgId)
+    let result;
+    result = await responseTypeService.getAll(orgId);
+    if (result.chatBot === null) {
+        result = await responsetypeService.create(orgId);
+    }
     return res.status(result.success ? 200 : 404).json(result);
 }
 // Core function
@@ -178,7 +183,7 @@ const loginUser = async (req, res) => {
         const { chatbot_id, user_id, org_id } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
-        if (chatBotConfig.orgId !== org_id) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
+        if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
