@@ -32,7 +32,7 @@ class UnifiedOpenAICase {
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
-    this.responseSender = new ResponseSender(process.env.RTLAYER_AUTH);
+    this.responseSender = new ResponseSender();
   }
 
   async execute() {
@@ -69,42 +69,6 @@ class UnifiedOpenAICase {
         type: "error",
         actor: this.user ? "user" : "tool"
       });
-
-      // if (this.rtlLayer) {
-      //   // rtlayer.message({
-      //   //   ...this.req.body,
-      //   //   error: openAIResponse?.error,
-      //   //   success: false
-      //   // }, this.req.body.rtlOptions).then(data => {
-           
-      //   //   console.log("message sent", data);
-      //   // }).catch(error => {
-      //   //   console.error("message not sent", error);
-      //   // });
-      //   // await this.responseSender.sendResponse('rtlayer', { error: openAIResponse?.error, success: false }, this.req.body, {});
-      //   this.responseSender.sendResponse({
-      //     method: 'rtlayer',
-      //     data: {error: openAIResponse?.error, success: false },
-      //     reqBody: this.req.body,
-      //     headers: {}
-      //   });
-
-      //   return { success: false, error: openAIResponse?.error };
-      // }
-      // if (this.webhook) {
-      //   // await this.responseSender.sendResponse('webhook', {
-      //   //   error: openAIResponse?.error,
-      //   //   success: false,
-      //   // }, this.req.body, this.headers);
-      //   this.responseSender.sendResponse({
-      //     webhook : this.webhook,
-      //     method: 'webhook',
-      //     data: {error: openAIResponse?.error, success: false },
-      //     reqBody: this.req.body,
-      //     headers: this.headers
-      //   });
-      //   return { success: false, error: openAIResponse?.error };
-      // }
       this.responseSender.sendResponse({
         rtlLayer : this.rtlLayer,
         webhook : this.webhook,
@@ -118,14 +82,7 @@ class UnifiedOpenAICase {
     }
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
-      if (this.rtlLayer && !this.playground) {
-       // await this.responseSender.sendResponse('rtlayer', { function_call: true, success: true }, this.req.body, {});
-        // this.responseSender.sendResponse({
-        //   method: 'rtlayer',
-        //   data: { function_call: true, success: true  },
-        //   reqBody: this.req.body,
-        //   headers: {}
-        // });
+      if (!this.playground) {
         this.responseSender.sendResponse({
           rtlLayer : this.rtlLayer,
           webhook : this.webhook,
@@ -158,31 +115,6 @@ class UnifiedOpenAICase {
           actor: this.user ? "user" : "tool"
         });
 
-        // if (this.rtlLayer && !this.playground) {
-        //   // await this.responseSender.sendResponse('rtlayer', {error: functionCallRes?.error, success: false }, this.req.body, {});
-        //   // this.responseSender.sendResponse({
-        //   //   method: 'rtlayer',
-        //   //   data: {error: functionCallRes?.error, success: false },
-        //   //   reqBody: this.req.body,
-        //   //   headers: {}
-        //   // });
-        //   return { success: false, error: functionCallRes?.error };
-        // }
-
-        // if (this.webhook && !this.playground) {
-        //   // await this.responseSender.sendResponse('webhook', {
-        //   //   error: functionCallRes?.error,
-        //   //   success: false,
-        //   // }, this.req.body, this.headers);
-        //   this.responseSender.sendResponse({
-        //     webhook : this.webhook,
-        //     method: 'webhook',
-        //     data: {error:functionCallRes?.error, success: false },
-        //     reqBody: this.req.body,
-        //     headers: this.headers
-        //   });
-        //   return { success: false, error: functionCallRes?.error };
-        // }
         this.responseSender.sendResponse({
           rtlLayer : this.rtlLayer,
           webhook : this.webhook,

@@ -14,7 +14,7 @@ import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 import { ResponseSender } from "../utils/customRes.js";
 
 const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
-const responseSender = new ResponseSender(process.env.RTLAYER_AUTH);
+const responseSender = new ResponseSender();
 
 const getchat = async (req, res) => {
   try {
@@ -280,10 +280,13 @@ const prochat = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(200).json({
-      success: true,
-      response: result.modelResponse
-    });
+    success: true,
+    response: result.modelResponse
+  });
   } catch (error) {
     const endTime = Date.now();
     const latency = endTime - startTime;
@@ -554,6 +557,9 @@ const proCompletion = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(200).json({
       success: true,
       response: modelResponse
@@ -720,7 +726,7 @@ const proEmbeddings = async (req, res) => {
       }
     }
     let historyParams;
-
+    rtlLayer = true;
     switch (service) {
       case "openai":
         customConfig["input"] = input || "";
@@ -826,6 +832,9 @@ const proEmbeddings = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(200).json({
       success: true,
       response: modelResponse
