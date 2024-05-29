@@ -1,40 +1,36 @@
 import Joi from "joi";
 
-const createChatBotSchema = Joi.object({})
-const getAllChatBotsSchema = Joi.object({})
-const getOneChatBotSchema = Joi.object({})
+const createChatBotSchema = Joi.object({
+    orgId: Joi.number(),
+    title: Joi.string(),
+    createdBy: Joi.number(),
+    updatedBy: Joi.number(),
+})
+
 const updateChatBotSchema = Joi.object({})
-const deleteChatBotSchema = Joi.object({})
 const updateDetailsSchema = Joi.object({})
 const updateChatBotActionSchema = Joi.object({})
-const createAllDefaultResponseInOrgSchema = Joi.object({})
 const updateAllDefaultResponseInOrgSchema = Joi.object({})
-const getAllDefaultResponseInOrgSchema = Joi.object({})
 const addorRemoveBridgeInChatBotSchema = Joi.object({})
 const addorRemoveResponseIdInBridgeSchema = Joi.object({})
-const getChatBotOfBridgeSchema = Joi.object({})
-const getChatBotOfBridgeFunctionSchema = Joi.object({})
-const loginUserSchema = Joi.object({})
+const getChatBotOfBridgeSchema = Joi.object({
+    orgId: Joi.string(),
+    bridgeId: Joi.string(),
+})
 const updateChatBotConfigSchema = Joi.object({})
-const createOrgTokenSchema = Joi.object({})
-const getViewOnlyChatBotSchema = Joi.object({})
+const getViewOnlyChatBotSchema = Joi.object({
+    org_id: Joi.number(),
+    botId: Joi.string(),
+})
 export {
     createChatBotSchema,
-    getAllChatBotsSchema,
-    getOneChatBotSchema,
     updateChatBotSchema,
-    deleteChatBotSchema,
     updateDetailsSchema,
     updateChatBotActionSchema,
-    createAllDefaultResponseInOrgSchema,
     updateAllDefaultResponseInOrgSchema,
-    getAllDefaultResponseInOrgSchema,
     addorRemoveBridgeInChatBotSchema,
     addorRemoveResponseIdInBridgeSchema,
     getChatBotOfBridgeSchema,
-    getChatBotOfBridgeFunctionSchema,
-    loginUserSchema,
     updateChatBotConfigSchema,
-    createOrgTokenSchema,
     getViewOnlyChatBotSchema,
 }
