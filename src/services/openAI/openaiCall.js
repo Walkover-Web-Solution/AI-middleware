@@ -28,7 +28,6 @@ class UnifiedOpenAICase {
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
-    // rtlayer = params.rtlayer;
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
@@ -76,6 +75,9 @@ class UnifiedOpenAICase {
         reqBody: this.req.body,
         headers: this.headers || {}
       });
+      if(this.rtlLayer || this.webhook){
+        return
+      }
     
       }
       return { success: false, error: openAIResponse?.error };
@@ -122,6 +124,9 @@ class UnifiedOpenAICase {
           reqBody: this.req.body,
           headers: this.headers || {}
         });
+        if(this.rtlLayer || this.webhook){
+          return
+        }
 
         return { success: false, error: functionCallRes?.error };
       }
