@@ -11,7 +11,7 @@ routes.route('/:orgId/all').get(middleware, userOrgAccessCheck, getAllChatBots);
 routes.route('/:botId').get(middleware, getOneChatBot); // get one chatbot
 routes.route('/:botId/getchatbot').get(chatBotAuth, getViewOnlyChatBot); // get one chatbot
 
-routes.route('/:botId').put(middleware, updateChatBot); // update chatbot
+routes.route('/:botId').put(middleware, updateChatBot); // update chatbot name
 routes.route('/:botId/updateDetails').put(middleware, updateDetails); // update chatbot details
 // routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
 
