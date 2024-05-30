@@ -8,12 +8,10 @@ import { completion } from "../openAI/completion.js";
 import { embeddings } from "../openAI/embedding.js";
 import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
-import RTLayer from 'rtlayer-node';
 import { v1 as uuidv1 } from 'uuid';
 import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 import { ResponseSender } from "../utils/customRes.js";
 
-const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
 const responseSender = new ResponseSender();
 
 const getchat = async (req, res) => {
@@ -191,14 +189,12 @@ const prochat = async (req, res) => {
       thread_id,
       model,
       service,
-      RTLayer:rtlayer,
       req,
       modelOutputConfig,
       playground: false,
       metrics_sevice,
       rtlayer: rtlLayer,
       webhook,
-      RTLLayer:rtlayer
     };
 
     let result;
@@ -237,6 +233,9 @@ const prochat = async (req, res) => {
             reqBody: req.body,
             headers: headers || {}
           });
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -308,7 +307,9 @@ const prochat = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
-    
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(400).json({
       success: false,
       error: error.message
@@ -483,6 +484,9 @@ const proCompletion = async (req, res) => {
             reqBody: req.body,
             headers: headers || {}
           });
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json({
             success: false,
             error: openAIResponse?.error
@@ -528,6 +532,9 @@ const proCompletion = async (req, res) => {
             reqBody: req.body,
             headers: headers || {}
           });
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -595,6 +602,9 @@ const proCompletion = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(400).json({
       success: false,
       error: error.message
@@ -726,7 +736,6 @@ const proEmbeddings = async (req, res) => {
       }
     }
     let historyParams;
-    rtlLayer = true;
     switch (service) {
       case "openai":
         customConfig["input"] = input || "";
@@ -759,6 +768,9 @@ const proEmbeddings = async (req, res) => {
             reqBody: req.body,
             headers: headers || {}
           });
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json({
             success: false,
             error: response?.error
@@ -804,6 +816,9 @@ const proEmbeddings = async (req, res) => {
             reqBody: req.body,
             headers: headers || {}
           });
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json({
             success: false,
             error: geminiResponse?.error
@@ -870,6 +885,9 @@ const proEmbeddings = async (req, res) => {
       reqBody: req.body,
       headers: headers || {}
     });
+    if(rtlLayer || webhook){
+      return
+    }
     return res.status(400).json({
       success: false,
       error: error.message

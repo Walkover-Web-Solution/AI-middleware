@@ -10,7 +10,7 @@ class ResponseSender {
     if (rtlLayer) {
       await this.rtlayer.message(
         { ...reqBody, ...data },
-        {"id":"husain"}
+        reqBody.rtlOptions
       );
     }
     if (webhook) {
