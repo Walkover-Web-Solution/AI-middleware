@@ -3,23 +3,23 @@ import ChatBotDbService from '../db_services/ChatBotDbService.js';
 import configurationModel from '../mongoModel/configuration.js';
 
 async function userOrgAccessCheck(req, res, next) {
-  const { profile } = req;
+  const { params,profile } = req;
   const checkOrgId = profile.org.id;
   let orgId;
   const toFind = ['bridge_id', 'botId', 'orgId'];
   try {
     for (let i = 0; i < toFind.length; i++) {
-      if (!query.hasOwnProperty(toFind[i])) continue;
+      if (!params.hasOwnProperty(toFind[i])) continue;
       if (toFind[i] === 'orgId') {
-        orgId = query[toFind[i]];
+        orgId = params[toFind[i]];
         break;
       } else if (toFind[i] === 'bridge_id') {//testing pending
         orgId = await configurationModel.findOne({
-          _id: query[toFind[i]]
+          _id: params[toFind[i]]
         }, { org_id: 1 });
         break;
       } else if (toFind[i] === 'botId') { //testing pending
-        orgId = await ChatBotDbService.getOne(query[toFind[i]])?.orgId;
+        orgId = await ChatBotDbService.getOne(params[toFind[i]])?.orgId;
         break;
       }
     }
