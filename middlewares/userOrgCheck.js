@@ -10,7 +10,8 @@ async function userOrgAccessCheck(req, res, next) {
 
     if (orgId !== checkOrgId?.toString()) {
       const isValidUserOrgMapping = await getUserOrgMapping(profile.user.id, orgId);
-      const proxyToken = req.get('proxy-auth-token');
+      //live pr proxy-auth-token or local pr proxy_auth_token
+      const proxyToken = req.get('proxy-auth-token') || req.get('proxy_auth_token');
       
       if (!isValidUserOrgMapping || !proxyToken)
         return res.status(403).send('Sorry, Either the field is missing or You are not authorized to access this flow!');
