@@ -8,13 +8,13 @@ const updateBridgeSchema = Joi.object({
       is: 'google',
       then: Joi.valid('gemini_pro'),
       otherwise: Joi.string().valid('gpt-3.5-turbo', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0613', 'gpt-4-1106-preview', 'gpt-4-turbo-preview', 'gpt-4-0125-preview', 'gpt-4-turbo-2024-04-09', 'gpt-4-turbo', 'gpt-4o', 'text-embedding-3-large', 'text-embedding-3-small', 'text-embedding-ada-002', 'gpt-3.5-turbo-instruct')
-    }).required(),
-    type: Joi.string().valid('chat', 'embedding', 'completion').required(),
+    }),
+    type: Joi.string().valid('chat', 'embedding', 'completion'),
     prompt: Joi.alternatives().try(Joi.string().allow(''), Joi.array()).optional(),
     input: Joi.string().allow('').optional(),
     RTLayer: Joi.boolean().allow(null).optional(),
     webhook: Joi.string().allow('').optional()
-  }).required(),
+  }),
   service: Joi.string().valid('openai', 'google').required(),
   apikey: Joi.string().regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]*$/).optional().allow(''),
   org_id: Joi.number().required().messages({
