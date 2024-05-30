@@ -6,7 +6,7 @@ import responseTypeService from "../db_services/responseTypeService.js";
 import { getToken } from "../services/utils/usersServices.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
-import { createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema } from "../validation/joi_validation/chatbot.js";
+import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
     const { title } = req.body;
@@ -78,11 +78,12 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
     const orgId = req.profile.org.id
     const { botId: chatbotId, bridgeId } = req.params;
-
-    // Validate operation type early
-    if (!['add', 'remove'].includes(type)) {
-        return res.status(400).json({ success: false, message: "Invalid status value" });
-    }
+    await addorRemoveBridgeInChatBotSchema({
+        type,
+        orgId,
+        chatbotId,
+        bridgeId,
+    })
 
     try {
         // Determine the operation to perform
@@ -106,11 +107,17 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
 
 const addorRemoveResponseIdInBridge = async (req, res) => { // why using status ??
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.org_id;
+    const orgId = req.profile?.org.id;
     const { bridgeId } = req.params;
     const { responseId, responseJson, status } = req.body;
-    if (!responseId) return res.status(400).json({ success: false, message: "responseId is required" });
     let responseRefId = null;
+    await addorRemoveResponseIdInBridgeSchema({
+        orgId,
+        bridgeId,
+        responseId,
+        responseJson,
+        status,
+    })
     if (responseJson) {
         responseRefId = await responsetypeService.addResponseTypes(orgId, responseId, responseJson)
     }
@@ -121,10 +128,7 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
         result = await configurationService.addResponseIdinBridge(bridgeId, orgId, responseId, responseRefId);
     } else if (status === 'remove') {
         result = await configurationService.removeResponseIdinBridge(bridgeId, orgId, responseId);
-    } else {
-        return res.status(400).json({ success: false, message: "Invalid status value" });
     }
-
     filterDataOfBridgeOnTheBaseOfUI(result, bridgeId, false)
 
     return res.status(result.success ? 200 : 404).json(result?.bridges);
