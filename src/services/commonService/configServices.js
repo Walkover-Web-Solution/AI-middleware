@@ -250,10 +250,7 @@ const updateBridges = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    if (apikey === null) {
-      apikey = bridge.apikey;
-    }
-    apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+    apikey = !apikey ? bridge.apikey : helper.encrypt(apikey);
     const model = configuration.model;
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
