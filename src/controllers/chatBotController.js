@@ -245,10 +245,11 @@ const createOrRemoveAction = async (req, res) => {
     const { type } = req.query;
     const { actionJson } = req.body;
     let {actionId} = req.body;
-    if(type == "add") // add for create and update the action 
-        actionId = generateIdentifier(12);
 
     if (!['add', 'remove'].includes(type)) return res.status(400).json({ error: "Invalid type", success: false });
+
+    if(type !== "remove" && !actionId) // add for create and update the action 
+        actionId = generateIdentifier(12);
 
     try {
         const response = type === 'add' 
