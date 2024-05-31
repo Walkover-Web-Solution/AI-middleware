@@ -12,7 +12,6 @@ import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 import { ResponseSender } from "../utils/customRes.js";
 import GeminiHandler from "../Google/geminiCall.js";
 
-const geminiHandler = new GeminiHandler();
 const responseSender = new ResponseSender();
 
 const getchat = async (req, res) => {
@@ -65,6 +64,7 @@ const getchat = async (req, res) => {
       service,
       modelOutputConfig,
       playground: true,
+      req
     };
 
     let result;
@@ -77,21 +77,9 @@ const getchat = async (req, res) => {
         }
         break;
       case "google":
-        // let geminiConfig = {
-        //   generationConfig: customConfig,
-        //   model: configuration?.model,
-        //   user_input: configuration?.user
-        // };
-        // const geminiResponse = await runChat(geminiConfig, apikey, "chat");
-        // // modelResponse = _.get(geminiResponse, "modelResponse", {});
-        // if (!geminiResponse?.success) {
-        //   return res.status(400).json({
-        //     success: false,
-        //     error: geminiResponse?.error
-        //   });
-        // }
         params.user = configuration?.user;
-        result = await geminiHandler.handleGemini(params, req, res);
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleGemini();
         if (!result?.success) {
           return res.status(400).json(result.response);
         }
@@ -198,7 +186,7 @@ const prochat = async (req, res) => {
       playground: false,
       metrics_sevice,
       rtlayer: rtlLayer,
-      webhook,
+      webhook
     };
 
     let result;
@@ -212,7 +200,8 @@ const prochat = async (req, res) => {
         }
         break;
       case "google":
-        result = await geminiHandler.handleGemini(params, req, res);
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleGemini();
         if (!result?.success) {
           return res.status(400).json(result);
         }

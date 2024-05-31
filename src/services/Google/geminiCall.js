@@ -5,102 +5,98 @@ import metrics_service from "../../db_services/metrics_services.js";
 import { ResponseSender } from "../utils/customRes.js";
 
 class GeminiHandler {
-  constructor() {
+  constructor(params) {
+    this.customConfig = params.customConfig;
+    this.configuration = params.configuration;
+    this.apikey = params.apikey;
+    this.user = params.user;
+    this.startTime = params.startTime;
+    this.org_id = params.org_id;
+    this.bridge_id = params.bridge_id;
+    this.thread_id = params.thread_id;
+    this.model = params.model;
+    this.service = params.service;
+    this.rtlayer = params.rtlayer;
+    this.modelOutputConfig = params.modelOutputConfig;
+    this.webhook = params.webhook;
+    this.headers = params.headers;
+    this.playground = params.playground;
+    this.req = params.req;
     this.responseSender = new ResponseSender();
   }
-
-  async handleGemini(params, req, res) {
-    let {
-      customConfig,
-      configuration,
-      apikey,
-      user,
-      startTime,
-      org_id,
-      bridge_id,
-      thread_id,
-      model,
-      service,
-      rtlayer,
-      modelOutputConfig,
-      webhook,
-      headers,
-      playground
-    } = params;
-  
+ 
+  async handleGemini() {
     let usage = {};
     let modelResponse = {};
-  
+
     let geminiConfig = {
-      generationConfig: customConfig,
-      model: configuration?.model,
-      user_input: user
+      generationConfig: this.customConfig,
+      model: this.configuration?.model,
+      user_input: this.user,
     };
-    
-    geminiConfig["history"] = configuration?.conversation 
-      ? conversationService.createGeminiConversation(configuration.conversation).messages 
+    geminiConfig["history"] = this.configuration?.conversation
+      ? conversationService.createGeminiConversation(this.configuration.conversation).messages
       : [];
-    
-    const geminiResponse = await runChat(geminiConfig, apikey, "chat");
+
+    const geminiResponse = await runChat(geminiConfig, this.apikey, "chat");
     modelResponse = _.get(geminiResponse, "modelResponse", {});
-    
     if (!geminiResponse?.success) {
       usage = {
-        service: service,
-        model: model,
-        orgId: org_id,
-        latency: Date.now() - startTime,
+        service: this.service,
+        model: this.model,
+        orgId: this.org_id,
+        latency: Date.now() - this.startTime,
         success: false,
-        error: geminiResponse?.error
+        error: geminiResponse?.error,
       };
-      if(!playground) {
-      metrics_service.create([usage], {
-        thread_id: thread_id,
-        user: user,
-        message: "",
-        org_id: org_id,
-        bridge_id: bridge_id,
-        model: configuration?.model,
-        channel: 'chat',
-        type: "error",
-        actor: "user"
-      });
-      this.responseSender.sendResponse({
-        rtlayer,
-        webhook,
-        data: { success: false, error: geminiResponse?.error },
-        reqBody: req.body,
-        headers: headers || {}
-      });
+      if (!this.playground) {
+        metrics_service.create([usage], {
+          thread_id: this.thread_id,
+          user: this.user,
+          message: "",
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'chat',
+          type: "error",
+          actor: "user",
+        });
+        this.responseSender.sendResponse({
+          rtlayer: this.rtlayer,
+          webhook: this.webhook,
+          data: { success: false, error: geminiResponse?.error },
+          reqBody: this.req.body,
+          headers: this.headers || {},
+        });
+        if(this.webhook || this.rtlayer){
+          return;
+        }
+      }
+      return { success: false, error: geminiResponse?.error };
     }
-      return res.status(400).json({
-        success: false,
-        error: geminiResponse?.error
-      });
-    }
-    
-    usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-    usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
-    usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-    usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
-    
+
+    usage["totalTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].total_tokens);
+    usage["inputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+    usage["outputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].output_tokens);
+    usage["expectedCost"] = this.modelOutputConfig.usage[0].total_cost;
+
     let historyParams = {
-      thread_id: thread_id,
-      user: user,
-      message: _.get(modelResponse, modelOutputConfig.message),
-      org_id: org_id,
-      bridge_id: bridge_id,
-      model: configuration?.model,
+      thread_id: this.thread_id,
+      user: this.user,
+      message: _.get(modelResponse, this.modelOutputConfig.message),
+      org_id: this.org_id,
+      bridge_id: this.bridge_id,
+      model: this.configuration?.model,
       channel: 'chat',
       type: "model",
-      actor: "user"
+      actor: "user",
     };
-    
+
     return {
       success: true,
       modelResponse,
       usage,
-      historyParams
+      historyParams,
     };
   }
 }
