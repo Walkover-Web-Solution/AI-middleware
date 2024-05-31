@@ -239,6 +239,28 @@ const createOrgToken = async (req, res) => {
     const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14))
     return res.status(org?.success ? 200 : 404).json(org.orgData);
 };
+// for create , removd and update aciton 
+const createOrRemoveAction = async (req, res) => {
+    const { bridgeId } = req.params;
+    const { type } = req.query;
+    const { actionJson } = req.body;
+    let {actionId} = req.body;
+    if(type == "add") // add for create and update the action 
+        actionId = generateIdentifier(12);
+
+    if (!['add', 'remove'].includes(type)) return res.status(400).json({ error: "Invalid type", success: false });
+
+    try {
+        const response = type === 'add' 
+            ? await configurationService.addActionInBridge(bridgeId, actionId, actionJson)
+            : await configurationService.removeActionInBridge(bridgeId, actionId);
+
+        return res.status(200).json({ success: true, data: response });
+    } catch (error) {
+        return res.status(400).json({ error: `some error occured ${error?.message}`, success: false });
+    }
+};
+
 
 export {
     createChatBot,
@@ -258,6 +280,7 @@ export {
     loginUser,
     updateChatBotConfig,
     createOrgToken,
-    getViewOnlyChatBot
+    getViewOnlyChatBot,
+    createOrRemoveAction
     // updateChatBotResponse
 };
