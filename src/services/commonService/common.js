@@ -1,4 +1,4 @@
-import { services } from "../../../config/models.js";
+import { services } from "../../configs/models.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { getThread } from "../../controllers/conversationContoller.js";
 import conversationService from "./createConversation.js";
