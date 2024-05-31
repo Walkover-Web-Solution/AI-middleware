@@ -1,4 +1,5 @@
 /** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('raw_data', {
@@ -11,7 +12,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       authkey_name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       latency: {
         type: Sequelize.FLOAT
@@ -22,8 +23,8 @@ module.exports = {
       model: {
         type: Sequelize.STRING
       },
-      status :{
-        type:   Sequelize.BOOLEAN,
+      status: {
+        type: Sequelize.BOOLEAN
       },
       input_tokens: {
         type: Sequelize.FLOAT
@@ -36,19 +37,17 @@ module.exports = {
       },
       created_at: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       }
     });
-
     await queryInterface.addIndex('raw_data', {
       fields: ['id', 'created_at'],
       unique: true,
       name: 'index_id_created_at'
     });
     await queryInterface.sequelize.query("SELECT create_hypertable('raw_data', 'created_at');");
-
   },
-
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('raw_data');
   }

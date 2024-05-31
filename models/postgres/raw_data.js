@@ -1,7 +1,6 @@
-const { Model, DataTypes } = require('sequelize');
-
-
-module.exports= (sequelize, DataTypes) => {
+// eslint-disable-next-line no-unused-vars
+import { Model, DataTypes } from "sequelize";
+export default ((sequelize, DataTypes) => {
   class raw_data extends Model {
     /**
      * Helper method for defining associations.
@@ -20,7 +19,7 @@ module.exports= (sequelize, DataTypes) => {
     id: {
       allowNull: false,
       type: DataTypes.UUID,
-      primaryKey: true, 
+      primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
     org_id: DataTypes.STRING,
@@ -29,11 +28,11 @@ module.exports= (sequelize, DataTypes) => {
     service: DataTypes.STRING,
     status: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
+      allowNull: false
     },
-    error:{
-      type:DataTypes.TEXT,
-      defaultValue:'none'
+    error: {
+      type: DataTypes.TEXT,
+      defaultValue: 'none'
     },
     model: DataTypes.STRING,
     input_tokens: DataTypes.FLOAT,
@@ -44,7 +43,7 @@ module.exports= (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       references: {
         model: 'conversations',
-        key: 'id',
+        key: 'id'
       }
     },
     variables: DataTypes.JSON,
@@ -58,4 +57,4 @@ module.exports= (sequelize, DataTypes) => {
     timestamps: false
   });
   return raw_data;
-};
+});
