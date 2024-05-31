@@ -107,6 +107,7 @@ const updateBridgeType = async (bridge_id, org_id, bridgeType) => {
       bridges: bridges
     };
   } catch (error) {
+    console.log(error)
     return {
       success: false,
       error: "something went wrong in updating bridge type!!"
@@ -123,6 +124,7 @@ const getBridges = async bridge_id => {
       bridges: bridges
     };
   } catch (error) {
+    console.log(error)
     return {
       success: false,
       error: "something went wrong!!"
@@ -258,36 +260,34 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 
 // add action  or update the previous action in bridge
 
-const addActionInBridge = async (bridgeId,actionId,actionJson)=>
-{
+const addActionInBridge = async (bridgeId, actionId, actionJson) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({_id:bridgeId },{
-      $set : {
-       [ `actions.${actionId}`] :  actionJson
+    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+      $set: {
+        [`actions.${actionId}`]: actionJson
       }
-    },{new : true })
-    return bridges 
-    
+    }, { new: true }).lean();
+    return bridges
+
   } catch (error) {
-     throw new Error(error?.message)
+    throw new Error(error?.message)
   }
 }
 
 // remove action from bridge 
 
-const removeActionInBridge = async (bridgeId , actionId )=>
-{
+const removeActionInBridge = async (bridgeId, actionId) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({_id:bridgeId },{
-      $unset : {
-       [`actions.${actionId}`] :  ""
+    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+      $unset: {
+        [`actions.${actionId}`]: ""
       }
-    },{new : true })
-    return bridges 
-    
+    }, { new: true }).lean()
+    return bridges
+
   } catch (error) {
     console.log(error)
-     throw new Error(error?.message)
+    throw new Error(error?.message)
   }
 }
 
