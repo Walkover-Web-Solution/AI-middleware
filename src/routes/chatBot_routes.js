@@ -1,9 +1,9 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
-import { chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../src/middlewares/interfaceMiddlewares.js";
-import common from "../src/services/commonService/common.js";
-import middleware from "../src/middlewares/middleware.js";
-import userOrgAccessCheck from "../src/middlewares/userOrgCheck.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../controllers/chatBotController.js";
+import { chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../middlewares/interfaceMiddlewares.js";
+import common from "../services/commonService/common.js";
+import middleware from "../middlewares/middleware.js";
+import userOrgAccessCheck from "../middlewares/userOrgCheck.js";
 
 const routes = express.Router();
 routes.route('/').post(middleware, createChatBot); // create chatbot
