@@ -258,8 +258,6 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
   }
 };
 
-
-
 // add action  or update the previous action in bridge
 
 const addActionInBridge = async (bridgeId,actionId,actionJson)=>
