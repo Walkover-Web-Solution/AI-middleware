@@ -1,13 +1,13 @@
 import { chats } from "./chat.js";
 import _ from 'lodash';
 import configurationService from "../../db_services/ConfigurationServices.js";
-import RTLayer from 'rtlayer-node';
 import axios from "axios";
+import { ResponseSender } from "../utils/customRes.js";
+const responseSender = new ResponseSender();
 
-const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
-const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0,rtlLayer=false,body={},playground=false)=>{
+const functionCall= async (data)=>{
     try {
-        
+        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false} = data;
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
@@ -25,22 +25,17 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             }
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
-            // //("configuration",configuration);
-            // //(configuration.messages,": messages","\n tools call:",tools_call);
             //rtlayer going to gpt
-            if(rtlLayer && !playground){
-            rtlayer.message({
-                body,
-                message: "Going to GPT",
-                function_call:false,
-                success: true
-            },body.rtlOptions).then((data) => {
-                 
-                console.log("RTLayer message sent", data);
-            }).catch((error) => {
-                console.error("RTLayer message not sent", error);
-            });
-        }
+            if(!playground){
+              responseSender.sendResponse({
+                rtlLayer,
+                data: { function_call: true, success: true, message: "Going to GPT" },
+                reqBody: body,
+                headers: {}
+              });
+              
+            }
+            
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
             //("modelResponse",modelResponse);
@@ -48,22 +43,20 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
                 //("openAIResponse errror",openAIResponse);
                 return {success:false,error:openAIResponse?.error}
             }
-            if(!_.get(modelResponse, outputConfig.message) && l<=3){
+            if(_.get(modelResponse, outputConfig.tools) && l<=3){
                 //("l",l);
-                if(rtlLayer && !playground){
-                    rtlayer.message({
-                        ...body,
-                        message: "sending the next fuction call",
-                        function_call:true,
-                        success: true
-                    },body.rtlOptions).then((data) => {
-                         
-                        console.log("RTLayer message sent", data);
-                    }).catch((error) => {
-                        console.error("RTLayer message not sent", error);
-                    });
+                if(!playground){
+                      responseSender.sendResponse({
+                        rtlLayer,
+                        data: { function_call: true, success: true, message: "sending the next fuction call" },
+                        reqBody: body,
+                        headers: {}
+                      });
                 }
-                return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
+
+                data.l=data.l+1;
+                data.tools_call= _.get(modelResponse, outputConfig.tools)[0];
+                return await functionCall(data);
             }
             //(openAIResponse);
             return openAIResponse;
