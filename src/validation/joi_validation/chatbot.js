@@ -12,6 +12,7 @@ const updateChatBotSchema = Joi.object({
     title: Joi.string().required(),
 })
 const updateAllDefaultResponseInOrgSchema = Joi.object({})
+
 const updateChatBotConfigSchema = Joi.object({
     buttonName: Joi.string().allow("").required(),
     height: Joi.string().allow("").required(),
