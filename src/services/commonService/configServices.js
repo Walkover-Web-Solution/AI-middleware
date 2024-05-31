@@ -118,16 +118,27 @@ const createBridges = async (req, res) => {
     if (!(service in services)) {
       return res.status(400).json({
         success: false,
-        error: "service does not exist!"
+        error: "The specified service does not exist!"
       });
     }
-    const data = await configurationService.getBridgesByName(configuration?.name, org_id);
-    if (data.success && data.bridges) {
-      return res.status(400).json({
-        success: false,
-        error: "bridge Name already exists! please choose unique one"
-      });
+
+    // Check if the bridge name and slugName are unique
+    const bridgeData = await configurationService.getBridgesBySlugNameAndName(configuration?.slugName, configuration?.name, org_id);
+    if (bridgeData.success && bridgeData.bridges) {
+      if (bridgeData.bridges.name === configuration?.name) {
+        return res.status(400).json({
+          success: false,
+          error: "Bridge name already exists! Please choose a unique one."
+        });
+      }
+      if (bridgeData.bridges.slugName === configuration?.slugName) {
+        return res.status(400).json({
+          success: false,
+          error: "Slug name already exists! Please choose a unique one."
+        });
+      }
     }
+
     const result = await configurationService.createBridges({
       configuration: configuration,
       org_id,
@@ -147,7 +158,7 @@ const createBridges = async (req, res) => {
     console.error("common error=>", error);
     return res.status(400).json({
       success: false,
-      error: "something went wrong!!"
+      error: "An unexpected error occurred while creating the bridge. Please try again later."
     });
   }
 };
@@ -239,10 +250,7 @@ const updateBridges = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    if (apikey === null) {
-      apikey = bridge.apikey;
-    }
-    apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+    apikey = !apikey ? bridge.apikey : helper.encrypt(apikey);
     const model = configuration.model;
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
@@ -261,7 +269,7 @@ const updateBridges = async (req, res) => {
   } catch (error) {
     return res.status(422).json({
       success: false,
-      error: error.details
+      error: error.message
     });
   }
 };

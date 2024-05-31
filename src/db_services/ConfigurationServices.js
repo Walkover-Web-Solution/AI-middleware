@@ -48,6 +48,19 @@ const getAllBridges = async org_id => {
 };
 const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeType, slugName) => {
   try {
+    // Check if slugName is being updated and if it is unique
+    if (slugName) {
+      const existingBridge = await configurationModel.findOne({
+        slugName: slugName,
+        org_id: org_id,
+        _id: { $ne: bridge_id } // Exclude the current bridge from the check
+      });
+
+      if (existingBridge) {
+        throw new Error("slugName must be unique");
+      }
+    }
+
     const bridges = await configurationModel.findOneAndUpdate({
       _id: bridge_id,
       org_id: org_id
@@ -68,17 +81,15 @@ const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeTyp
         "bridge_id": 0
       }
     }).lean();
+
     return {
       success: true,
       message: "bridge updated successfully",
       bridges
     };
   } catch (error) {
-    console.error("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
+
+    throw new Error(error?.message || "some error occured");
   }
 };
 const updateBridgeType = async (bridge_id, org_id, bridgeType) => {
@@ -144,11 +155,14 @@ const getBridgesWithSelectedData = async bridge_id => {
     };
   }
 };
-const getBridgesByName = async (name, org_id) => {
+const getBridgesBySlugNameAndName = async (slugName, name, org_id) => {
   try {
     const bridges = await configurationModel.findOne({
-      name: name,
-      org_id: org_id
+      org_id: org_id,
+      $or: [
+        { slugName: slugName },
+        { name: name }
+      ]
     });
     return {
       success: true,
@@ -329,7 +343,6 @@ export default {
   getAllBridges,
   getBridges,
   updateBridges,
-  getBridgesByName,
   deleteBridge,
   updateToolsCalls,
   getApiCallById,
@@ -340,5 +353,6 @@ export default {
   findChatbotOfBridge,
   updateBridgeType,
   getBridgeIdBySlugname,
-  gettemplateById
+  gettemplateById,
+  getBridgesBySlugNameAndName
 };
