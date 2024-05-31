@@ -27,7 +27,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key,templ
     service: service,
     apikey: api_key,
     RTLayer: RTLayer,
-    template:templateContent.template
+    template: templateContent?.template
   };
 };
 const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
