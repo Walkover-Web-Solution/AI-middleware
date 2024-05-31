@@ -5,8 +5,7 @@ import conversationService from "../commonService/createConversation.js";
 import _ from "lodash";
 import functionCall from "./functionCall.js";
 import Helper from "../utils/helper.js";
-import RTLayer from 'rtlayer-node';
-const rtlayer = new RTLayer.default(process.env.RTLAYER_AUTH)
+import { ResponseSender } from "../utils/customRes.js";
 class UnifiedOpenAICase {
   constructor(params) {
     this.customConfig = params.customConfig;
@@ -29,10 +28,10 @@ class UnifiedOpenAICase {
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
     this.sendRequest = params.sendRequest;
-    // rtlayer = params.rtlayer;
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
+    this.responseSender = new ResponseSender();
   }
 
   async execute() {
@@ -69,27 +68,15 @@ class UnifiedOpenAICase {
         type: "error",
         actor: this.user ? "user" : "tool"
       });
-
-      if (this.rtlLayer) {
-        rtlayer.message({
-          ...this.req.body,
-          error: openAIResponse?.error,
-          success: false
-        }, this.req.body.rtlOptions).then(data => {
-           
-          console.log("message sent", data);
-        }).catch(error => {
-          console.error("message not sent", error);
-        });
-        return { success: false, error: openAIResponse?.error };
-      }
-      if (this.webhook) {
-        await this.sendRequest(this.webhook, {
-          error: openAIResponse?.error,
-          success: false,
-          ...this.req.body
-        }, 'POST', this.headers);
-        return { success: false, error: openAIResponse?.error };
+      this.responseSender.sendResponse({
+        rtlLayer : this.rtlLayer,
+        webhook : this.webhook,
+        data: {error: openAIResponse?.error, success: false },
+        reqBody: this.req.body,
+        headers: this.headers || {}
+      });
+      if(this.rtlLayer || this.webhook){
+        return
       }
     
       }
@@ -97,17 +84,13 @@ class UnifiedOpenAICase {
     }
    
     if (_.get(modelResponse, this.modelOutputConfig.tools) && this.apiCallavailable) {
-      if (this.rtlLayer && !this.playground) {
-        rtlayer.message({
-          ...this.req.body,
-          message: "Function call",
-          function_call: true,
-          success: true
-        }, this.req.body.rtlOptions).then(data => {
-           
-          console.log("RTLayer message sent", data);
-        }).catch(error => {
-          console.error("RTLayer message not sent", error);
+      if (!this.playground) {
+        this.responseSender.sendResponse({
+          rtlLayer : this.rtlLayer,
+          webhook : this.webhook,
+          data: { function_call: true, success: true  },
+          reqBody: this.req.body,
+          headers: this.headers || {}
         });
       }
       const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground});
@@ -134,27 +117,15 @@ class UnifiedOpenAICase {
           actor: this.user ? "user" : "tool"
         });
 
-        if (this.rtlLayer && !this.playground) {
-          rtlayer.message({
-            ...this.req.body,
-            error: functionCallRes?.error,
-            success: false
-          }, this.req.body.rtlOptions).then(data => {
-             
-            console.log("message sent", data);
-          }).catch(error => {
-            console.error("message not sent", error);
-          });
-          return { success: false, error: functionCallRes?.error };
-        }
-
-        if (this.webhook && !this.playground) {
-          await this.sendRequest(this.webhook, {
-            error: functionCallRes?.error,
-            success: false,
-            ...this.req.body
-          }, 'POST', this.headers);
-          return { success: false, error: functionCallRes?.error };
+        this.responseSender.sendResponse({
+          rtlLayer : this.rtlLayer,
+          webhook : this.webhook,
+          data: {error: functionCallRes?.error, success: false },
+          reqBody: this.req.body,
+          headers: this.headers || {}
+        });
+        if(this.rtlLayer || this.webhook){
+          return
         }
 
         return { success: false, error: functionCallRes?.error };
