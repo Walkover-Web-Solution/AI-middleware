@@ -68,9 +68,6 @@ class GeminiHandler {
           reqBody: this.req.body,
           headers: this.headers || {},
         });
-        if(this.webhook || this.rtlayer){
-          return;
-        }
       }
       return { success: false, error: geminiResponse?.error };
     }
