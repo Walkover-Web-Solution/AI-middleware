@@ -42,7 +42,7 @@ module.exports = {
       throw error;
     }
   },
-
+// eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {

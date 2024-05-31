@@ -1,23 +1,21 @@
-const {chats}= require("./chat");
-const _ = require('lodash');
-const configurationService= require("../../db_services/ConfigurationServices");
-// const ModelsConfig = require("../../configs/modelConfiguration");
-const RTLayer = require('rtlayer-node').default;
-const rtlayer = new RTLayer(process.env.RTLAYER_AUTH)
-const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l=0,rtlLayer=false,body={},playground=false)=>{
+import { chats } from "./chat.js";
+import _ from 'lodash';
+import configurationService from "../../db_services/ConfigurationServices.js";
+import axios from "axios";
+import { ResponseSender } from "../utils/customRes.js";
+const responseSender = new ResponseSender();
+
+const functionCall= async (data)=>{
     try {
-        console.log("tools_call=>",tools_call);
-        
+        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false} = data;
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
-        console.log("apiName",apiName);
-        console.log("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
+        //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
         if(apiEndpoints.has(apiName)){
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
-            const arguments = JSON.parse(tools_call.function.arguments);
-            console.log("arguments",arguments);
-            const apiResponse=await axiosWork(arguments,axios);
+            const args = JSON.parse(tools_call.function.arguments ||"{}");
+            const apiResponse=await axiosWork(args,axios);
 
             const funcResponseData={
                 tool_call_id: tools_call.id,
@@ -27,57 +25,49 @@ const functionCall= async (configuration,apikey,bridge,tools_call,outputConfig,l
             }
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
-            console.log("configuration",configuration);
-            console.log(configuration.messages,": messages","\n tools call:",tools_call);
             //rtlayer going to gpt
-            if(rtlLayer && !playground){
-            rtlayer.message({
-                body,
-                message: "Going to GPT",
-                function_call:true,
-                success: true
-            },body.rtlOptions).then((data) => {
-                console.log("RTLayer message sent", data);
-            }).catch((error) => {
-                console.log("RTLayer message not sent", error);
-            });
-        }
+            if(!playground){
+              responseSender.sendResponse({
+                rtlLayer,
+                data: { function_call: true, success: true, message: "Going to GPT" },
+                reqBody: body,
+                headers: {}
+              });
+              
+            }
+            
             const openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
-            console.log("modelResponse",modelResponse);
+            //("modelResponse",modelResponse);
             if(!openAIResponse?.success){
-                console.log("openAIResponse errror",openAIResponse);
+                //("openAIResponse errror",openAIResponse);
                 return {success:false,error:openAIResponse?.error}
             }
-            if(!_.get(modelResponse, outputConfig.message) && l<=3){
-                console.log("l",l);
-                if(rtlLayer && !playground){
-                    rtlayer.message({
-                        ...body,
-                        message: "sending the next fuction call",
-                        function_call:true,
-                        success: true
-                    },body.rtlOptions).then((data) => {
-                        console.log("RTLayer message sent", data);
-                    }).catch((error) => {
-                        console.log("RTLayer message not sent", error);
-                    });
+            if(_.get(modelResponse, outputConfig.tools) && l<=3){
+                //("l",l);
+                if(!playground){
+                      responseSender.sendResponse({
+                        rtlLayer,
+                        data: { function_call: true, success: true, message: "sending the next fuction call" },
+                        reqBody: body,
+                        headers: {}
+                      });
                 }
-                return await functionCall(configuration,apikey,bridge,_.get(modelResponse, outputConfig.tools)[0],outputConfig,l+1);
+
+                data.l=data.l+1;
+                data.tools_call= _.get(modelResponse, outputConfig.tools)[0];
+                return await functionCall(data);
             }
-            console.log(openAIResponse);
+            //(openAIResponse);
             return openAIResponse;
         }
         return {success:false,error:"endpoint does not exist"}
 
-
     } catch (error) {
-        console.log("function call error:",error);
+        console.error("function call error:",error);
         return {success:false,error:error.message}
     }
 }
-
-
 
 const fetchAxios=async (apiInfo)=>{
     const apiCall=await configurationService.getApiCallById(apiInfo.apiObjectID);
@@ -85,36 +75,31 @@ const fetchAxios=async (apiInfo)=>{
 }
 
 const axiosWork = async (data, axiosFunction) => {
-	const axios = axiosFunction;
-	let axiosCall = "";
-	//converting to code
-	axiosCall = eval(axios);
-
-	let responseAxios = "";
-	try {
-		responseAxios = await axiosCall(data);
-		console.log("response of axios" + responseAxios.data);
-	} catch (err) {
-		console.error("error" + err);
-        return {success:false};
-	}
-	return responseAxios?.data;
+    // Dynamically create a function using new Function()
+    const createFunction = new Function('axios','data', axiosFunction);
+    const axiosCall =await createFunction(axios,data);
+    try {
+        return axiosCall.data;
+    } catch (err) {
+        console.error("error", err.message);
+        return { success: false };
+    }
 };
 
-const checkFields = async ()=>{
-    const parseResponse = response;
-	const values = parseResponse.function_call.arguments;
-	// const required_fields = parseResponse.act.required_parameters;
-	let notPresent = [];
-	for (let i = 0; i < required_fields.length; i++) {
-		if (
-			!values.hasOwnProperty(required_fields[i]) ||
-			(values.hasOwnProperty(required_fields[i]) &&
-				values[required_fields[i]] == "")
-		) {
-			notPresent.push(required_fields[i]);
-		}
-	}
-	return notPresent;
-} 
-module.exports={functionCall}
+// const checkFields = async ()=>{
+//     const parseResponse = response;
+// 	const values = parseResponse.function_call.arguments;
+// 	// const required_fields = parseResponse.act.required_parameters;
+// 	let notPresent = [];
+// 	for (let i = 0; i < required_fields.length; i++) {
+// 		if (
+// 			!values.hasOwnProperty(required_fields[i]) ||
+// 			(values.hasOwnProperty(required_fields[i]) &&
+// 				values[required_fields[i]] == "")
+// 		) {
+// 			notPresent.push(required_fields[i]);
+// 		}
+// 	}
+// 	return notPresent;
+// } 
+export default functionCall;

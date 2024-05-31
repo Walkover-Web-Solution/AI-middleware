@@ -2,6 +2,7 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
       CREATE MATERIALIZED VIEW five_min_data_aggregate
@@ -30,7 +31,7 @@ module.exports = {
           schedule_interval => INTERVAL '5 minutes');
     `);
   },
-
+// eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
       DROP MATERIALIZED VIEW IF EXISTS five_min_data_aggregate;
