@@ -1,4 +1,4 @@
-import { getUserOrgMapping, switchOrganization } from '../../services/proxyService.js';
+import { getUserOrgMapping, switchOrganization } from '../services/proxyService.js';
 import ChatBotDbService from '../db_services/ChatBotDbService.js';
 import configurationModel from '../mongoModel/configuration.js';
 
@@ -19,7 +19,8 @@ async function userOrgAccessCheck(req, res, next) {
         }, { org_id: 1 });
         break;
       } else if (toFind[i] === 'botId') { //testing pending
-        orgId = await ChatBotDbService.getOne(params[toFind[i]])?.orgId;
+        orgId = (await ChatBotDbService.getOne(params[toFind[i]]))?.chatbot?.orgId;
+        console.log(orgId);
         break;
       }
     }

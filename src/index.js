@@ -14,7 +14,7 @@ import userOrgLocalController from "../routes/userOrgLocal_route.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import('../services/cacheService.js')
+import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
   maxAge: 86400,

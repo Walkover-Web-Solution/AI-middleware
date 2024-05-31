@@ -18,7 +18,7 @@ const createChatBot = async (req, res) => {
         createdBy: userId,
         updatedBy: userId,
     }
-    await createChatBotSchema(dataToSave);
+    await createChatBotSchema.validateAsync(dataToSave);
     const result = await ChatbotDbService.create(dataToSave);
     return res.status(result.success ? 201 : 400).json(result);
 };
@@ -45,7 +45,7 @@ const getViewOnlyChatBot = async (req, res) => {
 const updateChatBot = async (req, res) => {
     const { botId } = req.params;
     const title = req.body.title;
-    await updateChatBotSchema({ botId, title })
+    await updateChatBotSchema.validateAsync({ botId, title })
     const result = await ChatbotDbService.update(botId, title);
     return res.status(result.success ? 200 : 400).json(result);
 };
@@ -81,7 +81,7 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
     const orgId = req.profile.org.id
     const { botId: chatbotId, bridgeId } = req.params;
-    await addorRemoveBridgeInChatBotSchema({
+    await addorRemoveBridgeInChatBotSchema.validateAsync({
         type,
         orgId,
         chatbotId,
@@ -114,7 +114,7 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
     const { bridgeId } = req.params;
     const { responseId, responseJson, status } = req.body;
     let responseRefId = null;
-    await addorRemoveResponseIdInBridgeSchema({
+    await addorRemoveResponseIdInBridgeSchema.validateAsync({
         orgId,
         bridgeId,
         responseId,
@@ -173,7 +173,7 @@ const getChatBotOfBridge = async (req, res) => {
     // const { orgId, bridgeId } = req.params;
     const orgId = req.profile.org.id
     const { bridgeId } = req.params;
-    await getChatBotOfBridgeSchema({ orgId, bridgeId })
+    await getChatBotOfBridgeSchema.validateAsync({ orgId, bridgeId })
     const bridges = await getChatBotOfBridgeFunction(orgId, bridgeId);
     return res.status(bridges?.success ? 200 : 404).json(bridges);
 };
@@ -181,7 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
-    await updateChatBotConfigSchema({...config, botId})
+    await updateChatBotConfigSchema.validateAsync({...config, botId})
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
