@@ -33,7 +33,7 @@ const addorRemoveResponseIdInBridgeSchema = Joi.object({
     orgId: Joi.number().required(),
     bridgeId: Joi.string().required(),
     responseId: Joi.string().required(),
-    responseJson: Joi.string().required(),
+    responseJson: Joi.object().required(),
     status: Joi.string().valid('add', 'remove').required(),
 })
 const getChatBotOfBridgeSchema = Joi.object({

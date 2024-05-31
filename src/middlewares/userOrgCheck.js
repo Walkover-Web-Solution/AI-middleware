@@ -18,7 +18,7 @@ async function userOrgAccessCheck(req, res, next) {
           _id: params[toFind[i]]
         }, { org_id: 1 });
         break;
-      } else if (toFind[i] === 'botId') { //testing pending
+      } else if (toFind[i] === 'botId') {
         orgId = (await ChatBotDbService.getOne(params[toFind[i]]))?.chatbot?.orgId;
         console.log(orgId);
         break;
