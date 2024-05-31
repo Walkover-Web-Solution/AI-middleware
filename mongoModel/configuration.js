@@ -1,4 +1,19 @@
 import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
+const actionTypeModel = new Schema({
+  description: {
+    type: String
+  },
+  type :{
+    type : String
+  },
+  data : {
+    type : String 
+  }
+}, {
+  _id: false
+});
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
@@ -56,8 +71,17 @@ const configuration = new mongoose.Schema({
   },
   defaultQuestions: {
     type: Array
+  },
+  actions : {
+    type: Map,
+    of :  actionTypeModel
   }
 });
+
+
+
+
+
 configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
 const configurationModel = mongoose.model("configuration", configuration);
 export default configurationModel;

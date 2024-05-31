@@ -258,6 +258,43 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
   }
 };
 
+
+
+// add action  or update the previous action in bridge
+
+const addActionInBridge = async (bridgeId,actionId,actionJson)=>
+{
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({_id:bridgeId },{
+      $set : {
+       [ `actions.${actionId}`] :  actionJson
+      }
+    },{new : true })
+    return bridges 
+    
+  } catch (error) {
+     throw new Error(error?.message)
+  }
+}
+
+// remove action from bridge 
+
+const removeActionInBridge = async (bridgeId , actionId )=>
+{
+  try {
+    const bridges = await configurationModel.findOneAndUpdate({_id:bridgeId },{
+      $unset : {
+       [`actions.${actionId}`] :  ""
+      }
+    },{new : true })
+    return bridges 
+    
+  } catch (error) {
+    console.log(error)
+     throw new Error(error?.message)
+  }
+}
+
 // get bridge with slugname
 
 const getBridgeIdBySlugname = async (orgId, slugName) => {
@@ -344,5 +381,7 @@ export default {
   findChatbotOfBridge,
   updateBridgeType,
   getBridgeIdBySlugname,
-  getBridgesBySlugNameAndName
+  getBridgesBySlugNameAndName,
+  addActionInBridge,
+  removeActionInBridge
 };

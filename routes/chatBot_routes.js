@@ -1,5 +1,5 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrRemoveAction, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
 import { chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../middlewares/interfaceMiddlewares.js";
 import common from "../src/services/commonService/common.js";
 import middleware from "../middlewares/middleware.js";
@@ -31,4 +31,6 @@ routes.route('/loginuser').post(chatBotTokenDecode, loginUser)
 routes.route('/:botId/updateconfig').post(middleware, updateChatBotConfig)
 routes.route('/:orgId/createtoken').post(middleware, userOrgAccessCheck, createOrgToken)
 // routes.route('/:botId/bridge').delete(deleteBridge); // update chatbot actions
+
+routes.route('/:orgId/bridge/:bridgeId/action').post(middleware,createOrRemoveAction)
 export default routes;
