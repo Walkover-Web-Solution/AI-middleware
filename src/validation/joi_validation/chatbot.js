@@ -7,9 +7,20 @@ const createChatBotSchema = Joi.object({
     updatedBy: Joi.number().required(),
 })
 
-const updateChatBotSchema = Joi.object({})
+const updateChatBotSchema = Joi.object({
+    botId: Joi.string().required(),
+    title: Joi.string().required(),
+})
 const updateAllDefaultResponseInOrgSchema = Joi.object({})
-const updateChatBotConfigSchema = Joi.object({})
+const updateChatBotConfigSchema = Joi.object({
+    buttonName: Joi.string().allow("").required(),
+    height: Joi.string().allow("").required(),
+    heightUnit: Joi.string().allow("").required(),
+    width: Joi.string().allow("").required(),
+    widthUnit: Joi.string().allow("").required(),
+    type: Joi.string().allow("").required(),
+    botId: Joi.string().required(),
+})
 
 const addorRemoveBridgeInChatBotSchema = Joi.object({
     orgId: Joi.number().required(),

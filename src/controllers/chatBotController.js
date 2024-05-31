@@ -6,7 +6,7 @@ import responseTypeService from "../db_services/responseTypeService.js";
 import { getToken } from "../services/utils/usersServices.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
-import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema } from "../validation/joi_validation/chatbot.js";
+import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
     const { title } = req.body;
@@ -43,7 +43,10 @@ const getViewOnlyChatBot = async (req, res) => {
     return res.status(result.success ? 200 : 404).json({ ...result, responseTypes: orgData.chatBot.responseTypes });
 };
 const updateChatBot = async (req, res) => {
-    const result = await ChatbotDbService.update(req.params.botId, req.body);
+    const { botId } = req.params;
+    const title = req.body.title;
+    await updateChatBotSchema({ botId, title })
+    const result = await ChatbotDbService.update(botId, title);
     return res.status(result.success ? 200 : 400).json(result);
 };
 const deleteChatBot = async (req, res) => {
@@ -178,6 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
+    await updateChatBotConfigSchema({...config, botId})
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
