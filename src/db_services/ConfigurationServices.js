@@ -107,7 +107,6 @@ const updateBridgeType = async (bridge_id, org_id, bridgeType) => {
       bridges: bridges
     };
   } catch (error) {
-    console.log("error:", error);
     return {
       success: false,
       error: "something went wrong in updating bridge type!!"
@@ -124,7 +123,6 @@ const getBridges = async bridge_id => {
       bridges: bridges
     };
   } catch (error) {
-    console.error("error:", error);
     return {
       success: false,
       error: "something went wrong!!"
