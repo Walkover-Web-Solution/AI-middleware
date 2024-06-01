@@ -17,8 +17,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -116,8 +116,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -216,8 +216,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -333,8 +333,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -446,8 +446,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -563,8 +563,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 16384,
         step: 1,
         default: 256,
         level: 2
@@ -676,8 +676,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 16384,
         step: 1,
         default: 256,
         level: 2
@@ -789,8 +789,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 8192,
         step: 1,
         default: 256,
         level: 2
@@ -899,8 +899,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 8192,
         step: 1,
         default: 256,
         level: 2
@@ -1009,8 +1009,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1126,8 +1126,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1243,8 +1243,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1360,8 +1360,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1482,8 +1482,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1601,8 +1601,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
@@ -1857,8 +1857,8 @@ class ModelsConfig {
       },
       "max_tokens": {
         field: "slider",
-        min: 0,
-        max: 1024,
+        min: 1,
+        max: 4096,
         step: 1,
         default: 256,
         level: 2
