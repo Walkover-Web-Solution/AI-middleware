@@ -1,6 +1,6 @@
 import express from "express";
 import common from "../services/commonService/common.js";
-import middleware from "../../middlewares/middleware.js"; 
+import middleware from "../middlewares/middleware.js"; 
 // const completion=require('../services/commonService/completion');
 let router = express.Router();
 router.post('/chat/completion', middleware, common.prochat);

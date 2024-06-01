@@ -1,7 +1,7 @@
-import configurationModel from "../../mongoModel/configuration.js";
-import apiCallModel from "../../mongoModel/apiCall.js";
-import ChatBotModel from "../../mongoModel/chatBotModel.js";
-import { templateModel } from "../../mongoModel/template.js";
+import configurationModel from "../mongoModel/configuration.js";
+import apiCallModel from "../mongoModel/apiCall.js";
+import ChatBotModel from "../mongoModel/chatBotModel.js";
+import { templateModel } from "../mongoModel/template.js";
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
