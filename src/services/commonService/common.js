@@ -81,7 +81,7 @@ const getchat = async (req, res) => {
         const geminiHandler = new GeminiHandler(params);
         result = await geminiHandler.handleGemini();
         if (!result?.success) {
-          return res.status(400).json(result.response);
+          return res.status(400).json(result);
         }
         break;
     }
