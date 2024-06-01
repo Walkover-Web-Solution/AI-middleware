@@ -27,7 +27,6 @@ class UnifiedOpenAICase {
     this.apiCallavailable =  params.bridge?.is_api_call ?? false;
     this.playground = params.playground;
     this.metrics_sevice = params.metrics_sevice;
-    this.sendRequest = params.sendRequest;
     this.RTLayer=params.RTLayer;
     this.webhook = params.webhook;
     this.headers = params.headers;
