@@ -20,7 +20,6 @@ async function userOrgAccessCheck(req, res, next) {
         break;
       } else if (toFind[i] === 'botId') {
         orgId = (await ChatBotDbService.getOne(params[toFind[i]]))?.chatbot?.orgId;
-        console.log(orgId);
         break;
       }
     }
