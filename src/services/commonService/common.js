@@ -199,13 +199,20 @@ const prochat = async (req, res) => {
         const openAIInstance = new UnifiedOpenAICase(params);
         result = await openAIInstance.execute();
         if(!result?.success){
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json(result);
         }
         break;
       case "google":
         const geminiHandler = new GeminiHandler(params);
         result = await geminiHandler.handleGemini();
+        
         if (!result?.success) {
+          if(rtlLayer || webhook){
+            return
+          }
           return res.status(400).json(result);
         }
         break;
