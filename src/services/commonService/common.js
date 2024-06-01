@@ -1,7 +1,6 @@
 import { services } from "../../../config/models.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { getThread } from "../../controllers/conversationContoller.js";
-import conversationService from "./createConversation.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
 import _ from "lodash";
 import { completion } from "../openAI/completion.js";
@@ -11,6 +10,7 @@ import metrics_sevice from "../../db_services/metrics_services.js";
 import { v1 as uuidv1 } from 'uuid';
 import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 import { ResponseSender } from "../utils/customRes.js";
+import GeminiHandler from "../Google/geminiCall.js";
 
 const responseSender = new ResponseSender();
 
@@ -64,6 +64,7 @@ const getchat = async (req, res) => {
       service,
       modelOutputConfig,
       playground: true,
+      req
     };
 
     let result;
@@ -76,18 +77,11 @@ const getchat = async (req, res) => {
         }
         break;
       case "google":
-        let geminiConfig = {
-          generationConfig: customConfig,
-          model: configuration?.model,
-          user_input: configuration?.user
-        };
-        const geminiResponse = await runChat(geminiConfig, apikey, "chat");
-        // modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
+        params.user = configuration?.user;
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleGemini();
+        if (!result?.success) {
+          return res.status(400).json(result);
         }
         break;
     }
@@ -121,7 +115,6 @@ const prochat = async (req, res) => {
   } = req.body;
 
   let usage = {},
-    modelResponse = {},
     customConfig = {};
   let model = configuration?.model;
   let rtlLayer = false;
@@ -134,7 +127,6 @@ const prochat = async (req, res) => {
         error: getconfig.error
       });
     }
-    let historyParams;
     configuration = getconfig.configuration;
     service = getconfig.service;
     apikey = getconfig.apikey;
@@ -211,55 +203,11 @@ const prochat = async (req, res) => {
         }
         break;
       case "google":
-        let geminiConfig = {
-          generationConfig: customConfig,
-          model: configuration?.model,
-          user_input: user
-        };
-        geminiConfig["history"] = configuration?.conversation ? conversationService.createGeminiConversation(configuration.conversation).messages : [];
-        const geminiResponse = await runChat(geminiConfig, apikey, "chat");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: geminiResponse?.error
-          };
-          metrics_sevice.create([usage]);
-          responseSender.sendResponse({
-            rtlLayer,
-            webhook,
-            data:  { success: false, error: geminiResponse?.error },
-            reqBody: req.body,
-            headers: headers || {}
-          });
-          if(rtlLayer || webhook){
-            return
-          }
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleGemini();
+        if (!result?.success) {
+          return res.status(400).json(result);
         }
-        usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-        usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
-       // eslint-disable-next-line no-unused-vars
-        historyParams = {
-          thread_id: thread_id,
-          user: user,
-          message: _.get(modelResponse, modelOutputConfig.message),
-          org_id: org_id,
-          bridge_id: bridge_id,
-          model: configuration?.model,
-          channel: 'chat',
-          type: "model",
-          actor: "user"
-        };
         break;
     }
 
