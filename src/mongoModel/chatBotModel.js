@@ -22,25 +22,6 @@ const ChatBotSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'configuration', // Replace 'Configuration' with your actual model name
   }],
-
-  // actions: [{
-  //   actionIdMapping: {
-  //     type: mongoose.Schema.Types.ObjectId,
-  //     ref: 'Actions'
-  //   },
-  //   actionId: {
-  //     type: String
-  //   },
-  //   gridId: {
-  //     type: String
-  //   },
-  //   componentId: {
-  //     type: String
-  //   }
-  // }],
-  // frontendActions: {
-  //   type: Object
-  // }
 }, {
   minimize: false
 });
