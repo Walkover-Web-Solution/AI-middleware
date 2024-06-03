@@ -20,7 +20,7 @@ async function find(org_id, thread_id, bridge_id) {
   return conversations;
 }
 async function findAllMessages(org_id, thread_id,bridge_id,page=1,pageSize=10) {
-  let conversations = await models.conversations.findAll({
+  let conversations = await models.pg.conversations.findAll({
     attributes: [['message', 'content'], ['message_by', 'role'],'createdAt','id',"function"],
     where: {
       org_id,
@@ -107,7 +107,7 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
 }
 // Find All conversation db Service
 async function findAllThreads(bridge_id, org_id, page, pageSize) {
-  const threads = await models.conversations.findAll({
+  const threads = await models.pg.conversations.findAll({
     attributes: ['thread_id',[Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id',
       [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
     ],
