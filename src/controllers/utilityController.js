@@ -1,18 +1,7 @@
 import axios from "axios";
 import responseTypeService from "../db_services/responseTypeService.js";
-import configurationModel from "../../mongoModel/configuration.js";
-import { customAlphabet, nanoid } from "nanoid";
-
-const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-
-function generateIdentifier(length = 12, prefix = '', includeNumber = true) {
-  const alphabet = includeNumber ? alphabetSet : alphabetSet.slice(0, alphabetSet.length - 10);
-  if (alphabet) {
-    const custom_nanoid = customAlphabet(alphabet, length);
-    return `${prefix}${custom_nanoid()}`;
-  }
-  return `${prefix}${nanoid(length)}`;
-}
+import configurationModel from "../mongoModel/configuration.js";
+import { generateIdentifier } from "../services/utils/utilityService.js";
 
 const defaulResponseMigration = async (req, res) => {
   let result = []

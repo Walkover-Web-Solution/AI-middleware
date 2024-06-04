@@ -1,9 +1,9 @@
 import ModelsConfig from "../../configs/modelConfiguration.js";
-import { services } from "../../../config/models.js";
+import { services } from "../../configs/models.js";
 import { getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
-import { updateBridgeSchema } from "../../../validation/joi_validation/bridge.js";
+import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
 import { filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -250,10 +250,7 @@ const updateBridges = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    if (apikey === null) {
-      apikey = bridge.apikey;
-    }
-    apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+    apikey = !apikey ? bridge.apikey : helper.encrypt(apikey);
     const model = configuration.model;
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
