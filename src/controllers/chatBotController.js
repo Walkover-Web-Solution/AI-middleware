@@ -5,45 +5,54 @@ import { filterDataOfBridgeOnTheBaseOfUI } from "../services/utils/getConfigurat
 import responseTypeService from "../db_services/responseTypeService.js";
 import { getToken } from "../services/utils/usersServices.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
-import { nanoid, customAlphabet } from 'nanoid';
-
-const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-function generateIdentifier(length = 12, prefix = '', includeNumber = true) {
-    const alphabet = includeNumber ? alphabetSet : alphabetSet.slice(0, alphabetSet.length - 10);
-    if (alphabet) {
-        const custom_nanoid = customAlphabet(alphabet, length);
-        return `${prefix}${custom_nanoid()}`;
-    }
-    return `${prefix}${nanoid(length)}`;
-}
-// const { filterDataOfBridgeOnTheBaseOfUI } = require('../services/utils/getConfiguration');
+import { generateIdentifier } from "../services/utils/utilityService.js";
+import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
-    const result = await ChatbotDbService.create(req.body);
+    const { title } = req.body;
+    const userId = req.profile.user.id;
+    const orgId = req.profile.org.id;
+    const dataToSave = {
+        orgId,
+        title,
+        createdBy: userId,
+        updatedBy: userId,
+    }
+    await createChatBotSchema.validateAsync(dataToSave);
+    const result = await ChatbotDbService.create(dataToSave);
     return res.status(result.success ? 201 : 400).json(result);
 };
 const getAllChatBots = async (req, res) => {
-    // const org_id = req.params.org_id;
-    const { org_id } = req.body
+    const org_id = req.params.orgId;
+    if (!org_id) throw new Error('orgId is mandatory');
     const result = await ChatbotDbService.getAll(org_id);
     return res.status(result.success ? 200 : 400).json(result);
 };
 const getOneChatBot = async (req, res) => {
-    const result = await ChatbotDbService.getOne(req.params.botId);
+    const { botId } = req.params;
+    if (!botId) throw new Error('botId is mandatory');
+    const result = await ChatbotDbService.getOne(botId);
     return res.status(result.success ? 200 : 404).json(result);
 };
 const getViewOnlyChatBot = async (req, res) => {
-    const { org_id } = req.body;
-    const result = await ChatbotDbService.getOneChatBotViewOnly(req.params.botId, org_id);
+    const org_id = req.profile.org.id;
+    const { botId } = req.params;
+    await getViewOnlyChatBotSchema.validateAsync({ org_id, botId });
+    const result = await ChatbotDbService.getOneChatBotViewOnly(botId, org_id);
     const orgData = await responseTypeService.getAll(org_id);
     return res.status(result.success ? 200 : 404).json({ ...result, responseTypes: orgData.chatBot.responseTypes });
 };
 const updateChatBot = async (req, res) => {
-    const result = await ChatbotDbService.update(req.params.botId, req.body);
+    const { botId } = req.params;
+    const title = req.body.title;
+    await updateChatBotSchema.validateAsync({ botId, title })
+    const result = await ChatbotDbService.update(botId, title);
     return res.status(result.success ? 200 : 400).json(result);
 };
 const deleteChatBot = async (req, res) => {
-    const result = await ChatbotDbService.deleteById(req.params.botId);
+    const { botId } = req.params;
+    if (!botId) throw new Error('botId is mandatory');
+    const result = await ChatbotDbService.deleteById(botId);
     return res.status(result.success ? 200 : 404).json(result);
 };
 const updateDetails = async (req, res) => {
@@ -67,48 +76,17 @@ const updateChatBotAction = async (req, res) => {
     const result = await ChatbotDbService.updateAction(identifier, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId);
     return res.status(result.success ? 200 : 404).json(result);
 };
-// const updateBridge = async (req, res) => {
-//     const chatbotId = req.params?.botId;
-//     const orgId = req.params?.orgId;
-//     const {
-//         bridgeId
-//     } = req.params;
-//     const {
-//         bridges
-//     } = await configurationService.getBridges(bridgeId);
-//     if (bridges.org_id != orgId) return res.status(401).json({
-//         success: false,
-//         message: "invalid orgid"
-//     });
-//     const chatBot = await ChatbotDbService.addBridgeInChatBot(chatbotId, bridgeId);
-//     return res.status(chatBot.success ? 200 : 404).json(chatBot);
-// };
-// const deleteBridge = async (req, res) => {
-//     const chatbotId = req.params?.botId;
-//     const orgId = req.params?.orgId;
-//     const {
-//         bridgeId
-//     } = req.params;
-//     const {
-//         bridges
-//     } = await configurationService.getBridges(bridgeId);
-//     if (bridges.org_id != orgId) return res.status(401).json({
-//         success: false,
-//         message: "invalid orgid"
-//     });
-//     const chatBot = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridgeId);
-//     return res.status(chatBot.success ? 200 : 404).json(chatBot);
-// };
 
 const addorRemoveBridgeInChatBot = async (req, res) => {
     const { type } = req.query;
-    const { org_id: orgId } = req.body
+    const orgId = req.profile.org.id
     const { botId: chatbotId, bridgeId } = req.params;
-
-    // Validate operation type early
-    if (!['add', 'remove'].includes(type)) {
-        return res.status(400).json({ success: false, message: "Invalid status value" });
-    }
+    await addorRemoveBridgeInChatBotSchema.validateAsync({
+        type,
+        orgId,
+        chatbotId,
+        bridgeId,
+    })
 
     try {
         // Determine the operation to perform
@@ -130,22 +108,19 @@ const addorRemoveBridgeInChatBot = async (req, res) => {
     }
 };
 
-// const deleteBridge = async (req, res) => {
-//     const chatbotId = req.params?.botId;
-//     const orgId = req.params?.orgId;
-//     const { bridgeId } = req.params;
-//     const { bridges } = await configurationService.getBridges(bridgeId)
-//     if (bridges.org_id != orgId) return res.status(401).json({ success: false, message: "invalid orgid" });
-//     const chatBot = await ChatbotDbService.removeBridgeInChatBot(chatbotId, bridgeId)
-//     return res.status(chatBot.success ? 200 : 404).json(chatBot);
-// };
 const addorRemoveResponseIdInBridge = async (req, res) => { // why using status ??
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.org_id;
+    const orgId = req.profile?.org.id;
     const { bridgeId } = req.params;
     const { responseId, responseJson, status } = req.body;
-    if (!responseId) return res.status(400).json({ success: false, message: "responseId is required" });
     let responseRefId = null;
+    await addorRemoveResponseIdInBridgeSchema.validateAsync({
+        orgId,
+        bridgeId,
+        responseId,
+        responseJson,
+        status,
+    })
     if (responseJson) {
         responseRefId = await responsetypeService.addResponseTypes(orgId, responseId, responseJson)
     }
@@ -156,10 +131,7 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
         result = await configurationService.addResponseIdinBridge(bridgeId, orgId, responseId, responseRefId);
     } else if (status === 'remove') {
         result = await configurationService.removeResponseIdinBridge(bridgeId, orgId, responseId);
-    } else {
-        return res.status(400).json({ success: false, message: "Invalid status value" });
     }
-
     filterDataOfBridgeOnTheBaseOfUI(result, bridgeId, false)
 
     return res.status(result.success ? 200 : 404).json(result?.bridges);
@@ -167,7 +139,7 @@ const addorRemoveResponseIdInBridge = async (req, res) => { // why using status 
 
 const createAllDefaultResponseInOrg = async (req, res) => {
     const orgId = req.params?.orgId;
-    // const orgId = req.body?.org_id;
+    if (!orgId) throw new Error('orgId is required')
     const result = await responsetypeService.create(orgId);
     return res.status(result.success ? 200 : 404).json(result);
 };
@@ -182,7 +154,8 @@ const updateAllDefaultResponseInOrg = async (req, res) => {
 
 const getAllDefaultResponseInOrg = async (req, res) => {
     // const orgId = req.params?.orgId;
-    const orgId = req.body?.org_id;
+    const orgId = req.profile?.org.id;
+    if (!orgId) throw new Error('orgId is required')
     let result;
     result = await responseTypeService.getAll(orgId);
     if (result.chatBot === null) {
@@ -198,8 +171,9 @@ const getChatBotOfBridgeFunction = async (orgId, bridgeId) => {
 
 const getChatBotOfBridge = async (req, res) => {
     // const { orgId, bridgeId } = req.params;
-    const { org_id: orgId } = req.body
+    const orgId = req.profile.org.id
     const { bridgeId } = req.params;
+    await getChatBotOfBridgeSchema.validateAsync({ orgId, bridgeId })
     const bridges = await getChatBotOfBridgeFunction(orgId, bridgeId);
     return res.status(bridges?.success ? 200 : 404).json(bridges);
 };
@@ -207,6 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
+    await updateChatBotConfigSchema.validateAsync({...config, botId})
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
@@ -233,7 +208,7 @@ const loginUser = async (req, res) => {
 
 const createOrgToken = async (req, res) => {
     // const { orgId } = req.params;
-    const { org_id: orgId } = req.body;
+    const orgId = req.profile.org.id;
     const { chatBot } = await responseTypeService.getAll(orgId);
     if (chatBot?.orgAcessToken) return res.status(200).json(chatBot);
     const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14))

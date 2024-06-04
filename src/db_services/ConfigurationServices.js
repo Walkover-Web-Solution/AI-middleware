@@ -1,6 +1,7 @@
-import configurationModel from "../../mongoModel/configuration.js";
-import apiCallModel from "../../mongoModel/apiCall.js";
-import ChatBotModel from "../../mongoModel/chatBotModel.js";
+import configurationModel from "../mongoModel/configuration.js";
+import apiCallModel from "../mongoModel/apiCall.js";
+import ChatBotModel from "../mongoModel/chatBotModel.js";
+import { templateModel } from "../mongoModel/template.js";
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
@@ -329,6 +330,14 @@ const findChatbotOfBridge = async (orgId, bridgeId) => {
     };
   }
 };
+const gettemplateById = async template_id =>{
+  try {
+    return await templateModel.findById(template_id)
+  } catch (error) {
+    console.error("template_id error=>",error);
+    return null;
+  }
+}
 export default {
   createBridges,
   getAllBridges,
@@ -344,5 +353,6 @@ export default {
   findChatbotOfBridge,
   updateBridgeType,
   getBridgeIdBySlugname,
+  gettemplateById,
   getBridgesBySlugNameAndName
 };

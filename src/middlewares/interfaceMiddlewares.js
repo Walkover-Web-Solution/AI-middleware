@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import responseTypeService from '../src/db_services/responseTypeService.js';
-import ConfigurationServices from '../src/db_services/ConfigurationServices.js';
+import responseTypeService from '../db_services/responseTypeService.js';
+import ConfigurationServices from '../db_services/ConfigurationServices.js';
 
 const chatBotTokenDecode = async (req, res, next) => {
   const token = req?.get('Authorization');
