@@ -96,6 +96,76 @@ class GeminiHandler {
       historyParams,
     };
   }
-}
+  async handleCompletion() {
+      let usage = {};
+      let historyParams = {};
+      const geminiConfig = {
+        prompt: (this.configuration?.prompt || "") + "\n" + this.reqBody?.prompt || "",
+        model: this.configuration?.model
+      };
+      const geminiResponse = await runChat(geminiConfig, this.apikey, "completion");
+      const modelResponse = _.get(geminiResponse, "modelResponse", {});
+     
+      if (!geminiResponse?.success) {
+        
+        if(!this.playground){
+        usage = {
+          service: this.service,
+          model: this.config.model,
+          orgId: this.reqBody.org_id,
+          latency: Date.now() - this.startTime,
+          success: false,
+          error: geminiResponse?.error
+        };
+        metrics_service.create([usage],{
+          thread_id: this.thread_id,
+          user: this.configuration?.prompt,
+          message: "",
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'completion',
+          type: "error",
+          actor:  "user"
+        });
+        this.responseSender.sendResponse({
+          rtlLayer: this.rtlLayer,
+          webhook: this.webhook,
+          data: { error: geminiResponse?.error, success: false },
+          reqBody: this.reqBody,
+          headers: this.headers || {}
+        });
+        return this.res.status(400).json({
+          success: false,
+          error: geminiResponse?.error
+        });
+      }
+    }
+    if(!this.playground){
+      usage["totalTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].total_tokens);
+      usage["inputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+      usage["outputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].output_tokens);
+      usage["expectedCost"] = this.modelOutputConfig.usage[0].total_cost;
+      historyParams = {
+        thread_id: this.thread_id,
+        user: this.configuration.prompt,
+        message: _.get(modelResponse, this.modelOutputConfig.message),
+        org_id: this.org_id,
+        bridge_id: this.bridge_id,
+        model: this.configuration?.model,
+        channel: 'completion',
+        type: "model",
+        actor: "user",
+      };
+    }
+        return{
+          success: true,
+          modelResponse,
+          usage,
+          historyParams
+        }
+      }
+  }
+
 
 export default GeminiHandler;

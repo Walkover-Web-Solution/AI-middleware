@@ -3,7 +3,6 @@ import ModelsConfig from "../../configs/modelConfiguration.js";
 import { getThread } from "../../controllers/conversationContoller.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
 import _ from "lodash";
-import { completion } from "../openAI/completion.js";
 import { embeddings } from "../openAI/embedding.js";
 import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
@@ -280,12 +279,12 @@ const getCompletion = async (req, res) => {
     let {
       apikey,
       configuration,
-      service
+      service,
+      playground = true,
+      prompt
     } = req.body;
     const model = configuration?.model;
-    // let usage,
-    let modelResponse = {},
-      customConfig = {};
+    let customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["completion"].has(model))) {
       return res.status(400).json({
@@ -304,37 +303,35 @@ const getCompletion = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let result;
+    const params = {
+      configuration,
+      apikey,
+      service,
+      startTime: Date.now(),
+      modelOutputConfig: modelConfig,
+      reqBody: req.body,
+      headers: {},
+      res,
+      rtlLayer: false,
+      webhook: false,
+      playground,
+      prompt,
+      customConfig
+    };
     switch (service) {
       case "openai":
-        customConfig["prompt"] = configuration?.prompt || "";
-        const openAIResponse = await completion(customConfig, apikey);
-        modelResponse = _.get(openAIResponse, "modelResponse", {});
-        if (!openAIResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: openAIResponse?.error
-          });
-        }
-        // usage = modelResponse[modelOutputConfig["usage"]];
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result =  await openAIInstance.handleCompletion();
         break;
       case "google":
-        let geminiConfig = {
-          prompt: configuration?.prompt || "",
-          model: configuration?.model
-        };
-        const geminiResponse = await runChat(geminiConfig, apikey, "completion");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
-        }
+        const handler = new GeminiHandler(params);
+        result =  await handler.handleCompletion();
         break;
     }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
     console.error("Get Completion common error=>", error);
@@ -354,13 +351,12 @@ const proCompletion = async (req, res) => {
     org_id,
     prompt,
     service,
-    variables
+    variables,
+    playground = false
   } = req.body;
   let webhook, headers;
   let model = configuration?.model;
-  let usage = {},
-    modelResponse = {},
-    customConfig = {};
+  let usage = {},customConfig = {};
   let rtlLayer = false;
   try {
     const getconfig = await getConfiguration(configuration, service, bridge_id, apikey);
@@ -400,113 +396,37 @@ const proCompletion = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
-    let historyParams;
+    let result;
+    const params = {
+      configuration,
+      apikey,
+      service,
+      startTime,
+      modelOutputConfig,
+      reqBody: req.body,
+      headers,
+      res,
+      rtlLayer,
+      webhook,
+      playground,
+      prompt,
+      customConfig
+    };
     switch (service) {
       case "openai":
-        configuration["prompt"] = configuration?.prompt ? configuration.prompt + "\n" + prompt : prompt;
-        customConfig["prompt"] = configuration?.prompt || "";
-        if (variables && Object.keys(variables).length > 0) {
-          Object.entries(variables).forEach(([key, value]) => {
-            const stringValue = JSON.stringify(value);
-            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-            customConfig["prompt"] = customConfig.prompt.replace(regex, stringValue);
-          });
-        }
-        const openAIResponse = await completion(customConfig, apikey);
-        modelResponse = _.get(openAIResponse, "modelResponse", {});
-        if (!openAIResponse?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: openAIResponse?.error,
-            variables: variables
-          };
-          metrics_sevice.create([usage], {
-            thread_id: thread_id,
-            user: prompt,
-            message: "",
-            org_id: org_id,
-            bridge_id: bridge_id,
-            model: configuration?.model,
-            channel: 'completion',
-            type: "error",
-            actor:  "user"
-          });
-          responseSender.sendResponse({
-            rtlLayer,
-            webhook,
-            data:  { error: openAIResponse?.error, success: false},
-            reqBody: req.body,
-            headers: headers || {}
-          });
-          if(rtlLayer || webhook){
-            return
-          }
-          return res.status(400).json({
-            success: false,
-            error: openAIResponse?.error
-          });
-        }
-        usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].completion_tokens);
-        usage["expectedCost"] = usage.inputTokens / 1000 * modelOutputConfig.usage[0].total_cost.input_cost + usage.outputTokens / 1000 * modelOutputConfig.usage[0].total_cost.output_cost;
-        historyParams = {
-          thread_id: thread_id,
-          user: prompt,
-          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
-          org_id: org_id,
-          bridge_id: bridge_id,
-          model: configuration?.model,
-          channel: 'completion',
-          type: _.get(modelResponse, modelOutputConfig.message) == null ? "completion" : "assistant",
-          actor:"user"
-        }; 
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result =  await openAIInstance.handleCompletion();
         break;
       case "google":
-        let geminiConfig = {
-          prompt: (configuration?.prompt || "") + "\n" + prompt || "",
-          model: configuration?.model
-        };
-        const geminiResponse = await runChat(geminiConfig, apikey, "completion");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: geminiResponse?.error
-          };
-          metrics_sevice.create([usage]);
-          responseSender.sendResponse({
-            rtlLayer,
-            webhook,
-            data:  {error: geminiResponse?.error, success: false },
-            reqBody: req.body,
-            headers: headers || {}
-          });
-          if(rtlLayer || webhook){
-            return
-          }
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
-        }
-        usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-        usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
+        const handler = new GeminiHandler(params);
+        result =  await handler.handleCompletion();
         break;
     }
+
     const endTime = Date.now();
+    
     usage = {
-      ...usage,
+      ...result?.usage,
       service: service,
       model: model,
       orgId: org_id,
@@ -514,11 +434,11 @@ const proCompletion = async (req, res) => {
       success: true,
       variables: variables
     };
-    metrics_sevice.create([usage], historyParams);
+    metrics_sevice.create([usage], result.historyParams);
     responseSender.sendResponse({
       rtlLayer,
       webhook,
-      data:  { response: modelResponse, success: true },
+      data:  { response: result.modelResponse, success: true },
       reqBody: req.body,
       headers: headers || {}
     });
@@ -527,7 +447,7 @@ const proCompletion = async (req, res) => {
     }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
     const endTime = Date.now();
