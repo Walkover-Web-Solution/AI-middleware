@@ -44,5 +44,12 @@ class Helper {
     return prompt;
   };
   
+  static parseJson = (jsonString) => {
+    try {
+      return{success: true, json: JSON.parse(jsonString)};
+    } catch (error) {
+      return {success: false, error: error.message};
+    }
+  };
 }
 export default Helper;
