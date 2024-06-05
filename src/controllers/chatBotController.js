@@ -35,7 +35,7 @@ const getOneChatBot = async (req, res) => {
     return res.status(result.success ? 200 : 404).json(result);
 };
 const getViewOnlyChatBot = async (req, res) => {
-    const org_id = req.profile.org.id;
+    const org_id = req.profile.org_id;
     const { botId } = req.params;
     await getViewOnlyChatBotSchema.validateAsync({ org_id, botId });
     const result = await ChatbotDbService.getOneChatBotViewOnly(botId, org_id);
@@ -181,7 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
-    await updateChatBotConfigSchema.validateAsync({...config, botId})
+    await updateChatBotConfigSchema.validateAsync({ ...config, botId })
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
