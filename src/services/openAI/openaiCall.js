@@ -6,6 +6,8 @@ import _ from "lodash";
 import functionCall from "./functionCall.js";
 import Helper from "../utils/helper.js";
 import { ResponseSender } from "../utils/customRes.js";
+import { embeddings } from "./embedding.js";
+import metrics_services from "../../db_services/metrics_services.js";
 class UnifiedOpenAICase {
   constructor(params) {
     this.customConfig = params.customConfig;
@@ -32,6 +34,7 @@ class UnifiedOpenAICase {
     this.headers = params.headers;
     this.template=params.template;
     this.responseSender = new ResponseSender();
+    this.input = params.input;
   }
 
   async execute() {
@@ -158,6 +161,70 @@ class UnifiedOpenAICase {
 
     return { success: true, modelResponse, historyParams, usage };
   }
+  async handleEmbedding(){
+    let historyParams = {};
+    let usage={};
+    if(this.playground){
+      this.customConfig["input"] = this.input || "";
+    }
+    else{
+      this.customConfig["input"] = this.configuration?.input || "";
+    }
+    const openAIResponse = await embeddings(this.customConfig, this.apikey);
+    let modelResponse = _.get(openAIResponse, "modelResponse", {});
+    if (!openAIResponse?.success) {
+      if(!this.playground)
+      {
+      usage = {
+        service: this.service,
+        model: model,
+        orgId: this.org_id,
+        latency: Date.now() - this.startTime,
+        success: false,
+        error: this.response?.error
+      };
+      metrics_services.create([usage],{
+        thread_id: this.thread_id,
+        user: this.input,
+        message: "",
+        org_id: this.org_id,
+        bridge_id: this.bridge_id,
+        model: this.configuration?.model,
+        channel: 'embedding',
+        type: "error",
+        actor: "user"
+      });
+      this.responseSender.sendResponse({
+        rtlLayer : this.rtlLayer,
+        webhook : this.webhook,
+        data:   { error: this.response?.error, success: false },
+        reqBody: this.req.body,
+        headers: this.headers || {}
+      });
+    }
+    return { success: false, error: openAIResponse?.error };
+    }
+    if(!this.playground){
+    console.log("usage",JSON.stringify(modelResponse))
+    usage["totalTokens"] = _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens);
+    usage["inputTokens"] = _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+    usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
+    usage["expectedCost"] = usage.totalTokens / 1000 * this.modelOutputConfig.usage[0].total_cost;
+    historyParams = {
+      thread_id: this.thread_id,
+      user: this.input,
+      message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
+      org_id: this.org_id,
+      bridge_id: this.bridge_id || null,
+      model: this.configuration?.model,
+      channel: 'embedding',
+      type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "embedding" : "assistant",
+      actor: this.input ? "user" : "tool"
+    }
+  }
+  return { success: true, modelResponse, historyParams, usage };
+
+  }  
 }
 
 export {
