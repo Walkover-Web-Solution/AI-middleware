@@ -18,4 +18,5 @@ router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', chatBotAuth, commo
 router.post('/createapi/:bridge_id', middleware, createApi.createsApi); //vaisocket embed create api.
 router.put('/:bridge_id', middleware, common.updateBridgeType);
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory);
+router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory);
 export default router;

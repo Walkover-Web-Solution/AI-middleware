@@ -106,6 +106,19 @@ const getSystemPromptHistory = async (req, res) => {
     });
   }
 };
+const getAllSystemPromptHistory = async (req, res) => {
+  try {
+    const bridge_id = req.params.bridge_id;
+    const result = await conversationDbService.getAllPromptHistory(bridge_id);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("error occured", error);
+    return res.status(400).json({
+      success: false,
+      error: "something went wrong!"
+    });
+  }
+};
 const createBridges = async (req, res) => {
   try {
     let {
@@ -363,5 +376,6 @@ export default {
   deleteBridges,
   getAndUpdate,
   updateBridgeType,
-  getSystemPromptHistory
+  getSystemPromptHistory,
+  getAllSystemPromptHistory
 };
