@@ -1,4 +1,4 @@
-import responseTypeModel from "../../mongoModel/responseTypeModel.js";
+import responseTypeModel from "../mongoModel/responseTypeModel.js";
 import defaultResponseJson from "../services/utils/defaultResponseConfig.js";
 
 const create = async orgId => {
