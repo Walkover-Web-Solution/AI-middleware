@@ -78,15 +78,24 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     }
     responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   });
-  if (!success) return res.status(400).json({ message: 'some error occured' });
+ const actions  = []
+  Object.keys(bridges.actions||{}).forEach((actionId)=>{
+    const {description , type , variable}  =  bridges.actions[actionId]
+      actions.push({actionId , description  ,type ,variable})
+ })
 
+  if (!success) return res.status(400).json({ message: 'some error occured' });
+  req.chatbot  = true ;
   req.body = {
     org_id,
     bridge_id: bridges?._id?.toString(),
     service: 'openai',
     user: message,
     thread_id: threadId,
-    variables: { ...req.body.interfaceContextData, responseTypes, message },
+    variables: { ...req.body.interfaceContextData, responseTypes, message,actions },
+    RTLayer : true ,
+    template_id :process.env.TEMPLATE_ID,
+
     rtlOptions: {
       channel: channelId,
       ttl: 1,

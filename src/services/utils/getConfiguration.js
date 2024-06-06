@@ -12,7 +12,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key,templ
       error: "bridge_id does not exist"
     };
   }
-  configuration = configuration? configuration : result?.bridges?.configuration;
+  configuration = configuration ? configuration : result?.bridges?.configuration;
   service = service || (result?.bridges?.service ? result.bridges.service.toLowerCase() : "");
   api_key = api_key ? api_key : helper.decrypt(result?.bridges?.apikey);
   RTLayer = configuration?.RTLayer ? true : false;
@@ -20,6 +20,8 @@ const getConfiguration = async (configuration, service, bridge_id, api_key,templ
   service = service ? service.toLowerCase() : "";
 
   let templateContent = template_id ? await configurationService.gettemplateById(template_id): null;
+  service = service ? service.toLowerCase() : "";
+
   return {
     success: true,
     configuration: configuration,
@@ -39,7 +41,7 @@ const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
   let modelConfig = modelfunc().configuration;
   for (const key in modelConfig) {
     if (Object.prototype.hasOwnProperty.call(configuration, key)) {
-       modelConfig[key].default = configuration[key];
+      modelConfig[key].default = configuration[key];
     }
   }
   let customConfig = modelConfig;

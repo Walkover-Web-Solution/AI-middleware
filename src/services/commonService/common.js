@@ -114,9 +114,8 @@ const prochat = async (req, res) => {
     variables = {},
     RTLayer = null,
     template_id=null,
-    bridgeType="api"
   } = req.body;
-  
+  const bridgeType = req.chatbot 
   let usage = {},
     customConfig = {};
   let model = configuration?.model;
@@ -196,7 +195,6 @@ const prochat = async (req, res) => {
     };
 
     let result;
-    
     switch (service) {
       case "openai":
         const openAIInstance = new UnifiedOpenAICase(params);
@@ -220,16 +218,20 @@ const prochat = async (req, res) => {
         }
         break;
     }
-    if(bridgeType==="chat"){
+    /// chat bot second reponse check
+    if(bridgeType ){
       const parsedJson=Helper.parseJson(_.get(result.modelResponse,modelOutputConfig.message));
-        const bridgeMarkdown = parsedJson?.json?.bridgemarkdown ?? false;
-        if(bridgeMarkdown){
-          params.configuration.prompt = responsePrompt;
+        // const bridgeMarkdown = parsedJson?.json?.isMarkdown ?? false;
+        if(!( parsedJson?.json?.isMarkdown)){
+          params.configuration.prompt = {"role":"system",content:responsePrompt};
+          params.user=_.get(result.modelResponse,modelOutputConfig.message)
+          params.template=null;
           const openAIInstance = new UnifiedOpenAICase(params);
           let newresult = await openAIInstance.execute();
           if(!newresult?.success){
               return
           }
+
           _.set(result.modelResponse, modelOutputConfig.message, _.get(newresult.modelResponse, modelOutputConfig.message));
           _.set(result.modelResponse, modelOutputConfig.usage[0].total_tokens, _.get(result.modelResponse, modelOutputConfig.usage[0].total_tokens) + _.get(newresult.modelResponse, modelOutputConfig.usage[0].total_tokens));
           _.set(result.modelResponse, modelOutputConfig.usage[0].prompt_tokens, _.get(result.modelResponse, modelOutputConfig.usage[0].prompt_tokens) + _.get(newresult.modelResponse, modelOutputConfig.usage[0].prompt_tokens));
@@ -244,6 +246,8 @@ const prochat = async (req, res) => {
         }
 
     }
+
+    // -==-=-=-=-=-
 
     const endTime = Date.now();
     usage = {
