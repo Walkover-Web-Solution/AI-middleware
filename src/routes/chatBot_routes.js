@@ -1,7 +1,7 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../src/controllers/chatBotController.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../controllers/chatBotController.js";
 import { chatBotAuth, chatBotTokenDecode, sendDataMiddleware } from "../middlewares/interfaceMiddlewares.js";
-import common from "../src/services/commonService/common.js";
+import common from "../services/commonService/common.js";
 import middleware from "../middlewares/middleware.js";
 import userOrgAccessCheck from "../middlewares/userOrgCheck.js";
 import rateLimiterMiddleware from "../middlewares/rateLimit.js";
@@ -12,7 +12,7 @@ routes.route('/:orgId/all').get(middleware, userOrgAccessCheck, getAllChatBots);
 routes.route('/:botId').get(middleware, getOneChatBot); // get one chatbot
 routes.route('/:botId/getchatbot').get(chatBotAuth, getViewOnlyChatBot); // get one chatbot
 
-routes.route('/:botId').put(middleware, updateChatBot); // update chatbot
+routes.route('/:botId').put(middleware, updateChatBot); // update chatbot name
 routes.route('/:botId/updateDetails').put(middleware, updateDetails); // update chatbot details
 // routes.route('/:botId/updateActions').put(updateChatBotAction); // update chatbot actions
 

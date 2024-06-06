@@ -1,9 +1,9 @@
 import ModelsConfig from "../../configs/modelConfiguration.js";
-import { services } from "../../../config/models.js";
+import { services } from "../../configs/models.js";
 import { getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
-import { updateBridgeSchema } from "../../../validation/joi_validation/bridge.js";
+import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
 import { filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -97,6 +97,19 @@ const getSystemPromptHistory = async (req, res) => {
       timestamp
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("error occured", error);
+    return res.status(400).json({
+      success: false,
+      error: "something went wrong!"
+    });
+  }
+};
+const getAllSystemPromptHistory = async (req, res) => {
+  try {
+    const bridge_id = req.params.bridge_id;
+    const result = await conversationDbService.getAllPromptHistory(bridge_id);
     return res.status(200).json(result);
   } catch (error) {
     console.error("error occured", error);
@@ -250,10 +263,7 @@ const updateBridges = async (req, res) => {
         error: "service does not exist!"
       });
     }
-    if (apikey === null) {
-      apikey = bridge.apikey;
-    }
-    apikey = apikey ? helper.encrypt(apikey) : helper.encrypt("");
+    apikey = !apikey ? bridge.apikey : helper.encrypt(apikey);
     const model = configuration.model;
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
     const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
@@ -366,5 +376,6 @@ export default {
   deleteBridges,
   getAndUpdate,
   updateBridgeType,
-  getSystemPromptHistory
+  getSystemPromptHistory,
+  getAllSystemPromptHistory
 };

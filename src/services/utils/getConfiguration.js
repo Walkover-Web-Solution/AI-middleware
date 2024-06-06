@@ -2,7 +2,7 @@ import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import token from "../../services/commonService/generateToken.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
-const getConfiguration = async (configuration, service, bridge_id, api_key) => {
+const getConfiguration = async (configuration, service, bridge_id, api_key,template_id=null) => {
   let RTLayer = false;
   let bridge;
   const result = await configurationService.getBridges(bridge_id);
@@ -17,16 +17,17 @@ const getConfiguration = async (configuration, service, bridge_id, api_key) => {
   api_key = api_key ? api_key : helper.decrypt(result?.bridges?.apikey);
   RTLayer = configuration?.RTLayer ? true : false;
   bridge = result?.bridges;
+  service = service ? service.toLowerCase() : "";
 
-service = service ? service.toLowerCase() : "";
-
+  let templateContent = template_id ? await configurationService.gettemplateById(template_id): null;
   return {
     success: true,
     configuration: configuration,
     bridge: bridge,
     service: service,
     apikey: api_key,
-    RTLayer: RTLayer
+    RTLayer: RTLayer,
+    template: templateContent?.template
   };
 };
 const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
