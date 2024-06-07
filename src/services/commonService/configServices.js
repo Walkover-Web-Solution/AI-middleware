@@ -109,7 +109,9 @@ const getSystemPromptHistory = async (req, res) => {
 const getAllSystemPromptHistory = async (req, res) => {
   try {
     const bridge_id = req.params.bridge_id;
-    const result = await conversationDbService.getAllPromptHistory(bridge_id);
+    let page = req?.query?.pageNo || 1;
+    let pageSize = req?.query?.limit || 10 ;
+    const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
     return res.status(200).json(result);
   } catch (error) {
     console.error("error occured", error);
