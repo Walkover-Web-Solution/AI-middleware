@@ -56,7 +56,7 @@ async function getHistory(bridge_id, timestamp) {
     return { success: false, message: "Prompt not found" };
   }
 }
-async function getAllPromptHistory(bridge_id) {
+async function getAllPromptHistory(bridge_id,page, pageSize) {
   try {
     const history = await models.pg.system_prompt_versionings.findAll({
       where: {
@@ -64,7 +64,10 @@ async function getAllPromptHistory(bridge_id) {
       },
       order: [
         ['updated_at', 'DESC'],
-      ]
+      ],
+    raw: true,
+    limit: pageSize,
+    offset: (page - 1) * pageSize
     });
     if (history.length === 0) {
       return { success: true, message: "No prompts found for the given bridge_id" };
