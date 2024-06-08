@@ -30,7 +30,7 @@ const rateLimiterMiddleware = (keyPath, options={}) => {
           data = { count: 1};
         }
 
-        await storeInCache(redisKey, data, ttl);
+        storeInCache(redisKey, data, ttl);
         next();
     } catch (error) {
       next(error);
