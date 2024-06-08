@@ -1,4 +1,4 @@
-import { findInCache, storeInCache } from '../cache_service/index.js';
+import { findInCache, storeInCache, verifyTTL } from '../cache_service/index.js';
 
 // Function to extract nested value from the request object
 const getNestedValue = (obj, path) => {
@@ -7,39 +7,30 @@ const getNestedValue = (obj, path) => {
 
 // Custom rate limiter middleware
 const rateLimiterMiddleware = (keyPath, options={}) => {
-  const { points=50, duration=60 } = options;
+  const { points=5} = options;
 
   return async (req, res, next) => {
     try {
       const key = getNestedValue(req, keyPath);
-      if (!key) {
-        return res.status(400).json({ error: 'Invalid key path or key not found in request' });
-      }
-
+      if (!key) return res.status(400).json({ error: 'Invalid key path or key not found in request' });
       const redisKey = `rate-limit:${key}`;
-      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
         const record = await findInCache(redisKey);
         let data;
-
+        let ttl = 10 ;
         if (record) {
+          ttl = await verifyTTL(redisKey); 
           data = JSON.parse(record);
-          const { count, expiry } = data;
-
-          if (currentTime < expiry) {
+          const { count } = data;
             if (count >= points) {
-              res.set('Retry-After', String(expiry - currentTime));
+              res.set('Retry-After', String(ttl));
               return res.status(429).json({ error: 'Too many requests' });
             }
             data.count += 1;
-          } else {
-            // Reset the rate limit counter if the duration has passed
-            data = { count: 1, expiry: currentTime + duration };
-          }
         } else {
-          data = { count: 1, expiry: currentTime + duration };
+          data = { count: 1};
         }
 
-        await storeInCache(redisKey, data);
+        await storeInCache(redisKey, data, ttl);
         next();
     } catch (error) {
       next(error);
