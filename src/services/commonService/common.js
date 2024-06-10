@@ -11,6 +11,8 @@ import { v1 as uuidv1 } from 'uuid';
 import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
 import { ResponseSender } from "../utils/customRes.js";
 import GeminiHandler from "../Google/geminiCall.js";
+import Helper from "../utils/helper.js";
+import responsePrompt from "../../../config/prompt.js";
 
 const responseSender = new ResponseSender();
 
@@ -111,9 +113,9 @@ const prochat = async (req, res) => {
     service,
     variables = {},
     RTLayer = null,
-    template_id=null
+    template_id=null,
   } = req.body;
-
+  const bridgeType = req.chatbot 
   let usage = {},
     customConfig = {};
   let model = configuration?.model;
@@ -193,7 +195,6 @@ const prochat = async (req, res) => {
     };
 
     let result;
-    
     switch (service) {
       case "openai":
         const openAIInstance = new UnifiedOpenAICase(params);
@@ -217,6 +218,35 @@ const prochat = async (req, res) => {
         }
         break;
     }
+    /// chat bot second reponse check
+    if (bridgeType) {
+      const parsedJson = Helper.parseJson(_.get(result.modelResponse, modelOutputConfig.message));
+      if (!( parsedJson?.json?.isMarkdown)) {
+        params.configuration.prompt = { "role": "system", content: responsePrompt };
+        params.user = _.get(result.modelResponse, modelOutputConfig.message)
+        params.template = null;
+        const openAIInstance = new UnifiedOpenAICase(params);
+        let newresult = await openAIInstance.execute();
+        if (!newresult?.success) {
+          return
+        }
+
+        _.set(result.modelResponse, modelOutputConfig.message, _.get(newresult.modelResponse, modelOutputConfig.message));
+        _.set(result.modelResponse, modelOutputConfig.usage[0].total_tokens, _.get(result.modelResponse, modelOutputConfig.usage[0].total_tokens) + _.get(newresult.modelResponse, modelOutputConfig.usage[0].total_tokens));
+        _.set(result.modelResponse, modelOutputConfig.usage[0].prompt_tokens, _.get(result.modelResponse, modelOutputConfig.usage[0].prompt_tokens) + _.get(newresult.modelResponse, modelOutputConfig.usage[0].prompt_tokens));
+        _.set(result.modelResponse, modelOutputConfig.usage[0].completion_tokens, _.get(result.modelResponse, modelOutputConfig.usage[0].completion_tokens) + _.get(newresult.modelResponse, modelOutputConfig.usage[0].completion_tokens));
+        result.historyParams = newresult.historyParams
+        _.set(result.usage, "totalTokens", _.get(result.usage, "totalTokens") + _.get(newresult.usage, "totalTokens"));
+        _.set(result.usage, "inputTokens", _.get(result.usage, "inputTokens") + _.get(newresult.usage, "inputTokens"));
+        _.set(result.usage, "outputTokens", _.get(result.usage, "outputTokens") + _.get(newresult.usage, "outputTokens"));
+        _.set(result.usage, "expectedCost", _.get(result.usage, "expectedCost") + _.get(newresult.usage, "expectedCost"));
+        result.historyParams.user = user
+
+      }
+
+    }
+
+    // -==-=-=-=-=-
 
     const endTime = Date.now();
     usage = {
