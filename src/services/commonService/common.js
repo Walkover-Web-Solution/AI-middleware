@@ -77,7 +77,7 @@ const getchat = async (req, res) => {
         }
         break;
       case "google":
-        params.user = configuration?.user;
+        params.user = configuration?.user.content;
         const geminiHandler = new GeminiHandler(params);
         result = await geminiHandler.handleGemini();
         if (!result?.success) {
