@@ -2089,9 +2089,25 @@ class ModelsConfig {
       message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  }
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
@@ -2150,9 +2166,25 @@ class ModelsConfig {
       message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  };
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
@@ -2211,9 +2243,25 @@ class ModelsConfig {
       message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  };
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
@@ -2272,9 +2320,26 @@ class ModelsConfig {
       message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+
+      },
+      content_location: "prompt"
+  }
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
