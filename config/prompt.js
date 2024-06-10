@@ -1,26 +1,35 @@
-const responsePrompt=`purpose : "you have received data and may be an action 
-ui material ui components to show the data in a best way and if action if present then add it to a button 
-
-"instructions" :- "help us to use minumum word by use response in variable and using its path  in components and in action also"  ,
-path will be like variables.key 
-in the component props should be of materail ui component only
-available components : - Table , Button , Typography , TextField
-output format :
-"{"markdown": false,
-"variables": {
-<key> :value
-}
-"components": {
-  "<material ui name>"{
-    "type": "<component type >",
-    "props": {
-          <key> :<path from key>
-    } 
-     action : { 
-      // if present then add in button only
-      ...other keys of actons 
-      variable with filled path from variables , also the variable value should be a parsable json   
-       example :- variable: {"data": "variables.<keyname>", "type": "function"}
+const responsePrompt = `{
+  "purpose": "Modify given response so that we can display it beautifully using Material UI components and make it actionable by adding actions to buttons",
+  "instructions": "1. Minimize words by using variable paths (variables.key) in components and actions."
+  "2. Add actions only to the Button component and compulsory show the UI component to display information to the user."
+ "3. give valid response in available max tokens"
+  "available_components": ["Table", "Button", "Typography", "TextField"],
+  "output_json_format": {
+    "markdown": false,
+    "variables": {
+      "<key>": "<value>"
+    },
+    "components": {
+      "<component_name>": {
+        "type": "<component_type>",
+        "props": {
+          "<key>": "variables.<key>"
+        }
+      },
+      "Button": {
+        "type": "Button",
+        "props": {
+          "<key>": "variables.<key>"
+        },
+        "action": {
+          actionId : <actionId>
+          actionType : <action_Type>
+          "variables": {
+            // fill all the json values with the variables path
+            "<key_from_available_actions_varible>": <path from variables>
+          }
+        }
+      }
     }
   }
 }`
