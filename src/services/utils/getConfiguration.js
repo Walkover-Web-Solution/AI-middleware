@@ -20,7 +20,6 @@ const getConfiguration = async (configuration, service, bridge_id, api_key,templ
   service = service ? service.toLowerCase() : "";
 
   let templateContent = template_id ? await configurationService.gettemplateById(template_id): null;
-  service = service ? service.toLowerCase() : "";
 
   return {
     success: true,
