@@ -7,7 +7,7 @@ const getNestedValue = (obj, path) => {
 
 // Custom rate limiter middleware
 const rateLimiterMiddleware = (keyPath, options={}) => {
-  const { points=5} = options;
+  const { points=40} = options;
 
   return async (req, res, next) => {
     try {
@@ -16,7 +16,7 @@ const rateLimiterMiddleware = (keyPath, options={}) => {
       const redisKey = `rate-limit:${key}`;
         const record = await findInCache(redisKey);
         let data;
-        let ttl = 10 ;
+        let ttl = 60 ;
         if (record) {
           ttl = await verifyTTL(redisKey); 
           data = JSON.parse(record);
