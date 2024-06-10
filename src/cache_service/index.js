@@ -1,11 +1,10 @@
-// import { client, isReady } from '../config/redis.js';
-import client from '../services/cacheService.js';
-// import scriptDbService from '../db_services/db/script_db_service.js';
-const REDIS_PREFIX = 'AIMIDDLEWARE_';
-const DEFAULT_REDIS_TTL = 172800; //  on day
-async function storeInCache(identifier, data) {
 
-  if (client.isReady) return await client.set(REDIS_PREFIX + identifier, JSON.stringify(data), 'EX', DEFAULT_REDIS_TTL);
+import client from '../services/cacheService.js';
+const REDIS_PREFIX = 'AIMIDDLEWARE_';
+const DEFAULT_REDIS_TTL = 172800; //  2 day
+async function storeInCache(identifier, data, ttl = DEFAULT_REDIS_TTL) {
+
+  if (client.isReady) return await client.set(REDIS_PREFIX + identifier, JSON.stringify(data), { EX: ttl });
   return false;
 }
 
@@ -33,8 +32,26 @@ async function deleteInCache(identifiers) {
   }
 }
 
+async function verifyTTL(identifier) {
+  try {
+    if (client.isReady) {
+      const ttl = await client.ttl(REDIS_PREFIX + identifier);
+      console.log(`TTL for key ${REDIS_PREFIX + identifier} is ${ttl} seconds`);
+      return ttl;
+    } else {
+      console.error('Redis client is not ready');
+      return -2; // Indicating error
+    }
+  } catch (error) {
+    console.error('Error retrieving TTL from cache:', error);
+    return;
+  }
+}
+
+
 export {
     deleteInCache,
   storeInCache,
   findInCache,
+  verifyTTL
 };

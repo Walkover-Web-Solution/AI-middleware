@@ -189,13 +189,14 @@ const updateChatBotConfig = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { chatbot_id, user_id, org_id } = req.chatBot;
+        const { exp,iat } = req.profile;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id, org_id })}`,
+            token: `Bearer ${getToken({ userId: user_id, org_id }, { exp,iat })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
@@ -213,6 +214,29 @@ const createOrgToken = async (req, res) => {
     if (chatBot?.orgAcessToken) return res.status(200).json(chatBot);
     const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14))
     return res.status(org?.success ? 200 : 404).json(org.orgData);
+};
+// for create , removd and update aciton 
+const createOrRemoveAction = async (req, res) => {
+    const { bridgeId } = req.params;
+    const { type } = req.query;
+    const { actionJson } = req.body;
+    let { actionId } = req.body;
+
+    if (!['add', 'remove'].includes(type)) return res.status(400).json({ error: "Invalid type", success: false });
+
+    if (type !== "remove" && !actionId) // add for create and update the action 
+        actionId = generateIdentifier(12);
+
+    try {
+        const response = type === 'add'
+            ? await configurationService.addActionInBridge(bridgeId, actionId, actionJson)
+            : await configurationService.removeActionInBridge(bridgeId, actionId);
+        filterDataOfBridgeOnTheBaseOfUI({ bridges: response }, bridgeId, false);
+
+        return res.status(200).json({ success: true, data: response });
+    } catch (error) {
+        return res.status(400).json({ error: `some error occured ${error?.message}`, success: false });
+    }
 };
 
 export {
@@ -233,6 +257,7 @@ export {
     loginUser,
     updateChatBotConfig,
     createOrgToken,
-    getViewOnlyChatBot
+    getViewOnlyChatBot,
+    createOrRemoveAction
     // updateChatBotResponse
 };

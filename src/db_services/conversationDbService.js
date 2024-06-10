@@ -56,6 +56,30 @@ async function getHistory(bridge_id, timestamp) {
     return { success: false, message: "Prompt not found" };
   }
 }
+async function getAllPromptHistory(bridge_id,page, pageSize) {
+  try {
+    const history = await models.pg.system_prompt_versionings.findAll({
+      where: {
+        bridge_id
+      },
+      order: [
+        ['updated_at', 'DESC'],
+      ],
+    raw: true,
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+    });
+    if (history.length === 0) {
+      return { success: true, message: "No prompts found for the given bridge_id" };
+    }
+
+    return { success: true, history };
+  } catch (error) {
+    console.error("get history system prompt error=>", error);
+    return { success: false, message: "Error retrieving prompts" };
+  }
+}
+
 
 async function findMessage(org_id, thread_id, bridge_id) {
   let conversations = await models.pg.conversations.findAll({
@@ -137,7 +161,8 @@ export default {
   findAllMessages,
   storeSystemPrompt,
   getHistory,
-  findMessage
+  findMessage,
+  getAllPromptHistory
 };
 
 // findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")
