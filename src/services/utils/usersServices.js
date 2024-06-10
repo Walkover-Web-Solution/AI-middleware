@@ -10,12 +10,21 @@ const generateToken = (tokenInfo) => {
   return token;
 };
 
-const getToken = (data) => {
-  const token = jwt.sign(
-    { ...data },
-    process.env.CHATBOTSECRETKEY,
-    { expiresIn: '48h' },
-  );
+const getToken = (data, expire) => {
+  let token ;
+  if(expire.exp&&expire.iat){
+    token = jwt.sign(
+      { ...expire,...data },
+      process.env.CHATBOTSECRETKEY,
+      
+    );
+  }else{
+    token = jwt.sign(
+      { ...data },
+      process.env.CHATBOTSECRETKEY,
+      { expiresIn: '48h' }
+    );
+  }
 
   return token;
 };
