@@ -176,7 +176,7 @@ const deleteApi = async (endpoint, org_id, bridge_id) => {
     const result = await common.getAndUpdate("", bridge_id, org_id, "", endpoint, {},"delete");
    return result
   } catch (error) {
-    console.log("Delete API error=>",error);
+    console.error("Delete API error=>",error);
     return { success: false, error: error };
   }
 }
@@ -184,10 +184,11 @@ const deleteApi = async (endpoint, org_id, bridge_id) => {
 
 const getApiId=async(org_id,bridge_id,endpoint)=>{
   try {
-    const api=await apiCallModel.findOne({org_id,bridge_id,endpoint});
+    const apiCallData=await apiCallModel.findOne({org_id,bridge_id,endpoint});
     const apiId = apiCallData ? apiCallData.id : "";
     return apiId;
   } catch (error) {
+    console.error("error:", error);
     return "";
   }
 }
