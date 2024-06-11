@@ -1,9 +1,6 @@
 class conversationService {
 
-
-
-  // [{"assistant":"hey"},{"user":"hhhh"},.....]
-  static createOpenAIConversation = (conversation) => { //openai role: assistant, user. content: content
+  static createOpenAIConversation = (conversation) => { 
       try {
         let threads = [];
         conversation.forEach(messages => {
@@ -35,7 +32,7 @@ class conversationService {
         };
       }
 }
-  static createGeminiConversation = conversation => {  //gemini rols: model, user, content: parts
+  static createGeminiConversation = conversation => { 
     try {
       let threads = [];
       let previousRole = "model";
