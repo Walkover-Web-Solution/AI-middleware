@@ -6,6 +6,8 @@ import _ from "lodash";
 import functionCall from "./functionCall.js";
 import Helper from "../utils/helper.js";
 import { ResponseSender } from "../utils/customRes.js";
+import { completion } from "./completion.js";
+import metrics_sevices from "../../db_services/metrics_services.js";
 class UnifiedOpenAICase {
   constructor(params) {
     this.customConfig = params.customConfig;
@@ -32,6 +34,7 @@ class UnifiedOpenAICase {
     this.headers = params.headers;
     this.template=params.template;
     this.responseSender = new ResponseSender();
+    this.prompt = params.prompt;
   }
 
   async execute() {
@@ -158,6 +161,81 @@ class UnifiedOpenAICase {
 
     return { success: true, modelResponse, historyParams, usage };
   }
+  async handleCompletion() {
+      let usage = {};
+      let historyParams = {};
+      this.configuration["prompt"] = this.configuration?.prompt ? this.configuration.prompt + "\n" + this.prompt : this.prompt;
+      this.customConfig["prompt"] = this.configuration?.prompt || "";
+      
+      if (this.variables && Object.keys(this.variables).length > 0) {
+        Object.entries(this.variables).forEach(([key, value]) => {
+          const stringValue = JSON.stringify(value);
+          const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+          this.customConfig["prompt"] = this.customConfig.prompt.replace(regex, stringValue);
+        });
+      }
+      const openAIResponse = await completion(this.customConfig, this.apikey);
+      const modelResponse = _.get(openAIResponse, "modelResponse", {});
+      if (!openAIResponse?.success) {
+        if(!this.playground) {
+        usage = {
+          service: this.service,
+          model: model,
+          orgId: this.org_id,
+          latency: Date.now() - this.startTime,
+          success: false,
+          error: openAIResponse?.error,
+          variables: this.variables
+        };
+        metrics_sevices.create([usage], {
+          thread_id: this.thread_id,
+          user: this.prompt,
+          message: "",
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'completion',
+          type: "error",
+          actor:  "user"
+        });
+        this.responseSender.sendResponse({
+          rtlLayer : this.rtlLayer,
+          webhook : this.webhook,
+          data:  { error: openAIResponse?.error, success: false},
+          reqBody: this.req.body,
+          headers: this.headers || {}
+        });
+      }
+      return {
+        success: false,
+        error: openAIResponse?.error
+      }
+    }
+    if(!this.playground){
+        usage["totalTokens"] = _.get(modelResponse, this.modelOutputConfig.usage[0].total_tokens);
+        usage["inputTokens"] = _.get(modelResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+        usage["outputTokens"] = _.get(modelResponse, this.modelOutputConfig.usage[0].completion_tokens);
+        usage["expectedCost"] = usage.inputTokens / 1000 * this.modelOutputConfig.usage[0].total_cost.input_cost + usage.outputTokens / 1000 * this.modelOutputConfig.usage[0].total_cost.output_cost;
+        historyParams = {
+          thread_id: this.thread_id,
+          user: this.prompt,
+          message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'completion',
+          type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "completion" : "assistant",
+          actor:"user"
+        };
+      }
+        return {
+          success : true,
+          modelResponse,
+          historyParams,
+          usage
+        }
+        
+   }
 }
 
 export {
