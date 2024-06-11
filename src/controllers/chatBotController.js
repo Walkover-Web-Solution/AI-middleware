@@ -181,7 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
-    await updateChatBotConfigSchema.validateAsync({...config, botId})
+    await updateChatBotConfigSchema.validateAsync({ ...config, botId })
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
@@ -190,6 +190,7 @@ const loginUser = async (req, res) => {
     try {
         const { chatbot_id, user_id, org_id } = req.chatBot;
         const { exp,iat } = req.chatBot;
+
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
