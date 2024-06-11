@@ -6,9 +6,9 @@ const services = {
     embedding: new Set(["text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"])
   },
   google: {
-    models: new Set(["gemini-pro"]),
-    chat: new Set(["gemini-pro"]),
-    completion: new Set(["gemini-pro"]),
+    models: new Set(["gemini-pro","gemini-1.5-pro","gemini-1.0-pro-vision","gemini-1.0-pro","gemini-1.5-Flash"]),
+    chat: new Set(["gemini-pro","gemini-1.5-pro","gemini-1.0-pro-vision","gemini-1.0-pro","gemini-1.5-Flash"]),
+    completion: new Set(["gemini-pro","gemini-1.5-pro","gemini-1.0-pro-vision","gemini-1.0-pro","gemini-1.5-Flash"]),
     embedding: new Set(["embedding-001"])
   }
 };
