@@ -1949,6 +1949,91 @@ class ModelsConfig {
       chatmessage
     };
   };
+  static gemini_1_5_pro = () => {
+    const configuration = {
+      "model": {
+        field: "drop",
+        default: "gemini-1.5-pro",
+        "level": 1
+      },
+      "temperature": {
+        field: "slider",
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "topK": {
+        field: "slider",
+        min: 1,
+        max: 40,
+        step: 1,
+        default: 40,
+        level: 2
+      },
+      "topP": {
+        field: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "maxOutputTokens": {
+        field: "slider",
+        min: 1,
+        max: 8192,
+        step: 1,
+        default: 2048,
+        level: 0
+      },
+      "stopSequences": {
+        field: "text",
+        default: "",
+        level: 0
+      }
+    };
+    const outputConfig = {
+      usage: [{
+        prompt_tokens: "usage.input_tokens",
+        output_tokens: "usage.output_tokens",
+        total_tokens: "usage.total_tokens",
+        total_cost: 0
+      }],
+      message: "candidates[0].content.parts[0].text",
+      role: "model"
+    };
+    return {
+      configuration,
+      outputConfig
+    };
+  };
+  
+  static embedding_001 = () => {
+    const configuration = {
+      "model": {
+        field: "drop",
+        default: "embedding-001",
+        "level": 1
+      }
+    };
+    const outputConfig = {
+      usage: [{
+        prompt_tokens: "usage.input_tokens",
+        output_tokens: "usage.output_tokens",
+        total_tokens: "usage.total_tokens",
+        total_cost: 0
+      }],
+      message: "values",
+      role: "model"
+    };
+    return {
+      configuration,
+      outputConfig
+    };
+  };
+
   static gemini_pro = () => {
     const configuration = {
       "model": {
@@ -2004,17 +2089,71 @@ class ModelsConfig {
       message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  }
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
-  static embedding_001 = () => {
+
+  static gemini_1_5_Flash = () => {
     const configuration = {
       "model": {
         field: "drop",
-        default: "embedding-001",
+        default: "gemini-1.5-Flash",
         "level": 1
+      },
+      "temperature": {
+        field: "slider",
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "topK": {
+        field: "slider",
+        min: 1,
+        max: 40,
+        step: 1,
+        default: 40,
+        level: 2
+      },
+      "topP": {
+        field: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "maxOutputTokens": {
+        field: "slider",
+        min: 1,
+        max: 8192,
+        step: 1,
+        default: 2048,
+        level: 0
+      },
+      "stopSequences": {
+        field: "text",
+        default: "",
+        level: 0
       }
     };
     const outputConfig = {
@@ -2024,13 +2163,185 @@ class ModelsConfig {
         total_tokens: "usage.total_tokens",
         total_cost: 0
       }],
-      message: "values",
+      message: "candidates[0].content.parts[0].text",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  };
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
+
+  static gemini_1_0_pro = () => {
+    const configuration = {
+      "model": {
+        field: "drop",
+        default: "gemini-1.0-pro",
+        "level": 1
+      },
+      "temperature": {
+        field: "slider",
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "topK": {
+        field: "slider",
+        min: 1,
+        max: 40,
+        step: 1,
+        default: 40,
+        level: 2
+      },
+      "topP": {
+        field: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "maxOutputTokens": {
+        field: "slider",
+        min: 1,
+        max: 8192,
+        step: 1,
+        default: 2048,
+        level: 0
+      },
+      "stopSequences": {
+        field: "text",
+        default: "",
+        level: 0
+      }
+    };
+    const outputConfig = {
+      usage: [{
+        prompt_tokens: "usage.input_tokens",
+        output_tokens: "usage.output_tokens",
+        total_tokens: "usage.total_tokens",
+        total_cost: 0
+      }],
+      message: "candidates[0].content.parts[0].text",
+      role: "model"
+    };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location: "prompt"
+  };
+    return {
+      configuration,
+      outputConfig,
+      inputConfig
+    };
+  };
+
+  static gemini_1_0_pro_vision = () => {
+    const configuration = {
+      "model": {
+        field: "drop",
+        default: "gemini-1.0-pro-vision",
+        "level": 1
+      },
+      "temperature": {
+        field: "slider",
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "topK": {
+        field: "slider",
+        min: 1,
+        max: 40,
+        step: 1,
+        default: 40,
+        level: 2
+      },
+      "topP": {
+        field: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        default: 1,
+        level: 2
+      },
+      "maxOutputTokens": {
+        field: "slider",
+        min: 1,
+        max: 4096,
+        step: 1,
+        default: 2048,
+        level: 0
+      },
+      "stopSequences": {
+        field: "text",
+        default: "",
+        level: 0
+      }
+    };
+    const outputConfig = {
+      usage: [{
+        prompt_tokens: "usage.input_tokens",
+        output_tokens: "usage.output_tokens",
+        total_tokens: "usage.total_tokens",
+        total_cost: 0
+      }],
+      message: "candidates[0].content.parts[0].text",
+      role: "model"
+    };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+
+      },
+      content_location: "prompt"
+  }
+    return {
+      configuration,
+      outputConfig,
+      inputConfig
+    };
+  };
+
 }
 export default ModelsConfig;
