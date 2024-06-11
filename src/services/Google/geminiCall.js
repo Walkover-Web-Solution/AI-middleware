@@ -38,8 +38,7 @@ class GeminiHandler {
     geminiConfig["history"] = this.configuration?.conversation
       ? conversationService.createGeminiConversation(this.configuration.conversation).messages
       : [];
-
-    const geminiResponse = await runChat(geminiConfig, this.apikey, "embedding");
+  const geminiResponse = await runChat(geminiConfig, this.apikey, "chat");
    let  modelResponse = _.get(geminiResponse, "modelResponse", {});
     if (!geminiResponse?.success) {
       usage = {
