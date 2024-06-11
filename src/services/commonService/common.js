@@ -3,9 +3,6 @@ import ModelsConfig from "../../configs/modelConfiguration.js";
 import { getThread } from "../../controllers/conversationContoller.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
 import _ from "lodash";
-import { embeddings } from "../openAI/embedding.js";
-import { completion } from "../openAI/completion.js";
-import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
 import { v1 as uuidv1 } from 'uuid';
 import { UnifiedOpenAICase } from '../openAI/openaiCall.js';
@@ -57,7 +54,7 @@ const getchat = async (req, res) => {
       configuration,
       apikey,
       variables,
-      user: configuration?.user?.content || "",
+      user: configuration?.user || "",
       startTime: Date.now(),
       org_id: null,
       bridge_id: req.params.bridge_id || null,
@@ -79,7 +76,6 @@ const getchat = async (req, res) => {
         }
         break;
       case "google":
-        params.user = configuration?.user.content;
         const geminiHandler = new GeminiHandler(params);
         result = await geminiHandler.handleGemini();
         if (!result?.success) {
