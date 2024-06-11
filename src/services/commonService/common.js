@@ -4,6 +4,7 @@ import { getThread } from "../../controllers/conversationContoller.js";
 import { getConfiguration } from "../utils/getConfiguration.js";
 import _ from "lodash";
 import { embeddings } from "../openAI/embedding.js";
+import { completion } from "../openAI/completion.js";
 import { runChat } from "../Google/gemini.js";
 import metrics_sevice from "../../db_services/metrics_services.js";
 import { v1 as uuidv1 } from 'uuid';
@@ -527,9 +528,7 @@ const getEmbeddings = async (req, res) => {
       service
     } = req.body;
     const model = configuration?.model;
-    // let usage,
-    let  modelResponse = {},
-      customConfig = {};
+    let  customConfig = {};
     service = service ? service.toLowerCase() : "";
     if (!(service in services && services[service]["embedding"].has(model))) {
       return res.status(400).json({
@@ -548,37 +547,38 @@ const getEmbeddings = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
+    let params = {
+      customConfig,
+      configuration,
+      apikey,
+      startTime: Date.now(),
+      org_id: null,
+      bridge_id: req.params.bridge_id || null,
+      model,
+      service,
+      playground: true,
+
+    };
+    let result;
     switch (service) {
       case "openai":
-        customConfig["input"] = configuration?.input || "";
-        const openAIResponse = await embeddings(customConfig, apikey);
-        modelResponse = _.get(openAIResponse, "modelResponse", {});
-        if (!openAIResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: openAIResponse?.error
-          });
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result = await openAIInstance.handleEmbedding();
+        if (!result?.success) {
+          return res.status(400).json(result);
         }
-        // usage = modelResponse[modelOutputConfig["usage"]];
         break;
       case "google":
-        let geminiConfig = {
-          input: configuration?.input || "",
-          model: configuration?.model
-        };
-        const geminiResponse = await runChat(geminiConfig, apikey, "embedding");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
-        }
-        break;
-    }
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleGemini();
+        
+        if (!result?.success) {
+          return res.status(400).json(result);
+      }
+  }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
     console.error("proCompletion common error=>", error);
@@ -602,7 +602,6 @@ const proEmbeddings = async (req, res) => {
   let webhook, headers;
   let model = configuration?.model;
   let usage = {},
-    modelResponse = {},
     customConfig = {};
   let rtlLayer = false;
   try {
@@ -643,115 +642,58 @@ const proEmbeddings = async (req, res) => {
         customConfig[key] = key in configuration ? configuration[key] : modelConfig[key]["default"];
       }
     }
-    let historyParams;
+    let result;
+    let params = {
+      customConfig,
+      configuration,
+      apikey,
+      startTime: Date.now(),
+      org_id: null,
+      bridge_id: req.params.bridge_id || null,
+      model,
+      service,
+      modelOutputConfig,
+      playground: false,
+      input,
+      thread_id
+    };
     switch (service) {
       case "openai":
-        customConfig["input"] = input || "";
-        const response = await embeddings(customConfig, apikey);
-        modelResponse = _.get(response, "modelResponse", {});
-        if (!response?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: response?.error
-          };
-          metrics_sevice.create([usage],{
-            thread_id: thread_id,
-            user: input,
-            message: "",
-            org_id: org_id,
-            bridge_id: bridge_id,
-            model: configuration?.model,
-            channel: 'embedding',
-            type: "error",
-            actor: "user"
-          });
-          responseSender.sendResponse({
-            rtlLayer,
-            webhook,
-            data:   { error: response?.error, success: false },
-            reqBody: req.body,
-            headers: headers || {}
-          });
+        const openAIInstance = new UnifiedOpenAICase(params);
+        result = await openAIInstance.handleEmbedding();
+        if (!result?.success) {
           if(rtlLayer || webhook){
             return
           }
-          return res.status(400).json({
-            success: false,
-            error: response?.error
-          });
-        }
-        usage["totalTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(modelResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = usage["totalTokens"] - usage["inputTokens"];
-        usage["expectedCost"] = usage.totalTokens / 1000 * modelOutputConfig.usage[0].total_cost;
-        historyParams = {
-          thread_id: thread_id,
-          user: input,
-          message: _.get(modelResponse, modelOutputConfig.message) == null ? _.get(modelResponse, modelOutputConfig.tools) : _.get(modelResponse, modelOutputConfig.message),
-          org_id: org_id,
-          bridge_id: bridge_id || null,
-          model: configuration?.model,
-          channel: 'embedding',
-          type: _.get(modelResponse, modelOutputConfig.message) == null ? "embedding" : "assistant",
-          actor: input ? "user" : "tool"
+          return res.status(400).json(result);
         }
         break;
       case "google":
-        let geminiConfig = {
-          input: input || "",
-          model: configuration?.model
-        };
-        const geminiResponse = await runChat(geminiConfig, apikey, "embedding");
-        modelResponse = _.get(geminiResponse, "modelResponse", {});
-        if (!geminiResponse?.success) {
-          usage = {
-            service: service,
-            model: model,
-            orgId: org_id,
-            latency: Date.now() - startTime,
-            success: false,
-            error: geminiResponse?.error
-          };
-          metrics_sevice.create([usage]);
-          responseSender.sendResponse({
-            rtlLayer,
-            webhook,
-            data: { error: geminiResponse?.error, success: false },
-            reqBody: req.body,
-            headers: headers || {}
-          });
+        const geminiHandler = new GeminiHandler(params);
+        result = await geminiHandler.handleEmbedding();
+        
+        if (!result?.success) {
           if(rtlLayer || webhook){
             return
           }
-          return res.status(400).json({
-            success: false,
-            error: geminiResponse?.error
-          });
+          return res.status(400).json(result);
         }
-        usage["totalTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].total_tokens);
-        usage["inputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].prompt_tokens);
-        usage["outputTokens"] = _.get(geminiResponse, modelOutputConfig.usage[0].output_tokens);
-        usage["expectedCost"] = modelOutputConfig.usage[0].total_cost;
         break;
     }
     const endTime = Date.now();
     usage = {
-      ...usage,
+      ...result?.usage,
       service: service,
       model: model,
       orgId: org_id,
       latency: endTime - startTime,
       success: true
     };
-    metrics_sevice.create([usage], historyParams);
+    metrics_sevice.create([usage], result.historyParams);
     responseSender.sendResponse({
       rtlLayer,
       webhook,
-      data:   { response: modelResponse, success: true},
+      data:   { response: result.modelResponse, success: true},
       reqBody: req.body,
       headers: headers || {}
     });
@@ -760,7 +702,7 @@ const proEmbeddings = async (req, res) => {
     }
     return res.status(200).json({
       success: true,
-      response: modelResponse
+      response: result.modelResponse
     });
   } catch (error) {
     const endTime = Date.now();
