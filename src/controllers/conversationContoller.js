@@ -59,7 +59,7 @@ const getThreadHistory = async (thread_id, org_id, bridge_id) => {
     };
   }
 };
-const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id, model_name, type, messageBy, userRole = "user") => {
+const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id, model_name, type, messageBy, userRole = "user",tools={}) => {
   try {
     let chatToSave = [{
       thread_id: thread_id,
@@ -70,6 +70,18 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
       type: type,
       bridge_id: bridge_id
     }];
+    if(Object.keys(tools)?.length>0){
+      chatToSave.push({
+        thread_id: thread_id,
+        org_id: org_id,
+        model_name: model_name,
+        message: "",
+        message_by: "tools_call",
+        type: type,
+        bridge_id: bridge_id,
+        function:  tools
+      })
+    }
     if (botMessage) {
       chatToSave.push({
         thread_id: thread_id,

@@ -3,20 +3,9 @@ class conversationService {
     try {
       let threads = [];
       conversation.forEach(messages => {
-        let chat = {};
-        if (messages.role == "tool_calls") {
-          chat = {
-            role: "assistant",
-            content: null,
-            tool_calls: messages.function
-          };
-        } else if (messages.role == "tool") {
-          chat = JSON.parse(messages.content);
-        } else {
-          chat["role"] = messages.role;
-          chat["content"] = messages.content;
+        if (messages.role !== "tools_call" && messages.role !== "tool") {
+          threads.push({role: messages.role, content: messages.content});
         }
-        threads.push(chat);
       });
       return {
         success: true,
