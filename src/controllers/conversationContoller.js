@@ -1,18 +1,13 @@
 import chatbotDbService from "../db_services/conversationDbService.js";
-const getAllThreads = async (bridge_id, org_id) => {
-  try {
-    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id);
-    return {
-      success: true,
-      data: chats
-    };
-  } catch (err) {
-    console.error("getall threads=>", err);
-    return {
-      success: false,
-      message: err.message
-    };
-  }
+
+const getAllThreads = async (bridge_id,org_id,page,pageSize) => {
+    try {
+        const chats = await chatbotDbService.findAllThreads(bridge_id,org_id,page,pageSize);
+        return { success: true, data: chats };
+    } catch (err) {
+        console.log("getall threads=>",err)
+        return { success: false, message: err.message }
+    }
 };
 const getThread = async (thread_id, org_id, bridge_id) => {
   try {
