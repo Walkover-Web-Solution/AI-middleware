@@ -437,7 +437,8 @@ const proCompletion = async (req, res) => {
       webhook,
       playground,
       prompt,
-      customConfig
+      customConfig,
+      variables
     };
     switch (service) {
       case "openai":

@@ -51,5 +51,16 @@ class Helper {
       return {success: false, error: error.message};
     }
   };
+
+  static addPredefinedVariables = (variables) =>{
+
+    if (!variables.hasOwnProperty('DateTime')) {
+        const currentTimeIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        variables['DateTime'] = currentTimeIST;
+    }
+    return variables;
+};
+
+
 }
 export default Helper;
