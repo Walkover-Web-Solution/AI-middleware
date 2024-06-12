@@ -45,6 +45,8 @@ const getAIModels = async (req, res) => {
 const getThreads = async (req, res) => {
   try {
     let { bridge_id } = req.params
+    let page = req?.query?.pageNo || 1;
+    let pageSize = req?.query?.limit || 10 ;
     const {
       thread_id,
       bridge_slugName
@@ -56,7 +58,7 @@ const getThreads = async (req, res) => {
       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
       bridge_id = bridge_id?.toString();
     }
-    const threads = await getThreadHistory(thread_id, org_id, bridge_id);
+    const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
@@ -77,7 +79,9 @@ const getMessageHistory = async (req, res) => {
     const {
       org_id
     } = req.body;
-    const threads = await getAllThreads(bridge_id, org_id);
+    let page = req?.query?.pageNo || 1;
+    let pageSize = req?.query?.limit || 10;
+    const threads = await getAllThreads(bridge_id, org_id, page, pageSize);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
