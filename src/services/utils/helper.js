@@ -52,12 +52,31 @@ class Helper {
     }
   };
 
-  static addPredefinedVariables = (variables) =>{
-
+  static addPredefinedVariables = (variables) => {
     if (!variables.hasOwnProperty('DateTime')) {
-        const currentTimeIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-        variables['DateTime'] = currentTimeIST;
+        const currentTimeUST = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+        variables['DateTime'] = currentTimeUST;
     }
+
+    if (!variables.hasOwnProperty('RandomNumber')) {
+        variables['RandomNumber'] = Math.floor(Math.random() * 100);
+    }
+    if (!variables.hasOwnProperty('CurrentMonth')) {
+      const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+      ];
+      const currentMonth = monthNames[new Date().getMonth()];
+      variables['CurrentMonth'] = currentMonth;
+    }
+    if (!variables.hasOwnProperty('CurrentDay')) {
+        const dayNames = [
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        ];
+        const currentDay = dayNames[new Date().getDay()];
+        variables['CurrentDay'] = currentDay;
+    }
+
     return variables;
 };
 
