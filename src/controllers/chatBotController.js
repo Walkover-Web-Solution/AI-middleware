@@ -181,7 +181,7 @@ const getChatBotOfBridge = async (req, res) => {
 const updateChatBotConfig = async (req, res) => {
     const { botId } = req.params;
     const { config } = req.body;
-    await updateChatBotConfigSchema.validateAsync({...config, botId})
+    await updateChatBotConfigSchema.validateAsync({ ...config, botId })
     const chatBot = await ChatBotDbService.updateChatbotConfig(botId, config)
     return res.status(chatBot?.success ? 200 : 404).json(chatBot.chatbotData);
 }
