@@ -115,6 +115,9 @@ const prochat = async (req, res) => {
     RTLayer = null,
     template_id=null,
   } = req.body;
+  if(thread_id != null){
+    thread_id = thread_id.trim();
+  }
   const bridgeType = req.chatbot 
   let usage = {},
     customConfig = {};
