@@ -46,6 +46,7 @@ class UnifiedOpenAICase {
     let prompt = this.configuration.prompt ?? [];
     prompt = Array.isArray(prompt) ? prompt : [prompt];
     const conversation = this.configuration?.conversation ? conversationService.createOpenAIConversation(this.configuration.conversation).messages : [];
+    this.variables = Helper.addPredefinedVariables(this.variables || {});
     prompt = Helper.replaceVariablesInPrompt(prompt, this.variables);
     prompt =this.template ? Helper.replaceVariablesInPrompt([{"role":"system","content":this.template}], {system_prompt:prompt[0]?.content,...this.variables}) :  prompt; 
     this.customConfig["messages"] = [...prompt, ...conversation, this.user ? { role: "user", content: this.user } : this.tool_call];
@@ -169,7 +170,7 @@ class UnifiedOpenAICase {
       let historyParams = {};
       this.configuration["prompt"] = this.configuration?.prompt ? this.configuration.prompt + "\n" + this.prompt : this.prompt;
       this.customConfig["prompt"] = this.configuration?.prompt || "";
-      
+      this.variables = Helper.addPredefinedVariables(this.variables || {});
       if (this.variables && Object.keys(this.variables).length > 0) {
         Object.entries(this.variables).forEach(([key, value]) => {
           const stringValue = JSON.stringify(value);
