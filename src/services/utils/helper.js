@@ -26,7 +26,7 @@ class Helper {
     for (let key in configuration) {
       prev_configuration[key] = configuration[key];
     }
-    if(prev_configuration["tools"].length===0){
+    if(prev_configuration["tools"]?.length===0){
        delete prev_configuration["tools"];
     }
     return prev_configuration;
