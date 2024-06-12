@@ -37,6 +37,7 @@ class UnifiedOpenAICase {
   async execute() {
     let historyParams = {};
     let usage;
+    let tools={};
     let prompt = this.configuration.prompt ?? [];
     prompt = Array.isArray(prompt) ? prompt : [prompt];
     const conversation = this.configuration?.conversation ? conversationService.createOpenAIConversation(this.configuration.conversation).messages : [];
@@ -92,8 +93,9 @@ class UnifiedOpenAICase {
           headers: this.headers || {}
         });
       }
-      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground});
+      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground,tools:{}});
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {}); 
+      tools= _.get(functionCallRes,"tools",{})
 
       if (!functionCallRes?.success) {
         usage = {
@@ -152,7 +154,8 @@ class UnifiedOpenAICase {
        model: this.configuration?.model,
        channel: 'chat',
        type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "tool_calls" : "assistant",
-       actor: this.user ? "user" : "tool"
+       actor: this.user ? "user" : "tool",
+       tools: tools
       };
   }
 
