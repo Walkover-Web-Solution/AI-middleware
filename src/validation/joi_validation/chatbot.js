@@ -3,6 +3,7 @@ import Joi from "joi";
 const createChatBotSchema = Joi.object({
     orgId: Joi.number().required(),
     title: Joi.string().required(),
+    type: Joi.string().required(),
     createdBy: Joi.number().required(),
     updatedBy: Joi.number().required(),
 })
