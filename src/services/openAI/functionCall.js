@@ -29,7 +29,7 @@ const functionCall= async (data)=>{
             if(!playground){
               responseSender.sendResponse({
                 rtlLayer,
-                data: { function_call: true, success: true, message: "Going to GPT" },
+                data: { function_call: false, success: true, message: "Going to GPT" },
                 reqBody: body,
                 headers: {}
               });

@@ -331,7 +331,7 @@ const deleteBridges = async (req, res) => {
     });
   }
 };
-const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams) => {
+const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
   try {
     let modelConfig = await configurationService.getBridges(bridge_id);
     let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
@@ -346,15 +346,22 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         updated_tools_call.push(tool);
       }
     });
+    if(status==="add"){
     updated_tools_call.push(openApiFormat);
     api_call[endpoint] = {
       apiObjectID: apiObjectID,
       requiredParams: requiredParams
     };
+    }
+    if(status==="delete"){
+      api_endpoints= api_endpoints.filter(item => item !== endpoint);
+      api_call && delete api_call[endpoint];
+    }
     tools_call = updated_tools_call;
     let configuration = {
       tools: tools_call
     };
+  
     const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
     let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
     result.tools_call = tools_call;
@@ -367,6 +374,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     };
   }
 };
+
 export default {
   getAIModels,
   getThreads,
