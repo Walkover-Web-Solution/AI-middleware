@@ -4,17 +4,19 @@ import configurationService from "../db_services/ConfigurationServices.js";
 import { filterDataOfBridgeOnTheBaseOfUI } from "../services/utils/getConfiguration.js"
 import responseTypeService from "../db_services/responseTypeService.js";
 import { getToken } from "../services/utils/usersServices.js";
+import token from "../services/commonService/generateToken.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
 import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
-    const { title } = req.body;
+    const { title, type } = req.body;
     const userId = req.profile.user.id;
     const orgId = req.profile.org.id;
     const dataToSave = {
         orgId,
         title,
+        type,
         createdBy: userId,
         updatedBy: userId,
     }
@@ -24,9 +26,43 @@ const createChatBot = async (req, res) => {
 };
 const getAllChatBots = async (req, res) => {
     const org_id = req.params.orgId;
+    const userId = req.profile.user.id;
+
     if (!org_id) throw new Error('orgId is mandatory');
+
     const result = await ChatbotDbService.getAll(org_id);
-    return res.status(result.success ? 200 : 400).json(result);
+    let chatbots = result.chatbots;
+
+    let defaultChatbot = chatbots.find(chatbot => chatbot.type === 'default');
+    let accessKey;
+    if (!defaultChatbot) {
+        const defaultChatbotData = {
+            orgId: org_id,
+            title: 'Default Chatbot',
+            type: 'default',
+            "config": {
+                "buttonName": "",
+                "height": "100",
+                "heightUnit": "%",
+                "width": "50",
+                "widthUnit": "%",
+                "type": "right_slider"
+            },
+            createdBy: userId,
+            updatedBy: userId,
+        };
+        defaultChatbot = await ChatbotDbService.create(defaultChatbotData);
+
+        chatbots.push(defaultChatbot.chatBot);
+    }
+    const { chatBot } = await responseTypeService.getAll(org_id);
+    if (chatBot?.orgAcessToken) accessKey = chatBot?.orgAcessToken;
+    const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(14))
+    accessKey = org.orgData.orgAcessToken
+    const chatbot_token = token.generateToken({ payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id }, accessKey: accessKey })
+
+
+    return res.status(200).json({ result: { chatbots: chatbots }, chatbot_token });
 };
 const getOneChatBot = async (req, res) => {
     const { botId } = req.params;
@@ -189,14 +225,14 @@ const updateChatBotConfig = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { chatbot_id, user_id, org_id } = req.chatBot;
-        const { exp,iat } = req.chatBot;
+        const { exp, iat } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id, org_id }, { exp,iat })}`,
+            token: `Bearer ${getToken({ userId: user_id, org_id }, { exp, iat })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
