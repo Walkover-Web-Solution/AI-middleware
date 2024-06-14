@@ -3,10 +3,8 @@ import Joi from "joi";
 const createChatBotSchema = Joi.object({
     orgId: Joi.number().required(),
     title: Joi.string().required(),
-    type: Joi.string().required().valid('default', "chatbot"),
     createdBy: Joi.number().required(),
     updatedBy: Joi.number().required(),
-    config: Joi.object().required()
 })
 
 const updateChatBotSchema = Joi.object({
