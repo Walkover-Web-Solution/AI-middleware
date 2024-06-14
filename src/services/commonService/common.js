@@ -163,6 +163,7 @@ const prochat = async (req, res) => {
       }
     }
     if (thread_id) {
+      thread_id = thread_id.trim();
       const result = await getThread(thread_id, org_id, bridge_id);
       if (result.success) {
         configuration["conversation"] = result?.data ? result.data : [];
