@@ -10,9 +10,18 @@ import { generateIdentifier } from "../services/utils/utilityService.js";
 import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
-    const { title, type, config } = req.body;
+    const { title, type } = req.body;
     const userId = req.profile.user.id;
     const orgId = req.profile.org.id;
+    const config = {
+        buttonName: '',
+        height: '100',
+        heightUnit: '%',
+        width: '50',
+        widthUnit: '%',
+        type: 'popup',
+        themeColor: "#000000"
+    }
     const dataToSave = {
         orgId,
         title,
@@ -41,20 +50,19 @@ const getAllChatBots = async (req, res) => {
             orgId: org_id,
             title: 'Default Chatbot',
             type: 'default',
-            "config": {
-                "buttonName": "",
-                "height": "100",
-                "heightUnit": "%",
-                "width": "50",
-                "widthUnit": "%",
-                "type": "right_slider"
+            config: {
+                buttonName: '',
+                height: '100',
+                heightUnit: '%',
+                width: '50',
+                widthUnit: '%',
+                type: 'popup',
+                themeColor: "#000000"
             },
             createdBy: userId,
             updatedBy: userId,
         };
         defaultChatbot = await ChatbotDbService.create(defaultChatbotData);
-
-        chatbots.push(defaultChatbot.chatBot);
     }
     const { chatBot } = await responseTypeService.getAll(org_id);
     if (chatBot?.orgAcessToken) accessKey = chatBot?.orgAcessToken;
@@ -64,6 +72,8 @@ const getAllChatBots = async (req, res) => {
     }
     const chatbot_token = token.generateToken({ payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id }, accessKey: accessKey })
 
+    // Filter out the default chatbot from the chatbots array
+    chatbots = chatbots.filter(chatbot => chatbot.type !== 'default');
 
     return res.status(200).json({ result: { chatbots: chatbots }, chatbot_token });
 };
