@@ -4,7 +4,16 @@ const {
 } = mongoose;
 const ChatBotSchema = new Schema({
   config: {
-    type: Object
+    type: Object,
+    default: {
+      buttonName: '',
+      height: '100',
+      heightUnit: '%',
+      width: '50',
+      widthUnit: '%',
+      type: 'popup',
+      themeColor: "#000000"
+    }
   },
   orgId: {
     type: String

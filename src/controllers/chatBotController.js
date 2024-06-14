@@ -13,22 +13,12 @@ const createChatBot = async (req, res) => {
     const { title, type } = req.body;
     const userId = req.profile.user.id;
     const orgId = req.profile.org.id;
-    const config = {
-        buttonName: '',
-        height: '100',
-        heightUnit: '%',
-        width: '50',
-        widthUnit: '%',
-        type: 'popup',
-        themeColor: "#000000"
-    }
     const dataToSave = {
         orgId,
         title,
         type,
         createdBy: userId,
         updatedBy: userId,
-        config
     }
     await createChatBotSchema.validateAsync(dataToSave);
     const result = await ChatbotDbService.create(dataToSave);
@@ -50,15 +40,6 @@ const getAllChatBots = async (req, res) => {
             orgId: org_id,
             title: 'Default Chatbot',
             type: 'default',
-            config: {
-                buttonName: '',
-                height: '100',
-                heightUnit: '%',
-                width: '50',
-                widthUnit: '%',
-                type: 'popup',
-                themeColor: "#000000"
-            },
             createdBy: userId,
             updatedBy: userId,
         };
