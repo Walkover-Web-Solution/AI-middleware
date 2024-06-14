@@ -38,13 +38,7 @@ const createsApi = async (req, res) => {
       else {
         axiosCode = `return axios({url:'${url}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
-      let apiId = "";
-      const apiCallData = await apiCallModel.findOne({
-        endpoint: endpoint,
-        org_id,
-        bridge_id
-      });
-      apiId = apiCallData ? apiCallData.id : "";
+      const apiId = await getApiId(org_id, bridge_id, endpoint);
       const response = await saveAPI(desc, url, org_id, bridge_id, apiId, "An API", axiosCode, requiredParams, id, [], true);
       if (!response.success) {
         return res.status(400).json({
@@ -66,8 +60,20 @@ const createsApi = async (req, res) => {
       }
       return res.status(400).json(result);
     }
+    else if(status==="delete" || status==="paused"){
+      const result=await deleteApi(endpoint,org_id,bridge_id);
+      if (result.success) {
+        return res.status(200).json({
+          message: "API deleted successfully",
+          success: true,
+          deleted: true,
+          tools_call: result.tools_call
+        });
+      }
+      return res.status(400).json(result);
+    }
     return res.status(400).json({
-      message: "Api is not published",
+      message: "Something went wrong!",
       success: false
     });
   } catch (error) {
@@ -162,6 +168,29 @@ const createOpenAPI = (endpoint, desc, required_fields = []) => {
     return { success: false, error: error };
   }
 
+}
+const deleteApi = async (endpoint, org_id, bridge_id) => {
+  try {
+    //delete by endpoint
+    await apiCallModel.findOneAndDelete({ org_id, bridge_id, endpoint });
+    const result = await common.getAndUpdate("", bridge_id, org_id, "", endpoint, {},"delete");
+   return result
+  } catch (error) {
+    console.error("Delete API error=>",error);
+    return { success: false, error: error };
+  }
+}
+
+
+const getApiId=async(org_id,bridge_id,endpoint)=>{
+  try {
+    const apiCallData=await apiCallModel.findOne({org_id,bridge_id,endpoint});
+    const apiId = apiCallData ? apiCallData.id : "";
+    return apiId;
+  } catch (error) {
+    console.error("error:", error);
+    return "";
+  }
 }
 export default {
   createsApi
