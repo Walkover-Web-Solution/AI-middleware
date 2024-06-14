@@ -58,8 +58,10 @@ const getAllChatBots = async (req, res) => {
     }
     const { chatBot } = await responseTypeService.getAll(org_id);
     if (chatBot?.orgAcessToken) accessKey = chatBot?.orgAcessToken;
-    const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(14))
-    accessKey = org.orgData.orgAcessToken
+    else {
+        const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(14))
+        accessKey = org.orgData.orgAcessToken
+    }
     const chatbot_token = token.generateToken({ payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id }, accessKey: accessKey })
 
 
