@@ -272,7 +272,7 @@ const updateBridges = async (req, res) => {
     apikey = !apikey ? bridge.apikey : helper.encrypt(apikey);
     const model = configuration.model;
     const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-    const contentLocation = ModelsConfig[modelname]().inputConfig.content_location;
+    const contentLocation = ModelsConfig[modelname]().inputConfig?.content_location;
     const promptText = _.get(configuration, contentLocation);
     await conversationDbService.storeSystemPrompt(promptText, org_id, bridge_id);
     let prev_configuration = helper.updateConfiguration(bridge.configuration, configuration);
