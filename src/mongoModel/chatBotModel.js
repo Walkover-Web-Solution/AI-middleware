@@ -25,7 +25,8 @@ const ChatBotSchema = new Schema({
     type: String
   },
   type: {
-    type: String
+    type: String,
+    default: "chatbot"
   },
   updatedBy: {
     type: String
