@@ -227,11 +227,7 @@ const updateResponseTypes = async (chatBotId, responseType, gridId) => {
 };
 
 async function getChatBotConfig(botId) {
-  try {
-    return await ChatBotModel.findById({ _id: botId }).select({ 'config': 1, 'orgId': 1 });
-  } catch (error) {
-    console.log(error, 234)
-  }
+  return await ChatBotModel.findById({ _id: botId }).select({ 'config': 1, 'orgId': 1 });
 }
 
 async function updateChatbotConfig(botId, config) {
