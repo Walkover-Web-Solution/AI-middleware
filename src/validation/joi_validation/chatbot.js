@@ -6,6 +6,7 @@ const createChatBotSchema = Joi.object({
     type: Joi.string().required(),
     createdBy: Joi.number().required(),
     updatedBy: Joi.number().required(),
+    config: Joi.object().required()
 })
 
 const updateChatBotSchema = Joi.object({
@@ -22,6 +23,7 @@ const updateChatBotConfigSchema = Joi.object({
     widthUnit: Joi.string().allow("").required(),
     type: Joi.string().allow("").required(),
     botId: Joi.string().required(),
+    themeColor: Joi.string().required()
 })
 
 const addorRemoveBridgeInChatBotSchema = Joi.object({
