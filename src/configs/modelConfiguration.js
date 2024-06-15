@@ -2116,7 +2116,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   }
     return {
       configuration,
@@ -2192,7 +2193,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   };
     return {
       configuration,
@@ -2268,7 +2270,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   };
     return {
       configuration,
@@ -2345,7 +2348,8 @@ class ModelsConfig {
           "contentKey": "parts[0].text",
           "type": "json"
 
-      }
+      },
+      content_location : "prompt",
   }
     return {
       configuration,
