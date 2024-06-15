@@ -45,6 +45,8 @@ const getAIModels = async (req, res) => {
 const getThreads = async (req, res) => {
   try {
     let { bridge_id } = req.params
+    let page = req?.query?.pageNo || 1;
+    let pageSize = req?.query?.limit || 10 ;
     const {
       thread_id,
       bridge_slugName
@@ -56,7 +58,7 @@ const getThreads = async (req, res) => {
       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
       bridge_id = bridge_id?.toString();
     }
-    const threads = await getThreadHistory(thread_id, org_id, bridge_id);
+    const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
@@ -77,7 +79,9 @@ const getMessageHistory = async (req, res) => {
     const {
       org_id
     } = req.body;
-    const threads = await getAllThreads(bridge_id, org_id);
+    let page = req?.query?.pageNo || 1;
+    let pageSize = req?.query?.limit || 10;
+    const threads = await getAllThreads(bridge_id, org_id, page, pageSize);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
@@ -331,7 +335,7 @@ const deleteBridges = async (req, res) => {
     });
   }
 };
-const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams) => {
+const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
   try {
     let modelConfig = await configurationService.getBridges(bridge_id);
     let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
@@ -346,15 +350,22 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         updated_tools_call.push(tool);
       }
     });
+    if(status==="add"){
     updated_tools_call.push(openApiFormat);
     api_call[endpoint] = {
       apiObjectID: apiObjectID,
       requiredParams: requiredParams
     };
+    }
+    if(status==="delete"){
+      api_endpoints= api_endpoints.filter(item => item !== endpoint);
+      api_call && delete api_call[endpoint];
+    }
     tools_call = updated_tools_call;
     let configuration = {
       tools: tools_call
     };
+  
     const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
     let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
     result.tools_call = tools_call;
@@ -367,6 +378,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     };
   }
 };
+
 export default {
   getAIModels,
   getThreads,

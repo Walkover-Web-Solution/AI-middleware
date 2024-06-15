@@ -12,7 +12,7 @@ const generateToken = (tokenInfo) => {
 
 const getToken = (data, expire) => {
   let token ;
-  if(expire.exp&&expire.iat){
+  if(expire?.exp&&expire?.iat){
     token = jwt.sign(
       { ...expire,...data },
       process.env.CHATBOTSECRETKEY,

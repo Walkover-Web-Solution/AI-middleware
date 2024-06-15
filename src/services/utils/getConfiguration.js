@@ -2,7 +2,7 @@ import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import token from "../../services/commonService/generateToken.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
-const getConfiguration = async (configuration, service, bridge_id, api_key,template_id=null) => {
+const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {
   let RTLayer = false;
   let bridge;
   const result = await configurationService.getBridges(bridge_id);
@@ -19,8 +19,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key,templ
   bridge = result?.bridges;
   service = service ? service.toLowerCase() : "";
 
-  let templateContent = template_id ? await configurationService.gettemplateById(template_id): null;
-
+  let templateContent = template_id ? await configurationService.gettemplateById(template_id) : null;
   return {
     success: true,
     configuration: configuration,
@@ -50,9 +49,13 @@ const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
     }
   }
 
+  if (configuration?.max_tokens > modelConfig?.max_tokens?.max) {
+    configuration.max_tokens = modelConfig.max_tokens.default;
+  }
+
   result.bridges.apikey = helper.decrypt(result.bridges.apikey);
   if (update) {
-    const embed_token = token.generateToken(bridge_id);
+    const embed_token = token.generateToken({ payload: { org_id: process.env.ORG_ID, project_id: process.env.PROJECT_ID, user_id: bridge_id }, accessKey: process.env.Access_key });
     result.bridges.embed_token = embed_token;
   }
   result.bridges.type = type;
