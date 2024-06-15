@@ -2043,9 +2043,24 @@ class ModelsConfig {
       message: "values",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+    }
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
