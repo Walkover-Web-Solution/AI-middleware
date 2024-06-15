@@ -2043,9 +2043,25 @@ class ModelsConfig {
       message: "values",
       role: "model"
     };
+    const inputConfig =  {
+      model: {
+          "default": {
+              "role": "model",
+              "parts": [
+                  {
+                      "text": ""
+                  }
+              ]
+          },
+          "contentKey": "parts[0].text",
+          "type": "json"
+      },
+      content_location : "prompt",
+    }
     return {
       configuration,
-      outputConfig
+      outputConfig,
+      inputConfig
     };
   };
 
@@ -2116,7 +2132,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   }
     return {
       configuration,
@@ -2192,7 +2209,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   };
     return {
       configuration,
@@ -2268,7 +2286,8 @@ class ModelsConfig {
           },
           "contentKey": "parts[0].text",
           "type": "json"
-      }
+      },
+      content_location : "prompt",
   };
     return {
       configuration,
@@ -2345,7 +2364,8 @@ class ModelsConfig {
           "contentKey": "parts[0].text",
           "type": "json"
 
-      }
+      },
+      content_location : "prompt",
   }
     return {
       configuration,
