@@ -217,14 +217,14 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id, user_id, org_id, exp, iat, varibales } = req.chatBot;
+        const { chatbot_id, user_id, org_id, exp, iat, variables } = req.chatBot;
         let chatBotConfig = {};
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id, org_id, variables: varibales }, { exp,iat })}`,
+            token: `Bearer ${getToken({ userId: user_id, org_id, variables }, { exp,iat })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
