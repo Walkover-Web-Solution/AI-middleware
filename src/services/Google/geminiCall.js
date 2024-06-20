@@ -23,11 +23,12 @@ class GeminiHandler {
     this.playground = params.playground;
     this.req = params.req;
     this.responseSender = new ResponseSender();
+    this.input = params.input;
   }
  
   async handleGemini() {
     let usage = {};
-    let modelResponse = {};
+    let historyParams = {};
 
     let geminiConfig = {
       generationConfig: this.customConfig,
@@ -37,9 +38,8 @@ class GeminiHandler {
     geminiConfig["history"] = this.configuration?.conversation
       ? conversationService.createGeminiConversation(this.configuration.conversation).messages
       : [];
-
-    const geminiResponse = await runChat(geminiConfig, this.apikey, "chat");
-    modelResponse = _.get(geminiResponse, "modelResponse", {});
+  const geminiResponse = await runChat(geminiConfig, this.apikey, "chat");
+   let  modelResponse = _.get(geminiResponse, "modelResponse", {});
     if (!geminiResponse?.success) {
       usage = {
         service: this.service,
@@ -71,13 +71,14 @@ class GeminiHandler {
       }
       return { success: false, error: geminiResponse?.error };
     }
+    if(!this.playground) {
 
     usage["totalTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].total_tokens);
     usage["inputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].prompt_tokens);
     usage["outputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].output_tokens);
     usage["expectedCost"] = this.modelOutputConfig.usage[0].total_cost;
 
-    let historyParams = {
+    historyParams = {
       thread_id: this.thread_id,
       user: this.user,
       message: _.get(modelResponse, this.modelOutputConfig.message),
@@ -88,7 +89,143 @@ class GeminiHandler {
       type: "model",
       actor: "user",
     };
+  }
 
+    return {
+      success: true,
+      modelResponse,
+      usage,
+      historyParams,
+    };
+  }
+  async handleCompletion() {
+      let usage = {};
+      let historyParams = {};
+      const geminiConfig = {
+        prompt: (this.configuration?.prompt || "") + "\n" + this.reqBody?.prompt || "",
+        model: this.configuration?.model
+      };
+      const geminiResponse = await runChat(geminiConfig, this.apikey, "completion");
+      const modelResponse = _.get(geminiResponse, "modelResponse", {});
+     
+      if (!geminiResponse?.success) {
+        
+        if(!this.playground){
+        usage = {
+          service: this.service,
+          model: this.config.model,
+          orgId: this.reqBody.org_id,
+          latency: Date.now() - this.startTime,
+          success: false,
+          error: geminiResponse?.error
+        };
+        metrics_service.create([usage],{
+          thread_id: this.thread_id,
+          user: this.configuration?.prompt,
+          message: "",
+          org_id: this.org_id,
+          bridge_id: this.bridge_id,
+          model: this.configuration?.model,
+          channel: 'completion',
+          type: "error",
+          actor:  "user"
+        });
+        this.responseSender.sendResponse({
+          rtlLayer: this.rtlLayer,
+          webhook: this.webhook,
+          data: { error: geminiResponse?.error, success: false },
+          reqBody: this.reqBody,
+          headers: this.headers || {}
+        });
+        return this.res.status(400).json({
+          success: false,
+          error: geminiResponse?.error
+        });
+      }
+    }
+    if(!this.playground){
+      usage["totalTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].total_tokens);
+      usage["inputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+      usage["outputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].output_tokens);
+      usage["expectedCost"] = this.modelOutputConfig.usage[0].total_cost;
+      historyParams = {
+        thread_id: this.thread_id,
+        user: this.configuration.prompt,
+        message: _.get(modelResponse, this.modelOutputConfig.message),
+        org_id: this.org_id,
+        bridge_id: this.bridge_id,
+        model: this.configuration?.model,
+        channel: 'completion',
+        type: "model",
+        actor: "user",
+      };
+    }
+        return{
+          success: true,
+          modelResponse,
+          usage,
+          historyParams
+        }
+      }
+  async handleEmbedding(){
+    let usage = {};
+    let historyParams = {};
+    let geminiConfig = {
+      input: this.input || "",
+      model: this.configuration?.model
+    };
+    const geminiResponse = await runChat(geminiConfig, this.apikey, "embedding");
+    let modelResponse = _.get(geminiResponse, "modelResponse", {});
+    if (!geminiResponse?.success) {
+      if(!this.playground){
+      usage = {
+        service: this.service,
+        model: this.model,
+        orgId: this.org_id,
+        latency: Date.now() - this.startTime,
+        success: false,
+        error: geminiResponse?.error
+      };
+      metrics_service.create([usage],{
+        thread_id: this.thread_id,
+        user: this.input,
+        message: "",
+        org_id: this.org_id,
+        bridge_id: this.bridge_id,
+        model: this.configuration?.model,
+        channel: 'embedding',
+        type: "error",
+        actor: "user"
+      });
+      this.responseSender.sendResponse({
+        rtlayer: this.rtlayer,
+        webhook: this.webhook,
+        data: { error: geminiResponse?.error, success: false },
+        reqBody: this.req.body,
+        headers: this.headers || {}
+      });
+    }
+      return { success: false, error: geminiResponse?.error };
+    }
+    if(!this.playground) {
+
+    usage["totalTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].total_tokens);
+    usage["inputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].prompt_tokens);
+    usage["outputTokens"] = _.get(geminiResponse, this.modelOutputConfig.usage[0].output_tokens);
+    usage["expectedCost"] = this.modelOutputConfig.usage[0].total_cost;
+
+    historyParams = {
+      thread_id: this.thread_id,
+      user: this.input,
+      message: _.get(modelResponse, this.modelOutputConfig.message) == null ? _.get(modelResponse, this.modelOutputConfig.tools) : _.get(modelResponse, this.modelOutputConfig.message),
+      org_id: this.org_id,
+      bridge_id: this.bridge_id || null,
+      model: this.configuration?.model,
+      channel: 'embedding',
+      type: _.get(modelResponse, this.modelOutputConfig.message) == null ? "embedding" : "assistant",
+      actor: this.input ? "user" : "tool"
+    }
+  }
     return {
       success: true,
       modelResponse,
