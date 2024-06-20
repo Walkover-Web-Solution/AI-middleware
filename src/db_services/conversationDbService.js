@@ -19,21 +19,6 @@ async function find(org_id, thread_id, bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
-async function findAllMessages(org_id, thread_id, bridge_id) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', "function"],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
-    order: [['id', 'DESC']],
-    raw: true
-  });
-  conversations = conversations.reverse();
-  // If you want to return the result directly
-  return conversations;
-}
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -126,15 +111,22 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id) {
+async function findAllThreads(bridge_id, org_id, page, pageSize) {
   const threads = await models.pg.conversations.findAll({
-    attributes: ['thread_id', [Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id', [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']],
+    attributes: ['thread_id',[Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id',
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
+    ],
     where: {
       bridge_id,
       org_id
     },
-    group: ['thread_id', 'bridge_id'],
-    order: [[Sequelize.col('updatedAt'), 'DESC'], ['thread_id', 'ASC']]
+    group: ['thread_id', 'bridge_id'], 
+    order: [
+      [Sequelize.col('updatedAt'), 'DESC'], 
+      ['thread_id', 'ASC']
+    ],
+   limit: pageSize,
+    offset: (page - 1) * pageSize
   });
   return threads;
 }
@@ -158,7 +150,6 @@ export default {
   createBulk,
   findAllThreads,
   deleteLastThread,
-  findAllMessages,
   storeSystemPrompt,
   getHistory,
   findMessage,

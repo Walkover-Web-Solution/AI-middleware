@@ -92,7 +92,7 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     service: 'openai',
     user: message,
     thread_id: threadId,
-    variables: { ...req.body.interfaceContextData, message, actions },
+    variables: { ...req.body.interfaceContextData, message, actions, ...req.profile?.variables },
     RTLayer: true,
     template_id: process.env.TEMPLATE_ID,
 
