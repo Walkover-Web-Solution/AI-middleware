@@ -19,25 +19,6 @@ async function find(org_id, thread_id, bridge_id) {
   // If you want to return the result directly
   return conversations;
 }
-async function findAllMessages(org_id, thread_id,bridge_id,page=1,pageSize=10) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'],'createdAt','id',"function"],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
-    order: [
-      ['id', 'DESC'],
-    ],
-    raw: true,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
-  });
-  conversations = conversations.reverse();
-  // If you want to return the result directly
-  return conversations;
-}
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -169,7 +150,6 @@ export default {
   createBulk,
   findAllThreads,
   deleteLastThread,
-  findAllMessages,
   storeSystemPrompt,
   getHistory,
   findMessage,
