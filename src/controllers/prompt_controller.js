@@ -7,7 +7,7 @@ const promptCompressionUsingGpt = async (req, res) => {
             return res.status(400).json({ error: error.details[0].message });
         }
 
-        req.body.bridge_id = '66796eb4091216f40bc4f8c6' // hard coded for now 
+        req.body.bridge_id = process.env.BRIDGE_ID 
         await common.prochat(req, res);
 }
 
