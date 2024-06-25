@@ -168,6 +168,7 @@ const prochat = async (req, res) => {
       thread_id = uuidv1();
     }
 
+    customConfig.max_tokens = req.body.tokenLimit || customConfig.max_tokens || 1024
     let params = {
       customConfig,
       configuration,

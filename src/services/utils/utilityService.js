@@ -1,5 +1,6 @@
 import { nanoid, customAlphabet } from 'nanoid';
 import crypto from 'crypto';
+import tiktoken from 'tiktoken';
 
 const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 // const basicAuthServices = require('../db_services/basic_auth_db_service.js')
@@ -50,8 +51,14 @@ function generateEncryption() {
   return { encryptionKey, iv };
 }
 
+function countTokens(text) {
+  const tokenizer = new tiktoken.Encoding('gpt-4o');
+  return tokenizer.encode(text).length;
+}
+
 export {
   generateIdentifier,
   encrypt,
   decrypt,
+  countTokens
 };
