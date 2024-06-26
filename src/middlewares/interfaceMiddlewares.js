@@ -78,11 +78,13 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
   //   }
   //   responseTypes += ` ${i + 1}. ${JSON.stringify(responseComponents)} // description:- ${responseTypesJson[responseId].description},  \n`;
   // });
-  const actions = []
+  let actions = []
   Object.keys(bridges.actions || {}).forEach((actionId) => {
     const { description, type, variable } = bridges.actions[actionId]
     actions.push({ actionId, description, type, variable })
   })
+
+  if (actions.length === 0) actions = "no available action"
 
   if (!success) return res.status(400).json({ message: 'some error occured' });
   req.chatbot = true;
