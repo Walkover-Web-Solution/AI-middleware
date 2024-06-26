@@ -7,7 +7,7 @@ const responseSender = new ResponseSender();
 
 const functionCall= async (data)=>{
     try {
-        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false} = data;
+        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false, tools={}} = data;
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
@@ -23,6 +23,7 @@ const functionCall= async (data)=>{
                 name: apiName,
                 content: JSON.stringify(apiResponse),
             }
+            tools[apiName]=JSON.stringify(apiResponse);
             configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] })
             configuration["messages"].push(funcResponseData);
             //rtlayer going to gpt
@@ -36,8 +37,9 @@ const functionCall= async (data)=>{
               
             }
             
-            const openAIResponse=await chats(configuration,apikey);
+            let openAIResponse=await chats(configuration,apikey);
             const modelResponse = _.get(openAIResponse, "modelResponse", {});
+            openAIResponse["tools"]=tools;
             //("modelResponse",modelResponse);
             if(!openAIResponse?.success){
                 //("openAIResponse errror",openAIResponse);
@@ -56,6 +58,7 @@ const functionCall= async (data)=>{
 
                 data.l=data.l+1;
                 data.tools_call= _.get(modelResponse, outputConfig.tools)[0];
+                data.tools=tools;
                 return await functionCall(data);
             }
             //(openAIResponse);

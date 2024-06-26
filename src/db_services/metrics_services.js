@@ -38,7 +38,7 @@ async function findOnePg(id) {
 }
 async function create(dataset, historyParams) {
   try {
-      const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor);
+      const result = await savehistory(historyParams.thread_id, historyParams.user, historyParams.message, historyParams.org_id, historyParams.bridge_id, historyParams.model, historyParams.channel, historyParams.type, historyParams.actor,historyParams.tools);
       let ChatId = result.result[0].dataValues.id;
       dataset[0].chat_id = ChatId;
       const insertAiData = dataset.map(DataObject => ({
