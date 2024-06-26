@@ -26,7 +26,7 @@ class conversationService {
       let previousRole = "model";
       conversation.forEach(messages => {
         let chat = {};
-        const role = messages.role;
+        let role = messages.role !== "model" ? "model" : messages.role;
         chat["role"] = role;
         chat["parts"] = messages.content;
         if (previousRole != role) {

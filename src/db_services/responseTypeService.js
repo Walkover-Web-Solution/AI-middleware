@@ -82,7 +82,7 @@ const createOrgToken = async (orgId, token) => {
       }
     }, {
       new: true
-    });
+    }).lean();
     return { success: true, orgData }
   } catch (error) {
     return {
