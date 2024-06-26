@@ -5,7 +5,7 @@ const responsePrompt = `{
  "3. give valid response in available max tokens"
   "available_components": ["Table", "Button", "Typography", "TextField"],
   "output_json_format": {
-    "markdown": false,
+    "isMarkdown": false,
     "variables": {
       "<key>": "<value>"
     },
