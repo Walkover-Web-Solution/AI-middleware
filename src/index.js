@@ -27,8 +27,6 @@ app.use(express.json());
 try {
   mongoose.set("strictQuery", false);
   mongoose.connect(config.mongo.uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
   });
 } catch (err) {
   console.error('database connection error: ', err.message);
