@@ -185,7 +185,7 @@ const getAllBridges = async (req, res) => {
   try {
     const {
       org_id
-    } = req.body;
+    } = req.params;
     const result = await configurationService.getAllBridges(org_id);
     if (result.success) {
       return res.status(200).json({
