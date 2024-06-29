@@ -4,7 +4,7 @@ import middleware from "../middlewares/middleware.js";
 import createApi from "../services/commonService/apiCallService.js";
 import { chatBotAuth } from "../middlewares/interfaceMiddlewares.js";
 let router = express.Router();
-router.get('/getbridges/all', middleware, common.getAllBridges); //Done
+router.get('/getbridges/all/:org_id', middleware, common.getAllBridges); //Done
 router.get('/getbridges/:bridge_id', middleware, common.getBridges); //Done
 router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);
 router.get('/history/:bridge_id', middleware, common.getMessageHistory);
