@@ -33,10 +33,10 @@ const createsApi = async (req, res) => {
           }
         });
         // const params = requiredParams.join();
-        axiosCode = `return axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+        axiosCode = `return axios({url:'http://prod-flow-vm.viasocket.com/func/${id}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
       else {
-        axiosCode = `return axios({url:'${url}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+        axiosCode = `return axios({url:'http://prod-flow-vm.viasocket.com/func/${id}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
       }
       const apiId = await getApiId(org_id, bridge_id, endpoint);
       const response = await saveAPI(desc, url, org_id, bridge_id, apiId, "An API", axiosCode, requiredParams, id, [], true);
