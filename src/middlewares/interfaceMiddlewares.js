@@ -84,7 +84,7 @@ const sendDataMiddleware = async (req, res, next) => { // todo pending
     actions.push({ actionId, description, type, variable })
   })
 
-  if (actions.length === 0) actions = "no available action"
+  if (actions.length === 0) actions = "not available"
 
   if (!success) return res.status(400).json({ message: 'some error occured' });
   req.chatbot = true;
