@@ -32,6 +32,11 @@ async function findOne(id) {
   const model = timescale.raw_data;
   return await model.findByPk(id);
 }
+async function findLastOptionData(thread_id) {
+  const model = postgres.last_data_to_show;
+  return await model.findOne({ where: { thread_id } });
+}
+
 async function findOnePg(id) {
   const model = postgres.raw_data;
   return await model.findByPk(id);
@@ -81,5 +86,6 @@ export default {
   find,
   create,
   findOne,
-  findOnePg
+  findOnePg,
+  findLastOptionData
 };

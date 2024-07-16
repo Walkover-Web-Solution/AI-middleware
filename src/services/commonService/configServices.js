@@ -8,6 +8,7 @@ import { filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfigu
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
+import metrics_services from '../../db_services/metrics_services.js'
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -59,6 +60,8 @@ const getThreads = async (req, res) => {
       bridge_id = bridge_id?.toString();
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
+    const lastOptions = await metrics_services.findLastOptionData(thread_id)
+    threads.lastStaticOptions = lastOptions?.data;
     if (threads?.success) {
       return res.status(200).json(threads);
     }

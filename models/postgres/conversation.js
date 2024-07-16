@@ -14,6 +14,10 @@ export default ((sequelize, DataTypes) => {
         foreignKey: 'chat_id',
         as: 'raw_data'
       });
+      conversation.hasMany(models.last_data_to_show, {
+        foreignKey: 'thread_id',
+        as: 'last_data_to_show'
+      });
     }
   }
   conversation.init({
@@ -29,6 +33,11 @@ export default ((sequelize, DataTypes) => {
       type: DataTypes.ENUM('chat', 'completion', 'embedding'),
       // Using ENUM for type field
       allowNull: false
+    },
+    isstatic: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     sequelize,
