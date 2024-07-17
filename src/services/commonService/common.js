@@ -220,7 +220,7 @@ const prochat = async (req, res) => {
       const parsedJson = Helper.parseJson(_.get(result.modelResponse, modelOutputConfig.message));
       if ( parsedJson?.json?.isMarkdown ==  false ) {
         parsedJson.json.user  = user;
-        modelOutputConfig.message = JSON.stringify(parsedJson.json);
+        result.modelResponse.choices[0].message.content = JSON.stringify(parsedJson.json);
         params.configuration.prompt = { "role": "system", content: responsePrompt };
         params.user = _.get(result.modelResponse, modelOutputConfig.message)
         params.template = null;
