@@ -6,10 +6,11 @@ const createsApi = async (req, res) => {
       id,
       payload,
       url,
-      desc,
       status,
-      org_id
+      org_id,
+      name
     } = req.body;
+    let desc = req.body.desc;
     const {
       bridge_id
     } = req.params;
@@ -20,26 +21,36 @@ const createsApi = async (req, res) => {
         success: false
       });
     }
+    desc = desc + " (" + name +")";
     let axiosCode = "";
     if (status === "published" || status === "updated") {
       const body = payload?.body;
       let requiredParams = [];
       if (body) {
-        const keys = Object.keys(body);
-        keys.forEach((key) => {
-          const value = body[key];
-          if (value === "your_value_here") {
-            requiredParams.push(key);
-          }
-        });
-        // const params = requiredParams.join();
-        axiosCode = `return axios({url:'http://prod-flow-vm.viasocket.com/func/${id}',method:'post',data:data,  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+        // const keys = Object.keys(body);
+        // keys.forEach((key) => {
+        //   const value = body[key];
+        //   if (value === "your_value_here") {
+        //     requiredParams.push(key);
+        //   }
+        // });
+        const traversedBody = traverseBody(body)
+        requiredParams = traversedBody?.requiredParams
+        //const params = requiredParams.join();
+        axiosCode = `async (params) => {const axios = require('axios'); try{
+            let data=${JSON.stringify(body)};
+            const paths=${JSON.stringify(traversedBody?.paths)};
+            paths.forEach((path)=>{
+                    const keys=path.split(".");
+                    _.set(data,path,params[keys[keys.length-1]]);
+            });
+            const response = await axios({url:'${url}',method:'post',data:data,  headers: {'content-type': 'application/json' } }); return response;}catch(error){return error.response;}}`;
       }
       else {
-        axiosCode = `return axios({url:'http://prod-flow-vm.viasocket.com/func/${id}',method:'get',  headers: {'content-type': 'application/json' } }).then((response) => { return response; })`
+        axiosCode = `async (params) => {const axios = require('axios');try{const response = await axios({url:'${url}',method:'get', headers: {'content-type': 'application/json' } }); return response;}catch(error){return error.response;}}`;
       }
       const apiId = await getApiId(org_id, bridge_id, endpoint);
-      const response = await saveAPI(desc, url, org_id, bridge_id, apiId, "An API", axiosCode, requiredParams, id, [], true);
+      const response = await saveAPI(desc, url, org_id, bridge_id, apiId, "An API", axiosCode, requiredParams, id, [], true,name);
       if (!response.success) {
         return res.status(400).json({
           message: "something went wrong!",
@@ -84,7 +95,7 @@ const createsApi = async (req, res) => {
     });
   }
 };
-const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_description = "An API", axios = "", required_fields = null, endpoint = "", optional_fields = [], activated = false) => {
+const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_description = "An API", axios = "", required_fields = null, endpoint = "", optional_fields = [], activated = false,name = name) => {
   try {
     if (api_id) {
       const apiData = await apiCallModel.findById(api_id);
@@ -97,6 +108,7 @@ const saveAPI = async (apiDesc, curl, org_id, bridge_id, api_id, short_descripti
       apiData.endpoint = endpoint;
       apiData.optional_fields = optional_fields;
       apiData.activated = activated;
+      apiData.name = name;
 
       //saving updated fields in the db with same id
       const savedApi = await apiData.save();
@@ -192,6 +204,18 @@ const getApiId=async(org_id,bridge_id,endpoint)=>{
     return "";
   }
 }
+const traverseBody = (body, requiredParams = [],path="",paths=[]) => {
+  for (const key in body) {
+      if (typeof body[key] === 'object') {
+          path=path+key+"."
+          traverseBody(body[key], requiredParams,path,paths);
+      } else if (body[key] === "your_value_here") {
+        paths.push(path+key)
+        requiredParams.push(key);
+      }
+  }
+  return {requiredParams,paths};
+};
 export default {
   createsApi
 };

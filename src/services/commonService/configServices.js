@@ -335,7 +335,7 @@ const deleteBridges = async (req, res) => {
     });
   }
 };
-const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
+const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add",name="") => {
   try {
     let modelConfig = await configurationService.getBridges(bridge_id);
     let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
@@ -354,7 +354,8 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
     updated_tools_call.push(openApiFormat);
     api_call[endpoint] = {
       apiObjectID: apiObjectID,
-      requiredParams: requiredParams
+      requiredParams: requiredParams,
+      name:name
     };
     }
     if(status==="delete"){
