@@ -8,12 +8,23 @@ import { callDBdash } from "../../db_services/dbdash.js";
 
 const functionCall= async (data)=>{
     try {
-        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false, tools={}} = data;
+        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false, tools={},webhook,headers} = data;
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
+        const apiInfo = bridge?.api_call[apiName];
+        if(!playground){
+        responseSender.sendResponse({
+            rtlLayer : rtlLayer,
+            webhook : webhook,
+            data: { function_call: true, success: true, name: apiInfo},
+            reqBody: body,
+            headers: headers || {}
+          });
+        }
+
+        // add here also
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
         if(apiEndpoints.has(apiName)){
-            const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
             const args = JSON.parse(tools_call.function.arguments ||"{}");
             const apiResponse=await axiosWork(args,axios,data.variables,data.bridge_id);

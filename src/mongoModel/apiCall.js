@@ -41,6 +41,10 @@ const apiCall = new mongoose.Schema({
   created_at: {
     type: Date,
     default: Date.now
+  },
+  name: {
+    type: String,
+    default: ""
   }
 });
 const apiCallModel = mongoose.model("apicall", apiCall);
