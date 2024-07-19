@@ -8,7 +8,7 @@ const createsApi = async (req, res) => {
       url,
       status,
       org_id,
-      name
+      name = ""
     } = req.body;
     let desc = req.body.desc;
     const {
@@ -21,22 +21,14 @@ const createsApi = async (req, res) => {
         success: false
       });
     }
-    desc = desc + " (" + name +")";
+    desc = desc + " functionName: (" + name +")";
     let axiosCode = "";
     if (status === "published" || status === "updated") {
       const body = payload?.body;
       let requiredParams = [];
       if (body) {
-        // const keys = Object.keys(body);
-        // keys.forEach((key) => {
-        //   const value = body[key];
-        //   if (value === "your_value_here") {
-        //     requiredParams.push(key);
-        //   }
-        // });
         const traversedBody = traverseBody(body)
         requiredParams = traversedBody?.requiredParams
-        //const params = requiredParams.join();
         axiosCode = `async (params) => {const axios = require('axios'); try{
             let data=${JSON.stringify(body)};
             const paths=${JSON.stringify(traversedBody?.paths)};
@@ -211,7 +203,7 @@ const traverseBody = (body, requiredParams = [],path="",paths=[]) => {
           traverseBody(body[key], requiredParams,path,paths);
       } else if (body[key] === "your_value_here") {
         paths.push(path+key)
-        requiredParams.push(key);
+        requiredParams.push(key); // [?] it can repeat
       }
   }
   return {requiredParams,paths};
