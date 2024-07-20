@@ -1,10 +1,10 @@
 import { chats } from "./chat.js";
 import _ from 'lodash';
 import configurationService from "../../db_services/ConfigurationServices.js";
-import axios from "axios";
 import { ResponseSender } from "../utils/customRes.js";
 const responseSender = new ResponseSender();
 import { callDBdash } from "../../db_services/dbdash.js";
+import {runCode} from "../utils/runCode.cjs";
 
 const functionCall= async (data)=>{
     try {
@@ -95,10 +95,9 @@ const axiosWork = async (data, axiosFunction,variable={},bridge_id="") => {
     if(bridge_id in config){
         config[bridge_id].forEach(args=>{data[args]=variable[args]})
     }
-    const createFunction = new Function('axios','data', axiosFunction);
-    const axiosCall =await createFunction(axios,data);
+    const response = await runCode(axiosFunction, data)
     try {
-        return axiosCall.data;
+        return response?.data
     } catch (err) {
         console.error("error", err.message);
         return { success: false };
