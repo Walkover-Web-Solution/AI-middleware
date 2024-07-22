@@ -1,8 +1,8 @@
 import chatbotDbService from "../db_services/conversationDbService.js";
 
-const getAllThreads = async (bridge_id, org_id, page, pageSize, startTimestamp, endTimestamp) => {
+const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) => {
   try {
-    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, page, pageSize, startTimestamp, endTimestamp);
+    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
     return { success: true, data: chats };
   } catch (err) {
     console.log("getall threads=>", err);

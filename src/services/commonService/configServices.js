@@ -75,8 +75,7 @@ const getMessageHistory = async (req, res) => {
   try {
     const { bridge_id } = req.params;
     const { org_id } = req.body;
-    let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10;
+    const { pageNo = 1, limit = 10, keyword_search = null } = req.query;
 
     const { startTime, endTime } = req.query;
     let startTimestamp, endTimestamp;
@@ -86,7 +85,7 @@ const getMessageHistory = async (req, res) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = await getAllThreads(bridge_id, org_id, page, pageSize, startTimestamp, endTimestamp);
+    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
