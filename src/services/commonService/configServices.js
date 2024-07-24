@@ -4,7 +4,7 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
-import { filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
+import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
@@ -73,15 +73,19 @@ const getThreads = async (req, res) => {
 };
 const getMessageHistory = async (req, res) => {
   try {
-    const {
-      bridge_id
-    } = req.params;
-    const {
-      org_id
-    } = req.body;
-    let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10;
-    const threads = await getAllThreads(bridge_id, org_id, page, pageSize);
+    const { bridge_id } = req.params;
+    const { org_id } = req.body;
+    const { pageNo = 1, limit = 10, keyword_search = null } = req.query;
+
+    const { startTime, endTime } = req.query;
+    let startTimestamp, endTimestamp;
+
+    if (startTime !== 'undefined' && endTime !== 'undefined') {
+      startTimestamp = convertToTimestamp(startTime);
+      endTimestamp = convertToTimestamp(endTime);
+    }
+
+    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
     if (threads?.success) {
       return res.status(200).json(threads);
     }
