@@ -21,7 +21,7 @@ const createsApi = async (req, res) => {
         success: false
       });
     }
-    desc = desc + " functionName: (" + name +")";
+    desc = " functionName: (" + name +")" + desc;
     let axiosCode = "";
     if (status === "published" || status === "updated") {
       const body = payload?.body;
