@@ -1,19 +1,30 @@
 import { chats } from "./chat.js";
 import _ from 'lodash';
 import configurationService from "../../db_services/ConfigurationServices.js";
-import axios from "axios";
 import { ResponseSender } from "../utils/customRes.js";
 const responseSender = new ResponseSender();
 import { callDBdash } from "../../db_services/dbdash.js";
+import {runCode} from "../utils/runCode.cjs";
 
 const functionCall= async (data)=>{
     try {
-        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false, tools={}} = data;
+        let { configuration, apikey, bridge, tools_call, outputConfig, l=0, rtlLayer=false, body={}, playground=false, tools={},webhook,headers} = data;
         const apiEndpoints=new Set(bridge.api_endpoints);
         const apiName = tools_call?.function?.name;
+        const apiInfo = bridge?.api_call[apiName];
+        if(!playground){
+        responseSender.sendResponse({
+            rtlLayer : rtlLayer,
+            webhook : webhook,
+            data: { function_call: true, success: true, name: apiInfo},
+            reqBody: body,
+            headers: headers || {}
+          });
+        }
+
+        // add here also
         //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
         if(apiEndpoints.has(apiName)){
-            const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
             const args = JSON.parse(tools_call.function.arguments ||"{}");
             const apiResponse=await axiosWork(args,axios,data.variables,data.bridge_id);
@@ -75,7 +86,7 @@ const functionCall= async (data)=>{
 
 const fetchAxios=async (apiInfo)=>{
     const apiCall=await configurationService.getApiCallById(apiInfo.apiObjectID);
-    return apiCall.apiCall.axios
+    return apiCall.apiCall.code || apiCall.apiCall.axios
 }
 
 const axiosWork = async (data, axiosFunction,variable={},bridge_id="") => {
@@ -84,10 +95,9 @@ const axiosWork = async (data, axiosFunction,variable={},bridge_id="") => {
     if(bridge_id in config){
         config[bridge_id].forEach(args=>{data[args]=variable[args]})
     }
-    const createFunction = new Function('axios','data', axiosFunction);
-    const axiosCall =await createFunction(axios,data);
+    const response = await runCode(axiosFunction, data)
     try {
-        return axiosCall.data;
+        return response?.data
     } catch (err) {
         console.error("error", err.message);
         return { success: false };

@@ -16,31 +16,37 @@ const apiCall = new mongoose.Schema({
     type: [String],
     default: []
   },
-  short_description: {
+  code: {
     type: String,
     // required: true,
     default: ''
   },
-  axios: {
-    type: String,
-    // required: true,
-    default: ''
-  },
-  optional_fields: {
-    type: [String],
+  fields: { // structure is 
+    type: [Object],
+    /*  [
+          {
+              variable_name:"",
+              description:"",
+              enum:""
+          } 
+        ]*/
     default: []
   },
-  endpoint: {
+  endpoint: {  // name of the flow 
     // COMPLETE IT
     type: String,
     default: ""
   },
-  api_description: {
+  description: {
     type: String
   },
   created_at: {
     type: Date,
     default: Date.now
+  },
+  name: { // function name, scriptId in case of viasocket function
+    type: String,
+    default: ""
   }
 });
 const apiCallModel = mongoose.model("apicall", apiCall);
