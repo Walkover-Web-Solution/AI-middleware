@@ -32,7 +32,8 @@ const getAllBridges = async org_id => {
       "configuration.model": 1,
       "configuration.prompt": 1,
       "configuration.input": 1,
-      bridgeType: 1
+      bridgeType: 1,
+      slugName:1,
     });
     return {
       success: true,
