@@ -372,6 +372,32 @@ const gettemplateById = async template_id =>{
     return null;
   }
 }
+
+
+const getAllBridgesWithoutOrg = async () => {
+  try {
+    const bridges = await configurationModel.find();
+    return bridges
+  } catch (error) {
+    console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
+const bulkUpdate = async (bulkdata) => {
+  try {
+    const result = await configurationModel.bulkWrite(bulkdata);
+    return result
+  } catch (error) {
+    console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
 export default {
   createBridges,
   getAllBridges,
@@ -390,5 +416,7 @@ export default {
   gettemplateById,
   getBridgesBySlugNameAndName,
   addActionInBridge,
-  removeActionInBridge
+  removeActionInBridge,
+  getAllBridgesWithoutOrg,
+  bulkUpdate
 };
