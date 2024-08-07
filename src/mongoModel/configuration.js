@@ -22,6 +22,10 @@ const configuration = new mongoose.Schema({
   service: {
     type: String,
     default: ""
+  },  
+  type: {
+    type: Number,
+    default: 1
   },
   bridgeType: {
     type: String,
@@ -41,41 +45,16 @@ const configuration = new mongoose.Schema({
     type: String,
     default: ""
   },
-  created_at: {
-    type: Date,
-    default: Date.now
-  },
-  api_call: {
-    type: Object,
-    default: {}
-  },
-  api_endpoints: {
-    type: Object,
-    default: []
-  },
-  is_api_call: {
-    type: Boolean,
-    default: false
-  },
   slugName: {
     type: String,
     required: true
-  },
-  responseIds: {
-    type: Array,
-    default: []
-  },
-  responseRef: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ResponseType'
-  },
-  defaultQuestions: {
-    type: Array
   },
   actions : {
     type: Map,
     of :  actionTypeModel
   }
+}, {
+  timestamps: true // This option automatically manages createdAt and updatedAt
 });
 
 configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
