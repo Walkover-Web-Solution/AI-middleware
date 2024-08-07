@@ -2,6 +2,7 @@ import configurationModel from "../mongoModel/configuration.js";
 import apiCallModel from "../mongoModel/apiCall.js";
 import ChatBotModel from "../mongoModel/chatBotModel.js";
 import { templateModel } from "../mongoModel/template.js";
+
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
@@ -233,31 +234,14 @@ const getApiCallById = async apiId => {
     };
   }
 };
-const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId) => {
-  try {
-    const bridges = await configurationModel.findOneAndUpdate({
-      _id: bridgeId
-    }, {
-      $addToSet: {
-        responseIds: responseId
-      },
-      $set: {
-        responseRef: responseRefId
-      }
-    }, {
-      new: true
-    });
+const addResponseIdinBridge = async () => {
+
+    
     return {
       success: true,
-      bridges: bridges
+      bridges: []
     };
-  } catch (error) {
-    console.log("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
+  
 };
 
 // add action  or update the previous action in bridge
@@ -318,7 +302,7 @@ const getBridgeBySlugname = async (orgId, slugName) => {
     const bridges = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).populate('responseRef').lean();
+    }).lean();
     return {
       success: true,
       bridges: bridges
@@ -375,9 +359,9 @@ const gettemplateById = async template_id =>{
 
 
 const getAllBridgesWithoutOrg = async () => {
-  try {
-    const bridges = await configurationModel.find();
-    return bridges
+  try {    
+    const  bridge = await configurationModel.find();
+    return bridge
   } catch (error) {
     console.error("error:", error);
     return {
@@ -388,8 +372,13 @@ const getAllBridgesWithoutOrg = async () => {
 };
 const bulkUpdate = async (bulkdata) => {
   try {
-    const result = await configurationModel.bulkWrite(bulkdata);
-    return result
+    // const result = await configurationModel.deleteMany({});
+    const insertResult = await configurationModel.bulkWrite(bulkdata);
+    return {
+      success: true,
+      // deletedCount: result.deletedCount,
+      insertedCount: insertResult.length
+    };
   } catch (error) {
     console.error("error:", error);
     return {
