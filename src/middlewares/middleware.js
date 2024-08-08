@@ -4,7 +4,7 @@ dotenv.config();
 const middleware = async (req, res, next) => {
   const token = req?.get('Authorization');
   if (!token) {
-    return res.status(498).json({
+    return res.status(401).json({
       message: 'invalid token'
     });
   }
