@@ -61,7 +61,15 @@ const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
   result.bridges.type = type;
   result.bridges.configuration = customConfig;
 };
+
+
+function convertToTimestamp(dateTimeStr) {
+  const dateObj = new Date(dateTimeStr);
+  return dateObj.getTime();
+}
+
 export {
   getConfiguration,
-  filterDataOfBridgeOnTheBaseOfUI
+  filterDataOfBridgeOnTheBaseOfUI,
+  convertToTimestamp
 };

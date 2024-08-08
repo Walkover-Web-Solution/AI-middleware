@@ -111,25 +111,50 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id, page, pageSize) {
+async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) {
+  const whereClause = {
+    bridge_id,
+    org_id
+  };
+
+  if (startTimestamp && endTimestamp) {
+    whereClause.updatedAt = {
+      [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)]
+    };
+  }
+  if (keyword_search) {
+    whereClause[Sequelize.Op.and] = [
+      {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`
+          }),
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } }
+        ]
+      }
+    ];
+  }
+
   const threads = await models.pg.conversations.findAll({
-    attributes: ['thread_id',[Sequelize.fn('MIN', Sequelize.col('id')), 'id'], 'bridge_id',
+    attributes: [
+      'thread_id',
+      [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+      'bridge_id',
       [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
     ],
-    where: {
-      bridge_id,
-      org_id
-    },
-    group: ['thread_id', 'bridge_id'], 
+    where: whereClause,
+    group: ['thread_id', 'bridge_id'],
     order: [
-      [Sequelize.col('updatedAt'), 'DESC'], 
+      [Sequelize.col('updatedAt'), 'DESC'],
       ['thread_id', 'ASC']
     ],
-   limit: pageSize,
-    offset: (page - 1) * pageSize
+    limit,
+    offset: (pageNo - 1) * limit
   });
+
   return threads;
 }
+
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
   try {

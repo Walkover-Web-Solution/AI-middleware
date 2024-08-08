@@ -33,6 +33,15 @@ const getAllChatBots = async (req, res) => {
     let chatbots = result.chatbots;
 
     let defaultChatbot = chatbots.find(chatbot => chatbot.type === 'default');
+    if(result.chatbots.length === 1 && defaultChatbot ){
+        const defaultChatbotData = {
+            orgId: org_id,
+            title: req.params.name || 'chatbot1',
+            createdBy: userId,
+            updatedBy: userId,
+        };
+        await ChatbotDbService.create(defaultChatbotData);
+    }
     let accessKey;
     if (!defaultChatbot) {
         const defaultChatbotData = {
