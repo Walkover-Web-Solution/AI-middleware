@@ -1,6 +1,7 @@
 import 'express-async-errors';
 import express from "express";
 import cors from "cors";
+// import multer from 'multer';
 import modelController from "./controllers/modelController.js";
 import configurationController from "./controllers/configController.js";
 const app = express();
@@ -14,6 +15,7 @@ import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
+import configurePostmanCollection from './routes/configurePostmanCollection.js';
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -21,11 +23,10 @@ app.use(cors({
   preflightContinue: true
 }));
 app.use(express.json());
+// app.use(multer().array());
 try {
   mongoose.set("strictQuery", false);
   mongoose.connect(config.mongo.uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
   });
 } catch (err) {
   console.error('database connection error: ', err.message);
@@ -40,6 +41,7 @@ app.use('/api/v1/config', configurationController);
 app.use('/utility', utlilityRoutes);
 app.use('/chatbot', chatbot);
 app.use('/user', userOrgLocalController);
+app.use('/config',configurePostmanCollection)
 
 //Metrics
 app.use('/api/v1/metrics', metrisRoutes);
