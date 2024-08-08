@@ -9,6 +9,8 @@
         isCached: responseData.isCached,
       };
       return res.status(responseData.statusCode).json(formattedResponse);
+    }else{
+      console.log(`Path: ${req.path}`,responseData);
     }
 
     // If response data or status code is not set, pass the request to the next middleware
