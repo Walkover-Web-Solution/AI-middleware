@@ -35,6 +35,7 @@ const configDB = async (req, res, next) => {
     let id = ''
     try {
         let allConfig = await ConfigurationServices.getAllBridgesWithoutOrg();
+        allConfig = [allConfig]
         let failed = [];
         let successfulUpdates = [];
 
@@ -94,13 +95,13 @@ const configDB = async (req, res, next) => {
                         }
                     }
 
-                    configCopy.configuration['response_type'] = configCopy?.configuration?.response_type?.type === 'json' ? {"type": "json"} : {"type": "text"};
+                    configCopy.configuration['response_type'] = configCopy?.configuration?.response_type?.type === 'json' ? { "type": "json" } : { "type": "text" };
 
                     // Add response_format
                     configCopy.configuration['response_format'] = {
-                        type: configCopy?.configuration?.RTLayer ? 'RTLayer' : 
-                              configCopy?.configuration?.webhook ? 'webhook' : 
-                              'default'
+                        type: configCopy?.configuration?.RTLayer ? 'RTLayer' :
+                            configCopy?.configuration?.webhook ? 'webhook' :
+                                'default'
                     };
                     configCopy.configuration['response_format']['cred'] = {};
 
@@ -145,7 +146,7 @@ const configDB = async (req, res, next) => {
                     successfulUpdates.push(configCopy._id);
                 } catch (error) {
                     console.log(`Failed to update configuration with ID: ${configCopy._id}`, error);
-                    failed.push({[configCopy._id]:"dbfail"});
+                    failed.push({ [configCopy._id]: "dbfail" });
                 }
             }
         } catch (e) {
@@ -164,10 +165,60 @@ const configDB = async (req, res, next) => {
     }
 };
 
+const updteMaxtoken = async (req, res, next) => {
+    let id = ''
+    
+    try {
+        let allConfig = await ConfigurationServices.getAllBridgesWithoutOrg();
+        // allConfig = [allConfig]
+        let failed = [];
+        let successfulUpdates = [];
+        try {
+            for (let coo of allConfig) {
+                let configCopy = _.cloneDeep(coo._doc);
+                id = configCopy._id
+                if(configCopy?.configuration?.max_output_tokens && !configCopy?.configuration?.max_tokens){
+                    configCopy.configuration['max_tokens']= configCopy?.configuration?.max_output_tokens
+                }
+                if(configCopy?.configuration?.max_output_tokens){
+                    delete  configCopy.configuration.max_output_tokens
+                    try {
+                        let dbquery = {
+                            replaceOne: {
+                                filter: { _id: configCopy._id },
+                                replacement: configCopy,
+                                upsert: true
+                            }
+                        };
+                        await configurationModel.bulkWrite([dbquery]);
+                        successfulUpdates.push(configCopy._id);
+                    } catch (error) {
+                        console.log(`Failed to update configuration with ID: ${configCopy._id}`, error);
+                        failed.push({ [configCopy._id]: "dbfail" });
+                    }
+                }
+            }
+        } catch (e) {
+            failed.push(id);
+            console.log(e)
+        }
 
+
+// const final = await configurationModel.bulkWrite(bulkUpdateData);
+const final = {
+    successfulUpdates,
+    failedUpdates: failed
+}
+return res.send(final);
+    } catch (error) {
+    console.log(123, id, 123)
+    next(error);
+}
+};
 
 
 export {
     importPostmanCollection,
-    configDB
+    configDB,
+    updteMaxtoken
 };
