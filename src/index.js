@@ -34,7 +34,7 @@ try {
 }
 
 app.get('/healthcheck', async (req, res) => {
-  res.status(200).send('OK running good...');
+  res.status(200).send('OK running good...v1.1');
 });
 app.use('/api/v1/model', modelController);
 app.use('/api/v1/config', configurationController);
