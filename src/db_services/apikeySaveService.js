@@ -2,12 +2,13 @@ import apiSaveModel from "../mongoModel/apiModel.js";
 
 const saveApi = async (data) => {
     try {
-        const { org_id, apikey, service, name } = data;
+        const { org_id, apikey, service, name, comment } = data;
         const result = await new apiSaveModel({
             org_id,
             apikey,
             service,
-            name
+            name,
+            comment
         }).save();
 
         return {

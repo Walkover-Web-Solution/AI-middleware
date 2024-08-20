@@ -15,6 +15,10 @@ const apiSave = new mongoose.Schema({
     apikey: {
         type: String,
         default: ""
+    },
+    comment: {
+        type: String,
+        default: ""
     } 
 });
 const apiSaveModel = mongoose.model("apisave", apiSave);

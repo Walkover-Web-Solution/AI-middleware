@@ -3,7 +3,7 @@ import { services } from "../../configs/models.js";
 
 const saveApikey = async(req,res) => {
     try {
-        const {apikey, service, org_id, name} = req.body;
+        const {apikey, service, org_id, name, comment} = req.body;
         if (!org_id || !apikey || !service || !name) {
             return res.status(400).json({
                 success: false,
@@ -23,7 +23,7 @@ const saveApikey = async(req,res) => {
                 error: "apikey Name already exists!!!"
               });
         }
-        const result = await apikeySaveService.saveApi({org_id, apikey, service, name});
+        const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
         if(result.success){
             return res.status(200).json(result);
         }
