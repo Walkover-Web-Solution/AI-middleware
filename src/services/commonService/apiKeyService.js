@@ -1,9 +1,11 @@
 import apikeySaveService from "../../db_services/apikeySaveService.js";
 import { services } from "../../configs/models.js";
+import Helper from "../utils/helper.js";
 
 const saveApikey = async(req,res) => {
     try {
-        const {apikey, service, org_id, name, comment} = req.body;
+        const {service, org_id, name, comment} = req.body;
+        let apikey = req.body.apikey
         if (!org_id || !apikey || !service || !name) {
             return res.status(400).json({
                 success: false,
@@ -16,6 +18,7 @@ const saveApikey = async(req,res) => {
               error: "service does not exist!"
             });
           }
+        apikey = await Helper.encrypt(apikey)
         const apiName = await apikeySaveService.getName(name, org_id);
         if(apiName.success == true && apiName.result != null){
             return res.status(400).json({
