@@ -106,7 +106,8 @@ async function updateApikey(apikey_object_id, apikey = null, name = null) {
         return {
             success: true,
             matchedCount: totalMatchedCount,
-            modifiedCount: totalModifiedCount
+            modifiedCount: totalModifiedCount,
+            apikey: apikey || updateFields.apikey
         };
     } catch (error) {
         console.error(error);

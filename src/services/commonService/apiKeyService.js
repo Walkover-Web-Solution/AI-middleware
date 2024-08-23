@@ -58,7 +58,9 @@ const getAllApikeys = async(req, res) => {
 async function updateApikey(req, res) {
     try {
         let apikey = req.body.apikey;
+        if(apikey){
         apikey = await Helper.encrypt(apikey);
+        }
         const {apikey_object_id, name } = req.body;
         try{
             await updateApikeySchema.validateAsync({
@@ -79,7 +81,8 @@ async function updateApikey(req, res) {
         if (result.success) {
             return res.status(200).json({
                 success: true,
-                message: "Apikey updated successfully"
+                message: "Apikey updated successfully",
+                apikey : result?.apikey
             });
         } else {
             return res.status(400).json({
