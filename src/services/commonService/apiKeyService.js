@@ -1,6 +1,6 @@
 import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
-import { saveApikeySchema } from "../../validation/joi_validation/apikey.js";
+import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 
 const saveApikey = async(req,res) => {
     try {
@@ -60,25 +60,31 @@ async function updateApikey(req, res) {
         let apikey = req.body.apikey;
         apikey = await Helper.encrypt(apikey);
         const {apikey_object_id, name } = req.body;
+        try{
+            await updateApikeySchema.validateAsync({
+                apikey,
+                name,
+                apikey_object_id
+            });
+        }
+        catch (error) {
+            return res.status(422).json({
+              success: false,
+              error: error.details
+            });
+        }
 
-        if (apikey && apikey_object_id) {
-            const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name);
+        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name);
 
-            if (result.success) {
-                return res.status(200).json({
-                    success: true,
-                    message: "Apikey updated successfully"
-                });
-            } else {
-                return res.status(400).json({
-                    success: false,
-                    message: 'No records updated or bridge not found'
-                });
-            }
+        if (result.success) {
+            return res.status(200).json({
+                success: true,
+                message: "Apikey updated successfully"
+            });
         } else {
             return res.status(400).json({
                 success: false,
-                message: 'apikey and apikey_object_id are required'
+                message: 'No records updated or bridge not found'
             });
         }
     } catch (e) {
@@ -94,9 +100,18 @@ async function deleteApikey(req, res) {
         const body = req.body;
         const apikey_object_id = body.apikey_object_id;
 
-        if (apikey_object_id) {
             const result = await apikeySaveService.deleteApi(apikey_object_id);
-
+            try{
+                await deleteApikeySchema.validateAsync({
+                    apikey_object_id
+                });
+            }
+            catch (error) {
+                return res.status(422).json({
+                  success: false,
+                  error: error.details
+                });
+            }
             if (result.success) {
                 return res.status(200).json({
                     success: true,
@@ -108,12 +123,6 @@ async function deleteApikey(req, res) {
                     message: result.error
                 });
             }
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: 'apikey_object_id is required'
-            });
-        }
     } catch (error) {
         return res.status(400).json({
             success: false,

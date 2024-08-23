@@ -7,6 +7,20 @@ const saveApikeySchema = Joi.object({
     comment: Joi.string().required()
 })
 
+const updateApikeySchema = Joi.object({
+    name: Joi.string().alphanum().optional(),
+    apikey: Joi.string().regex(/^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]*$/).optional().allow(''),
+    apikey_object_id: Joi.string().alphanum().required()
+})
+
+const deleteApikeySchema = Joi.object({
+    apikey_object_id: Joi.string().alphanum().required()
+})
+
+
+
 export {
-    saveApikeySchema
+    saveApikeySchema,
+    updateApikeySchema,
+    deleteApikeySchema
 }
