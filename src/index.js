@@ -39,7 +39,7 @@ app.get('/healthcheck', async (req, res) => {
 });
 app.use('/api/v1/model', modelController);
 app.use('/api/v1/config', configurationController);
-app.use('/apikey', apiKeyrouter);
+app.use('/apikeys', apiKeyrouter);
 app.use('/utility', utlilityRoutes);
 app.use('/chatbot', chatbot);
 app.use('/user', userOrgLocalController);

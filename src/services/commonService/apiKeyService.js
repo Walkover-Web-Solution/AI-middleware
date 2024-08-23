@@ -1,31 +1,27 @@
 import apikeySaveService from "../../db_services/apikeySaveService.js";
-import { services } from "../../configs/models.js";
 import Helper from "../utils/helper.js";
+import { saveApikeySchema } from "../../validation/joi_validation/apikey.js";
 
 const saveApikey = async(req,res) => {
     try {
-        const {service, org_id, name, comment} = req.body;
+        const {service, name, comment} = req.body;
+        const org_id = req.profile?.org?.id;
         let apikey = req.body.apikey
-        if (!org_id || !apikey || !service || !name) {
-            return res.status(400).json({
-                success: false,
-                error: "Missing required fields: org_id, apikey, service, and name are all required."
-              });
-        }
-        if (!(service in services)) {
-            return res.status(400).json({
-              success: false,
-              error: "service does not exist!"
+        try{
+            await saveApikeySchema.validateAsync({
+                apikey,
+                service,
+                name,
+                comment
             });
-          }
-        apikey = await Helper.encrypt(apikey)
-        const apiName = await apikeySaveService.getName(name, org_id);
-        if(apiName.success == true && apiName.result != null){
-            return res.status(400).json({
-                success: false,
-                error: "apikey Name already exists!!!"
-              });
         }
+        catch (error) {
+            return res.status(422).json({
+              success: false,
+              error: error.details
+            });
+        }
+        apikey = await Helper.encrypt(apikey)
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
         if(result.success){
             return res.status(200).json(result);
@@ -42,7 +38,7 @@ const saveApikey = async(req,res) => {
 
 const getAllApikeys = async(req, res) => {
     try {
-        const org_id = req.body.org_id;
+        const org_id = req.profile?.org?.id;
         const result = await apikeySaveService.getAllApi(org_id);
         if (result.success) {
             return res.status(200).json(result);
@@ -59,7 +55,76 @@ const getAllApikeys = async(req, res) => {
     }
 }
 
+async function updateApikey(req, res) {
+    try {
+        let apikey = req.body.apikey;
+        apikey = await Helper.encrypt(apikey);
+        const {apikey_object_id, name } = req.body;
+
+        if (apikey && apikey_object_id) {
+            const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name);
+
+            if (result.success) {
+                return res.status(200).json({
+                    success: true,
+                    message: "Apikey updated successfully"
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'No records updated or bridge not found'
+                });
+            }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'apikey and apikey_object_id are required'
+            });
+        }
+    } catch (e) {
+        return res.status(400).json({
+            success: false,
+            error: e.message
+        });
+    }
+}
+
+async function deleteApikey(req, res) {
+    try {
+        const body = req.body;
+        const apikey_object_id = body.apikey_object_id;
+
+        if (apikey_object_id) {
+            const result = await apikeySaveService.deleteApi(apikey_object_id);
+
+            if (result.success) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Apikey deleted successfully'
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: result.error
+                });
+            }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'apikey_object_id is required'
+            });
+        }
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
 export default{
   saveApikey,
-  getAllApikeys
+  getAllApikeys,
+  deleteApikey,
+  updateApikey
 }

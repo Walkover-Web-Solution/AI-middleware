@@ -5,7 +5,9 @@ import middleware from "../middlewares/middleware.js";
 
 let router = express.Router();
 
-router.post('/save', middleware, service.saveApikey);
-router.get('/getall/api', middleware, service.getAllApikeys);
+router.post('/', middleware, service.saveApikey);
+router.get('/', middleware, service.getAllApikeys);
+router.put('/',middleware, service.updateApikey);
+router.delete('/',middleware,service.deleteApikey);
 
 export default router;

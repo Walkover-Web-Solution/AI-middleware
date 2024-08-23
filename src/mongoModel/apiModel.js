@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const apiSave = new mongoose.Schema({
+const ApikeyCredentials = new mongoose.Schema({
     org_id: {
         type: String,
         default: ""
@@ -21,5 +21,6 @@ const apiSave = new mongoose.Schema({
         default: ""
     } 
 });
-const apiSaveModel = mongoose.model("apisave", apiSave);
-export default apiSaveModel;
+ApikeyCredentials.index({name: 1, org_id: 1}, {unique: true})
+const ApikeyCredential = mongoose.model("apisave", ApikeyCredentials);
+export default ApikeyCredential;
