@@ -22,5 +22,5 @@ const ApikeyCredentials = new mongoose.Schema({
     } 
 });
 ApikeyCredentials.index({name: 1, org_id: 1}, {unique: true})
-const ApikeyCredential = mongoose.model("apisave", ApikeyCredentials);
+const ApikeyCredential = mongoose.model("ApikeyCredentials", ApikeyCredentials);
 export default ApikeyCredential;
