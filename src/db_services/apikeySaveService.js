@@ -65,7 +65,7 @@ const getAllApi = async(org_id)=>{
     }
 }
 
-async function updateApikey(apikey_object_id, apikey = null, name = null) {
+async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null) {
     try {
         const updateFields = {};
 
@@ -74,6 +74,12 @@ async function updateApikey(apikey_object_id, apikey = null, name = null) {
         }
         if (name) {
             updateFields.name = name;
+        }
+        if (service) {
+            updateFields.service = service;
+        }
+        if (comment) {
+            updateFields.comment = comment;
         }
 
         let apikeyCredentialResult;
@@ -94,7 +100,6 @@ async function updateApikey(apikey_object_id, apikey = null, name = null) {
         }
 
         const totalMatchedCount = (apikeyCredentialResult?.matchedCount || 0) + (configurationModelResult?.matchedCount || 0);
-        const totalModifiedCount = (apikeyCredentialResult?.modifiedCount || 0) + (configurationModelResult?.modifiedCount || 0);
 
         if (totalMatchedCount === 0) {
             return {
@@ -105,8 +110,6 @@ async function updateApikey(apikey_object_id, apikey = null, name = null) {
 
         return {
             success: true,
-            matchedCount: totalMatchedCount, // why sending to frontend
-            modifiedCount: totalModifiedCount, // why sending to frontend
             apikey: apikey || updateFields.apikey
         };
     } catch (error) {

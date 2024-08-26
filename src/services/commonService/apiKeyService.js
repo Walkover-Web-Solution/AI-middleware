@@ -58,15 +58,14 @@ const getAllApikeys = async(req, res) => {
 async function updateApikey(req, res) {
     try {
         let apikey = req.body.apikey;
-        if(apikey){
-        apikey = await Helper.encrypt(apikey); // why await used here 
-        }
-        const { name } = req.body; // why not inlcuding comments and services 
+        const { name, comment, service } = req.body;
         const { apikey_object_id } = req.params;
         try{
             await updateApikeySchema.validateAsync({
                 apikey,
                 name,
+                comment,
+                service,
                 apikey_object_id
             });
         }
@@ -76,8 +75,10 @@ async function updateApikey(req, res) {
               error: error.details
             });
         }
-
-        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name);
+        if(apikey){
+            apikey = Helper.encrypt(apikey); 
+        }
+        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, comment, service);
 
         if (result.success) {
             return res.status(200).json({
