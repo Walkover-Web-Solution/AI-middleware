@@ -4,6 +4,7 @@ import cors from "cors";
 // import multer from 'multer';
 import modelController from "./controllers/modelController.js";
 import configurationController from "./controllers/configController.js";
+import apiKeyrouter from "./routes/apikeyRouter.js";
 const app = express();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
@@ -34,10 +35,11 @@ try {
 }
 
 app.get('/healthcheck', async (req, res) => {
-  res.status(200).send('OK running good...v1.1');
+  res.status(200).send('OK running good...');
 });
 app.use('/api/v1/model', modelController);
 app.use('/api/v1/config', configurationController);
+app.use('/apikeys', apiKeyrouter);
 app.use('/utility', utlilityRoutes);
 app.use('/chatbot', chatbot);
 app.use('/user', userOrgLocalController);

@@ -51,7 +51,7 @@ const getAllChatBots = async (req, res) => {
             createdBy: userId,
             updatedBy: userId,
         };
-        defaultChatbot = (await ChatbotDbService.create(defaultChatbotData))?.chatBot;
+        defaultChatbot = await ChatbotDbService.create(defaultChatbotData); // ?
     }
     const { chatBot } = await responseTypeService.getAll(org_id);
     if (chatBot?.orgAcessToken) accessKey = chatBot?.orgAcessToken;
