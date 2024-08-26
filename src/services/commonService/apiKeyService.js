@@ -61,7 +61,8 @@ async function updateApikey(req, res) {
         if(apikey){
         apikey = await Helper.encrypt(apikey);
         }
-        const {apikey_object_id, name } = req.body;
+        const { name } = req.body;
+        const { apikey_object_id } = req.params;
         try{
             await updateApikeySchema.validateAsync({
                 apikey,
@@ -102,19 +103,18 @@ async function deleteApikey(req, res) {
     try {
         const body = req.body;
         const apikey_object_id = body.apikey_object_id;
-
-            const result = await apikeySaveService.deleteApi(apikey_object_id);
-            try{
-                await deleteApikeySchema.validateAsync({
-                    apikey_object_id
-                });
-            }
-            catch (error) {
-                return res.status(422).json({
-                  success: false,
-                  error: error.details
-                });
-            }
+        try{
+            await deleteApikeySchema.validateAsync({
+                apikey_object_id
+            });
+        }
+        catch (error) {
+            return res.status(422).json({
+                success: false,
+                error: error.details
+            });
+        }
+        const result = await apikeySaveService.deleteApi(apikey_object_id);
             if (result.success) {
                 return res.status(200).json({
                     success: true,
