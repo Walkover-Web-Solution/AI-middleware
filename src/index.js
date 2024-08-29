@@ -17,6 +17,7 @@ import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
 import configurePostmanCollection from './routes/configurePostmanCollection.js';
+import templateRouter from '../src/routes/template_routes.js'
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -42,6 +43,7 @@ app.use('/api/v1/config', configurationController);
 app.use('/apikeys', apiKeyrouter);
 app.use('/utility', utlilityRoutes);
 app.use('/chatbot', chatbot);
+app.use('/template', templateRouter);
 app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 
