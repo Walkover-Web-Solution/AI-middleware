@@ -4,13 +4,14 @@ import validateFunctions from "../validation/joi_validation/alerting.js"
 async function createAlert(req,res) {
   try {
         const org_id = req.profile?.org?.id;
-        const {webhookConfiguration, name, bridges } = req.body;
+        const {webhookConfiguration, name, bridges, alertType } = req.body;
         try {
           await validateFunctions.createAlertSchema.validateAsync({
             org_id,
             webhookConfiguration,
             name,
             bridges,
+            alertType
           });
         } catch (error) {
           return res.status(422).json({
@@ -22,7 +23,8 @@ async function createAlert(req,res) {
           org_id,
           webhookConfiguration,
           name,
-          bridges
+          bridges,
+          alertType
         });
         if (newAlert.success) {
           return res.status(201).json({
@@ -114,13 +116,14 @@ async function deleteAlert(req, res) {
 async function updateAlert(req, res){
   try {
     const id = req.params.id;
-    const { webhookConfiguration, bridges, name } = req.body;
+    const { webhookConfiguration, bridges, name, alertType } = req.body;
     try {
       await validateFunctions.updateAlertSchema.validateAsync({
         id,
         webhookConfiguration,
         bridges,
-        name
+        name,
+        alertType
       });
     } catch (error) {
       return res.status(422).json({
@@ -147,6 +150,9 @@ async function updateAlert(req, res){
     }
     if (bridges) {
       alert.bridges = bridges
+    }
+    if(alertType){
+      alert.alertType = alertType;
     }
     const updatedAlert = await alertingDbservices.updateAlert(id, alert);
     if(updatedAlert.success) {

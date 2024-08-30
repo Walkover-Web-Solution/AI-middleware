@@ -22,7 +22,7 @@ const alertSchema = new mongoose.Schema({
   },
   alertType: {
     type: [String],
-    enum: ['API Key Expiry', 'Error Occurrence', 'Performance Degradation'],
+    enum: ['Error', 'Variable'],
     default: [],
     required: true,
   },
