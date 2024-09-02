@@ -5,7 +5,7 @@ const createAlertSchema = Joi.object({
     webhookConfiguration : Joi.object().required(),
     name : Joi.string().required(),
     bridges : Joi.array().items(Joi.string()).required(),
-    alertType : Joi.array().valid('Variable', 'Error').required(),
+    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error')).required(),
 })
 
 const getAlertSchema = Joi.object({
@@ -17,7 +17,7 @@ const updateAlertSchema = Joi.object({
     webhookConfiguration : Joi.object().optional(),
     bridges : Joi.array().items(Joi.string()).optional(),
     name : Joi.string().optional(),
-    alertType : Joi.array().valid('Variable', 'Error').optional(),
+    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error')).optional(),
 })
 
 const deleteAlertSchema = Joi.object({
