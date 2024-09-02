@@ -318,6 +318,35 @@ const updateBridgeType = async (req, res) => {
     });
   }
 };
+
+const bridgeArchive = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const status = parseInt(req.query.status, 10);
+
+    if (status !== 0 && status !== 1) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid status value. Must be 1 or 0.",
+      });
+    }
+
+    const newStatus = status === 0 ? 1 : 0
+
+    const result = await configurationService.updateBridgeArchive(bridge_id, newStatus);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating bridge status =>", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong!!",
+    });
+  }
+};
+
+
+
 const deleteBridges = async (req, res) => {
   try {
     const {
@@ -391,6 +420,7 @@ export default {
   getAllBridges,
   getBridges,
   updateBridges,
+  bridgeArchive,
   deleteBridges,
   getAndUpdate,
   updateBridgeType,
