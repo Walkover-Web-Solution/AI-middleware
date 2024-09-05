@@ -133,11 +133,11 @@ const getBridges = async bridge_id => {
     };
   }
 };
-const updateBridgeArchive = async (bridge_id, newStatus) => {
+const updateBridgeArchive = async (bridge_id, status) => {
   try {
     const updatedBridge = await configurationModel.findOneAndUpdate(
       {_id: bridge_id},
-      { status: newStatus},
+      { status: status},
       { new: true }
     );
     if (!updatedBridge) {
@@ -150,7 +150,7 @@ const updateBridgeArchive = async (bridge_id, newStatus) => {
     return {
       success: true,
       data: updatedBridge,
-      message: newStatus ? "Bridge archived successfully!" : "Bridge unarchived successfully!",
+      message: status ? "Bridge archived successfully!" : "Bridge unarchived successfully!",
     };
   } catch (error) {
     console.error("Error updating bridge status =>", error);
