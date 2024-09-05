@@ -322,8 +322,8 @@ const updateBridgeType = async (req, res) => {
 const bridgeArchive = async (req, res) => {
   try {
     const { bridge_id } = req.params;
-    const status = parseInt(req.query.status, 10);
-
+    const status = parseInt(req.query.status, 10); // Parse the query as a number
+    // Add validation in Bridge.js
     if (status !== 0 && status !== 1) {
       return res.status(400).json({
         success: false,
@@ -331,9 +331,7 @@ const bridgeArchive = async (req, res) => {
       });
     }
 
-    const newStatus = status === 0 ? 1 : 0
-
-    const result = await configurationService.updateBridgeArchive(bridge_id, newStatus);
+    const result = await configurationService.updateBridgeArchive(bridge_id, status);
 
     return res.status(200).json(result);
   } catch (error) {
