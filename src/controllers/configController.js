@@ -12,7 +12,6 @@ router.get('/models/:service', middleware, common.getAIModels); //Done
 router.post('/createbridges', middleware, common.createBridges); //Done
 router.post('/updatebridges/:bridge_id', middleware, common.updateBridges); //Done
 router.put('/createbridges/:bridge_id', middleware, common.updateBridges);
-router.put('/bridgearchive/:bridge_id', middleware, common.bridgeArchive);
 router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
 router.get('/gethistory/:thread_id/:bridge_id', middleware, common.getThreads); //Public API for getting history for particular thread
 router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', chatBotAuth, common.getThreads); //Public API for getting history for particular thread
@@ -20,4 +19,5 @@ router.post('/createapi/:bridge_id', middleware, createApi.createsApi); //vaisoc
 router.put('/:bridge_id', middleware, common.updateBridgeType);
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory);
 router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory);
+router.put('/bridgearchive/:bridge_id', middleware, common.bridgeArchive);
 export default router;
