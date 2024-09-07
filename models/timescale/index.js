@@ -27,15 +27,15 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
     logging: console.log
 });
 
-const dbservice = async () => {
-  try {
-    await sequelize.sync();
-  } catch (error) {
-    console.error('Unable to connect to the database:', error,444);
-      }
-};
+// const dbservice = async () => {
+//   try {
+//     await sequelize.sync();
+//   } catch (error) {
+//     console.error('Unable to connect to the database:', error,444);
+//       }
+// };
 
-dbservice();
+// dbservice();
 
 await fs.promises
   .readdir(__dirname)
