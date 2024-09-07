@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
 import config from "../config/config.js";
-import metrisRoutes from "./routes/metrics_routes.js";
+// import metrisRoutes from "./routes/metrics_routes.js";
 import utlilityRoutes from "./routes/utlility_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
@@ -46,7 +46,7 @@ app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 
 //Metrics
-app.use('/api/v1/metrics', metrisRoutes);
+// app.use('/api/v1/metrics', metrisRoutes);
 
 app.use(responseMiddleware); // send response
 app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
