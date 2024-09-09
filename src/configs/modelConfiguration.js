@@ -1704,6 +1704,374 @@ class ModelsConfig {
       inputConfig
     };
   };
+
+  static  gpt_4o_2024_08_06 = () => {
+      const configuration = {
+          "model": {
+              "field": "drop",
+              "default": "gpt-4o-2024-08-06",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 4096,
+              "step": 1,
+              "default": 256,
+              "level": 2
+          },
+          "probability_cutoff": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          "log_probability": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "repetition_penalty": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0,
+              "level": 2
+          },
+          "novelty_penalty": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0,
+              "level": 2
+          },
+          "response_count": {
+              "field": "number",
+              "default": 1,
+              "typeOf": "number",
+              "level": 0
+          },
+          "stop": {
+              "field": "text",
+              "default": "",
+              "level": 0
+          },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": [],
+              "typeOf": "array"
+          },
+          "tool_choice": {
+              "field": "text",
+              "default": "auto",
+              "level": 0,
+              "typeOf": "string"
+          },
+          "response_type": {
+              "field": "select",
+              "options" : [{"type" : "text"},{"type" : "json_object"}],
+              "default": {
+              "type" : "text",
+              },
+              "level": 0
+          }
+      };
+      const outputConfig = {
+          "usage": [{
+              "prompt_tokens": "usage.prompt_tokens",
+              "completion_tokens": "usage.completion_tokens",
+              "total_tokens": "usage.total_tokens",
+              "total_cost": {
+                  "input_cost": 0.01,
+                  "output_cost": 0.03
+              }
+          }],
+          "message": "choices[0].message.content",
+          "tools": "choices[0].message.tool_calls",
+          "assistant": "choices[0].message",
+          "id": "id"
+      };
+      const inputConfig = {
+          "system": {
+              "role": "system",
+              "content": "",
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      };
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+    }
+  
+  static gpt_4o_mini= () => {
+      const configuration = {
+          "model": {
+              "field": "dropdown",
+              "default": "gpt-4o-mini",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 8192,
+              "step": 1,
+              "default": 256,
+              "level": 2
+          },
+          "probability_cutoff": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          "log_probability": {
+              "field": "boolean",
+              "default": false,
+              "level": 0
+          },
+          "repetition_penalty": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0,
+              "level": 2
+          },
+          "novelty_penalty": {
+              "field": "slider",
+              "min": 0,
+              "max": 2,
+              "step": 0.01,
+              "default": 0,
+              "level": 2
+          },
+          "response_count": {
+              "field": "number",
+              "default": 1,
+              "level": 0
+          },
+          "stop": {
+              "field": "text",
+              "default": "",
+              "level": 0
+          },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": []
+          },
+          "tool_choice": {
+              "field": "text",
+              "default": "auto",
+              "level": 0
+          },
+           "type" : {
+              "default" : ["chat"]
+          },
+          "response_type": {
+              "field": "select",
+              "options" : [{"type" : "text"},{"type" : "json_object"}],
+              "default": {
+              "type" : "text",
+              },
+              "level": 0
+          }
+      };
+      const outputConfig = {
+          "usage": [{
+              "prompt_tokens": "usage.prompt_tokens",
+              "completion_tokens": "usage.completion_tokens",
+              "total_tokens": "usage.total_tokens",
+              "total_cost": {
+                  "input_cost": 0.03,
+                  "output_cost": 0.06
+              }
+          }],
+          "message": "choices[0].message.content",
+          "tools": "choices[0].message.tool_calls",
+          "assistant": "choices[0].message",
+          "id": "id"
+      };
+      const inputConfig = {
+          "system": {
+              "default": {
+                  "role": "system",
+                  "content": ""
+              },
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      };
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+    }
+  
+  static gpt_4o_mini_2024_07_18= () => {
+    const configuration = {
+      "model": {
+          "field": "dropdown",
+          "default": "gpt-4o-mini-2024-07-18",
+          "level": 1
+      },
+      "creativity_level": {
+          "field": "slider",
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "default": 0,
+          "level": 2
+      },
+      "max_tokens": {
+          "field": "slider",
+          "min": 1,
+          "max": 8192,
+          "step": 1,
+          "default": 256,
+          "level": 2
+      },
+      "probability_cutoff": {
+          "field": "slider",
+          "min": 0,
+          "max": 1,
+          "step": 0.1,
+          "default": 1,
+          "level": 2
+      },
+      "log_probability": {
+          "field": "boolean",
+          "default": false,
+          "level": 0
+      },
+      "repetition_penalty": {
+          "field": "slider",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "default": 0,
+          "level": 2
+      },
+      "novelty_penalty": {
+          "field": "slider",
+          "min": 0,
+          "max": 2,
+          "step": 0.01,
+          "default": 0,
+          "level": 2
+      },
+      "response_count": {
+          "field": "number",
+          "default": 1,
+          "level": 0
+      },
+      "stop": {
+          "field": "text",
+          "default": "",
+          "level": 0
+      },
+      "stream": {
+          "field": "boolean",
+          "default": false,
+          "level": 0
+      },
+      "tools": {
+          "field": "array",
+          "level": 0,
+          "default": []
+      },
+      "tool_choice": {
+          "field": "text",
+          "default": "auto",
+          "level": 0
+      },
+       "type" : {
+          "default" : ["chat"]
+      },
+      "response_type": {
+          "field": "select",
+          "options" : [{"type" : "text"},{"type" : "json_object"}],
+          "default": {
+          "type" : "text",
+          },
+          "level": 0
+      }
+  };
+  const outputConfig = {
+      "usage": [{
+          "prompt_tokens": "usage.prompt_tokens",
+          "completion_tokens": "usage.completion_tokens",
+          "total_tokens": "usage.total_tokens",
+          "total_cost": {
+              "input_cost": 0.03,
+              "output_cost": 0.06
+          }
+      }],
+      "message": "choices[0].message.content",
+      "tools": "choices[0].message.tool_calls",
+      "assistant": "choices[0].message",
+      "id": "id"
+  };
+  const inputConfig = {
+      "system": {
+          "default": {
+              "role": "system",
+              "content": ""
+          },
+          "contentKey": "content",
+          "type": "json"
+      },
+      "content_location": "prompt[0].content"
+  };
+  return {
+      "configuration": configuration,
+      "outputConfig": outputConfig,
+      "inputConfig": inputConfig
+  }
+
+  }
+
   static text_embedding_3_large = () => {
     const configuration = {
       "model": {
@@ -2373,6 +2741,1522 @@ class ModelsConfig {
       inputConfig
     };
   };
+  static claude_3_5_sonnet_20240620 = () => {
+    const configuration = {
+          "model": {
+              "field": "drop",
+              "default": "claude-3-5-sonnet-20240620",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 8192,
+              "step": 1,
+              "default": 1046,
+              "level": 2
+          },
+          "top_p": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": [],
+              "typeOf": "array"
+          },
+      }
 
-}
-export default ModelsConfig;
+      const outputConfig = {
+          "usage": [{
+              "prompt_tokens": "usage.input_tokens",
+              "completion_tokens": "usage.output_tokens",
+              "total_cost": "usage.total_cost"
+          }],
+          "message": "content[0].text",
+          "tools": "content[1].text",
+          "assistant": "role",
+          "id": "id"
+      }
+      const inputConfig = {
+          "system": {
+              "role": "system",
+              "content": "",
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      }
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+    }
+      
+  static claude_3_opus_20240229 = () => { 
+      const configuration = {
+          "model": {
+              "field": "drop",
+              "default": "claude-3-opus-20240229",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 4096,
+              "step": 1,
+              "default": 1046,
+              "level": 2
+          },
+          "top_p": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          // "logprobs": {
+          //     "field": "boolean",
+          //     "default": false,
+          //     "level": 0,
+          //     "typeOf": "boolean"
+          // },
+          // "frequency_penalty": {
+          //     "field": "slider",
+          //     "min": 0,
+          //     "max": 2,
+          //     "step": 0.01,
+          //     "default": 0,
+          //     "level": 2
+          // },
+          // "presence_penalty": {
+          //     "field": "slider",
+          //     "min": 0,
+          //     "max": 2,
+          //     "step": 0.01,
+          //     "default": 0,
+          //     "level": 2
+          // },
+          // "response_count": {
+          //     "field": "number",
+          //     "default": 1,
+          //     "typeOf": "number",
+          //     "level": 0
+          // },
+          // "stop": {
+          //     "field": "text",
+          //     "default": "",
+          //     "level": 0
+          // },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": [],
+              "typeOf": "array"
+          },
+          // "tool_choice": {
+          //     "field": "text",
+          //     "default": "auto",
+          //     "level": 0,
+          //     "typeOf": "string"
+          // },
+          // "response_format": {
+          //     "field": "boolean",
+          //     "default": {
+          //         "type": "text"
+          //     },
+          //     "level": 0
+          // }
+      }
+      const outputConfig = {
+      "usage": [{
+              "prompt_tokens": "usage.input_tokens",
+              "completion_tokens": "usage.output_tokens",
+              "total_cost": {
+                  "input_cost": 0,
+                  "output_cost": 0
+              }
+          }],
+          "message": "content[0].text",
+          "tools": "content[1].type",
+          "assistant": "role",
+          "id": "id"
+      }
+      const inputConfig = {
+          "system": {
+              "role": "system",
+              "content": "",
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      }
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+  }
+      
+  static claude_3_sonnet_20240229 = () => { 
+      const configuration = {
+          "model": {
+              "field": "drop",
+              "default": "claude-3-sonnet-20240229",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 4096,
+              "step": 1,
+              "default": 1046,
+              "level": 2
+          },
+          "top_p": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          // "logprobs": {
+          //     "field": "boolean",
+          //     "default": false,
+          //     "level": 0,
+          //     "typeOf": "boolean"
+          // },
+          // "frequency_penalty": {
+          //     "field": "slider",
+          //     "min": 0,
+          //     "max": 2,
+          //     "step": 0.01,
+          //     "default": 0,
+          //     "level": 2
+          // },
+          // "presence_penalty": {
+          //     "field": "slider",
+          //     "min": 0,
+          //     "max": 2,
+          //     "step": 0.01,
+          //     "default": 0,
+          //     "level": 2
+          // },
+          // "response_count": {
+          //     "field": "number",
+          //     "default": 1,
+          //     "typeOf": "number",
+          //     "level": 0
+          // },
+          // "stop": {
+          //     "field": "text",
+          //     "default": "",
+          //     "level": 0
+          // },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": [],
+              "typeOf": "array"
+          },
+          // "tool_choice": {
+          //     "field": "text",
+          //     "default": "auto",
+          //     "level": 0,
+          //     "typeOf": "string"
+          // },
+          // // "response_format": {
+          //     "field": "boolean",
+          //     "default": {
+          //         "type": "text"
+          //     },
+          //     "level": 0
+          // }
+      }
+      const outputConfig = {
+          "usage": [{
+              "prompt_tokens": "usage.input_tokens",
+              "completion_tokens": "usage.output_tokens",
+              "total_cost": {
+                  "input_cost": 0,
+                  "output_cost": 0
+              }
+          }],
+          "message": "content[0].text",
+          "tools": "content[1].type",
+          "assistant": "role",
+          "id": "id"
+      }
+      const inputConfig = {
+          "system": {
+              "role": "system",
+              "content": "",
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      }
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+  }
+  
+  static claude_3_haiku_20240307 = () => { 
+     const configuration = {
+          "model": {
+              "field": "drop",
+              "default": "claude-3-haiku-20240307",
+              "level": 1
+          },
+          "creativity_level": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 0,
+              "level": 2
+          },
+          "max_tokens": {
+              "field": "slider",
+              "min": 1,
+              "max": 4096,
+              "step": 1,
+              "default": 1046,
+              "level": 2
+          },
+          "top_p": {
+              "field": "slider",
+              "min": 0,
+              "max": 1,
+              "step": 0.1,
+              "default": 1,
+              "level": 2
+          },
+          "stream": {
+              "field": "boolean",
+              "default": false,
+              "level": 0,
+              "typeOf": "boolean"
+          },
+          "tools": {
+              "field": "array",
+              "level": 0,
+              "default": [],
+              "typeOf": "array"
+          },
+      }
+      const outputConfig = {
+          "usage": [{
+              "prompt_tokens": "usage.input_tokens",
+              "completion_tokens": "usage.output_tokens",
+              "total_cost": {
+                  "input_cost": 0,
+                  "output_cost": 0
+              }
+          }],
+          "message": "content[0].text",
+          "tools": "content[1].type",
+          "assistant": "role",
+          "id": "id"
+      }
+      const inputConfig = {
+          "system": {
+              "role": "system",
+              "content": "",
+              "contentKey": "content",
+              "type": "json"
+          },
+          "content_location": "prompt[0].content"
+      }
+      return {
+          "configuration": configuration,
+          "outputConfig": outputConfig,
+          "inputConfig": inputConfig
+      }
+  }
+
+    static llama_3_1_405b_reasoning() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama-3.1-405b-reasoning",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static llama_3_1_70b_versatile() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama-3.1-70b-versatile",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static llama_3_1_8b_instant() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama-3.1-8b-instant",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static llama3_groq_70b_8192_tool_use_preview() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama3-groq-70b-8192-tool-use-preview",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+    static llama3_groq_8b_8192_tool_use_preview() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama3-groq-8b-8192-tool-use-preview",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static llama3_70b_8192() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama3-70b-8192",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static llama3_8b_8192() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "llama3-8b-8192",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static mixtral_8x7b_32768() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "mixtral-8x7b-32768",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static gemma_7b_it() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "gemma-7b-it",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  
+    static gemma2_9b_it() {
+      const configuration = {
+        model: {
+          field: "drop",
+          default: "gemma2-9b-it",
+          level: 1
+        },
+        creativity_level: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.1,
+          default: 0,
+          level: 2
+        },
+        max_tokens: {
+          field: "slider",
+          min: 1,
+          max: 4096,
+          step: 1,
+          default: 256,
+          level: 2
+        },
+        probability_cutoff: {
+          field: "slider",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: 1,
+          level: 2
+        },
+        log_probability: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        repetition_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        novelty_penalty: {
+          field: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01,
+          default: 0,
+          level: 2
+        },
+        response_count: {
+          field: "number",
+          default: 1,
+          typeOf: "number",
+          level: 0
+        },
+        stop: {
+          field: "text",
+          default: "",
+          level: 0
+        },
+        stream: {
+          field: "boolean",
+          default: false,
+          level: 0,
+          typeOf: "boolean"
+        },
+        tools: {
+          field: "array",
+          level: 0,
+          default: [],
+          typeOf: "array"
+        },
+        tool_choice: {
+          field: "text",
+          default: "auto",
+          level: 0,
+          typeOf: "string"
+        }
+      };
+      const outputConfig = {
+        usage: [{
+          prompt_tokens: "usage.prompt_tokens",
+          completion_tokens: "usage.completion_tokens",
+          total_tokens: "usage.total_tokens",
+          total_cost: {
+            input_cost: 0.01,
+            output_cost: 0.03
+          }
+        }],
+        message: "choices[0].message.content",
+        tools: "choices[0].message.tool_calls",
+        assistant: "choices[0].message",
+        id: "id"
+      };
+      const inputConfig = {
+        system: {
+          role: "system",
+          content: "",
+          contentKey: "content",
+          type: "json"
+        },
+        content_location: "prompt[0].content"
+      };
+      return {
+        configuration,
+        outputConfig,
+        inputConfig
+      };
+    }
+  }
+  
+  export default ModelsConfig;
