@@ -81,7 +81,8 @@ const createOrgToken = async (orgId, token) => {
         orgAcessToken: token
       }
     }, {
-      new: true
+      new: true,
+      upsert: true
     }).lean();
     return { success: true, orgData }
   } catch (error) {
