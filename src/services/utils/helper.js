@@ -31,10 +31,10 @@ class Helper {
   }
   static maskApiKey = (key) => {
     if (!key) return '';
-    if (key.length > 4) {
-        return key.slice(0, 2) + '*'.repeat(key.length - 4) + key.slice(-2);
+    if (key.length > 6) {
+        return key.slice(0, 3) + '*'.repeat(9) + key.slice(-3);
     }
-    return '*'.repeat(key.length);
+    return key;
   }
   static updateConfiguration = (prev_configuration, configuration) => {
     for (let key in prev_configuration) {
