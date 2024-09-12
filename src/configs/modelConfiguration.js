@@ -1588,7 +1588,7 @@ class ModelsConfig {
     const configuration = {
       "model": {
         field: "drop",
-        default: "gpt-4-turbo",
+        default: "gpt-4o",
         "level": 1
       },
       "temperature": {

@@ -4,6 +4,7 @@ import configurationService from "../../db_services/ConfigurationServices.js";
 import axios from "axios";
 import { ResponseSender } from "../utils/customRes.js";
 const responseSender = new ResponseSender();
+import { callDBdash } from "../../db_services/dbdash.js";
 
 const functionCall= async (data)=>{
     try {
@@ -15,7 +16,7 @@ const functionCall= async (data)=>{
             const apiInfo = bridge?.api_call[apiName];
             const axios=await fetchAxios(apiInfo);
             const args = JSON.parse(tools_call.function.arguments ||"{}");
-            const apiResponse=await axiosWork(args,axios);
+            const apiResponse=await axiosWork(args,axios,data.variables,data.bridge_id);
 
             const funcResponseData={
                 tool_call_id: tools_call.id,
@@ -77,8 +78,12 @@ const fetchAxios=async (apiInfo)=>{
     return apiCall.apiCall.axios
 }
 
-const axiosWork = async (data, axiosFunction) => {
+const axiosWork = async (data, axiosFunction,variable={},bridge_id="") => {
     // Dynamically create a function using new Function()
+    const config = await callDBdash();
+    if(bridge_id in config){
+        config[bridge_id].forEach(args=>{data[args]=variable[args]})
+    }
     const createFunction = new Function('axios','data', axiosFunction);
     const axiosCall =await createFunction(axios,data);
     try {

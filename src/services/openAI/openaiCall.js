@@ -99,7 +99,7 @@ class UnifiedOpenAICase {
           headers: this.headers || {}
         });
       }
-      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground,tools:{}});
+      const functionCallRes = await functionCall({configuration: this.customConfig,apikey: this.apikey, bridge: this.bridge,tools_call: _.get(modelResponse, this.modelOutputConfig.tools)[0], outputConfig: this.modelOutputConfig,l:0, rtlLayer: this.rtlLayer, body: this.req?.body, playground: this.playground,tools:{},variables:this.variables,bridge_id:this.bridge_id});
       const funcModelResponse = _.get(functionCallRes, "modelResponse", {}); 
       tools= _.get(functionCallRes,"tools",{})
 
