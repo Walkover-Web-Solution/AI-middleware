@@ -218,7 +218,9 @@ const prochat = async (req, res) => {
     /// chat bot second reponse check
     if (bridgeType) {
       const parsedJson = Helper.parseJson(_.get(result.modelResponse, modelOutputConfig.message));
-      if (!( parsedJson?.json?.isMarkdown)) {
+      if ( parsedJson?.json?.isMarkdown ==  false ) {
+        parsedJson.json.user  = user;
+        result.modelResponse.choices[0].message.content = JSON.stringify(parsedJson.json);
         params.configuration.prompt = { "role": "system", content: responsePrompt };
         params.user = _.get(result.modelResponse, modelOutputConfig.message)
         params.template = null;
