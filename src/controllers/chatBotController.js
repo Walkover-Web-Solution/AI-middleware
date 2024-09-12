@@ -233,7 +233,7 @@ const loginUser = async (req, res) => {
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id, org_id, variables }, { exp,iat })}`,
+            token: `Bearer ${getToken({ user_id, org_id, variables }, { exp,iat })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
