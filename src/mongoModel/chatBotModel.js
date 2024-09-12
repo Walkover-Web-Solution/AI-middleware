@@ -15,6 +15,7 @@ const ChatBotSchema = new Schema({
       themeColor: "#000000",
       chatbotTitle: "Chatbot",
       chatbotSubtitle: "Chatbot subtitle",
+      iconUrl: ''
     }
   },
   orgId: {
