@@ -23,6 +23,11 @@ const saveApikey = async(req,res) => {
         }
         apikey = await Helper.encrypt(apikey)
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
+        
+        const decryptedApiKey = await Helper.decrypt(apikey)
+        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+        result.api.apikey = maskedApiKey
+
         if(result.success){
             return res.status(200).json(result);
         }
@@ -78,7 +83,10 @@ async function updateApikey(req, res) {
         if(apikey){
             apikey = Helper.encrypt(apikey); 
         }
-        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment );
+        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
+        const decryptedApiKey = await Helper.decrypt(apikey)
+        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+        result.apikey = maskedApiKey
 
         if (result.success) {
             return res.status(200).json({
