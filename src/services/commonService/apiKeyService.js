@@ -18,7 +18,7 @@ const saveApikey = async(req,res) => {
         catch (error) {
             return res.status(422).json({
               success: false,
-              error: error.details?.[0]?.message
+              error: error.details
             });
         }
         apikey = await Helper.encrypt(apikey)
