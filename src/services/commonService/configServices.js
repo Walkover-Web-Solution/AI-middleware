@@ -383,6 +383,64 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
   }
 };
 
+// const FineTuneData = async (req, res) => {
+//   try {
+//     const { org_id, thread_ids, bridge_id } = req.body
+//     let data,system_prompt;
+//     for (const thread_id of thread_ids) {
+//       data = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id);
+//       system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
+//     }
+//     return res.status(400).json(system_prompt);
+//   } catch (error) {
+//     console.error("delete bridge error => ", error.message)
+//     return res.status(400).json({
+//       success: false,
+//       error: "something went wrong!!"
+//     });
+//   }
+// };
+
+const FineTuneData = async (req, res) => {
+  try {
+    const { org_id, thread_ids, bridge_id } = req.body;
+    let formattedData;
+    let result = [];
+
+    for (const thread_id of thread_ids) {
+      const threadData = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id);
+      const system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
+      let filteredData = [];
+      for (let i = 0; i < threadData.length - 1; i++) {
+        if (threadData[i].role === "user" && threadData[i + 1].role === "assistant" && threadData[i + 1].id === threadData[i].id + 1) {
+          filteredData.push(threadData[i]);
+          filteredData.push(threadData[i + 1]);
+        }
+      }
+      formattedData = {
+        messages: [
+          {
+            role: "system",
+            content: system_prompt.system_prompt
+          },
+          ...filteredData.map(item => ({
+            role: item.role,
+            content: item.content
+          }))
+        ]
+      };
+      result.push(formattedData)
+    }
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("delete bridge error => ", error.message);
+    return res.status(400).json({
+      success: false,
+      error: "something went wrong!!"
+    });
+  }
+};
+
 export default {
   getAIModels,
   getThreads,
@@ -395,5 +453,6 @@ export default {
   getAndUpdate,
   updateBridgeType,
   getSystemPromptHistory,
-  getAllSystemPromptHistory
+  getAllSystemPromptHistory,
+  FineTuneData
 };
