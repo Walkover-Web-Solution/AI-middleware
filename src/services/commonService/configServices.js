@@ -383,6 +383,139 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
   }
 };
 
+// const FineTuneData = async (req, res) => {
+//   try {
+//     const { org_id, thread_ids, bridge_id } = req.body
+//     let data,system_prompt;
+//     for (const thread_id of thread_ids) {
+//       data = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id);
+//       system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
+//     }
+//     return res.status(400).json(system_prompt);
+//   } catch (error) {
+//     console.error("delete bridge error => ", error.message)
+//     return res.status(400).json({
+//       success: false,
+//       error: "something went wrong!!"
+//     });
+//   }
+// };
+
+const FineTuneData = async (req, res) => {
+  try {
+    const { org_id, thread_ids, bridge_id } = req.body;
+    let result = [];
+
+    for (const thread_id of thread_ids) {
+      const threadData = await conversationDbService.findThreadsForFineTune(
+        org_id,
+        thread_id,
+        bridge_id
+      );
+      const system_prompt = await conversationDbService.system_prompt_data(
+        org_id,
+        bridge_id
+      );
+      let filteredData = [];
+
+      for (let i = 0; i < threadData.length; i++) {
+        const currentItem = threadData[i];
+        const nextItem = threadData[i + 1];
+        const nextNextItem = threadData[i + 2];
+
+        if (
+          currentItem.role === "user" &&
+          nextItem &&
+          nextItem.role === "assistant" &&
+          nextItem.id === currentItem.id + 1
+        ) {
+          filteredData.push(currentItem, nextItem);
+          i += 1;
+        } else if (
+          currentItem.role === "user" &&
+          nextItem &&
+          nextItem.role === "tools_call" &&
+          nextNextItem &&
+          nextNextItem.role === "assistant"
+        ) {
+          filteredData.push(currentItem, nextItem, nextNextItem);
+          i += 2;
+        }
+      }
+      let messages = [
+        {
+          role: "system",
+          content: system_prompt.system_prompt,
+        },
+      ];
+
+      for (let i = 0; i < filteredData.length; i++) {
+        const item = filteredData[i];
+
+        if (item.role === "tools_call") {
+          let toolCalls = [];
+          for (const [id, functionStr] of Object.entries(item.function)) {
+            let functionObj = JSON.parse(functionStr);
+            toolCalls.push({
+              id: id,
+              type: "function",
+              function: {
+                name: functionObj.name || "",
+                arguments: functionObj.arguments || "{}",
+              },
+              response: functionObj.response || "",
+            });
+          }
+
+          messages.push({
+            role: "assistant",
+            tool_calls: toolCalls.map(({ id, type, function: func }) => ({
+              id,
+              type,
+              function: func,
+            })),
+          });
+
+          for (const toolCall of toolCalls) {
+            messages.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: toolCall.response,
+            });
+          }
+
+          if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
+            messages.push({
+              role: "assistant",
+              content: filteredData[i + 1].content,
+            });
+            i += 1;
+          }
+        } else {
+          messages.push({
+            role: item.role,
+            content: item.content,
+          });
+        }
+      }
+      if(messages.length > 2){
+        result.push({ messages });
+      }
+    }
+    
+    const jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+
+    return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
+  } catch (error) {
+    console.error("Error in FineTuneData => ", error.message);
+    return res.status(400).json({
+      success: false,
+      error: "Something went wrong!",
+    });
+  }
+};
+
+
 export default {
   getAIModels,
   getThreads,
@@ -395,5 +528,6 @@ export default {
   getAndUpdate,
   updateBridgeType,
   getSystemPromptHistory,
-  getAllSystemPromptHistory
+  getAllSystemPromptHistory,
+  FineTuneData
 };
