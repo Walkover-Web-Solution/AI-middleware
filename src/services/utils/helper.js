@@ -29,6 +29,12 @@ class Helper {
     }
     return token;
   }
+  static maskApiKey = (key) => {
+    if (!key) return '';
+    if (key.length > 6)
+        return key.slice(0, 3) + '*'.repeat(9) + key.slice(-3);
+    return key;
+  }
   static updateConfiguration = (prev_configuration, configuration) => {
     for (let key in prev_configuration) {
       prev_configuration[key] = key in configuration ? configuration[key] : prev_configuration[key];
