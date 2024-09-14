@@ -8,6 +8,7 @@ import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../servi
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
+import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -403,7 +404,10 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
 
 const FineTuneData = async (req, res) => {
   try {
-    const { org_id, thread_ids, bridge_id } = req.body;
+    const { thread_ids } = req.body;
+    const org_id = req.profile?.org?.id;
+    const { bridge_id } = req.params
+
     let result = [];
 
     for (const thread_id of thread_ids) {
@@ -454,10 +458,10 @@ const FineTuneData = async (req, res) => {
 
         if (item.role === "tools_call") {
           let toolCalls = [];
-          for (const [id, functionStr] of Object.entries(item.function)) {
+          for (const functionStr of Object.values(item.function)) {
             let functionObj = JSON.parse(functionStr);
             toolCalls.push({
-              id: id,
+              id: generateIdForOpenAiFunctionCall(),
               type: "function",
               function: {
                 name: functionObj.name || "",
