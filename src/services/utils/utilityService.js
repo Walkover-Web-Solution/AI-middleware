@@ -50,8 +50,25 @@ function generateEncryption() {
   return { encryptionKey, iv };
 }
 
+
+
+function generateIdForOpenAiFunctionCall(prefix = 'call_', length = 26) {
+  // Define possible characters (lowercase, uppercase, digits)
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomId = '';
+  
+  // Randomly choose characters to form the ID
+  for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      randomId += characters[randomIndex];
+  }
+  
+  // Return the ID with the prefix
+  return prefix + randomId;
+}
 export {
   generateIdentifier,
   encrypt,
   decrypt,
+  generateIdForOpenAiFunctionCall
 };
