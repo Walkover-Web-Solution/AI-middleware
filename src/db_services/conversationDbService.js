@@ -68,7 +68,7 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 async function findMessage(org_id, thread_id, bridge_id) {
   let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
+    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message'],
     include: [{
       model: models.pg.raw_data,
       as: 'raw_data',
