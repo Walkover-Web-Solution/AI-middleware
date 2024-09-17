@@ -68,7 +68,7 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 async function findMessage(org_id, thread_id, bridge_id) {
   let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message'],
+    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message','updated_message'],
     include: [{
       model: models.pg.raw_data,
       as: 'raw_data',
@@ -239,9 +239,18 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       return { success: false, message: 'No matching record found to update.' };
     }
     const result = affectedRows.map(row => ({
-      content: row.message,
+      id: row.id,
+      org_id: row.org_id,
+      thread_id: row.thread_id,
+      model_name: row.model_name,
+      bridge_id: row.bridge_id,
+      content: row.message, 
       role: row.message_by,
+      function: row.function,
       updated_message: row.updated_message,
+      type: row.type,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
     }));
 
     return { success: true, result: result };
