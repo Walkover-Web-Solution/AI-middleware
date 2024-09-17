@@ -372,6 +372,8 @@ const gettemplateById = async template_id =>{
     return null;
   }
 }
+
+
 export default {
   createBridges,
   getAllBridges,
