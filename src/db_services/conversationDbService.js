@@ -220,6 +220,31 @@ async function system_prompt_data(org_id, bridge_id)
 
   return system_prompt;
 }
+async function updateMessage({ org_id, bridge_id, message, id }) {
+  try {
+
+    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+      { updated_message : message },
+      {
+        where: {
+          org_id,
+          bridge_id,
+          id
+        },
+        returning: true,
+      }
+    );
+
+    if (affectedCount === 0) {
+      return { success: false, message: 'No matching record found to update.' };
+    }
+
+    return { success: true, result: affectedRows };
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return { success: false, message: 'Error updating message' };
+  }
+}
 
 export default {
   find,
@@ -231,7 +256,8 @@ export default {
   findMessage,
   getAllPromptHistory,
   findThreadsForFineTune,
-  system_prompt_data
+  system_prompt_data,
+  updateMessage
 };
 
 // findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")

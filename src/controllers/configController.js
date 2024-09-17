@@ -20,5 +20,6 @@ router.put('/:bridge_id', middleware, common.updateBridgeType);
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory);
 router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory);
 router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData);
+router.put('/gethistory/:bridge_id', middleware, common.updateThreadMessage);
 
 export default router;
