@@ -66,27 +66,45 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id) {
+async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  const limit = pageSize;
+
   let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message'],
-    include: [{
-      model: models.pg.raw_data,
-      as: 'raw_data',
-      attributes: ['*'],
-      required: false,
-      'on': {
-        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+    attributes: [
+      ['message', 'content'],
+      ['message_by', 'role'],
+      'createdAt',
+      'id',
+      'function',
+      'is_reset',
+      'chatbot_message'
+    ],
+    include: [
+      {
+        model: models.pg.raw_data,
+        as: 'raw_data',
+        attributes: ['*'],
+        required: false,
+        on: {
+          id: models.pg.sequelize.where(
+            models.pg.sequelize.col('conversations.id'),
+            '=',
+            models.pg.sequelize.col('raw_data.chat_id')
+          )
+        }
       }
-    }],
+    ],
     where: {
       org_id: org_id,
       thread_id: thread_id,
       bridge_id: bridge_id
     },
     order: [['id', 'DESC']],
+    offset: offset,
+    limit: limit,
     raw: true
   });
-
   conversations = conversations.reverse();
   return conversations;
 }
