@@ -74,8 +74,8 @@ async function findMessage(org_id, thread_id, bridge_id) {
       as: 'raw_data',
       attributes: ['*'],
       required: false,
-      'on': {
-        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+      on: {
+        id: models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
       }
     }],
     where: {
