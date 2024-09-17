@@ -46,6 +46,11 @@ const getAllApikeys = async(req, res) => {
         const org_id = req.profile?.org?.id;
         const result = await apikeySaveService.getAllApi(org_id);
         if (result.success) {
+            for (let apiKeyObj of result.result) {
+                const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
+                const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
+                apiKeyObj.apikey = maskedApiKey;
+            }
             return res.status(200).json(result);
         } 
         else {
