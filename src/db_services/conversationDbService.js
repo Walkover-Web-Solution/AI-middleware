@@ -238,8 +238,13 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
     if (affectedCount === 0) {
       return { success: false, message: 'No matching record found to update.' };
     }
+    const result = affectedRows.map(row => ({
+      content: row.message,
+      role: row.message_by,
+      updated_message: row.updated_message,
+    }));
 
-    return { success: true, result: affectedRows };
+    return { success: true, result: result };
   } catch (error) {
     console.error('Error updating message:', error);
     return { success: false, message: 'Error updating message' };
