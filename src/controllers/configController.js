@@ -19,4 +19,6 @@ router.post('/createapi/:bridge_id', middleware, createApi.createsApi); //vaisoc
 router.put('/:bridge_id', middleware, common.updateBridgeType);
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory);
 router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory);
+router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData);
+
 export default router;

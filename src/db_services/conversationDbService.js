@@ -68,7 +68,7 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 async function findMessage(org_id, thread_id, bridge_id) {
   let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function'],
+    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message'],
     include: [{
       model: models.pg.raw_data,
       as: 'raw_data',
@@ -170,6 +170,57 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
   }
 }
 
+async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
+  let conversations = await models.pg.conversations.findAll({
+    attributes: [
+      ['message', 'content'],
+      ['message_by', 'role'],
+      'createdAt',
+      'id',
+      'function',
+      [Sequelize.col('raw_data.error'), 'error']
+    ],
+    include: [{
+      model: models.pg.raw_data,
+      as: 'raw_data',
+      attributes: [],
+      required: false,
+      where: {
+        [Sequelize.Op.or]: [
+          { error: '' },
+          { error: { [Sequelize.Op.is]: null } }
+        ]
+      }
+    }],
+    where: {
+      org_id,
+      thread_id,
+      bridge_id
+    },
+    order: [['id', 'DESC']],
+    raw: true
+  });
+  conversations = conversations.reverse();
+  return conversations;
+}
+
+async function system_prompt_data(org_id, bridge_id)
+{
+  const system_prompt = await models.pg.system_prompt_versionings.findOne({
+    where: {
+      org_id,
+      bridge_id
+    },
+    order: [
+      ['updated_at', 'DESC'],
+    ],
+    raw: true,
+    limit: 1
+  });
+
+  return system_prompt;
+}
+
 export default {
   find,
   createBulk,
@@ -178,7 +229,9 @@ export default {
   storeSystemPrompt,
   getHistory,
   findMessage,
-  getAllPromptHistory
+  getAllPromptHistory,
+  findThreadsForFineTune,
+  system_prompt_data
 };
 
 // findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")
