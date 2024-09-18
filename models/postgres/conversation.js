@@ -24,6 +24,7 @@ export default ((sequelize, DataTypes) => {
     message: DataTypes.TEXT,
     message_by: DataTypes.STRING,
     function: DataTypes.JSON,
+    updated_message: DataTypes.TEXT,
     // created_at: DataTypes.DATE,
     type: {
       type: DataTypes.ENUM('chat', 'completion', 'embedding'),

@@ -68,11 +68,35 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 async function findMessage(org_id, thread_id, bridge_id) {
   let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message'],
+    attributes: [
+      ['message', 'content'],
+      ['message_by', 'role'],
+      'createdAt',
+      'id',
+      'function',
+      'is_reset',
+      'chatbot_message',
+      'updated_message',
+      [Sequelize.col('raw_data.id'), 'raw_data_id'],
+      [Sequelize.col('raw_data.org_id'), 'org_id'],
+      [Sequelize.col('raw_data.chat_id'), 'chat_id'],
+      [Sequelize.col('raw_data.error'), 'raw_data_attribute2'],
+      [Sequelize.col('raw_data.input_tokens'), 'input_tokens'],
+      [Sequelize.col('raw_data.output_tokens'), 'output_tokens'],
+      [Sequelize.col('raw_data.variables'), 'variables'],
+      [Sequelize.col('raw_data.authkey_name'), 'authkey_name'],
+      [Sequelize.col('raw_data.latency'), 'latency'],
+      [Sequelize.col('raw_data.service'), 'service'],
+      [Sequelize.col('raw_data.model'), 'model'],
+      [Sequelize.col('raw_data.status'), 'status'],
+      [Sequelize.col('raw_data.created_at'), 'created_at'],
+      [Sequelize.col('raw_data.is_present'), 'is_present'],
+      [Sequelize.col('raw_data.created_at'), 'created_at']
+    ],
     include: [{
       model: models.pg.raw_data,
       as: 'raw_data',
-      attributes: ['*'],
+      attributes: [],
       required: false,
       'on': {
         'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
@@ -220,6 +244,45 @@ async function system_prompt_data(org_id, bridge_id)
 
   return system_prompt;
 }
+async function updateMessage({ org_id, bridge_id, message, id }) {
+  try {
+
+    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+      { updated_message : message },
+      {
+        where: {
+          org_id,
+          bridge_id,
+          id
+        },
+        returning: true,
+      }
+    );
+
+    if (affectedCount === 0) {
+      return { success: false, message: 'No matching record found to update.' };
+    }
+    const result = affectedRows.map(row => ({
+      id: row.id,
+      org_id: row.org_id,
+      thread_id: row.thread_id,
+      model_name: row.model_name,
+      bridge_id: row.bridge_id,
+      content: row.message, 
+      role: row.message_by,
+      function: row.function,
+      updated_message: row.updated_message,
+      type: row.type,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
+    }));
+
+    return { success: true, result: result };
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return { success: false, message: 'Error updating message' };
+  }
+}
 
 export default {
   find,
@@ -231,7 +294,6 @@ export default {
   findMessage,
   getAllPromptHistory,
   findThreadsForFineTune,
-  system_prompt_data
+  system_prompt_data,
+  updateMessage
 };
-
-// findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")
