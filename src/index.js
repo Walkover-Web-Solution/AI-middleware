@@ -28,8 +28,16 @@ app.use(express.json());
 // app.use(multer().array());
 try {
   mongoose.set("strictQuery", false);
-  mongoose.connect(config.mongo.uri, {
-  });
+  mongoose.connect(config.mongo.uri, { 
+  })
+    // Check connection status
+    mongoose.connection.on('connected', () => {
+      console.log('Connected to MongoDB');
+    });
+  
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error: ', err.message);
+    });
 } catch (err) {
   console.error('database connection error: ', err.message);
   // logger.error('database connection error: ' + err.message);
