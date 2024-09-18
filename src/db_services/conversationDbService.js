@@ -67,28 +67,17 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 
 async function findMessage(org_id, thread_id, bridge_id) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', 'function','is_reset','chatbot_message','updated_message'],
-    include: [{
-      model: models.pg.raw_data,
-      as: 'raw_data',
-      attributes: ['*'],
-      required: false,
-      'on': {
-        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
-      }
-    }],
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id
-    },
-    order: [['id', 'DESC']],
+  const query = `
+   SELECT "conversations"."message" AS "content", "conversations"."message_by" AS "role", "conversations"."createdAt", "conversations"."id", "conversations"."function", "conversations"."is_reset", "conversations"."chatbot_message", "raw_data".* AS "raw_data.*" FROM "conversations" AS "conversations" LEFT OUTER JOIN "raw_data" AS "raw_data" ON "conversations"."id" = "raw_data"."chat_id" WHERE "conversations"."org_id" = :org_id AND "conversations"."thread_id" = :thread_id AND "conversations"."bridge_id" = :bridge_id ORDER BY "conversations"."id" DESC;
+  `;
+
+  const conversations = await models.pg.sequelize.query(query, {
+    replacements: { org_id, thread_id, bridge_id },
+    type: Sequelize.QueryTypes.SELECT,
     raw: true
   });
 
-  conversations = conversations.reverse();
-  return conversations;
+  return conversations.reverse();
 }
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
