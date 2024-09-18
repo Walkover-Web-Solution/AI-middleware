@@ -4,6 +4,7 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
+import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -384,24 +385,6 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
   }
 };
 
-// const FineTuneData = async (req, res) => {
-//   try {
-//     const { org_id, thread_ids, bridge_id } = req.body
-//     let data,system_prompt;
-//     for (const thread_id of thread_ids) {
-//       data = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id);
-//       system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
-//     }
-//     return res.status(400).json(system_prompt);
-//   } catch (error) {
-//     console.error("delete bridge error => ", error.message)
-//     return res.status(400).json({
-//       success: false,
-//       error: "something went wrong!!"
-//     });
-//   }
-// };
-
 const FineTuneData = async (req, res) => {
   try {
     const { thread_ids } = req.body;
@@ -519,6 +502,32 @@ const FineTuneData = async (req, res) => {
   }
 };
 
+const updateThreadMessage = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const { message, id } = req.body;
+    const org_id = req.profile?.org?.id;
+    try {
+      await updateMessageSchema.validateAsync({
+       bridge_id,
+       message,
+       id,
+       org_id
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
+    const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in updateThreadMessage => ", error.message);
+
+}
+}
+
 
 export default {
   getAIModels,
@@ -533,5 +542,6 @@ export default {
   updateBridgeType,
   getSystemPromptHistory,
   getAllSystemPromptHistory,
-  FineTuneData
+  FineTuneData,
+  updateThreadMessage
 };
