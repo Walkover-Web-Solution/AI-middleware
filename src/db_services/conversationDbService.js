@@ -80,7 +80,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
       [Sequelize.col('raw_data.id'), 'raw_data_id'],
       [Sequelize.col('raw_data.org_id'), 'org_id'],
       [Sequelize.col('raw_data.chat_id'), 'chat_id'],
-      [Sequelize.col('raw_data.error'), 'raw_data_attribute2'],
+      [Sequelize.col('raw_data.error'), 'error'],
       [Sequelize.col('raw_data.input_tokens'), 'input_tokens'],
       [Sequelize.col('raw_data.output_tokens'), 'output_tokens'],
       [Sequelize.col('raw_data.variables'), 'variables'],
@@ -96,7 +96,6 @@ async function findMessage(org_id, thread_id, bridge_id) {
     include: [{
       model: models.pg.raw_data,
       as: 'raw_data',
-      attributes: [],
       required: false,
       'on': {
         'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
