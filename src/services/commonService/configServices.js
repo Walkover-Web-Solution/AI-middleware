@@ -4,6 +4,7 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
+import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -506,7 +507,19 @@ const updateThreadMessage = async (req, res) => {
     const { bridge_id } = req.params;
     const { message, id } = req.body;
     const org_id = req.profile?.org?.id;
-
+    try {
+      await updateMessageSchema.validateAsync({
+       bridge_id,
+       message,
+       id,
+       org_id
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
     return res.status(200).json(result);
   } catch (error) {
