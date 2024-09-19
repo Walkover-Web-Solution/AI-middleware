@@ -472,16 +472,22 @@ const FineTuneData = async (req, res) => {
           }
 
           if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
+            const assistantItem = filteredData[i + 1];
+            const assistantContent =assistantItem.updated_message !== null ? assistantItem.updated_message: assistantItem.content;
             messages.push({
               role: "assistant",
-              content: filteredData[i + 1].content,
+              content: assistantContent,
             });
             i += 1;
           }
         } else {
+          let messageContent = item.content;
+          if (item.role === "assistant" && item.updated_message !== null) {
+            messageContent = item.updated_message;
+          }
           messages.push({
             role: item.role,
-            content: item.content,
+            content: messageContent,
           });
         }
       }
