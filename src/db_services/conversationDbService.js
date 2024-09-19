@@ -178,6 +178,7 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
       'createdAt',
       'id',
       'function',
+      'updated_message',
       [Sequelize.col('raw_data.error'), 'error']
     ],
     include: [{
