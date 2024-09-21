@@ -89,10 +89,12 @@ async function updateApikey(req, res) {
             apikey = Helper.encrypt(apikey); 
         }
         const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
-        const decryptedApiKey = await Helper.decrypt(apikey)
-        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
-        result.apikey = maskedApiKey
-
+        let decryptedApiKey, maskedApiKey;
+        if(apikey){
+            decryptedApiKey = await Helper.decrypt(apikey)
+            maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+            result.apikey = maskedApiKey
+        }
         if (result.success) {
             return res.status(200).json({
                 success: true,
