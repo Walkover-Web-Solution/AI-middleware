@@ -21,13 +21,16 @@ const saveApikey = async(req,res) => {
               error: error.details
             });
         }
-        apikey = await Helper.encrypt(apikey)
+        if(apikey){
+            apikey = await Helper.encrypt(apikey)
+        }
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
         
-        const decryptedApiKey = await Helper.decrypt(apikey)
-        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
-        result.api.apikey = maskedApiKey
-
+        if(apikey){
+            const decryptedApiKey = await Helper.decrypt(apikey)
+            const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+            result.api.apikey = maskedApiKey
+        }
         if(result.success){
             return res.status(200).json(result);
         }
@@ -46,10 +49,13 @@ const getAllApikeys = async(req, res) => {
         const org_id = req.profile?.org?.id;
         const result = await apikeySaveService.getAllApi(org_id);
         if (result.success) {
-            for (let apiKeyObj of result.result) {
-                const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
-                const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
-                apiKeyObj.apikey = maskedApiKey;
+            const apiKeys = result.result;
+            if (Array.isArray(apiKeys) && apiKeys.length > 0) {
+                await Promise.all(apiKeys.map(async (apiKeyObj) => {
+                    const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
+                    const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
+                    apiKeyObj.apikey = maskedApiKey;
+                }));
             }
             return res.status(200).json(result);
         } 
