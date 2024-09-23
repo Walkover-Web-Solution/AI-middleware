@@ -21,16 +21,15 @@ const saveApikey = async(req,res) => {
               error: error.details
             });
         }
-        if(apikey){
-            apikey = await Helper.encrypt(apikey)
-        }
+
+        apikey = await Helper.encrypt(apikey)
+
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
         
-        if(apikey){
-            const decryptedApiKey = await Helper.decrypt(apikey)
-            const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
-            result.api.apikey = maskedApiKey
-        }
+        const decryptedApiKey = await Helper.decrypt(apikey)
+        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+        result.api.apikey = maskedApiKey
+        
         if(result.success){
             return res.status(200).json(result);
         }
