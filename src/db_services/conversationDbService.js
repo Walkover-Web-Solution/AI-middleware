@@ -77,6 +77,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
       'is_reset',
       'chatbot_message',
       'updated_message',
+      'tools_call_data',
       [Sequelize.col('raw_data.id'), 'raw_data_id'],
       [Sequelize.col('raw_data.org_id'), 'org_id'],
       [Sequelize.col('raw_data.chat_id'), 'chat_id'],
