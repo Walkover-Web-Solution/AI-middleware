@@ -66,7 +66,10 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id) {
+async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  const limit = pageSize;
+
   let conversations = await models.pg.conversations.findAll({
     attributes: [
       ['message', 'content'],
@@ -108,6 +111,9 @@ async function findMessage(org_id, thread_id, bridge_id) {
       bridge_id: bridge_id
     },
     order: [['id', 'DESC']],
+    offset: offset,
+    limit: limit,
+    subQuery: false,
     raw: true
   });
 
