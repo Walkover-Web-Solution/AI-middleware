@@ -30,7 +30,9 @@ export default ((sequelize, DataTypes) => {
       type: DataTypes.ENUM('chat', 'completion', 'embedding'),
       // Using ENUM for type field
       allowNull: false
-    }
+    },
+    message_id : DataTypes.UUIDV4,
+    user_feedback: DataTypes.ENUM('0', '1', '2')
   }, {
     sequelize,
     modelName: 'conversations',
