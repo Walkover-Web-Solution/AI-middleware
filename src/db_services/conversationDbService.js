@@ -285,6 +285,29 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
   }
 }
 
+async function updateStatus({ status, message_id }) {
+  try {
+
+    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+      { user_feedback : status },
+      {
+        where: {
+          message_id
+        },
+        returning: true,
+      }
+    );
+    if (affectedCount === 0) {
+      return { success: true, message: 'No matching record found to update.' };
+    }
+
+    return { success: true, result: affectedRows };
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return { success: false, message: 'Error updating message' };
+  }
+}
+
 export default {
   find,
   createBulk,
@@ -296,5 +319,6 @@ export default {
   getAllPromptHistory,
   findThreadsForFineTune,
   system_prompt_data,
-  updateMessage
+  updateMessage,
+  updateStatus
 };
