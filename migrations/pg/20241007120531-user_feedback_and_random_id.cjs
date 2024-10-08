@@ -7,9 +7,12 @@ const up = async (queryInterface) => {
   const transaction = await queryInterface.sequelize.transaction();
   try {
     await queryInterface.addColumn('conversations', 'user_feedback', {
-      type: Sequelize.ENUM('0','1','2'),
+      type: Sequelize.INTEGER,
       allowNull: true,
-      defaultValue: '0'
+      defaultValue: 0,
+      validate:{
+        isIn : [[0,1,2]]
+      }
     }, { transaction });
 
     await queryInterface.addColumn('conversations', 'message_id', {
