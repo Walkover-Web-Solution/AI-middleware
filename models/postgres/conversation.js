@@ -32,7 +32,7 @@ export default ((sequelize, DataTypes) => {
       allowNull: false
     },
     message_id : DataTypes.UUIDV4,
-    user_feedback: DataTypes.ENUM('0', '1', '2')
+    user_feedback: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'conversations',
