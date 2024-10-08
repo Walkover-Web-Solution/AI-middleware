@@ -534,6 +534,22 @@ const updateThreadMessage = async (req, res) => {
 }
 }
 
+const updateMessageStatus = async (req, res)=>{
+  try {
+    const status = req.params.status;
+    const message_id = req.body.message_id;
+    const result = await conversationDbService.updateStatus({status, message_id})
+    return res.status(200).json(result);
+    
+  } catch (error) {
+    console.error("Error in updateMessageStatus => ", error.message);
+    return res.status(400).json({
+      success: false,
+      error: error,
+    });
+  }
+}
+
 
 export default {
   getAIModels,
@@ -549,5 +565,6 @@ export default {
   getSystemPromptHistory,
   getAllSystemPromptHistory,
   FineTuneData,
-  updateThreadMessage
+  updateThreadMessage,
+  updateMessageStatus
 };
