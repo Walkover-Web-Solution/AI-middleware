@@ -64,7 +64,7 @@ const getThreads = async (req, res) => {
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
     req.body.result = threads;
     if (threads?.success) {
-    statusMiddleware(req, res, 200);
+      statusMiddleware(req, res, 200);
     }
     statusMiddleware(req, res, 400);
   } catch (error) {
@@ -107,7 +107,10 @@ const getSystemPromptHistory = async (req, res) => {
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
     req.body.result = result;
-    statusMiddleware(req, res, 200);
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("error occured", error);
     req.body.result = { error: "Something went wrong!" };
@@ -120,8 +123,11 @@ const getAllSystemPromptHistory = async (req, res) => {
     let page = req?.query?.pageNo || 1;
     let pageSize = req?.query?.limit || 10 ;
     const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
-    req.body.result = result; 
-    statusMiddleware(req, res, 200);
+    req.body.result = result;
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("error occured", error);
     req.body.result = { error: "Something went wrong!" };
@@ -520,7 +526,10 @@ const updateThreadMessage = async (req, res) => {
     }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
     req.body.result = result;
-    statusMiddleware(req, res, 200);
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("Error in updateThreadMessage => ", error.message);
     req.body.result = { message: "Something went wrong!" };
@@ -534,8 +543,10 @@ const updateMessageStatus = async (req, res)=>{
     const message_id = req.body.message_id;
     const result = await conversationDbService.updateStatus({status, message_id})
     req.body.result = result;
-    statusMiddleware(req, res, 200);
-    
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("Error in updateMessageStatus => ", error.message);
     req.body.result = {error: error};
