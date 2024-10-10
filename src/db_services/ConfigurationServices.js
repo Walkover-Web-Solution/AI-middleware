@@ -2,51 +2,7 @@ import configurationModel from "../mongoModel/configuration.js";
 import apiCallModel from "../mongoModel/apiCall.js";
 import ChatBotModel from "../mongoModel/chatBotModel.js";
 import { templateModel } from "../mongoModel/template.js";
-const createBridges = async configuration => {
-  try {
-    const result = await new configurationModel({
-      ...configuration
-    }).save();
-    return {
-      success: true,
-      bridge: result
-    };
-  } catch (error) {
-    console.error("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
-};
-const getAllBridges = async org_id => {
-  try {
-    const bridges = await configurationModel.find({
-      org_id: org_id
-    }, {
-      bridge_id: 1,
-      _id: 1,
-      name: 1,
-      service: 1,
-      org_id: 1,
-      "configuration.model": 1,
-      "configuration.prompt": 1,
-      "configuration.input": 1,
-      bridgeType: 1,
-      slugName:1,
-    });
-    return {
-      success: true,
-      bridges: bridges
-    };
-  } catch (error) {
-    console.error("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
-};
+
 const updateBridges = async (bridge_id, configuration, org_id, apikey, bridgeType, slugName) => {
   try {
     // Check if slugName is being updated and if it is unique
@@ -144,27 +100,6 @@ const getBridgesWithSelectedData = async bridge_id => {
       "__v": 0,
       "bridge_id": 0
     }).lean();
-    return {
-      success: true,
-      bridges: bridges
-    };
-  } catch (error) {
-    console.error("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
-};
-const getBridgesBySlugNameAndName = async (slugName, name, org_id) => {
-  try {
-    const bridges = await configurationModel.findOne({
-      org_id: org_id,
-      $or: [
-        { slugName: slugName },
-        { name: name }
-      ]
-    });
     return {
       success: true,
       bridges: bridges
@@ -375,8 +310,6 @@ const gettemplateById = async template_id =>{
 
 
 export default {
-  createBridges,
-  getAllBridges,
   getBridges,
   updateBridges,
   deleteBridge,
@@ -390,7 +323,6 @@ export default {
   updateBridgeType,
   getBridgeIdBySlugname,
   gettemplateById,
-  getBridgesBySlugNameAndName,
   addActionInBridge,
   removeActionInBridge
 };
