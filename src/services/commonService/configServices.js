@@ -8,6 +8,7 @@ import { updateMessageSchema } from "../../validation/joi_validation/validation.
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
+import {statusMiddleware} from '../../middlewares/statusMiddleware.js';
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 const getAIModels = async (req, res) => {
@@ -62,7 +63,7 @@ const getThreads = async (req, res) => {
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
     if (threads?.success) {
-      return res.status(200).json(threads);
+      statusMiddleware(req, res, 200);
     }
     return res.status(400).json(threads);
   } catch (error) {
@@ -107,7 +108,11 @@ const getSystemPromptHistory = async (req, res) => {
       timestamp
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
-    return res.status(200).json(result);
+    req.body.result = result;
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("error occured", error);
     return res.status(400).json({
@@ -122,7 +127,11 @@ const getAllSystemPromptHistory = async (req, res) => {
     let page = req?.query?.pageNo || 1;
     let pageSize = req?.query?.limit || 10 ;
     const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
-    return res.status(200).json(result);
+    req.body.result = result;
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("error occured", error);
     return res.status(400).json({
@@ -527,7 +536,11 @@ const updateThreadMessage = async (req, res) => {
       });
     }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
-    return res.status(200).json(result);
+    req.body.result = result;
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("Error in updateThreadMessage => ", error.message);
 
@@ -539,8 +552,11 @@ const updateMessageStatus = async (req, res)=>{
     const status = req.params.status;
     const message_id = req.body.message_id;
     const result = await conversationDbService.updateStatus({status, message_id})
-    return res.status(200).json(result);
-    
+    req.body.result = result;
+    if (result?.success) {
+      statusMiddleware(req, res, 200);
+    }
+    statusMiddleware(req, res, 400);
   } catch (error) {
     console.error("Error in updateMessageStatus => ", error.message);
     return res.status(400).json({
