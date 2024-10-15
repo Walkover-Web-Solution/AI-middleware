@@ -3430,6 +3430,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -3544,6 +3552,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -3658,6 +3674,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -3771,6 +3795,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -3885,6 +3917,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -3991,6 +4031,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -4105,6 +4153,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -4219,6 +4275,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
@@ -4333,6 +4397,14 @@ class ModelsConfig {
           default: "auto",
           level: 0,
           typeOf: "string"
+        },
+        response_type: {
+            field: "select",
+            options : [{"type" : "text"},{"type" : "json_object"}],
+            default: {
+            type : "text",
+            },
+            level: 0
         }
       };
       const outputConfig = {
