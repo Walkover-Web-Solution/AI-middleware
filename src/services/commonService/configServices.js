@@ -513,10 +513,8 @@ const FineTuneData = async (req, res) => {
     return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
   } catch (error) {
     console.error("Error in FineTuneData => ", error.message);
-    return res.status(400).json({
-      success: false,
-      error: "Something went wrong!",
-    });
+    req.body.result = { error: "Something went wrong!" };
+    statusMiddleware(req, res, 400);
   }
 };
 
