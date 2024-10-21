@@ -20,7 +20,7 @@ router.post('/createapi/:bridge_id', middleware, createApi.createsApi); //vaisoc
 router.put('/:bridge_id', middleware, common.updateBridgeType);
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory,statusMiddleware);
 router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory,statusMiddleware); // Depricated
-router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData,statusMiddleware);
+router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData);
 router.put('/gethistory/:bridge_id', middleware, common.updateThreadMessage,statusMiddleware);
 router.put('/status/:status', common.updateMessageStatus,statusMiddleware);
 

@@ -8,7 +8,6 @@ import { updateMessageSchema } from "../../validation/joi_validation/validation.
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
-import {statusMiddleware} from '../../middlewares/statusMiddleware.js';
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 const getAIModels = async (req, res) => {
@@ -63,15 +62,12 @@ const getThreads = async (req, res,next) => {
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
     req.body.result = threads;
-    if (threads?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("common error=>", error);
     req.body.result = { error: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 };
@@ -91,15 +87,12 @@ const getMessageHistory = async (req, res,next) => {
 
     const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
     req.body.result = threads;
-    if (threads?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("common error=>", error);
     req.body.result = { error: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 };
@@ -111,15 +104,12 @@ const getSystemPromptHistory = async (req, res,next) => {
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
     req.body.result = result;
-    if (result?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("error occured", error);
     req.body.result = { error: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 };
@@ -130,15 +120,12 @@ const getAllSystemPromptHistory = async (req, res,next) => {
     let pageSize = req?.query?.limit || 10 ;
     const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
     req.body.result = result;
-    if (result?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("error occured", error);
     req.body.result = { error: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 };
@@ -341,15 +328,12 @@ const deleteBridges = async (req, res,next) => {
     } = req.body;
     const result = await configurationService.deleteBridge(bridge_id, org_id);
     req.body.result = result;
-    if (result.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("delete bridge error => ", error.message)
     req.body.result = { error: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 };
@@ -534,20 +518,17 @@ const updateThreadMessage = async (req, res,next) => {
       });
     } catch (error) {
       req.body.result = { error: error.details};
-      statusMiddleware(req, res, 422);
+      req.statusCode = 422
       return next();
     }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
     req.body.result = result;
-    if (result?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("Error in updateThreadMessage => ", error.message);
     req.body.result = { message: "Something went wrong!" };
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
 }
 }
@@ -558,15 +539,12 @@ const updateMessageStatus = async (req, res,next)=>{
     const message_id = req.body.message_id;
     const result = await conversationDbService.updateStatus({status, message_id})
     req.body.result = result;
-    if (result?.success) {
-      statusMiddleware(req, res, 200);
-    }
-    statusMiddleware(req, res, 400);
+    req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("Error in updateMessageStatus => ", error.message);
     req.body.result = {error: error};
-    statusMiddleware(req, res, 400);
+    req.statusCode = 400
     return next();
   }
 }
