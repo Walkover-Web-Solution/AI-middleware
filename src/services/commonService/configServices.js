@@ -10,6 +10,7 @@ import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
+import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -390,6 +391,17 @@ const FineTuneData = async (req, res) => {
     const { thread_ids, user_feedback } = req.body;
     const org_id = req.profile?.org?.id;
     const { bridge_id } = req.params
+    try {
+      await FineTuneSchema.validateAsync({
+       bridge_id,
+       user_feedback
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
 
     let result = [];
 
@@ -497,7 +509,12 @@ const FineTuneData = async (req, res) => {
       }
     }
     
-    const jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+    let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+    if(jsonlData == ''){
+      jsonlData = {
+        "message" : []
+      }
+    }
 
     return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
   } catch (error) {
