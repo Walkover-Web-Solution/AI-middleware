@@ -4,7 +4,6 @@ import helper from "../../services/utils/helper.js";
 import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp} from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
-import _ from "lodash";
 import {statusMiddleware} from '../../middlewares/statusMiddleware.js';
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 
