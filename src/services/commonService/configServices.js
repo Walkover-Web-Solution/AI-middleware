@@ -387,7 +387,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
 
 const FineTuneData = async (req, res) => {
   try {
-    const { thread_ids } = req.body;
+    const { thread_ids, user_feedback } = req.body;
     const org_id = req.profile?.org?.id;
     const { bridge_id } = req.params
 
@@ -397,7 +397,8 @@ const FineTuneData = async (req, res) => {
       const threadData = await conversationDbService.findThreadsForFineTune(
         org_id,
         thread_id,
-        bridge_id
+        bridge_id,
+        user_feedback
       );
       const system_prompt = await conversationDbService.system_prompt_data(
         org_id,

@@ -196,7 +196,21 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
   }
 }
 
-async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
+async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedback_array) {
+  let whereClause = {
+    org_id,
+    thread_id,
+    bridge_id
+  };
+
+  if (user_feedback_array.includes(0)) {
+    // If 0 is included, we want all data, so no need to filter by user_feedback
+  } else {
+    whereClause.user_feedback = {
+      [Sequelize.Op.in]: user_feedback_array
+    };
+  }
+
   let conversations = await models.pg.conversations.findAll({
     attributes: [
       ['message', 'content'],
@@ -219,14 +233,11 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
         ]
       }
     }],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
+    where: whereClause,
     order: [['id', 'DESC']],
     raw: true
   });
+
   conversations = conversations.reverse();
   return conversations;
 }
