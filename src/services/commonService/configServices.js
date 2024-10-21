@@ -519,7 +519,6 @@ const updateThreadMessage = async (req, res,next) => {
     } catch (error) {
       req.body.result = { error: error.details};
       req.statusCode = 422
-      return next();
     }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
     req.body.result = result;
