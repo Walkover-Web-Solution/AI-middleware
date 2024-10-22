@@ -61,12 +61,12 @@ const getThreads = async (req, res,next) => {
       bridge_id = bridge_id?.toString();
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
-    req.body.result = threads;
+    res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("common error=>", error);
-    req.body.result = { error: "Something went wrong!" };
+    res.locals = { error: "Something went wrong!" };
     req.statusCode = 400
     return next();
   }
@@ -86,12 +86,12 @@ const getMessageHistory = async (req, res,next) => {
     }
 
     const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
-    req.body.result = threads;
+    res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("common error=>", error);
-    req.body.result = { error: "Something went wrong!" };
+    res.locals = { error: "Something went wrong!" };
     req.statusCode = 400
     return next();
   }
@@ -103,12 +103,12 @@ const getSystemPromptHistory = async (req, res,next) => {
       timestamp
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
-    req.body.result = result;
+    res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("error occured", error);
-    req.body.result = { error: "Something went wrong!" };
+    res.locals = { error: "Something went wrong!" };
     req.statusCode = 400
     return next();
   }
@@ -119,12 +119,12 @@ const getAllSystemPromptHistory = async (req, res,next) => {
     let page = req?.query?.pageNo || 1;
     let pageSize = req?.query?.limit || 10 ;
     const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
-    req.body.result = result;
+    res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("error occured", error);
-    req.body.result = { error: "Something went wrong!" };
+    res.locals = { error: "Something went wrong!" };
     req.statusCode = 400
     return next();
   }
@@ -327,12 +327,12 @@ const deleteBridges = async (req, res,next) => {
       org_id
     } = req.body;
     const result = await configurationService.deleteBridge(bridge_id, org_id);
-    req.body.result = result;
+    res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("delete bridge error => ", error.message)
-    req.body.result = { error: "Something went wrong!" };
+    res.locals = { error: "Something went wrong!" };
     req.statusCode = 400
     return next();
   }
@@ -381,7 +381,7 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
   }
 };
 
-const FineTuneData = async (req, res) => {
+const FineTuneData = async (req, res,next) => {
   try {
     const { thread_ids } = req.body;
     const org_id = req.profile?.org?.id;
@@ -494,13 +494,14 @@ const FineTuneData = async (req, res) => {
     
     const jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
 
-    return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
+    res.locals = { data: jsonlData, contentType: "text/plain" }
+    req.statusCode = 200
+    return next();
   } catch (error) {
     console.error("Error in FineTuneData => ", error.message);
-    return res.status(400).json({
-      success: false,
-      error: "Something went wrong!",
-    });
+    res.locals = {error: "Something went wrong!"}
+    req.statusCode = 400
+    return next();
   }
 };
 
@@ -517,16 +518,16 @@ const updateThreadMessage = async (req, res,next) => {
        org_id
       });
     } catch (error) {
-      req.body.result = { error: error.details};
+      res.locals = { error: error.details};
       req.statusCode = 422
     }
     const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
-    req.body.result = result;
+    res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("Error in updateThreadMessage => ", error.message);
-    req.body.result = { message: "Something went wrong!" };
+    res.locals = { message: "Something went wrong!" };
     req.statusCode = 400
     return next();
 }
@@ -537,12 +538,12 @@ const updateMessageStatus = async (req, res,next)=>{
     const status = req.params.status;
     const message_id = req.body.message_id;
     const result = await conversationDbService.updateStatus({status, message_id})
-    req.body.result = result;
+    res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
     console.error("Error in updateMessageStatus => ", error.message);
-    req.body.result = {error: error};
+    res.locals = {error: error};
     req.statusCode = 400
     return next();
   }

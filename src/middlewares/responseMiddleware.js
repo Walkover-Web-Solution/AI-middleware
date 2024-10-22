@@ -1,21 +1,15 @@
+const responseMiddleware = (req, res) => {
+  const responseData = res.locals;
+  const statusCode = req.statusCode || 200;
 
-  const responseMiddleware = (req, res, next) => {
-    const { responseData } = res.locals;
-    if (!responseData) return next();
-    if (responseData.data && responseData.statusCode) {
-      const formattedResponse = {
-        message: responseData.message,
-        data: responseData.data,
-        isCached: responseData.isCached,
-      };
-      return res.status(responseData.statusCode).json(formattedResponse);
-    }else{
-      console.log(`Path: ${req.path}`,responseData);
+  if (responseData) {
+    if (responseData.contentType === "text/plain") {
+      return res.status(statusCode)
+        .set("Content-Type", "text/plain")
+        .send(responseData.data);
+    } else {
+      return res.status(statusCode).json(responseData);
     }
-
-    // If response data or status code is not set, pass the request to the next middleware
-    return next();
-  };
-  
-  export default responseMiddleware;
-  
+  }
+};
+export {responseMiddleware};
