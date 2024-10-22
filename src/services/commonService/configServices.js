@@ -10,6 +10,7 @@ import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
+import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -387,9 +388,20 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
 
 const FineTuneData = async (req, res) => {
   try {
-    const { thread_ids } = req.body;
+    const { thread_ids, user_feedback } = req.body;
     const org_id = req.profile?.org?.id;
     const { bridge_id } = req.params
+    try {
+      await FineTuneSchema.validateAsync({
+       bridge_id,
+       user_feedback
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
 
     let result = [];
 
@@ -397,7 +409,8 @@ const FineTuneData = async (req, res) => {
       const threadData = await conversationDbService.findThreadsForFineTune(
         org_id,
         thread_id,
-        bridge_id
+        bridge_id,
+        user_feedback
       );
       const system_prompt = await conversationDbService.system_prompt_data(
         org_id,
@@ -474,10 +487,14 @@ const FineTuneData = async (req, res) => {
           if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
             const assistantItem = filteredData[i + 1];
             const assistantContent =assistantItem.updated_message !== null ? assistantItem.updated_message: assistantItem.content;
-            messages.push({
+            const message = {
               role: "assistant",
-              content: assistantContent,
-            });
+              content: assistantContent
+            };
+            if (assistantItem.updated_message !== null) {
+              message.weight = 1;
+            }
+            messages.push(message);
             i += 1;
           }
         } else {
@@ -485,10 +502,14 @@ const FineTuneData = async (req, res) => {
           if (item.role === "assistant" && item.updated_message !== null) {
             messageContent = item.updated_message;
           }
-          messages.push({
+          const message = {
             role: item.role,
             content: messageContent,
-          });
+          }
+          if(item.updated_message !== null){
+              message.weight = 1
+          }
+          messages.push(message);
         }
       }
       if(messages.length > 2){
@@ -496,7 +517,12 @@ const FineTuneData = async (req, res) => {
       }
     }
     
-    const jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+    let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+    if(jsonlData == ''){
+      jsonlData = {
+        "messages" : []
+      }
+    }
 
     return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
   } catch (error) {
