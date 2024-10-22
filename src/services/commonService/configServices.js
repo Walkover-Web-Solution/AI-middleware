@@ -65,10 +65,8 @@ const getThreads = async (req, res,next) => {
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("common error=>", error);
-    res.locals = { error: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    console.error("common error=>", error)
+    throw error;
   }
 };
 const getMessageHistory = async (req, res,next) => {
@@ -90,10 +88,8 @@ const getMessageHistory = async (req, res,next) => {
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("common error=>", error);
-    res.locals = { error: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    console.error("common error=>", error)
+    throw error;
   }
 };
 const getSystemPromptHistory = async (req, res,next) => {
@@ -107,10 +103,8 @@ const getSystemPromptHistory = async (req, res,next) => {
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("error occured", error);
-    res.locals = { error: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    console.error("error occured", error)
+    throw error;
   }
 };
 const getAllSystemPromptHistory = async (req, res,next) => {
@@ -123,10 +117,8 @@ const getAllSystemPromptHistory = async (req, res,next) => {
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("error occured", error);
-    res.locals = { error: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    console.error("error occured", error)
+    throw error;
   }
 };
 const createBridges = async (req, res) => {
@@ -332,9 +324,7 @@ const deleteBridges = async (req, res,next) => {
     return next();
   } catch (error) {
     console.error("delete bridge error => ", error.message)
-    res.locals = { error: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    throw error;
   }
 };
 const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
@@ -498,10 +488,8 @@ const FineTuneData = async (req, res,next) => {
     req.statusCode = 200
     return next();
   } catch (error) {
-    console.error("Error in FineTuneData => ", error.message);
-    res.locals = {error: "Something went wrong!"}
-    req.statusCode = 400
-    return next();
+    console.error("Error in FineTuneData => ", error.message)
+    throw error;
   }
 };
 
@@ -526,10 +514,8 @@ const updateThreadMessage = async (req, res,next) => {
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("Error in updateThreadMessage => ", error.message);
-    res.locals = { message: "Something went wrong!" };
-    req.statusCode = 400
-    return next();
+    console.error("Error in updateThreadMessage => ", error.message)
+    throw error;
 }
 }
 
@@ -542,10 +528,8 @@ const updateMessageStatus = async (req, res,next)=>{
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("Error in updateMessageStatus => ", error.message);
-    res.locals = {error: error};
-    req.statusCode = 400
-    return next();
+    console.error("Error in updateMessageStatus => ", error.message)
+    throw error;
   }
 }
 

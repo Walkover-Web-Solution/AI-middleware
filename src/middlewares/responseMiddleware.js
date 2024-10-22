@@ -1,15 +1,20 @@
-const responseMiddleware = (req, res) => {
+const responseMiddleware = (req, res, next) => {
   const responseData = res.locals;
-  const statusCode = req.statusCode || 200;
+  const statusCode = req.statusCode;
 
-  if (responseData) {
-    if (responseData.contentType === "text/plain") {
-      return res.status(statusCode)
-        .set("Content-Type", "text/plain")
-        .send(responseData.data);
-    } else {
-      return res.status(statusCode).json(responseData);
+  if (!responseData) return next();
+
+  if (responseData && statusCode) {
+    switch (responseData.contentType) {
+      case "text/plain":
+        return res.status(statusCode).set("Content-Type", "text/plain").send(responseData.data);
+
+      default:
+        return res.status(statusCode).json(responseData);
     }
   }
+
+  return next();
 };
-export {responseMiddleware};
+
+export { responseMiddleware };
