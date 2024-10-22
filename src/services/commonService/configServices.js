@@ -487,10 +487,14 @@ const FineTuneData = async (req, res) => {
           if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
             const assistantItem = filteredData[i + 1];
             const assistantContent =assistantItem.updated_message !== null ? assistantItem.updated_message: assistantItem.content;
-            messages.push({
+            const message = {
               role: "assistant",
-              content: assistantContent,
-            });
+              content: assistantContent
+            };
+            if (assistantItem.updated_message !== null) {
+              message.weight = 1;
+            }
+            messages.push(message);
             i += 1;
           }
         } else {
@@ -498,10 +502,14 @@ const FineTuneData = async (req, res) => {
           if (item.role === "assistant" && item.updated_message !== null) {
             messageContent = item.updated_message;
           }
-          messages.push({
+          const message = {
             role: item.role,
             content: messageContent,
-          });
+          }
+          if(item.updated_message !== null){
+              message.weight = 1
+          }
+          messages.push(message);
         }
       }
       if(messages.length > 2){
@@ -512,7 +520,7 @@ const FineTuneData = async (req, res) => {
     let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
     if(jsonlData == ''){
       jsonlData = {
-        "message" : []
+        "messages" : []
       }
     }
 
