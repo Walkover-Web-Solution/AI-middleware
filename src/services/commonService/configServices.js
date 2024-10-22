@@ -321,6 +321,22 @@ const updateBridgeType = async (req, res) => {
     });
   }
 };
+
+const bridgeArchive = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const result = await configurationService.updateBridgeArchive(bridge_id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating bridge status =>", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong!!",
+    });
+  }
+};
+
 const deleteBridges = async (req, res) => {
   try {
     const {
@@ -585,6 +601,7 @@ export default {
   getAllBridges,
   getBridges,
   updateBridges,
+  bridgeArchive,
   deleteBridges,
   getAndUpdate,
   updateBridgeType,

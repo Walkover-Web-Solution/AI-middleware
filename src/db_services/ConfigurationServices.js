@@ -133,6 +133,33 @@ const getBridges = async bridge_id => {
     };
   }
 };
+const updateBridgeArchive = async (bridge_id) => {
+  try {
+    const updatedBridge = await configurationModel.findOneAndUpdate(
+      {_id: bridge_id},
+      { $bit: { status: { xor: 1 } } },
+      { new: true }
+    );
+    if (!updatedBridge) {
+      return {
+        success: false,
+        error: "Bridge not found!",
+      };
+    }
+
+    return {
+      success: true,
+      data: updatedBridge,
+      message: updatedBridge.status ? "Bridge archived successfully!" : "Bridge unarchived successfully!",
+    };
+  } catch (error) {
+    console.error("Error updating bridge status =>", error);
+    return {
+      success: false,
+      error: "Something went wrong!!",
+    };
+  }
+};
 const getBridgesWithSelectedData = async bridge_id => {
   try {
     const bridges = await configurationModel.findOne({
@@ -388,6 +415,7 @@ export default {
   getBridgeBySlugname,
   findChatbotOfBridge,
   updateBridgeType,
+  updateBridgeArchive,
   getBridgeIdBySlugname,
   gettemplateById,
   getBridgesBySlugNameAndName,
