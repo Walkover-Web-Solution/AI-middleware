@@ -133,11 +133,11 @@ const getBridges = async bridge_id => {
     };
   }
 };
-const updateBridgeArchive = async (bridge_id) => {
+const updateBridgeArchive = async (bridge_id, status) => {
   try {
     const updatedBridge = await configurationModel.findOneAndUpdate(
       {_id: bridge_id},
-      { $bit: { status: { xor: 1 } } },
+      { status: status },
       { new: true }
     );
     if (!updatedBridge) {

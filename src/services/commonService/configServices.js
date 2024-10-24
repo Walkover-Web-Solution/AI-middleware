@@ -4,7 +4,7 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
-import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
+import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -49,7 +49,7 @@ const getThreads = async (req, res) => {
   try {
     let { bridge_id } = req.params
     let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10 ;
+    let pageSize = req?.query?.limit || 10;
     const {
       thread_id,
       bridge_slugName
@@ -121,8 +121,8 @@ const getAllSystemPromptHistory = async (req, res) => {
   try {
     const bridge_id = req.params.bridge_id;
     let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10 ;
-    const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
+    let pageSize = req?.query?.limit || 10;
+    const result = await conversationDbService.getAllPromptHistory(bridge_id, page, pageSize);
     return res.status(200).json(result);
   } catch (error) {
     console.error("error occured", error);
@@ -325,14 +325,28 @@ const updateBridgeType = async (req, res) => {
 const bridgeArchive = async (req, res) => {
   try {
     const { bridge_id } = req.params;
-    const result = await configurationService.updateBridgeArchive(bridge_id);
+    const { status } = req.body;
+
+    try {
+      await BridgeStatusSchema.validateAsync({
+        bridge_id,
+        status
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
+
+    const result = await configurationService.updateBridgeArchive(bridge_id, status);
 
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error updating bridge status =>", error.message);
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
-      error: "Something went wrong!!",
+      error: "Something went wrong while update bridge status!!",
     });
   }
 };
@@ -358,7 +372,7 @@ const deleteBridges = async (req, res) => {
     });
   }
 };
-const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
+const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams, status = "add") => {
   try {
     let modelConfig = await configurationService.getBridges(bridge_id);
     let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
@@ -373,22 +387,21 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         updated_tools_call.push(tool);
       }
     });
-    if(status==="add"){
-    updated_tools_call.push(openApiFormat);
-    api_call[endpoint] = {
-      apiObjectID: apiObjectID,
-      requiredParams: requiredParams
-    };
+    if (status === "add") {
+      updated_tools_call.push(openApiFormat);
+      api_call[endpoint] = {
+        apiObjectID: apiObjectID,
+        requiredParams: requiredParams
+      };
     }
-    if(status==="delete"){
-      api_endpoints= api_endpoints.filter(item => item !== endpoint);
+    if (status === "delete") {
+      api_endpoints = api_endpoints.filter(item => item !== endpoint);
       api_call && delete api_call[endpoint];
     }
     tools_call = updated_tools_call;
     let configuration = {
       tools: tools_call
     };
-  
     const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
     let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
     result.tools_call = tools_call;
@@ -409,8 +422,8 @@ const FineTuneData = async (req, res) => {
     const { bridge_id } = req.params
     try {
       await FineTuneSchema.validateAsync({
-       bridge_id,
-       user_feedback
+        bridge_id,
+        user_feedback
       });
     } catch (error) {
       return res.status(422).json({
@@ -502,7 +515,7 @@ const FineTuneData = async (req, res) => {
 
           if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
             const assistantItem = filteredData[i + 1];
-            const assistantContent =assistantItem.updated_message !== null ? assistantItem.updated_message: assistantItem.content;
+            const assistantContent = assistantItem.updated_message !== null ? assistantItem.updated_message : assistantItem.content;
             const message = {
               role: "assistant",
               content: assistantContent
@@ -522,21 +535,21 @@ const FineTuneData = async (req, res) => {
             role: item.role,
             content: messageContent,
           }
-          if(item.updated_message !== null){
-              message.weight = 1
+          if (item.updated_message !== null) {
+            message.weight = 1
           }
           messages.push(message);
         }
       }
-      if(messages.length > 2){
+      if (messages.length > 2) {
         result.push({ messages });
       }
     }
-    
+
     let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
-    if(jsonlData == ''){
+    if (jsonlData == '') {
       jsonlData = {
-        "messages" : []
+        "messages": []
       }
     }
 
@@ -557,10 +570,10 @@ const updateThreadMessage = async (req, res) => {
     const org_id = req.profile?.org?.id;
     try {
       await updateMessageSchema.validateAsync({
-       bridge_id,
-       message,
-       id,
-       org_id
+        bridge_id,
+        message,
+        id,
+        org_id
       });
     } catch (error) {
       return res.status(422).json({
@@ -568,21 +581,21 @@ const updateThreadMessage = async (req, res) => {
         error: error.details
       });
     }
-    const result = await conversationDbService.updateMessage({org_id, bridge_id, message, id});
+    const result = await conversationDbService.updateMessage({ org_id, bridge_id, message, id });
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error in updateThreadMessage => ", error.message);
 
-}
+  }
 }
 
-const updateMessageStatus = async (req, res)=>{
+const updateMessageStatus = async (req, res) => {
   try {
     const status = req.params.status;
     const message_id = req.body.message_id;
-    const result = await conversationDbService.updateStatus({status, message_id})
+    const result = await conversationDbService.updateStatus({ status, message_id })
     return res.status(200).json(result);
-    
+
   } catch (error) {
     console.error("Error in updateMessageStatus => ", error.message);
     return res.status(400).json({

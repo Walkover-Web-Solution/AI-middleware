@@ -63,7 +63,7 @@ const configuration = new mongoose.Schema({
   },
   status:{
     type: Number,
-    default: 0,
+    default: 1,
     required: true
   },
   responseIds: {
