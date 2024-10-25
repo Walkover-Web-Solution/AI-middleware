@@ -23,4 +23,5 @@ router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData);
 router.put('/gethistory/:bridge_id', middleware, common.updateThreadMessage);
 router.put('/status/:status', chatBotAuth, common.updateMessageStatus);
 
+router.put('/bridge-status/:bridge_id', middleware, common.bridgeArchive);
 export default router;
