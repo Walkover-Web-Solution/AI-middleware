@@ -4,7 +4,7 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
-import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
+import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
@@ -550,6 +550,35 @@ const updateMessageStatus = async (req, res)=>{
   }
 }
 
+const bridgeArchive = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const { status } = req.body;
+
+    try {
+      await BridgeStatusSchema.validateAsync({
+        bridge_id,
+        status
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
+
+    const result = await configurationService.updateBridgeArchive(bridge_id, status);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating bridge status =>", error.message);
+    return res.status(400).json({
+      success: false,
+      error: "Something went wrong while update bridge status!!",
+    });
+  }
+};
+
 
 export default {
   getAIModels,
@@ -566,5 +595,6 @@ export default {
   getAllSystemPromptHistory,
   FineTuneData,
   updateThreadMessage,
-  updateMessageStatus
+  updateMessageStatus,
+  bridgeArchive
 };
