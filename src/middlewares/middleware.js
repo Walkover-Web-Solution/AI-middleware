@@ -29,14 +29,15 @@ const makeDataIfProxyTokenGiven = async (req) => {
 
 const middleware = async (req, res, next) => {
   try {
-    if (req.headers['proxy_auth_token']) {
-      req.profile = await makeDataIfProxyTokenGiven(req);
-    } else {
+    if (req.get('Authorization')) {
       const token = req.get('Authorization');
       if (!token) {
         return res.status(401).json({ message: 'invalid token' });
       }
       req.profile = jwt.verify(token, process.env.SecretKey);
+    }
+    else if (req.headers['proxy_auth_token']) {
+      req.profile = await makeDataIfProxyTokenGiven(req);
     }
 
     req.profile.org.id = req.profile.org.id.toString();
