@@ -66,7 +66,20 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id) {
+async function findMessage(org_id, thread_id, bridge_id, user_feedback) {
+  const whereCondition = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+  };
+
+  // Conditionally add user_feedback filter based on its value
+  if (user_feedback === "all" || !user_feedback) {
+    whereCondition.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
+  } else {
+    whereCondition.user_feedback = user_feedback;
+  }
+
   let conversations = await models.pg.conversations.findAll({
     attributes: [
       ['message', 'content'],
@@ -100,15 +113,11 @@ async function findMessage(org_id, thread_id, bridge_id) {
       model: models.pg.raw_data,
       as: 'raw_data',
       required: false,
-      'on': {
-        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+      on: {
+        id: models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
       }
     }],
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id
-    },
+    where: whereCondition,
     order: [['id', 'DESC']],
     raw: true
   });

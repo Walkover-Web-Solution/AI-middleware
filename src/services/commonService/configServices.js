@@ -49,6 +49,7 @@ const getThreads = async (req, res, next) => {
   try {
     let { bridge_id } = req.params
     let page = req?.query?.pageNo || 1;
+    let user_feedback = req?.query.user_feedback
     let pageSize = req?.query?.limit || 10;
     const {
       thread_id,
@@ -61,7 +62,7 @@ const getThreads = async (req, res, next) => {
       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
       bridge_id = bridge_id?.toString();
     }
-    const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
+    const threads = await getThreadHistory(thread_id, org_id, bridge_id,user_feedback, page, pageSize,);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
