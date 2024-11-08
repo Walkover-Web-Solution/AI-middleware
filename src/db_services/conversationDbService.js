@@ -1,24 +1,5 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
-async function createBulk(data) {
-  return await models.pg.conversations.bulkCreate(data);
-}
-async function find(org_id, thread_id, bridge_id) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', "function"],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
-    order: [['id', 'DESC']],
-    limit: 6,
-    raw: true
-  });
-  conversations = conversations.reverse();
-  // If you want to return the result directly
-  return conversations;
-}
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -39,29 +20,6 @@ async function getHistory(bridge_id, timestamp) {
   } catch (error) {
     console.error("get history system prompt error=>", error)
     return { success: false, message: "Prompt not found" };
-  }
-}
-async function getAllPromptHistory(bridge_id,page, pageSize) {
-  try {
-    const history = await models.pg.system_prompt_versionings.findAll({
-      where: {
-        bridge_id
-      },
-      order: [
-        ['updated_at', 'DESC'],
-      ],
-    raw: true,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
-    });
-    if (history.length === 0) {
-      return { success: true, message: "No prompts found for the given bridge_id" };
-    }
-
-    return { success: true, history };
-  } catch (error) {
-    console.error("get history system prompt error=>", error);
-    return { success: false, message: "Error retrieving prompts" };
   }
 }
 
@@ -179,21 +137,6 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   });
 
   return threads;
-}
-
-
-async function storeSystemPrompt(promptText, orgId, bridgeId) {
-  try {
-    await models.pg.system_prompt_versionings.create({
-      system_prompt: promptText,
-      org_id: orgId,
-      bridge_id: bridgeId,
-      created_at: new Date(),
-      updated_at: new Date()
-    });
-  } catch (error) {
-    console.error('Error storing system prompt:', error);
-  }
 }
 
 async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedback_array) {
@@ -322,14 +265,10 @@ async function updateStatus({ status, message_id }) {
 }
 
 export default {
-  find,
-  createBulk,
   findAllThreads,
   deleteLastThread,
-  storeSystemPrompt,
   getHistory,
   findMessage,
-  getAllPromptHistory,
   findThreadsForFineTune,
   system_prompt_data,
   updateMessage,
