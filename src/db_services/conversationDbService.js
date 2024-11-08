@@ -155,7 +155,13 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
           Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
             [Sequelize.Op.like]: `%${keyword_search}%`
           }),
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } }
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`
+          }), // Cast thread_id to text and apply LIKE
+          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`
+          })  // Cast message_id to text and apply LIKE
         ]
       }
     ];
@@ -166,10 +172,12 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
       'thread_id',
       [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
       'bridge_id',
-      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+      'message',
+      'message_id'
     ],
     where: whereClause,
-    group: ['thread_id', 'bridge_id'],
+    group: ['thread_id', 'bridge_id', 'message', 'message_id'],
     order: [
       [Sequelize.col('updatedAt'), 'DESC'],
       ['thread_id', 'ASC']
@@ -178,8 +186,50 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     offset: (pageNo - 1) * limit
   });
 
-  return threads;
+  const uniqueThreads = new Map();
+
+  threads.forEach(thread => {
+    let matchedField = null;
+
+    if (thread.message && thread.message.includes(keyword_search)) {
+      matchedField = 'message';
+    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+      matchedField = 'thread_id';
+    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
+      matchedField = 'message_id';
+    }
+
+    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
+    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
+
+    // Only add unique entries for `thread_id`, allow duplicates otherwise
+    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
+      // Create the response object
+      const response = {
+        thread_id: thread.thread_id,
+        id: thread.id,
+        bridge_id: thread.bridge_id,
+        matchedField
+      };
+      // Include additional fields only if matchedField is not 'thread_id'
+      if (matchedField !== 'thread_id') {
+        response.message = thread.message;
+        response.message_id = thread.message_id;
+      }
+
+      // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
+      if (matchedField === 'thread_id') {
+        uniqueThreads.set(uniqueKey, response);
+      } else {
+        uniqueThreads.set(`${thread.bridge_id}-${thread.thread_id}-${Math.random()}`, response);
+      }
+    }
+  });
+
+  // Convert the Map values to an array
+  return Array.from(uniqueThreads.values());
 }
+
 
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
