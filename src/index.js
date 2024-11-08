@@ -15,9 +15,9 @@ import chatbot from "./routes/chatBot_routes.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
-import responseMiddleware from './middlewares/responseMiddleware.js';
 import configurePostmanCollection from './routes/configurePostmanCollection.js';
 import alerting from './routes/alerting_routes.js';
+import { responseMiddleware } from './middlewares/responseMiddleware.js';
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -49,7 +49,6 @@ app.use('/alerting', alerting)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
-
 app.use(responseMiddleware); // send response
 app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
 app.use(errorHandlerMiddleware);
