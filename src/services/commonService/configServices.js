@@ -11,6 +11,7 @@ import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
+import { getHistory } from "../../utils/helloUtils.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -50,6 +51,9 @@ const getThreads = async (req, res, next) => {
     let { bridge_id } = req.params
     let page = req?.query?.pageNo || 1;
     let pageSize = req?.query?.limit || 10;
+    let helloAuth = req.headers.helloAuth;
+    let channelId = req.query.channelId
+
     const {
       thread_id,
       bridge_slugName
@@ -61,8 +65,16 @@ const getThreads = async (req, res, next) => {
       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
       bridge_id = bridge_id?.toString();
     }
-    const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
-    res.locals = threads;
+    let helloChat, threads;
+    if (helloAuth) {
+      [helloChat, threads] = await Promise.all([
+        getHistory(helloAuth, channelId),
+        getThreadHistory(thread_id, org_id, bridge_id, page, pageSize)
+      ]);
+    } else {
+      threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
+    }
+    res.locals = {...threads, helloChat};
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
