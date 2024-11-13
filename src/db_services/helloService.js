@@ -16,7 +16,7 @@ const getOrCreateAnonymousClientId = async (thread_id, slugname, org_id, helloId
     const newClientId = await getAnonymousClientId(helloId); // Assuming this function does not require parameters
 
     // Save the new document to the database
-    await helloDocument({
+    await new Hello({
         thread_id,
         slugname,
         org_id,
