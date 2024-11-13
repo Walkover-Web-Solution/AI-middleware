@@ -1,5 +1,6 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
+
 async function createBulk(data) {
   return await models.pg.conversations.bulkCreate(data);
 }
@@ -75,6 +76,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
       'id',
       'function',
       'is_reset',
+      'mode',
       'chatbot_message',
       'updated_message',
       'tools_call_data',
@@ -321,6 +323,32 @@ async function updateStatus({ status, message_id }) {
   }
 }
 
+async function updateConversationMode(org_id, bridge_id, thread_id) {
+  const sequelize = models.pg.sequelize; // Assuming you have a Sequelize instance
+
+  // Define the subquery
+  const subquery = `
+    SELECT "id"
+    FROM "conversations"
+    WHERE "org_id" = '${org_id}'
+      AND "bridge_id" = '${bridge_id}'
+      AND "thread_id" = '${thread_id}'
+    ORDER BY "id" DESC
+    LIMIT 1
+  `;
+
+  // Define the update statement
+  const [result] = await sequelize.query(
+    `UPDATE "conversations"
+     SET "mode" = 1
+     WHERE "id" = (${subquery})
+     RETURNING "id"`,
+    { type: Sequelize.QueryTypes.UPDATE }
+  );
+
+  return result;
+}
+
 export default {
   find,
   createBulk,
@@ -333,5 +361,6 @@ export default {
   findThreadsForFineTune,
   system_prompt_data,
   updateMessage,
-  updateStatus
+  updateStatus,
+  updateConversationMode
 };

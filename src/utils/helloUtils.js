@@ -30,7 +30,7 @@ export const getAnonymousClientId = async (helloId) => {
 export const getSocketJwt = async (helloId, anonymousClientId,isAnonymous) => {
   return await axios.get("https://api.phone91.com/jwt-token/", {
     params: {
-      is_anon: `${isAnonymous}`,
+      is_anon: isAnonymous,
     },
     headers: {
       authorization: `${helloId}:${anonymousClientId?.uuid}`,
