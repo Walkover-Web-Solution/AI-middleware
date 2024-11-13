@@ -31,7 +31,7 @@ export const subscribe = async (req, res) => {
       throw new Error('Error in one of the promises');
     }
     res.status(200).json({
-      widgetInfo,
+      widgetInfo:{...widgetInfo,helloId: hello_id},
       Jwt: socketJwt,
       ChannelList
     });
