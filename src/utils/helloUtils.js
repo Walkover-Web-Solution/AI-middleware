@@ -17,8 +17,7 @@ export const getWidgetInfo = async (helloId) => {
 
 export const getAnonymousClientId = async (helloId) => {
   return await axios.post(
-    "https://api.phone91.com/anonymous-client-details/",
-    "",
+    "https://api.phone91.com/anonymous-client-details/","",
     {
       headers: {
         authorization: helloId,
@@ -35,22 +34,23 @@ export const getSocketJwt = async (helloId, anonymousClientId,isAnonymous) => {
     headers: {
       authorization: `${helloId}:${anonymousClientId?.uuid}`,
     },
-  }).then(response => response.data.data.jwt_token);
+  }).then(response => response.data.data);
 };
 
-export const getChannelList = async (helloId, anonymousClientId, isAnonymous) => {
+export const getChannelList = async (helloId, thread_id) => {
   return await axios.post(
     "https://api.phone91.com/v2/pubnub-channels/list/",
     {
-      uuid: anonymousClientId?.uuid,
-      anonymous_client_uuid: "",
-      user_data: {},
-      is_anon: isAnonymous,
+        unique_id: thread_id,
+      user_data: {
+        unique_id: thread_id,
+      },
+      is_anon: false,
     },
     {
       headers: {
         accept: "application/json",
-        authorization: `${helloId}:${anonymousClientId?.uuid}`,
+        authorization: `${helloId}`,
       },
     }
   ).then(response => response.data);
