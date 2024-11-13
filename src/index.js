@@ -5,6 +5,7 @@ import cors from "cors";
 import modelController from "./controllers/modelController.js";
 import configurationController from "./controllers/configController.js";
 import apiKeyrouter from "./routes/apikeyRouter.js";
+import helloRoutes from './routes/helloRoutes.js';
 const app = express();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
@@ -46,6 +47,7 @@ app.use('/chatbot', chatbot);
 app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
+app.use('/hello', helloRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
