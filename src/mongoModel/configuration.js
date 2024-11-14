@@ -80,6 +80,9 @@ const configuration = new mongoose.Schema({
   actions : {
     type: Map,
     of :  actionTypeModel
+  },
+  hello_id :{
+    type: String
   }
 });
 
