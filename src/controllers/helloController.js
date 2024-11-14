@@ -4,12 +4,11 @@ import {
   getChannelList
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
-import conversationDbService from "../db_services/conversationDbService.js";
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
   const { slugName, threadId:thread_id } = req.body;
   const { org_id } = req.profile;
-  const {_id , hello_id} = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
+  const {hello_id} = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
   
   try {
 
@@ -18,7 +17,6 @@ export const subscribe = async (req, res, next) => {
       getChannelList(hello_id, thread_id)
     ]);
     const socketJwt = await getSocketJwt(hello_id, ChannelList, false);
-    await conversationDbService.updateConversationMode(org_id, _id, thread_id);
 
     // Check for errors
     if (widgetInfo.error || socketJwt.error || ChannelList.error) {
