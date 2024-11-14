@@ -62,8 +62,7 @@ const getThreads = async (req, res, next) => {
       bridge_id = bridge_id?.toString();
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
-
-    res.locals = threads
+    res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
@@ -309,35 +308,6 @@ const updateBridgeType = async (req, res) => {
     return res.status(400).json({
       success: false,
       error: "something went wrong!!"
-    });
-  }
-};
-
-const bridgeArchive = async (req, res) => {
-  try {
-    const { bridge_id } = req.params;
-    const { status } = req.body;
-
-    try {
-      await BridgeStatusSchema.validateAsync({
-        bridge_id,
-        status
-      });
-    } catch (error) {
-      return res.status(422).json({
-        success: false,
-        error: error.details
-      });
-    }
-
-    const result = await configurationService.updateBridgeArchive(bridge_id, status);
-
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Error updating bridge status =>", error.message);
-    return res.status(400).json({
-      success: false,
-      error: "Something went wrong while update bridge status!!",
     });
   }
 };
@@ -588,6 +558,33 @@ const updateMessageStatus = async (req, res, next) => {
     throw error;
   }
 }
+
+const bridgeArchive = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const { status } = req.body;
+
+    try {
+      await BridgeStatusSchema.validateAsync({
+        bridge_id,
+        status
+      });
+    } catch (error) {
+      res.locals = { error: error.details };
+      req.statusCode = 422
+    }
+
+    const result = await configurationService.updateBridgeArchive(bridge_id, status);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating bridge status =>", error.message);
+    return res.status(400).json({
+      success: false,
+      error: "Something went wrong while update bridge status!!",
+    });
+  }
+};
 
 
 export default {
