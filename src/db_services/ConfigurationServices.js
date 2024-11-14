@@ -342,14 +342,13 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
 }
 const getBridgeBySlugname = async (orgId, slugName) => {
   try {
-    const bridges = await configurationModel.findOne({
+    const hello_id = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).populate('responseRef').lean();
-    return {
-      success: true,
-      bridges: bridges
-    };
+    }).select({ hello_id: 1 }).lean();
+    
+    if (!hello_id) return false; 
+    return hello_id;
   } catch (error) {
     console.log("error:", error);
     return {

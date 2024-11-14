@@ -62,7 +62,8 @@ const getThreads = async (req, res, next) => {
       bridge_id = bridge_id?.toString();
     }
     const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
-    res.locals = threads;
+
+    res.locals = threads
     req.statusCode = threads?.success ? 200 : 400;
     return next();
   } catch (error) {
