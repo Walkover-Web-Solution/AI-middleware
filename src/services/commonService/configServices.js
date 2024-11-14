@@ -570,10 +570,8 @@ const bridgeArchive = async (req, res) => {
         status
       });
     } catch (error) {
-      return res.status(422).json({
-        success: false,
-        error: error.details
-      });
+      res.locals = { error: error.details };
+      req.statusCode = 422
     }
 
     const result = await configurationService.updateBridgeArchive(bridge_id, status);

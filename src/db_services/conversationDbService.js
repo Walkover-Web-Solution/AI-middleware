@@ -1,5 +1,6 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
+
 async function createBulk(data) {
   return await models.pg.conversations.bulkCreate(data);
 }
@@ -75,6 +76,7 @@ async function findMessage(org_id, thread_id, bridge_id) {
       'id',
       'function',
       'is_reset',
+      'mode',
       'chatbot_message',
       'updated_message',
       'tools_call_data',
