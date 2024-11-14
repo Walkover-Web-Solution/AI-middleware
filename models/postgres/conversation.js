@@ -33,6 +33,8 @@ export default ((sequelize, DataTypes) => {
     },
     message_id : DataTypes.UUIDV4,
     user_feedback: DataTypes.INTEGER,
+    is_reset: DataTypes.BOOLEAN,
+    mode: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'conversations',
