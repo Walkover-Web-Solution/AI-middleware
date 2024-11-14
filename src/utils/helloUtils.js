@@ -56,23 +56,3 @@ export const getChannelList = async (helloId, thread_id) => {
   ).then(response => response.data);
 }; 
 
-
-export const getHistory = async (auth, channelId)=>{
-    return await axios.post(
-        'https://api.phone91.com/get-history/',
-        {
-          'channel': channelId,
-          'origin': 'chat',
-          'page_size': 30,
-          'start_from': 1,
-          'user_data': {},
-          'is_anon': false
-        },
-        {
-          headers: {
-            authorization: auth,
-            'content-type': 'application/json',
-          }
-        }
-      ).then(response => response.data);;
-}

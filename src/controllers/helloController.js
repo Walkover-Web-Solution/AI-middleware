@@ -6,7 +6,7 @@ import {
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 import conversationDbService from "../db_services/conversationDbService.js";
 // import helloService from '../db_services/helloService.js';
-export const subscribe = async (req, res) => {
+export const subscribe = async (req, res, next) => {
   const { slugName, threadId:thread_id } = req.body;
   const { org_id } = req.profile;
   const {_id , hello_id} = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
@@ -30,13 +30,15 @@ export const subscribe = async (req, res) => {
       });
       throw new Error('Error in one of the promises');
     }
-    res.status(200).json({
-      widgetInfo:{...widgetInfo,helloId: hello_id},
-      Jwt: socketJwt,
-      ChannelList
-    });
+    res.locals ={
+        widgetInfo:{...widgetInfo,helloId: hello_id},
+        Jwt: socketJwt,
+        ChannelList
+      }
+    req.statusCode = 200;
+    return next();
   } catch (error) {
     console.error('Error in hello subscribe route:', error);
-    res.status(500).send('Internal Server Error');
+    throw new Error('Internal Server Error', error.message);
   }
 }; 
