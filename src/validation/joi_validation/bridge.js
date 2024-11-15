@@ -144,6 +144,17 @@ const updateBridgeSchema = Joi.object({
         "tools": Joi.string(),
         "tool_choice": Joi.string()
       }),
+      'chatgpt-4o-latest': Joi.object({
+        "temperature": Joi.string(),
+        "max_tokens": Joi.string(),
+        "top_p": Joi.string(),
+        "logprobs": Joi.string(),
+        "frequency_penalty": Joi.string(),
+        "presence_penalty": Joi.string(),
+        "n": Joi.string(),
+        "stop": Joi.string(),
+        "stream": Joi.string()
+      }),
       'gpt-4-0613': Joi.object({
         "temperature": Joi.string(),
         "max_tokens": Joi.string(),
