@@ -112,7 +112,15 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
     raw: true
   });
   conversations = conversations.reverse();
-  return conversations;
+  const totalEntries = await models.pg.conversations.count({
+    where: {
+      org_id: org_id,
+      thread_id: thread_id,
+      bridge_id: bridge_id
+    }
+  });
+  const totalPages = Math.ceil(totalEntries / limit);
+  return { conversations, totalPages, totalEntries };
 }
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
