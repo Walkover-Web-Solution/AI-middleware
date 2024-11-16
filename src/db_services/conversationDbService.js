@@ -85,21 +85,7 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'tools_call_data',
       'message_id',
       'user_feedback',
-      [Sequelize.col('raw_data.id'), 'raw_data_id'],
-      [Sequelize.col('raw_data.org_id'), 'org_id'],
-      [Sequelize.col('raw_data.chat_id'), 'chat_id'],
-      [Sequelize.col('raw_data.error'), 'error'],
-      [Sequelize.col('raw_data.input_tokens'), 'input_tokens'],
-      [Sequelize.col('raw_data.output_tokens'), 'output_tokens'],
-      [Sequelize.col('raw_data.variables'), 'variables'],
-      [Sequelize.col('raw_data.authkey_name'), 'authkey_name'],
-      [Sequelize.col('raw_data.latency'), 'latency'],
-      [Sequelize.col('raw_data.service'), 'service'],
-      [Sequelize.col('raw_data.model'), 'model'],
-      [Sequelize.col('raw_data.status'), 'status'],
-      [Sequelize.col('raw_data.created_at'), 'created_at'],
-      [Sequelize.col('raw_data.is_present'), 'is_present'],
-      [Sequelize.col('raw_data.created_at'), 'created_at']
+
     ],
     include: [{
       model: models.pg.raw_data,
