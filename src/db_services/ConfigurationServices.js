@@ -133,6 +133,33 @@ const getBridges = async bridge_id => {
     };
   }
 };
+const updateBridgeArchive = async (bridge_id, status) => {
+  try {
+    const updatedBridge = await configurationModel.findOneAndUpdate(
+      {_id: bridge_id},
+      { status: status },
+      { new: true }
+    );
+    if (!updatedBridge) {
+      return {
+        success: false,
+        error: "Bridge not found!",
+      };
+    }
+
+    return {
+      success: true,
+      data: updatedBridge,
+      message: updatedBridge.status ? "Bridge archived successfully!" : "Bridge unarchived successfully!",
+    };
+  } catch (error) {
+    console.error("Error updating bridge status =>", error);
+    return {
+      success: false,
+      error: "Something went wrong!!",
+    };
+  }
+};
 const getBridgesWithSelectedData = async bridge_id => {
   try {
     const bridges = await configurationModel.findOne({
@@ -315,14 +342,13 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
 }
 const getBridgeBySlugname = async (orgId, slugName) => {
   try {
-    const bridges = await configurationModel.findOne({
+    const hello_id = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
-    }).populate('responseRef').lean();
-    return {
-      success: true,
-      bridges: bridges
-    };
+    }).select({ hello_id: 1 }).lean();
+    
+    if (!hello_id) return false; 
+    return hello_id;
   } catch (error) {
     console.log("error:", error);
     return {
@@ -388,6 +414,7 @@ export default {
   getBridgeBySlugname,
   findChatbotOfBridge,
   updateBridgeType,
+  updateBridgeArchive,
   getBridgeIdBySlugname,
   gettemplateById,
   getBridgesBySlugNameAndName,
