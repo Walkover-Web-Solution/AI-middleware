@@ -1,5 +1,6 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
+
 async function createBulk(data) {
   return await models.pg.conversations.bulkCreate(data);
 }
@@ -78,7 +79,12 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'id',
       'function',
       'is_reset',
-      'chatbot_message'
+      'mode',
+      'chatbot_message',
+      'updated_message',
+      'tools_call_data',
+      'message_id',
+      'user_feedback',
     ],
     include: [
       {
@@ -188,7 +194,21 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
   }
 }
 
-async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
+async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedback_array) {
+  let whereClause = {
+    org_id,
+    thread_id,
+    bridge_id
+  };
+
+  if (user_feedback_array.includes(0)) {
+    // If 0 is included, we want all data, so no need to filter by user_feedback
+  } else {
+    whereClause.user_feedback = {
+      [Sequelize.Op.in]: user_feedback_array
+    };
+  }
+
   let conversations = await models.pg.conversations.findAll({
     attributes: [
       ['message', 'content'],
@@ -196,6 +216,7 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
       'createdAt',
       'id',
       'function',
+      'updated_message',
       [Sequelize.col('raw_data.error'), 'error']
     ],
     include: [{
@@ -210,14 +231,11 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id) {
         ]
       }
     }],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
+    where: whereClause,
     order: [['id', 'DESC']],
     raw: true
   });
+
   conversations = conversations.reverse();
   return conversations;
 }
@@ -238,6 +256,68 @@ async function system_prompt_data(org_id, bridge_id)
 
   return system_prompt;
 }
+async function updateMessage({ org_id, bridge_id, message, id }) {
+  try {
+
+    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+      { updated_message : message },
+      {
+        where: {
+          org_id,
+          bridge_id,
+          id
+        },
+        returning: true,
+      }
+    );
+
+    if (affectedCount === 0) {
+      return { success: false, message: 'No matching record found to update.' };
+    }
+    const result = affectedRows.map(row => ({
+      id: row.id,
+      org_id: row.org_id,
+      thread_id: row.thread_id,
+      model_name: row.model_name,
+      bridge_id: row.bridge_id,
+      content: row.message, 
+      role: row.message_by,
+      function: row.function,
+      updated_message: row.updated_message,
+      type: row.type,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
+    }));
+
+    return { success: true, result: result };
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return { success: false, message: 'Error updating message' };
+  }
+}
+
+async function updateStatus({ status, message_id }) {
+  try {
+
+    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+      { user_feedback : status },
+      {
+        where: {
+          message_id
+        },
+        returning: true,
+      }
+    );
+    if (affectedCount === 0) {
+      return { success: true, message: 'No matching record found to update.' };
+    }
+
+    return { success: true, result: affectedRows };
+  } catch (error) {
+    console.error('Error updating message:', error);
+    return { success: false, message: 'Error updating message' };
+  }
+}
 
 export default {
   find,
@@ -249,7 +329,7 @@ export default {
   findMessage,
   getAllPromptHistory,
   findThreadsForFineTune,
-  system_prompt_data
+  system_prompt_data,
+  updateMessage,
+  updateStatus
 };
-
-// findMessage("124dfgh67ghj","12","662662ebdece5b1b8474c8f4")

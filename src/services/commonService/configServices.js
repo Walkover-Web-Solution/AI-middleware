@@ -4,11 +4,13 @@ import { getAllThreads, getThreadHistory } from "../../controllers/conversationC
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
+import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
+import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -43,7 +45,7 @@ const getAIModels = async (req, res) => {
     });
   }
 };
-const getThreads = async (req, res) => {
+const getThreads = async (req, res, next) => {
   try {
     let { bridge_id } = req.params;
     let page = parseInt(req.query.pageNo) || 1;
@@ -55,21 +57,16 @@ const getThreads = async (req, res) => {
       bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId;
       bridge_id = bridge_id?.toString();
     }
-
     const threads = await getThreadHistory({ bridge_id, org_id, thread_id, page, pageSize });
-    if (threads?.success) {
-      return res.status(200).json(threads);
-    }
-    return res.status(400).json(threads);
+    res.locals = threads;
+    req.statusCode = threads?.success ? 200 : 400;
+    return next();
   } catch (error) {
-    console.error("common error=>", error);
-    return res.status(400).json({
-      success: false,
-      error: "Something went wrong!!"
-    });
+    console.error("common error=>", error)
+    throw error;
   }
 };
-const getMessageHistory = async (req, res) => {
+const getMessageHistory = async (req, res, next) => {
   try {
     const { bridge_id } = req.params;
     const { org_id } = req.body;
@@ -84,47 +81,41 @@ const getMessageHistory = async (req, res) => {
     }
 
     const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
-    if (threads?.success) {
-      return res.status(200).json(threads);
-    }
-    return res.status(400).json(threads);
+    res.locals = threads;
+    req.statusCode = threads?.success ? 200 : 400;
+    return next();
   } catch (error) {
-    console.error("common error=>", error);
-    return res.status(400).json({
-      success: false,
-      error: "something went wrong!!"
-    });
+    console.error("common error=>", error)
+    throw error;
   }
 };
-const getSystemPromptHistory = async (req, res) => {
+const getSystemPromptHistory = async (req, res, next) => {
   try {
     const {
       bridge_id,
       timestamp
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
-    return res.status(200).json(result);
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
   } catch (error) {
-    console.error("error occured", error);
-    return res.status(400).json({
-      success: false,
-      error: "something went wrong!"
-    });
+    console.error("error occured", error)
+    throw error;
   }
 };
-const getAllSystemPromptHistory = async (req, res) => {
+const getAllSystemPromptHistory = async (req, res, next) => {
   try {
     const bridge_id = req.params.bridge_id;
     let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10 ;
-    const result = await conversationDbService.getAllPromptHistory(bridge_id,page,pageSize);
-    return res.status(200).json(result);
+    let pageSize = req?.query?.limit || 10;
+    const result = await conversationDbService.getAllPromptHistory(bridge_id, page, pageSize);
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
   } catch (error) {
-    console.error("error occured", error);
-    return res.status(400).json({
-      success: false,
-      error: "something went wrong!"
-    });
+    console.error("error occured", error)
+    throw error;
   }
 };
 const createBridges = async (req, res) => {
@@ -316,7 +307,8 @@ const updateBridgeType = async (req, res) => {
     });
   }
 };
-const deleteBridges = async (req, res) => {
+
+const deleteBridges = async (req, res, next) => {
   try {
     const {
       bridge_id
@@ -325,19 +317,15 @@ const deleteBridges = async (req, res) => {
       org_id
     } = req.body;
     const result = await configurationService.deleteBridge(bridge_id, org_id);
-    if (result.success) {
-      return res.status(200).json(result);
-    }
-    return res.status(400).json(result);
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
   } catch (error) {
     console.error("delete bridge error => ", error.message)
-    return res.status(400).json({
-      success: false,
-      error: "something went wrong!!"
-    });
+    throw error;
   }
 };
-const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams,status="add") => {
+const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpoint, requiredParams, status = "add") => {
   try {
     let modelConfig = await configurationService.getBridges(bridge_id);
     let tools_call = modelConfig?.bridges?.configuration?.tools ? modelConfig?.bridges?.configuration?.tools : [];
@@ -352,22 +340,21 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
         updated_tools_call.push(tool);
       }
     });
-    if(status==="add"){
-    updated_tools_call.push(openApiFormat);
-    api_call[endpoint] = {
-      apiObjectID: apiObjectID,
-      requiredParams: requiredParams
-    };
+    if (status === "add") {
+      updated_tools_call.push(openApiFormat);
+      api_call[endpoint] = {
+        apiObjectID: apiObjectID,
+        requiredParams: requiredParams
+      };
     }
-    if(status==="delete"){
-      api_endpoints= api_endpoints.filter(item => item !== endpoint);
+    if (status === "delete") {
+      api_endpoints = api_endpoints.filter(item => item !== endpoint);
       api_call && delete api_call[endpoint];
     }
     tools_call = updated_tools_call;
     let configuration = {
       tools: tools_call
     };
-  
     const newConfiguration = helper.updateConfiguration(modelConfig.bridges.configuration, configuration);
     let result = await configurationService.updateToolsCalls(bridge_id, org_id, newConfiguration, api_endpoints, api_call);
     result.tools_call = tools_call;
@@ -381,29 +368,22 @@ const getAndUpdate = async (apiObjectID, bridge_id, org_id, openApiFormat, endpo
   }
 };
 
-// const FineTuneData = async (req, res) => {
-//   try {
-//     const { org_id, thread_ids, bridge_id } = req.body
-//     let data,system_prompt;
-//     for (const thread_id of thread_ids) {
-//       data = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id);
-//       system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
-//     }
-//     return res.status(400).json(system_prompt);
-//   } catch (error) {
-//     console.error("delete bridge error => ", error.message)
-//     return res.status(400).json({
-//       success: false,
-//       error: "something went wrong!!"
-//     });
-//   }
-// };
-
-const FineTuneData = async (req, res) => {
+const FineTuneData = async (req, res, next) => {
   try {
-    const { thread_ids } = req.body;
+    const { thread_ids, user_feedback } = req.body;
     const org_id = req.profile?.org?.id;
     const { bridge_id } = req.params
+    try {
+      await FineTuneSchema.validateAsync({
+        bridge_id,
+        user_feedback
+      });
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
 
     let result = [];
 
@@ -411,7 +391,8 @@ const FineTuneData = async (req, res) => {
       const threadData = await conversationDbService.findThreadsForFineTune(
         org_id,
         thread_id,
-        bridge_id
+        bridge_id,
+        user_feedback
       );
       const system_prompt = await conversationDbService.system_prompt_data(
         org_id,
@@ -486,32 +467,117 @@ const FineTuneData = async (req, res) => {
           }
 
           if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
-            messages.push({
+            const assistantItem = filteredData[i + 1];
+            const assistantContent = assistantItem.updated_message !== null ? assistantItem.updated_message : assistantItem.content;
+            const message = {
               role: "assistant",
-              content: filteredData[i + 1].content,
-            });
+              content: assistantContent
+            };
+            if (assistantItem.updated_message !== null) {
+              message.weight = 1;
+            }
+            messages.push(message);
             i += 1;
           }
         } else {
-          messages.push({
+          let messageContent = item.content;
+          if (item.role === "assistant" && item.updated_message !== null) {
+            messageContent = item.updated_message;
+          }
+          const message = {
             role: item.role,
-            content: item.content,
-          });
+            content: messageContent,
+          }
+          if (item.updated_message !== null) {
+            message.weight = 1
+          }
+          messages.push(message);
         }
       }
-      if(messages.length > 2){
+      if (messages.length > 2) {
         result.push({ messages });
       }
     }
-    
-    const jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
 
-    return res.status(200).set("Content-Type", "text/plain").send(jsonlData);
+    let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
+    if (jsonlData == '') {
+      jsonlData = {
+        "messages": []
+      }
+    }
+
+    res.locals = { data: jsonlData, contentType: "text/plain" }
+    req.statusCode = 200
+    return next();
   } catch (error) {
-    console.error("Error in FineTuneData => ", error.message);
+    console.error("Error in FineTuneData => ", error.message)
+    throw error;
+  }
+};
+
+const updateThreadMessage = async (req, res, next) => {
+  try {
+    const { bridge_id } = req.params;
+    const { message, id } = req.body;
+    const org_id = req.profile?.org?.id;
+    try {
+      await updateMessageSchema.validateAsync({
+        bridge_id,
+        message,
+        id,
+        org_id
+      });
+    } catch (error) {
+      res.locals = { error: error.details };
+      req.statusCode = 422
+    }
+    const result = await conversationDbService.updateMessage({ org_id, bridge_id, message, id });
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
+  } catch (error) {
+    console.error("Error in updateThreadMessage => ", error.message)
+    throw error;
+  }
+}
+
+const updateMessageStatus = async (req, res, next) => {
+  try {
+    const status = req.params.status;
+    const message_id = req.body.message_id;
+    const result = await conversationDbService.updateStatus({ status, message_id })
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
+  } catch (error) {
+    console.error("Error in updateMessageStatus => ", error.message)
+    throw error;
+  }
+}
+
+const bridgeArchive = async (req, res) => {
+  try {
+    const { bridge_id } = req.params;
+    const { status } = req.body;
+
+    try {
+      await BridgeStatusSchema.validateAsync({
+        bridge_id,
+        status
+      });
+    } catch (error) {
+      res.locals = { error: error.details };
+      req.statusCode = 422
+    }
+
+    const result = await configurationService.updateBridgeArchive(bridge_id, status);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updating bridge status =>", error.message);
     return res.status(400).json({
       success: false,
-      error: "Something went wrong!",
+      error: "Something went wrong while update bridge status!!",
     });
   }
 };
@@ -525,10 +591,13 @@ export default {
   getAllBridges,
   getBridges,
   updateBridges,
+  bridgeArchive,
   deleteBridges,
   getAndUpdate,
   updateBridgeType,
   getSystemPromptHistory,
   getAllSystemPromptHistory,
-  FineTuneData
+  FineTuneData,
+  updateThreadMessage,
+  updateMessageStatus
 };

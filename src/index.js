@@ -5,6 +5,7 @@ import cors from "cors";
 import modelController from "./controllers/modelController.js";
 import configurationController from "./controllers/configController.js";
 import apiKeyrouter from "./routes/apikeyRouter.js";
+import helloRoutes from './routes/helloRoutes.js';
 const app = express();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
@@ -15,9 +16,9 @@ import chatbot from "./routes/chatBot_routes.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
-import responseMiddleware from './middlewares/responseMiddleware.js';
 import configurePostmanCollection from './routes/configurePostmanCollection.js';
 import alerting from './routes/alerting_routes.js';
+import { responseMiddleware } from './middlewares/responseMiddleware.js';
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -46,10 +47,10 @@ app.use('/chatbot', chatbot);
 app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
+app.use('/hello', helloRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
-
 app.use(responseMiddleware); // send response
 app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
 app.use(errorHandlerMiddleware);

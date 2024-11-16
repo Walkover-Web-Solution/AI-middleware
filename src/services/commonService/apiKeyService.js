@@ -46,6 +46,11 @@ const getAllApikeys = async(req, res) => {
         const org_id = req.profile?.org?.id;
         const result = await apikeySaveService.getAllApi(org_id);
         if (result.success) {
+            for (let apiKeyObj of result.result) {
+                const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
+                const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
+                apiKeyObj.apikey = maskedApiKey;
+            }
             return res.status(200).json(result);
         } 
         else {
@@ -84,10 +89,12 @@ async function updateApikey(req, res) {
             apikey = Helper.encrypt(apikey); 
         }
         const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
-        const decryptedApiKey = await Helper.decrypt(apikey)
-        const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
-        result.apikey = maskedApiKey
-
+        let decryptedApiKey, maskedApiKey;
+        if(apikey){
+            decryptedApiKey = await Helper.decrypt(apikey)
+            maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
+            result.apikey = maskedApiKey
+        }
         if (result.success) {
             return res.status(200).json({
                 success: true,
