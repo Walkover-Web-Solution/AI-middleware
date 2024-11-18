@@ -6,9 +6,10 @@ import {
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
-    const { slugName, threadId: thread_id } = req.body;
+    const { slugName, threadId: thread_id, } = req.body;
+    let hello_id = req.body.helloId
     const { org_id } = req.profile;
-    const { hello_id } = await ConfigurationServices.getBridgeBySlugname(org_id, slugName);
+    if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
 
     try {
         if(hello_id ?? false)
