@@ -312,6 +312,18 @@ const updateBridgeSchema = Joi.object({
     }).unknown() // Allow any additional properties within each model's configuration
   })
 });
+const createThreadHistrorySchema = Joi.object({
+  bridge_id: Joi.string().hex().length(24).required(), 
+  org_id: Joi.number().required().messages({
+    'number.base': 'The org_id must be a number' 
+  }),
+  thread_id: Joi.string().required(), 
+  model_name: Joi.string().required(),
+  message: Joi.string().required(), 
+  type: Joi.string().valid('chat').required(),
+  message_by: Joi.string().valid('assistant').required() 
+});
 export {
-  updateBridgeSchema
+  updateBridgeSchema,
+  createThreadHistrorySchema
 };

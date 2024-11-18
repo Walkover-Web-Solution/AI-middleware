@@ -1,9 +1,9 @@
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { services } from "../../configs/models.js";
-import { getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
-import { updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
+import { createThreadHistrorySchema, updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp, filterDataOfBridgeOnTheBaseOfUI } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
@@ -586,6 +586,43 @@ const bridgeArchive = async (req, res) => {
   }
 };
 
+export const createEntry = async (req, res,next) => {
+  try {
+    const {
+      thread_id,
+      bridge_id
+    } = req.params;
+    const {
+      org_id,
+      message
+    } = req.body;
+    const result = (await configurationService.getBridges(bridge_id))?.bridges;
+    const payload ={
+      thread_id:thread_id,
+      org_id:org_id,
+      bridge_id:bridge_id,
+      model_name: result?.configuration?.model,
+      message:message,
+      type: "chat",
+      message_by:"assistant"
+    }
+    try {
+      await createThreadHistrorySchema.validateAsync(payload);
+    } catch (error) {
+      return res.status(422).json({
+        success: false,
+        error: error.details
+      });
+    }
+    const threads = await createThreadHistory(payload);
+    res.locals = threads;
+    req.statusCode =200;
+    return next();
+  } catch (error) {
+    console.error("common error=>", error)
+    throw error;
+  }
+};
 
 export default {
   getAIModels,
@@ -603,5 +640,6 @@ export default {
   getAllSystemPromptHistory,
   FineTuneData,
   updateThreadMessage,
-  updateMessageStatus
+  updateMessageStatus,
+  createEntry
 };
