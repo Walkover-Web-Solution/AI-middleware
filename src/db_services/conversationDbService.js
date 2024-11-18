@@ -192,11 +192,13 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     let matchedField = null;
 
     if (thread.message && thread.message.includes(keyword_search)) {
-      matchedField = 'message';
-    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
-      matchedField = 'thread_id';
+        matchedField = 'message';
     } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
-      matchedField = 'message_id';
+        matchedField = 'message_id';
+    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+        matchedField = 'thread_id';
+    } else {
+        matchedField = 'thread_id';
     }
 
     // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
@@ -212,16 +214,45 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
         matchedField
       };
       // Include additional fields only if matchedField is not 'thread_id'
-      if (matchedField !== 'thread_id') {
-        response.message = thread.message;
-        response.message_id = thread.message_id;
-      }
+      if (matchedField !== 'thread_id' ) {
+        if (!response.message) {
+            response.message = [];  
+        }
+        // Push an object containing the message and message_id to the message array
+        response.message.push({
+            message: thread.message,
+            message_id: thread.message_id
+        });
+    }
 
       // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
       if (matchedField === 'thread_id') {
-        uniqueThreads.set(uniqueKey, response);
-      } else {
-        uniqueThreads.set(`${thread.bridge_id}-${thread.thread_id}-${Math.random()}`, response);
+        uniqueThreads.set(thread.thread_id, response);
+      }
+      else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
+        // Retrieve the existing thread object from the map
+        const existingThread = uniqueThreads.get(thread.thread_id);
+    
+        // Check if 'message' is present or exists in the existing thread
+        if (existingThread && existingThread.message) {
+            // If message exists, push the new message to the array
+            existingThread.message.push({
+                message: thread.message,
+                message_id: thread.message_id
+            });
+        } else {            
+            // Optionally, initialize the message array if needed
+            uniqueThreads.set(thread.thread_id, {
+                ...existingThread,
+                message: [{
+                    message: thread.message,
+                    message_id: thread.message_id
+                }]
+            });
+        }
+    }
+       else {
+        uniqueThreads.set(`${thread.thread_id}`, response);
       }
     }
   });
