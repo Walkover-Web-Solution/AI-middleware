@@ -323,6 +323,9 @@ async function updateStatus({ status, message_id }) {
   }
 }
 
+async function create(payload) {
+  return await models.pg.conversations.create(payload);
+}
 export default {
   find,
   createBulk,
@@ -335,5 +338,6 @@ export default {
   findThreadsForFineTune,
   system_prompt_data,
   updateMessage,
-  updateStatus
+  updateStatus,
+  create
 };
