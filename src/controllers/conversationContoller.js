@@ -56,14 +56,7 @@ const getThreadHistory = async (thread_id, org_id, bridge_id) => {
   }
 };
 
-const createThreadHistory = async (payload) => {
-  try {
-    return await chatbotDbService.create(payload);
-  } catch (err) {
-    console.error(err);
-    throw err
-  }
-};
+const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
 
 const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id, model_name, type, messageBy, userRole = "user",tools={}) => {
   try {

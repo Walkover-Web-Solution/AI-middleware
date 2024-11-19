@@ -1,6 +1,6 @@
 import Joi from "joi";
 const updateBridgeSchema = Joi.object({
-  bridge_id: Joi.string().alphanum().required(),
+  bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   bridgeType: Joi.string().valid('chatbot', 'api'),
   slugName: Joi.string().alphanum(),
   configuration: Joi.object({
@@ -313,7 +313,7 @@ const updateBridgeSchema = Joi.object({
   })
 });
 const createThreadHistrorySchema = Joi.object({
-  bridge_id: Joi.string().hex().length(24).required(), 
+  bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   org_id: Joi.number().required().messages({
     'number.base': 'The org_id must be a number' 
   }),
