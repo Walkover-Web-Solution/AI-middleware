@@ -587,15 +587,14 @@ const bridgeArchive = async (req, res) => {
 };
 
 export const createEntry = async (req, res,next) => {
-  try {
     const {
       thread_id,
       bridge_id
     } = req.params;
     const {
-      org_id,
       message
     } = req.body;
+    const org_id = req.profile.org.id
     const result = (await configurationService.getBridges(bridge_id))?.bridges;
     const payload ={
       thread_id:thread_id,
@@ -618,10 +617,6 @@ export const createEntry = async (req, res,next) => {
     res.locals = threads;
     req.statusCode =200;
     return next();
-  } catch (error) {
-    console.error("common error=>", error)
-    throw error;
-  }
 };
 
 export default {
