@@ -1,9 +1,10 @@
 'use strict';
 
-import { Sequelize } from 'sequelize';
+const { Sequelize } = require('sequelize');
 
 /** @type {import('sequelize-cli').Migration} */
-export const up = async (queryInterface) => {
+module.exports = {
+async up (queryInterface) {
   const transaction = await queryInterface.sequelize.transaction();
   try {
     await queryInterface.addColumn(
@@ -21,9 +22,9 @@ export const up = async (queryInterface) => {
     await transaction.rollback();
     throw err;
   }
-};
+},
 
-export const down = async (queryInterface) => {
+async down (queryInterface) {
   const transaction = await queryInterface.sequelize.transaction();
   try {
     await queryInterface.removeColumn('conversations', 'mode', { transaction });
@@ -32,4 +33,5 @@ export const down = async (queryInterface) => {
     await transaction.rollback();
     throw err;
   }
+}
 };
