@@ -55,6 +55,9 @@ const getThreadHistory = async (thread_id, org_id, bridge_id) => {
     };
   }
 };
+
+const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
+
 const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id, model_name, type, messageBy, userRole = "user",tools={}) => {
   try {
     let chatToSave = [{
@@ -122,5 +125,6 @@ export {
   savehistory,
   getThread,
   getThreadHistory,
-  getChatData
+  getChatData,
+  createThreadHistory
 };
