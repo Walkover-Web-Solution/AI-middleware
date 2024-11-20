@@ -7,6 +7,7 @@ let router = express.Router();
 router.get('/getbridges/all', middleware, common.getAllBridges); //Shifted to Python
 router.get('/getbridges/:bridge_id', middleware, common.getBridges); //Shifted to Python
 router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);
+router.post('/threads/:thread_id/:bridge_id', middleware, common.createEntry);
 router.get('/history/:bridge_id', middleware, common.getMessageHistory);
 router.get('/models/:service', middleware, common.getAIModels);//Shifted to Python
 router.post('/createbridges', middleware, common.createBridges); //Shifted to Python
