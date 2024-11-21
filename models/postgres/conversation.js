@@ -35,6 +35,7 @@ export default ((sequelize, DataTypes) => {
     user_feedback: DataTypes.INTEGER,
     is_reset: DataTypes.BOOLEAN,
     mode: DataTypes.INTEGER,
+    sub_thread_id: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'conversations',
