@@ -15,7 +15,19 @@ async function duplicateCollection() {
             const doc = await cursor.next();
             const filteredDoc = { ...doc };
             excludedKeys.forEach(key => delete filteredDoc[key]);
-            await targetCollection.insertOne(filteredDoc);
+
+            // Insert the filtered document into the target collection
+            const result = await targetCollection.insertOne(filteredDoc);
+            const insertedId = result.insertedId;
+
+            // Update the source document with the new version ID
+            await sourceCollection.updateOne(
+                { _id: doc._id },
+                {
+                    $push: { versions: insertedId },
+                    $set: { published_version_id: insertedId }
+                }
+            );
         }
     } catch (error) {
         console.error('Error duplicating collection:', error);
