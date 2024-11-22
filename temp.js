@@ -15,6 +15,7 @@ async function duplicateCollection() {
             const doc = await cursor.next();
             const filteredDoc = { ...doc };
             excludedKeys.forEach(key => delete filteredDoc[key]);
+            filteredDoc.parent_id = doc._id;
 
             // Insert the filtered document into the target collection
             const result = await targetCollection.insertOne(filteredDoc);
