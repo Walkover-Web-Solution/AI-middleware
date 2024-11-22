@@ -53,10 +53,6 @@ const version = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  slugName: {
-    type: String,
-    required: true
-  },
   status:{
     type: Number,
     default: 1,
