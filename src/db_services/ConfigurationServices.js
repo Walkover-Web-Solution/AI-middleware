@@ -297,7 +297,8 @@ const addActionInBridge = async (bridgeId, actionId, actionJson, version_id) => 
     
     const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
       $set: {
-        [`actions.${actionId}`]: actionJson
+        [`actions.${actionId}`]: actionJson,
+        is_drafted : true
       }
     }, { new: true }).lean();
     return bridges
@@ -315,7 +316,8 @@ const removeActionInBridge = async (bridgeId, actionId, version_id) => {
     const id_to_use = version_id ? version_id : bridgeId;
     const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
       $unset: {
-        [`actions.${actionId}`]: ""
+        [`actions.${actionId}`]: "",
+        is_drafted : true
       }
     }, { new: true }).lean()
     return bridges
