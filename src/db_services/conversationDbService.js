@@ -323,6 +323,38 @@ async function updateStatus({ status, message_id }) {
   }
 }
 
+async function userFeedbackCounts({ bridge_id, startTime, endTime, user_feedback }) {
+  try {
+    // Query the database for matching records
+    const  whereClause = {
+      bridge_id,
+      user_feedback
+    }
+    if(startTime && endTime)
+    {
+      whereClause.createdAt =  {
+        [Sequelize.Op.between]: [startTime, endTime], 
+      }
+    }
+    const feedbackRecords = await models.pg.conversations.findAll({
+      attributes: ['bridge_id', 'createdAt', 'id', "user_feedback"],
+      where: whereClause,
+      returning: true, 
+    });
+
+    // Check if any records were found
+    if (feedbackRecords.length === 0) {
+      return { success: true, message: 'No user feedback records found.' };
+    }
+
+    return { success: true, result: feedbackRecords.length };
+  } catch (error) {
+    console.error('Error retrieving user feedback counts:', error);
+    return { success: false, message: 'Error retrieving user feedback counts.' };
+  }
+}
+
+
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
@@ -339,5 +371,6 @@ export default {
   system_prompt_data,
   updateMessage,
   updateStatus,
-  create
+  create,
+  userFeedbackCounts
 };

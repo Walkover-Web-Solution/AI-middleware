@@ -558,6 +558,19 @@ const updateMessageStatus = async (req, res, next) => {
     throw error;
   }
 }
+const userFeedbackCount = async (req, res, next) =>{
+  try {
+    const bridge_id = req.params.bridge_id;
+    const {startTime, endTime, user_feedback} = req.query;
+    const result = await conversationDbService.userFeedbackCounts({bridge_id,startTime, endTime, user_feedback})
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
+  } catch (error) {
+    console.log("Error While Finding the response Count of User")
+    throw error
+  }
+}
 
 const bridgeArchive = async (req, res) => {
   try {
@@ -636,5 +649,6 @@ export default {
   FineTuneData,
   updateThreadMessage,
   updateMessageStatus,
-  createEntry
+  createEntry,
+  userFeedbackCount
 };
