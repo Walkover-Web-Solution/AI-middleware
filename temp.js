@@ -1,10 +1,10 @@
 import { MongoClient } from 'mongodb';
 
 async function duplicateCollection() {
-    const client = new MongoClient('mongodb+srv://Arpitsagarjain:Walkover123@cluster0.eo2iuez.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
+    const client = new MongoClient('mongodb+srv://prod-user:ezZccEUxWzK619fL@socket-analyser.01gom.mongodb.net/AI_Middleware-test?retryWrites=true&w=majority');
     try {
         await client.connect();
-        const db = client.db('AI_Middleware');
+        const db = client.db('AI_Middleware-test');
         const sourceCollection = db.collection('configurations'); 
         const targetCollection = db.collection('configuration_versions');
 
@@ -25,8 +25,7 @@ async function duplicateCollection() {
             await sourceCollection.updateOne(
                 { _id: doc._id },
                 {
-                    $push: { versions: insertedId },
-                    $set: { published_version_id: insertedId }
+                    $set: { published_version_id: insertedId, versions: [insertedId] }
                 }
             );
         }
