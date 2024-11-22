@@ -1,4 +1,5 @@
 import configurationModel from "../mongoModel/configuration.js";
+import versionModel from "../mongoModel/bridge_version.js";
 import apiCallModel from "../mongoModel/apiCall.js";
 import ChatBotModel from "../mongoModel/chatBotModel.js";
 import { templateModel } from "../mongoModel/template.js";
@@ -289,11 +290,15 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
 
 // add action  or update the previous action in bridge
 
-const addActionInBridge = async (bridgeId, actionId, actionJson) => {
+const addActionInBridge = async (bridgeId, actionId, actionJson, version_id) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+    const model = version_id ? versionModel : configurationModel;
+    const id_to_use = version_id ? version_id : bridgeId;
+    
+    const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
       $set: {
-        [`actions.${actionId}`]: actionJson
+        [`actions.${actionId}`]: actionJson,
+        is_drafted : true
       }
     }, { new: true }).lean();
     return bridges
@@ -305,11 +310,14 @@ const addActionInBridge = async (bridgeId, actionId, actionJson) => {
 
 // remove action from bridge 
 
-const removeActionInBridge = async (bridgeId, actionId) => {
+const removeActionInBridge = async (bridgeId, actionId, version_id) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+    const model = version_id ? versionModel : configurationModel;
+    const id_to_use = version_id ? version_id : bridgeId;
+    const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
       $unset: {
-        [`actions.${actionId}`]: ""
+        [`actions.${actionId}`]: "",
+        is_drafted : true
       }
     }, { new: true }).lean()
     return bridges
