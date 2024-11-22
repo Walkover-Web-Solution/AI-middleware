@@ -167,7 +167,22 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     ];
   }
 
-  const threads = await models.pg.conversations.findAll({
+  const threads = !keyword_search ? await models.pg.conversations.findAll({
+    attributes: [
+      'thread_id',
+      [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+      'bridge_id',
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
+    ],
+    where: whereClause,
+    group: ['thread_id', 'bridge_id'],
+    order: [
+      [Sequelize.col('updatedAt'), 'DESC'],
+      ['thread_id', 'ASC']
+    ],
+    limit,
+    offset: (pageNo - 1) * limit
+  }) : await models.pg.conversations.findAll({
     attributes: [
       'thread_id',
       [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
@@ -184,7 +199,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     ],
     limit,
     offset: (pageNo - 1) * limit
-  });
+  })
 
   const uniqueThreads = new Map();
 
