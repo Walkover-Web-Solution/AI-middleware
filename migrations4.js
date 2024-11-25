@@ -1,11 +1,11 @@
 import { MongoClient, ObjectId } from 'mongodb';
 
 async function migrate() {
-    const client = new MongoClient('mongodb+srv://prod-user:ezZccEUxWzK619fL@socket-analyser.01gom.mongodb.net/AI_Middleware-test?retryWrites=true&w=majority');
+    const client = new MongoClient('mongodb+srv://Arpitsagarjain:Walkover123@cluster0.eo2iuez.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
 
     try {
         await client.connect();
-        const db = client.db('AI_Middleware-test');
+        const db = client.db('AI_Middleware');
         const collection = db.collection('apicalls');
 
         const cursor = collection.find({});
