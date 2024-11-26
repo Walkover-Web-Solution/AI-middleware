@@ -55,6 +55,7 @@ const getThreadHistory = async ({ thread_id, org_id, bridge_id, page, pageSize }
     };
   }
 };
+const getThreadHistoryByMessageId = async ({ bridge_id, org_id, thread_id, message_id }) =>  await chatbotDbService.findMessageByMessageId(bridge_id, org_id, thread_id, message_id);
 
 const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
 
@@ -126,5 +127,6 @@ export {
   getThread,
   getThreadHistory,
   getChatData,
-  createThreadHistory
+  createThreadHistory,
+  getThreadHistoryByMessageId
 };
