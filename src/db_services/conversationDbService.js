@@ -355,16 +355,10 @@ async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback
       whereClause.user_feedback = user_feedback;
     }
     const feedbackRecords = await models.pg.conversations.findAll({
-      attributes: ['bridge_id', 'createdAt', 'id', "user_feedback"],
+      attributes: ["user_feedback"],
       where: whereClause,
       returning: true, 
     });
-
-    // Check if any records were found
-    if (feedbackRecords.length === 0) {
-      return { success: true, message: 'No user feedback records found.' };
-    }
-
     return { success: true, result: feedbackRecords.length };
   } catch (error) {
     console.error('Error retrieving user feedback counts:', error);
