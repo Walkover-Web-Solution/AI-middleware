@@ -331,22 +331,11 @@ const removeActionInBridge = async (bridgeId, actionId, version_id) => {
 // get bridge with slugname
 
 const getBridgeIdBySlugname = async (orgId, slugName) => {
-  try {
-    const bridges = await configurationModel.findOne({
-      slugName: slugName,
-      org_id: orgId
-    }).select({ _id: 1, slugName: 1 })
-    return {
-      success: true,
-      bridgeId: bridges._id
-    };
-  } catch (error) {
-    console.log("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
+  return await configurationModel.findOne({
+    slugName: slugName,
+    org_id: orgId
+  }).select({ _id: 1, slugName: 1, starterQuestion: 1 }).lean()
+     
 }
 const getBridgeBySlugname = async (orgId, slugName) => {
   try {
