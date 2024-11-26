@@ -67,7 +67,7 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize) {
   const offset = (page - 1) * pageSize;
   const limit = pageSize;
 
@@ -85,6 +85,7 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'tools_call_data',
       'message_id',
       'user_feedback',
+      'sub_thread_id'
     ],
     include: [
       {
@@ -104,7 +105,8 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
     where: {
       org_id: org_id,
       thread_id: thread_id,
-      bridge_id: bridge_id
+      bridge_id: bridge_id,
+      sub_thread_id: sub_thread_id
     },
     order: [['id', 'DESC']],
     offset: offset,
@@ -116,7 +118,8 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
     where: {
       org_id: org_id,
       thread_id: thread_id,
-      bridge_id: bridge_id
+      bridge_id: bridge_id,
+      sub_thread_id: sub_thread_id
     }
   });
   const totalPages = Math.ceil(totalEntries / limit);
