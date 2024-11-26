@@ -52,14 +52,25 @@ const getThreads = async (req, res, next) => {
     let pageSize = parseInt(req.query.limit) || 10;
     const { thread_id, bridge_slugName } = req.params;
     const { org_id } = req.body;
-
+    let starterQuestion = []
+    let bridge = {}
     if (bridge_slugName) {
-      bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId;
-      bridge_id = bridge_id?.toString();
+      bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+      bridge_id = bridge?._id?.toString();
+      starterQuestion = bridge?.starterQuestion;
+      
     }
-    const threads = await getThreadHistory({ bridge_id, org_id, thread_id, page, pageSize });
+    let threads = await getThreadHistory({ bridge_id, org_id, thread_id, page, pageSize });
+    threads = {
+      ...threads,
+      data: {
+        ...threads.data,
+        starterQuestion
+      }
+
+    }
     res.locals = threads;
-    req.statusCode = threads?.success ? 200 : 400;
+    req.statusCode = 200;
     return next();
   } catch (error) {
     console.error("common error=>", error)
@@ -72,7 +83,7 @@ const getMessageByMessageId = async (req, res, next) => {
   const { org_id } = req.body;
 
   if (bridge_slugName) {
-    bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId;
+    bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
     bridge_id = bridge_id?.toString();
   }
   const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
