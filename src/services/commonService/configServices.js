@@ -70,8 +70,8 @@ const getMessageHistory = async (req, res, next) => {
   try {
     const { bridge_id } = req.params;
     const { org_id } = req.body;
-    const { pageNo = 1, limit = 10, keyword_search = null } = req.query;
-
+    const { pageNo = 1, limit = 10 } = req.query;
+    let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
     let startTimestamp, endTimestamp;
 
