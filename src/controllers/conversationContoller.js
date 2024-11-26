@@ -40,9 +40,9 @@ const getChatData = async chat_id => {
     };
   }
 };
-const getThreadHistory = async (thread_id, org_id, bridge_id) => {
+const getThreadHistory = async ({ thread_id, org_id, bridge_id, page, pageSize }) => {
   try {
-    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id);
+    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, page, pageSize);
     return {
       success: true,
       data: chats
@@ -55,6 +55,7 @@ const getThreadHistory = async (thread_id, org_id, bridge_id) => {
     };
   }
 };
+const getThreadHistoryByMessageId = async ({ bridge_id, org_id, thread_id, message_id }) =>  await chatbotDbService.findMessageByMessageId(bridge_id, org_id, thread_id, message_id);
 
 const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
 
@@ -126,5 +127,6 @@ export {
   getThread,
   getThreadHistory,
   getChatData,
-  createThreadHistory
+  createThreadHistory,
+  getThreadHistoryByMessageId
 };

@@ -1,6 +1,6 @@
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { services } from "../../configs/models.js";
-import { createThreadHistory, getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getThreadHistory, getThreadHistoryByMessageId } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { createThreadHistrorySchema, updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
@@ -47,21 +47,17 @@ const getAIModels = async (req, res) => {
 };
 const getThreads = async (req, res, next) => {
   try {
-    let { bridge_id } = req.params
-    let page = req?.query?.pageNo || 1;
-    let pageSize = req?.query?.limit || 10;
-    const {
-      thread_id,
-      bridge_slugName
-    } = req.params;
-    const {
-      org_id
-    } = req.body;
+    let { bridge_id } = req.params;
+    let page = parseInt(req.query.pageNo) || 1;
+    let pageSize = parseInt(req.query.limit) || 10;
+    const { thread_id, bridge_slugName } = req.params;
+    const { org_id } = req.body;
+
     if (bridge_slugName) {
-      bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
+      bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId;
       bridge_id = bridge_id?.toString();
     }
-    const threads = await getThreadHistory(thread_id, org_id, bridge_id, page, pageSize);
+    const threads = await getThreadHistory({ bridge_id, org_id, thread_id, page, pageSize });
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
@@ -69,6 +65,20 @@ const getThreads = async (req, res, next) => {
     console.error("common error=>", error)
     throw error;
   }
+};
+const getMessageByMessageId = async (req, res, next) => {
+  let { bridge_id, message_id } = req.params;
+  const { thread_id, bridge_slugName } = req.params;
+  const { org_id } = req.body;
+
+  if (bridge_slugName) {
+    bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId;
+    bridge_id = bridge_id?.toString();
+  }
+  const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
+  res.locals = {success:true,thread};
+  req.statusCode = 200;
+  return next();
 };
 const getMessageHistory = async (req, res, next) => {
   try {
@@ -622,6 +632,7 @@ export const createEntry = async (req, res,next) => {
 export default {
   getAIModels,
   getThreads,
+  getMessageByMessageId,
   getMessageHistory,
   createBridges,
   getAllBridges,
