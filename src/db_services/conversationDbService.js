@@ -330,10 +330,23 @@ async function updateStatus({ status, message_id }) {
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
+
+const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) =>  await models.pg.conversations.findOne({
+  where: {
+    org_id,
+    bridge_id,
+    thread_id,
+    message_id,
+    message_by : 'assistant'
+  },
+  raw: true,
+  limit: 1
+});
 export default {
   find,
   createBulk,
   findAllThreads,
+  findMessageByMessageId,
   deleteLastThread,
   storeSystemPrompt,
   getHistory,
