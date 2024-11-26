@@ -67,9 +67,22 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+async function findMessage(org_id, thread_id, bridge_id, page, pageSize,user_feedback) {
   const offset = (page - 1) * pageSize;
   const limit = pageSize;
+  const whereClause = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+  };
+
+  // Conditionally add user_feedback filter based on its value
+  if (user_feedback === "all" || !user_feedback) {
+    whereClause.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
+  } else {
+    whereClause.user_feedback = user_feedback;
+  }
+
 
   let conversations = await models.pg.conversations.findAll({
     attributes: [
@@ -101,11 +114,7 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
         }
       }
     ],
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id
-    },
+    where: whereClause,
     order: [['id', 'DESC']],
     offset: offset,
     limit: limit,
@@ -143,11 +152,16 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) {
+async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback) {
   const whereClause = {
     bridge_id,
     org_id
   };
+  
+  // Only add user_feedback to whereClause if it's a valid integer
+  if(user_feedback !== null && user_feedback !== undefined && !isNaN(parseInt(user_feedback))) {
+    whereClause.user_feedback = parseInt(user_feedback);
+  }
 
   if (startTimestamp && endTimestamp) {
     whereClause.updatedAt = {
@@ -161,30 +175,131 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
           Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
             [Sequelize.Op.like]: `%${keyword_search}%`
           }),
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } }
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`
+          }), // Cast thread_id to text and apply LIKE
+          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`
+          })  // Cast message_id to text and apply LIKE
         ]
       }
     ];
   }
 
-  const threads = await models.pg.conversations.findAll({
+  const threads = !keyword_search ? await models.pg.conversations.findAll({
     attributes: [
       'thread_id',
       [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
       'bridge_id',
-      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+      [Sequelize.fn('COUNT', Sequelize.literal('CASE WHEN user_feedback IS NOT NULL THEN 1 END')), 'feedback_count'],
+      'user_feedback'
     ],
     where: whereClause,
-    group: ['thread_id', 'bridge_id'],
+    group: ['thread_id', 'bridge_id', 'user_feedback'],
     order: [
       [Sequelize.col('updatedAt'), 'DESC'],
       ['thread_id', 'ASC']
     ],
     limit,
     offset: (pageNo - 1) * limit
+  }) : await models.pg.conversations.findAll({
+    attributes: [
+      'thread_id',
+      [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+      'bridge_id',
+      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+      [Sequelize.fn('COUNT', Sequelize.literal('CASE WHEN user_feedback IS NOT NULL THEN 1 END')), 'feedback_count'],
+      'user_feedback',
+      'message',
+      'message_id'
+    ],
+    where: whereClause,
+    group: ['thread_id', 'bridge_id', 'user_feedback', 'message', 'message_id'],
+    order: [
+      [Sequelize.col('updatedAt'), 'DESC'],
+      ['thread_id', 'ASC']
+    ],
+    limit,
+    offset: (pageNo - 1) * limit
+  })
+
+  const uniqueThreads = new Map();
+
+  threads.forEach(thread => {
+    let matchedField = null;
+
+    if (thread.message && thread.message.includes(keyword_search)) {
+        matchedField = 'message';
+    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
+        matchedField = 'message_id';
+    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+        matchedField = 'thread_id';
+    } else {
+        matchedField = 'thread_id';
+    }
+
+    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
+    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
+
+    // Only add unique entries for `thread_id`, allow duplicates otherwise
+    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
+      // Create the response object
+      const response = {
+        thread_id: thread.thread_id,
+        id: thread.id,
+        bridge_id: thread.bridge_id,
+        feedback_count: thread.dataValues?.feedback_count || 0, // Access feedback_count from dataValues
+        user_feedback: user_feedback,
+        matchedField
+      };
+      // Include additional fields only if matchedField is not 'thread_id'
+      if (matchedField !== 'thread_id' ) {
+        if (!response.message) {
+            response.message = [];  
+        }
+        // Push an object containing the message and message_id to the message array
+        response.message.push({
+            message: thread.message,
+            message_id: thread.message_id
+        });
+    }
+
+      // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
+      if (matchedField === 'thread_id') {
+        uniqueThreads.set(thread.thread_id, response);
+      }
+      else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
+        // Retrieve the existing thread object from the map
+        const existingThread = uniqueThreads.get(thread.thread_id);
+    
+        // Check if 'message' is present or exists in the existing thread
+        if (existingThread && existingThread.message) {
+            // If message exists, push the new message to the array
+            existingThread.message.push({
+                message: thread.message,
+                message_id: thread.message_id
+            });
+        } else {            
+            // Optionally, initialize the message array if needed
+            uniqueThreads.set(thread.thread_id, {
+                ...existingThread,
+                message: [{
+                    message: thread.message,
+                    message_id: thread.message_id
+                }]
+            });
+        }
+    }
+       else {
+        uniqueThreads.set(`${thread.thread_id}`, response);
+      }
+    }
   });
 
-  return threads;
+  // Convert the Map values to an array
+  return Array.from(uniqueThreads.values());
 }
 
 
@@ -327,6 +442,43 @@ async function updateStatus({ status, message_id }) {
   }
 }
 
+async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback }) {
+  try {
+    // Query the database for matching records
+    const  whereClause = {
+      bridge_id,
+      user_feedback
+    }
+    if(startDate && endDate && startDate !== 'null' && endDate !== 'null')
+    {
+      whereClause.createdAt =  {
+        [Sequelize.Op.between]: [startDate, endDate], 
+      }
+    }
+    if (user_feedback === "all" || !user_feedback) {
+      whereClause.user_feedback = { [Sequelize.Op.or]: [1,2] };
+    } else {
+      whereClause.user_feedback = user_feedback;
+    }
+    const feedbackRecords = await models.pg.conversations.findAll({
+      attributes: ['bridge_id', 'createdAt', 'id', "user_feedback"],
+      where: whereClause,
+      returning: true, 
+    });
+
+    // Check if any records were found
+    if (feedbackRecords.length === 0) {
+      return { success: true, message: 'No user feedback records found.' };
+    }
+
+    return { success: true, result: feedbackRecords.length };
+  } catch (error) {
+    console.error('Error retrieving user feedback counts:', error);
+    return { success: false, message: 'Error retrieving user feedback counts.' };
+  }
+}
+
+
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
@@ -343,5 +495,6 @@ export default {
   system_prompt_data,
   updateMessage,
   updateStatus,
-  create
+  create,
+  userFeedbackCounts
 };
