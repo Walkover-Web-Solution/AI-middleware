@@ -5,6 +5,6 @@ import { createThreadController, getAllThreadsController } from '../controllers/
 const router = Router();
 // Define routes
 router.post('/', chatBotAuth, createThreadController);
-router.get('/', chatBotAuth, getAllThreadsController);
+router.get('/:thread_id', chatBotAuth, getAllThreadsController);
 
 export default router;

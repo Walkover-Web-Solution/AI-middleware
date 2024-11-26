@@ -67,7 +67,10 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id) {
+async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  const limit = pageSize;
+
   let conversations = await models.pg.conversations.findAll({
     attributes: [
       ['message', 'content'],
@@ -82,41 +85,42 @@ async function findMessage(org_id, thread_id, bridge_id) {
       'tools_call_data',
       'message_id',
       'user_feedback',
-      [Sequelize.col('raw_data.id'), 'raw_data_id'],
-      [Sequelize.col('raw_data.org_id'), 'org_id'],
-      [Sequelize.col('raw_data.chat_id'), 'chat_id'],
-      [Sequelize.col('raw_data.error'), 'error'],
-      [Sequelize.col('raw_data.input_tokens'), 'input_tokens'],
-      [Sequelize.col('raw_data.output_tokens'), 'output_tokens'],
-      [Sequelize.col('raw_data.variables'), 'variables'],
-      [Sequelize.col('raw_data.authkey_name'), 'authkey_name'],
-      [Sequelize.col('raw_data.latency'), 'latency'],
-      [Sequelize.col('raw_data.service'), 'service'],
-      [Sequelize.col('raw_data.model'), 'model'],
-      [Sequelize.col('raw_data.status'), 'status'],
-      [Sequelize.col('raw_data.created_at'), 'created_at'],
-      [Sequelize.col('raw_data.is_present'), 'is_present'],
-      [Sequelize.col('raw_data.created_at'), 'created_at']
     ],
-    include: [{
-      model: models.pg.raw_data,
-      as: 'raw_data',
-      required: false,
-      'on': {
-        'id': models.pg.sequelize.where(models.pg.sequelize.col('conversations.id'), '=', models.pg.sequelize.col('raw_data.chat_id'))
+    include: [
+      {
+        model: models.pg.raw_data,
+        as: 'raw_data',
+        attributes: ['*'],
+        required: false,
+        on: {
+          id: models.pg.sequelize.where(
+            models.pg.sequelize.col('conversations.id'),
+            '=',
+            models.pg.sequelize.col('raw_data.chat_id')
+          )
+        }
       }
-    }],
+    ],
     where: {
       org_id: org_id,
       thread_id: thread_id,
       bridge_id: bridge_id
     },
     order: [['id', 'DESC']],
+    offset: offset,
+    limit: limit,
     raw: true
   });
-
   conversations = conversations.reverse();
-  return conversations;
+  const totalEntries = await models.pg.conversations.count({
+    where: {
+      org_id: org_id,
+      thread_id: thread_id,
+      bridge_id: bridge_id
+    }
+  });
+  const totalPages = Math.ceil(totalEntries / limit);
+  return { conversations, totalPages, totalEntries };
 }
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
@@ -326,10 +330,23 @@ async function updateStatus({ status, message_id }) {
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
+
+const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) =>  await models.pg.conversations.findOne({
+  where: {
+    org_id,
+    bridge_id,
+    thread_id,
+    message_id,
+    message_by : 'assistant'
+  },
+  raw: true,
+  limit: 1
+});
 export default {
   find,
   createBulk,
   findAllThreads,
+  findMessageByMessageId,
   deleteLastThread,
   storeSystemPrompt,
   getHistory,
