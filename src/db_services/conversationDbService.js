@@ -67,9 +67,22 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
+async function findMessage(org_id, thread_id, bridge_id, page, pageSize,user_feedback) {
   const offset = (page - 1) * pageSize;
   const limit = pageSize;
+  const whereClause = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+  };
+
+  // Conditionally add user_feedback filter based on its value
+  if (user_feedback === "all" || !user_feedback) {
+    whereClause.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
+  } else {
+    whereClause.user_feedback = user_feedback;
+  }
+
 
   let conversations = await models.pg.conversations.findAll({
     attributes: [
@@ -101,11 +114,7 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
         }
       }
     ],
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id
-    },
+    where: whereClause,
     order: [['id', 'DESC']],
     offset: offset,
     limit: limit,
@@ -327,6 +336,43 @@ async function updateStatus({ status, message_id }) {
   }
 }
 
+async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback }) {
+  try {
+    // Query the database for matching records
+    const  whereClause = {
+      bridge_id,
+      user_feedback
+    }
+    if(startDate && endDate && startDate !== 'null' && endDate !== 'null')
+    {
+      whereClause.createdAt =  {
+        [Sequelize.Op.between]: [startDate, endDate], 
+      }
+    }
+    if (user_feedback === "all" || !user_feedback) {
+      whereClause.user_feedback = { [Sequelize.Op.or]: [1,2] };
+    } else {
+      whereClause.user_feedback = user_feedback;
+    }
+    const feedbackRecords = await models.pg.conversations.findAll({
+      attributes: ['bridge_id', 'createdAt', 'id', "user_feedback"],
+      where: whereClause,
+      returning: true, 
+    });
+
+    // Check if any records were found
+    if (feedbackRecords.length === 0) {
+      return { success: true, message: 'No user feedback records found.' };
+    }
+
+    return { success: true, result: feedbackRecords.length };
+  } catch (error) {
+    console.error('Error retrieving user feedback counts:', error);
+    return { success: false, message: 'Error retrieving user feedback counts.' };
+  }
+}
+
+
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
@@ -356,5 +402,6 @@ export default {
   system_prompt_data,
   updateMessage,
   updateStatus,
-  create
+  create,
+  userFeedbackCounts
 };
