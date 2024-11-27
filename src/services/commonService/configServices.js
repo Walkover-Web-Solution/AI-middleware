@@ -54,14 +54,16 @@ const getThreads = async (req, res, next) => {
     const { sub_thread_id=thread_id } = req.query
     const { org_id } = req.body;
     let starterQuestion = []
-    let bridge = {}
+    let bridge = {}   
+     const {user_feedback} = req.query
+
     if (bridge_slugName) {
       bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
       bridge_id = bridge?._id?.toString();
       starterQuestion = bridge?.starterQuestion;
       
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
+    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback });
     threads = {
       ...threads,
       data: {
@@ -580,6 +582,20 @@ const updateMessageStatus = async (req, res, next) => {
     throw error;
   }
 }
+const userFeedbackCount = async (req, res, next) =>{
+  try {
+    const bridge_id = req.params.bridge_id;
+    const {startDate, endDate, user_feedback} = req.query;
+    
+    const result = await conversationDbService.userFeedbackCounts({bridge_id,startDate, endDate, user_feedback})
+    res.locals = result;
+    req.statusCode = result?.success ? 200 : 400;
+    return next();
+  } catch (error) {
+    console.log("Error While Finding the response Count of User")
+    throw error
+  }
+}
 
 const bridgeArchive = async (req, res) => {
   try {
@@ -659,5 +675,6 @@ export default {
   FineTuneData,
   updateThreadMessage,
   updateMessageStatus,
-  createEntry
+  createEntry,
+  userFeedbackCount
 };
