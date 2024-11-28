@@ -122,7 +122,8 @@ const getSystemPromptHistory = async (req, res, next) => {
       timestamp
     } = req.params;
     const result = await conversationDbService.getHistory(bridge_id, timestamp);
-    res.locals = result;
+    //{ success: true, system_prompt: history[0].system_prompt }
+    res.locals = {success: result.success, data: result.system_prompt};
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
@@ -636,7 +637,7 @@ export const createEntry = async (req, res,next) => {
       });
     }
     const threads = await createThreadHistory(payload);
-    res.locals = threads;
+    res.locals = {data: threads};
     req.statusCode =200;
     return next();
 };

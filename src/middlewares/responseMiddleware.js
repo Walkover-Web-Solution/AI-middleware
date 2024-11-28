@@ -5,12 +5,19 @@ const responseMiddleware = (req, res, next) => {
   if (!responseData) return next();
 
   if (responseData && statusCode) {
+    const formattedResponse = {
+      status: statusCode,
+      success: responseData.success || (statusCode >= 200 && statusCode < 300),
+      message: responseData.message || "Request processed successfully",
+      data: responseData.data || {}
+    };
+
     switch (responseData.contentType) {
       case "text/plain":
-        return res.status(statusCode).set("Content-Type", "text/plain").send(responseData.data);
+        return res.status(statusCode).set("Content-Type", "text/plain").send(formattedResponse);
 
       default:
-        return res.status(statusCode).json(responseData);
+        return res.status(statusCode).json(formattedResponse);
     }
   }
 

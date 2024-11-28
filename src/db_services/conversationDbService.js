@@ -59,7 +59,7 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
       return { success: true, message: "No prompts found for the given bridge_id" };
     }
 
-    return { success: true, history };
+    return { success: true, data: history };
   } catch (error) {
     console.error("get history system prompt error=>", error);
     return { success: false, message: "Error retrieving prompts" };
@@ -300,7 +300,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       updatedAt: row.updatedAt
     }));
 
-    return { success: true, result: result };
+    return { success: true, data: result };
   } catch (error) {
     console.error('Error updating message:', error);
     return { success: false, message: 'Error updating message' };
@@ -323,7 +323,7 @@ async function updateStatus({ status, message_id }) {
       return { success: true, message: 'No matching record found to update.' };
     }
 
-    return { success: true, result: affectedRows };
+    return { success: true, data: affectedRows };
   } catch (error) {
     console.error('Error updating message:', error);
     return { success: false, message: 'Error updating message' };
