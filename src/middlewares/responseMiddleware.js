@@ -7,7 +7,7 @@ const responseMiddleware = (req, res, next) => {
   if (responseData && statusCode) {
     const formattedResponse = {
       status: statusCode,
-      success: responseData.success || (statusCode >= 200 && statusCode < 300),
+      success: responseData.success || (statusCode === 200),
       message: responseData.message || "Request processed successfully",
       data: responseData.data || {}
     };
