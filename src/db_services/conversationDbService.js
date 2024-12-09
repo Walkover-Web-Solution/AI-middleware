@@ -326,6 +326,18 @@ async function updateStatus({ status, message_id }) {
 async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
+
+const addThreadId = async (message_id, thread_id, type) => {
+  return await models.pg.conversations.update(
+    { external_reference: thread_id },
+    {
+      where: { message_id, message_by: type },
+      returning: true
+    }
+  );
+};
+
+
 export default {
   find,
   createBulk,
@@ -339,5 +351,6 @@ export default {
   system_prompt_data,
   updateMessage,
   updateStatus,
-  create
+  create,
+  addThreadId
 };

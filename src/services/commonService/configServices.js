@@ -619,6 +619,16 @@ export const createEntry = async (req, res,next) => {
     return next();
 };
 
+const extraThreadID = async (req, res, next) => {
+  const type = req.query?.type || "user";
+  const thread_id = req.body.thread_id;
+  const message_id = req.body.message_id;
+  const result = await conversationDbService.addThreadId(message_id, thread_id, type);
+  res.locals = result;
+  req.statusCode = result?.success ? 200 : 400;
+  return next();
+};
+
 export default {
   getAIModels,
   getThreads,
@@ -636,5 +646,6 @@ export default {
   FineTuneData,
   updateThreadMessage,
   updateMessageStatus,
-  createEntry
+  createEntry,
+  extraThreadID
 };
