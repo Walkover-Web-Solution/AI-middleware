@@ -625,7 +625,7 @@ const extraThreadID = async (req, res, next) => {
   const message_id = req.body.message_id;
   const result = await conversationDbService.addThreadId(message_id, thread_id, type);
   res.locals = result;
-  req.statusCode = result?.success ? 200 : 400;
+  req.statusCode = 200 ;
   return next();
 };
 
