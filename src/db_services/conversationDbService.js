@@ -125,6 +125,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   const totalPages = Math.ceil(totalEntries / limit);
   return { conversations, totalPages, totalEntries };
 }
+
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
     where: {
@@ -345,6 +346,17 @@ const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) 
   raw: true,
   limit: 1
 });
+const addThreadId = async (message_id, thread_id, type) => {
+  return await models.pg.conversations.update(
+    { external_reference: thread_id },
+    {
+      where: { message_id, message_by: type },
+      returning: true
+    }
+  );
+};
+
+
 export default {
   find,
   createBulk,
@@ -359,5 +371,6 @@ export default {
   system_prompt_data,
   updateMessage,
   updateStatus,
-  create
+  create,
+  addThreadId
 };
