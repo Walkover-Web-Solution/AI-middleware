@@ -64,11 +64,7 @@ const getThreads = async (req, res, next) => {
     let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
     threads = {
       ...threads,
-      data: {
-        ...threads.data,
-        starterQuestion
-      }
-
+      starterQuestion,
     }
     res.locals = threads;
     req.statusCode = 200;
@@ -96,8 +92,8 @@ const getMessageHistory = async (req, res, next) => {
   try {
     const { bridge_id } = req.params;
     const { org_id } = req.body;
-    const { pageNo = 1, limit = 10, keyword_search = null } = req.query;
-
+    const { pageNo = 1, limit = 10 } = req.query;
+    let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
     let startTimestamp, endTimestamp;
 
