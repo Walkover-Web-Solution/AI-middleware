@@ -150,46 +150,145 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
 async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) {
   const whereClause = {
     bridge_id,
-    org_id
+    org_id,
   };
 
+  // Handle the date range filter
   if (startTimestamp && endTimestamp) {
     whereClause.updatedAt = {
-      [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)]
+      [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
     };
   }
+
+  // Handle the keyword search filter
   if (keyword_search) {
     whereClause[Sequelize.Op.and] = [
       {
         [Sequelize.Op.or]: [
           Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`
+            [Sequelize.Op.like]: `%${keyword_search}%`,
           }),
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } }
-        ]
-      }
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+        ],
+      },
     ];
   }
 
+  // Define the common attributes to select
+  const attributes = keyword_search
+    ? [
+        'thread_id',
+        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+        'bridge_id',
+        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+        'message',
+        'message_id',
+      ]
+    : [
+        'thread_id',
+        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+        'bridge_id',
+        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+      ];
+
+  // Execute the query
   const threads = await models.pg.conversations.findAll({
-    attributes: [
-      'thread_id',
-      [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
-      'bridge_id',
-      [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt']
-    ],
+    attributes,
     where: whereClause,
-    group: ['thread_id', 'bridge_id'],
+    group: keyword_search
+      ? ['thread_id', 'bridge_id', 'message', 'message_id']
+      : ['thread_id', 'bridge_id'],
     order: [
       [Sequelize.col('updatedAt'), 'DESC'],
-      ['thread_id', 'ASC']
+      ['thread_id', 'ASC'],
     ],
     limit,
-    offset: (pageNo - 1) * limit
+    offset: (pageNo - 1) * limit,
   });
 
-  return threads;
+
+
+  const uniqueThreads = new Map();
+
+  threads.forEach(thread => {
+    let matchedField = null;
+
+    if (thread.message && thread.message.includes(keyword_search)) {
+        matchedField = 'message';
+    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
+        matchedField = 'message_id';
+    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+        matchedField = 'thread_id';
+    } else {
+        matchedField = 'thread_id';
+    }
+
+    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
+    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
+
+    // Only add unique entries for `thread_id`, allow duplicates otherwise
+    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
+      // Create the response object
+      const response = {
+        thread_id: thread.thread_id,
+        id: thread.id,
+        bridge_id: thread.bridge_id,
+        matchedField
+      };
+      // Include additional fields only if matchedField is not 'thread_id'
+      if (matchedField !== 'thread_id' ) {
+        if (!response.message) {
+            response.message = [];  
+        }
+        // Push an object containing the message and message_id to the message array
+        response.message.push({
+            message: thread.message,
+            message_id: thread.message_id
+        });
+    }
+
+      // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
+      if (matchedField === 'thread_id') {
+        uniqueThreads.set(thread.thread_id, response);
+      }
+      else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
+        // Retrieve the existing thread object from the map
+        const existingThread = uniqueThreads.get(thread.thread_id);
+    
+        // Check if 'message' is present or exists in the existing thread
+        if (existingThread && existingThread.message) {
+            // If message exists, push the new message to the array
+            existingThread.message.push({
+                message: thread.message,
+                message_id: thread.message_id
+            });
+        } else {            
+            // Optionally, initialize the message array if needed
+            uniqueThreads.set(thread.thread_id, {
+                ...existingThread,
+                message: [{
+                    message: thread.message,
+                    message_id: thread.message_id
+                }]
+            });
+        }
+    }
+       else {
+        uniqueThreads.set(`${thread.thread_id}`, response);
+      }
+    }
+  });
+
+  // Convert the Map values to an array
+  return Array.from(uniqueThreads.values());
 }
+
 
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
