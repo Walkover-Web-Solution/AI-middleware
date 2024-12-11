@@ -79,7 +79,8 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'id',
       'function',
       'is_reset',
-      'chatbot_message'
+      'chatbot_message',
+      "version_id"
     ],
     include: [
       {
