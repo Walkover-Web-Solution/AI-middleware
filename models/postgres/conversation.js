@@ -34,7 +34,7 @@ export default ((sequelize, DataTypes) => {
     message_id : DataTypes.UUIDV4,
     user_feedback: DataTypes.INTEGER,
     is_reset: DataTypes.BOOLEAN,
-    mode: DataTypes.INTEGER,
+    version_id: DataTypes.STRING,
     sub_thread_id: DataTypes.STRING,
     external_reference: DataTypes.STRING,
   }, {
