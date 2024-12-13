@@ -85,7 +85,8 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'message_id',
       'user_feedback',
       'sub_thread_id',
-      "version_id"
+      "version_id",
+      "image_url"
     ],
     include: [
       {
