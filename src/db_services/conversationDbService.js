@@ -80,6 +80,11 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       'function',
       'is_reset',
       'chatbot_message',
+      'updated_message',
+      'tools_call_data',
+      'message_id',
+      'user_feedback',
+      'sub_thread_id',
       "version_id"
     ],
     include: [
