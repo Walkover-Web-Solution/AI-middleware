@@ -92,7 +92,9 @@ async function findMessage(org_id, thread_id, bridge_id, page, pageSize) {
       {
         model: models.pg.raw_data,
         as: 'raw_data',
-        attributes: ['*'],
+        attributes: {
+          exclude: ['id']
+        },
         required: false,
         on: {
           id: models.pg.sequelize.where(
