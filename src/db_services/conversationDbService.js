@@ -1,5 +1,6 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
+import Thread from "../mongoModel/threadModel.js";
 
 async function createBulk(data) {
   return await models.pg.conversations.bulkCreate(data);
@@ -500,6 +501,12 @@ const addThreadId = async (message_id, thread_id, type) => {
   );
 };
 
+const getSubThreads = async (org_id,thread_id) =>{
+    return await Thread.find({ org_id, thread_id });
+}
+
+
+
 
 export default {
   find,
@@ -517,5 +524,6 @@ export default {
   updateStatus,
   create,
   addThreadId,
-  userFeedbackCounts
+  userFeedbackCounts,
+  getSubThreads
 };
