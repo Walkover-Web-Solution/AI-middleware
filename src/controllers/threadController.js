@@ -14,7 +14,7 @@ async function createThreadController(req, res, next) {
         const thread = await createThread({
             display_name: name || sub_thread_id,
             thread_id,
-            org_id,
+            org_id: org_id.toString(),
             sub_thread_id
         });
         res.locals = {
