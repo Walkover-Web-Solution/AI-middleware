@@ -10,6 +10,7 @@ router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);
 router.post('/threads/:thread_id/:bridge_id', middleware, common.createEntry);
 router.get('/userfeedbackcount/:bridge_id',middleware,common.userFeedbackCount);
 router.get('/history/:bridge_id', middleware, common.getMessageHistory);
+router.get('/history/sub-thread/:thread_id', middleware, common.getAllSubThreadsController);
 router.get('/models/:service', middleware, common.getAIModels);//Shifted to Python
 router.post('/createbridges', middleware, common.createBridges); //Shifted to Python
 router.post('/updatebridges/:bridge_id', middleware, common.updateBridges); //Shifted to Python
