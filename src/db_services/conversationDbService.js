@@ -90,25 +90,24 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       ['message', 'content'],
       ['message_by', 'role'],
       'createdAt',
-      'id',
+      ['id', 'Id'],
       'function',
       'is_reset',
       "version_id",
       'chatbot_message',
       'updated_message',
       'tools_call_data',
-      'message_id',
+      ['message_id','thread_message_id'],
       'user_feedback',
       'sub_thread_id',
-      'image_url'
+      "version_id",
+      "image_url",
     ],
     include: [
       {
         model: models.pg.raw_data,
         as: 'raw_data',
-        attributes: {
-          exclude: ['id', 'message_id']
-        },
+        attributes: ['*'],
         required: false,
         on: {
           id: models.pg.sequelize.where(
