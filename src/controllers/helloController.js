@@ -11,25 +11,19 @@ export const subscribe = async (req, res, next) => {
     let hello_id = req.body.helloId
     const { org_id } = req.profile;
     if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
-
+    await createThread({
+        display_name: thread_id,
+        thread_id,
+        org_id: org_id.toString(),
+        sub_thread_id: thread_id
+    });
     try {
         if(hello_id ?? false)
             {
-                let widgetInfo, ChannelList, thread;
-                try {
-                    [widgetInfo, ChannelList, thread] = await Promise.all([
-                        getWidgetInfo(hello_id),
-                        getChannelList(hello_id, thread_id),
-                        createThread({
-                            display_name: thread_id,
-                            thread_id,
-                            org_id: org_id.toString(),
-                            sub_thread_id: thread_id
-                        })
-                    ]);
-                } catch (error) {
-                    console.log(error)
-                }
+                const [widgetInfo, ChannelList] = await Promise.all([
+                    getWidgetInfo(hello_id),
+                    getChannelList(hello_id, thread_id),
+                ]);
                 const socketJwt = await getSocketJwt(hello_id, ChannelList, false);
 
                 // Check for errors
@@ -43,7 +37,7 @@ export const subscribe = async (req, res, next) => {
                     throw new Error('Error in one of the promises');
                 }
                 res.locals = {
-                    widgetInfo: { ...widgetInfo, helloId: hello_id , thread},
+                    widgetInfo: { ...widgetInfo, helloId: hello_id},
                     Jwt: socketJwt,
                     ChannelList,
                     mode : ['human']
