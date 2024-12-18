@@ -4,6 +4,7 @@ import {
     getChannelList
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
+import { createThread } from '../services/threadService.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
     const { slugName, threadId: thread_id, } = req.body;
@@ -14,10 +15,21 @@ export const subscribe = async (req, res, next) => {
     try {
         if(hello_id ?? false)
             {
-                const [widgetInfo, ChannelList] = await Promise.all([
-                    getWidgetInfo(hello_id),
-                    getChannelList(hello_id, thread_id)
-                ]);
+                let widgetInfo, ChannelList, thread;
+                try {
+                    [widgetInfo, ChannelList, thread] = await Promise.all([
+                        getWidgetInfo(hello_id),
+                        getChannelList(hello_id, thread_id),
+                        createThread({
+                            display_name: thread_id,
+                            thread_id,
+                            org_id: org_id.toString(),
+                            sub_thread_id: thread_id
+                        })
+                    ]);
+                } catch (error) {
+                    console.log(error)
+                }
                 const socketJwt = await getSocketJwt(hello_id, ChannelList, false);
 
                 // Check for errors
@@ -31,7 +43,7 @@ export const subscribe = async (req, res, next) => {
                     throw new Error('Error in one of the promises');
                 }
                 res.locals = {
-                    widgetInfo: { ...widgetInfo, helloId: hello_id },
+                    widgetInfo: { ...widgetInfo, helloId: hello_id , thread},
                     Jwt: socketJwt,
                     ChannelList,
                     mode : ['human']
