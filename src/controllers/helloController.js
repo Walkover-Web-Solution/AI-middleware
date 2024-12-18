@@ -11,12 +11,16 @@ export const subscribe = async (req, res, next) => {
     let hello_id = req.body.helloId
     const { org_id } = req.profile;
     if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
-    await createThread({
-        display_name: thread_id,
-        thread_id,
-        org_id: org_id.toString(),
-        sub_thread_id: thread_id
-    });
+    try {
+        await createThread({
+            display_name: thread_id,
+            thread_id,
+            org_id: org_id.toString(),
+            sub_thread_id: thread_id
+        });
+    } catch (error) {
+       console.log(error) 
+    }
     try {
         if(hello_id ?? false)
             {
