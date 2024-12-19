@@ -1,8 +1,8 @@
 import chatbotDbService from "../db_services/conversationDbService.js";
 
-const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) => {
+const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback) => {
   try {
-    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
+    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback);
     return { success: true, data: chats };
   } catch (err) {
     console.log("getall threads=>", err);
@@ -40,9 +40,9 @@ const getChatData = async chat_id => {
     };
   }
 };
-const getThreadHistory = async ({ thread_id, org_id, bridge_id, page, pageSize }) => {
+const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize,user_feedback }) => {
   try {
-    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, page, pageSize);
+    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback);
     return {
       success: true,
       data: chats?.conversations,
@@ -57,6 +57,7 @@ const getThreadHistory = async ({ thread_id, org_id, bridge_id, page, pageSize }
     };
   }
 };
+const getThreadHistoryByMessageId = async ({ bridge_id, org_id, thread_id, message_id }) =>  await chatbotDbService.findMessageByMessageId(bridge_id, org_id, thread_id, message_id);
 
 const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
 
@@ -128,5 +129,6 @@ export {
   getThread,
   getThreadHistory,
   getChatData,
-  createThreadHistory
+  createThreadHistory,
+  getThreadHistoryByMessageId
 };
