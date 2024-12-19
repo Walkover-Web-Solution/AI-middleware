@@ -4,19 +4,29 @@ import {
     getChannelList
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
+import { createThread } from '../services/threadService.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
     const { slugName, threadId: thread_id, } = req.body;
     let hello_id = req.body.helloId
     const { org_id } = req.profile;
     if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
-
+    try {
+        await createThread({
+            display_name: thread_id,
+            thread_id,
+            org_id: org_id.toString(),
+            sub_thread_id: thread_id
+        });
+    } catch (error) {
+       console.log(error) 
+    }
     try {
         if(hello_id ?? false)
             {
                 const [widgetInfo, ChannelList] = await Promise.all([
                     getWidgetInfo(hello_id),
-                    getChannelList(hello_id, thread_id)
+                    getChannelList(hello_id, thread_id),
                 ]);
                 const socketJwt = await getSocketJwt(hello_id, ChannelList, false);
 
@@ -31,7 +41,7 @@ export const subscribe = async (req, res, next) => {
                     throw new Error('Error in one of the promises');
                 }
                 res.locals = {
-                    widgetInfo: { ...widgetInfo, helloId: hello_id },
+                    widgetInfo: { ...widgetInfo, helloId: hello_id},
                     Jwt: socketJwt,
                     ChannelList,
                     mode : ['human']

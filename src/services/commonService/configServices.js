@@ -1,6 +1,6 @@
 import ModelsConfig from "../../configs/modelConfiguration.js";
 import { services } from "../../configs/models.js";
-import { createThreadHistory, getAllThreads, getThreadHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getThreadHistory, getThreadHistoryByMessageId } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import helper from "../../services/utils/helper.js";
 import { createThreadHistrorySchema, updateBridgeSchema } from "../../validation/joi_validation/bridge.js";
@@ -47,36 +47,57 @@ const getAIModels = async (req, res) => {
 };
 const getThreads = async (req, res, next) => {
   try {
-    let { bridge_id } = req.params
-    let page = req?.query?.pageNo || null;
-    let pageSize = req?.query?.limit || null;
-    const {
-      thread_id,
-      bridge_slugName
-    } = req.params;
-    const {
-      org_id
-    } = req.body;
+    let { bridge_id } = req.params;
+    let page = parseInt(req.query.pageNo) || 1;
+    let pageSize = parseInt(req.query.limit) || 10;
+    const { thread_id, bridge_slugName } = req.params;
+    const { sub_thread_id=thread_id } = req.query
+    const { org_id } = req.body;
+    let starterQuestion = []
+    let bridge = {}
+     const {user_feedback} = req.query
+
     if (bridge_slugName) {
-      bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?.bridgeId
-      bridge_id = bridge_id?.toString();
+      bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+      bridge_id = bridge?._id?.toString();
+      starterQuestion = bridge?.starterQuestion;
+      
     }
-    const threads = await getThreadHistory({thread_id, org_id, bridge_id, page, pageSize});
+    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback });
+    threads = {
+      ...threads,
+      starterQuestion,
+    }
     res.locals = threads;
-    req.statusCode = threads?.success ? 200 : 400;
+    req.statusCode = 200;
     return next();
   } catch (error) {
     console.error("common error=>", error)
     throw error;
   }
 };
+const getMessageByMessageId = async (req, res, next) => {
+  let { bridge_id, message_id } = req.params;
+  const { thread_id, bridge_slugName } = req.params;
+  const { org_id } = req.body;
+
+  if (bridge_slugName) {
+    bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
+    bridge_id = bridge_id?.toString();
+  }
+  const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
+  res.locals = {success:true,thread};
+  req.statusCode = 200;
+  return next();
+};
 const getMessageHistory = async (req, res, next) => {
   try {
     const { bridge_id } = req.params;
     const { org_id } = req.body;
-    const { pageNo = 1, limit = 10, keyword_search = null } = req.query;
-
+    const { pageNo = 1, limit = 10 } = req.query;
+    let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
+    const {user_feedback} = req.query;
     let startTimestamp, endTimestamp;
 
     if (startTime !== 'undefined' && endTime !== 'undefined') {
@@ -84,7 +105,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
+    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
@@ -558,6 +579,15 @@ const updateMessageStatus = async (req, res, next) => {
     throw error;
   }
 }
+const userFeedbackCount = async (req, res, next) =>{
+  const bridge_id = req.params.bridge_id;
+  const {startDate, endDate, user_feedback} = req.query;
+  
+  const result = await conversationDbService.userFeedbackCounts({bridge_id,startDate, endDate, user_feedback})
+  res.locals = result;
+  req.statusCode = 200 
+  return next();
+}
 
 const bridgeArchive = async (req, res) => {
   try {
@@ -629,9 +659,20 @@ const extraThreadID = async (req, res, next) => {
   return next();
 };
 
+const getAllSubThreadsController = async(req, res, next) => {
+  const {thread_id}= req.params;
+  const org_id = req.profile.org.id
+  const threads = await conversationDbService.getSubThreads(org_id, thread_id);
+  res.locals = { threads, success: true };
+  req.statusCode = 200;
+  return next();
+}
+
+
 export default {
   getAIModels,
   getThreads,
+  getMessageByMessageId,
   getMessageHistory,
   createBridges,
   getAllBridges,
@@ -647,5 +688,7 @@ export default {
   updateThreadMessage,
   updateMessageStatus,
   createEntry,
-  extraThreadID
+  extraThreadID,
+  userFeedbackCount,
+  getAllSubThreadsController
 };
