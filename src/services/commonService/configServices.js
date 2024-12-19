@@ -580,18 +580,13 @@ const updateMessageStatus = async (req, res, next) => {
   }
 }
 const userFeedbackCount = async (req, res, next) =>{
-  try {
-    const bridge_id = req.params.bridge_id;
-    const {startDate, endDate, user_feedback} = req.query;
-    
-    const result = await conversationDbService.userFeedbackCounts({bridge_id,startDate, endDate, user_feedback})
-    res.locals = result;
-    req.statusCode = result?.success ? 200 : 400;
-    return next();
-  } catch (error) {
-    console.log("Error While Finding the response Count of User")
-    throw error
-  }
+  const bridge_id = req.params.bridge_id;
+  const {startDate, endDate, user_feedback} = req.query;
+  
+  const result = await conversationDbService.userFeedbackCounts({bridge_id,startDate, endDate, user_feedback})
+  res.locals = result;
+  req.statusCode = 200 
+  return next();
 }
 
 const bridgeArchive = async (req, res) => {
