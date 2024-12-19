@@ -447,32 +447,27 @@ async function updateStatus({ status, message_id }) {
 }
 
 async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback }) {
-  try {
-    const  whereClause = {
-      bridge_id,
-      user_feedback
-    }
-    if(startDate && endDate && startDate !== 'null' && endDate !== 'null')
-    {
-      whereClause.createdAt =  {
-        [Sequelize.Op.between]: [startDate, endDate], 
-      }
-    }
-    if (user_feedback === "all" || !user_feedback) {
-      whereClause.user_feedback = { [Sequelize.Op.or]: [1,2] };
-    } else {
-      whereClause.user_feedback = user_feedback;
-    }
-    const feedbackRecords = await models.pg.conversations.findAll({
-      attributes: ["user_feedback"],
-      where: whereClause,
-      returning: true, 
-    });
-    return { success: true, result: feedbackRecords.length };
-  } catch (error) {
-    console.error('Error retrieving user feedback counts:', error);
-    return { success: false, message: 'Error retrieving user feedback counts.' };
+  const  whereClause = {
+    bridge_id,
+    user_feedback
   }
+  if(startDate && endDate && startDate !== 'null' && endDate !== 'null')
+  {
+    whereClause.createdAt =  {
+      [Sequelize.Op.between]: [startDate, endDate], 
+    }
+  }
+  if (user_feedback === "all" || !user_feedback) {
+    whereClause.user_feedback = { [Sequelize.Op.or]: [1,2] };
+  } else {
+    whereClause.user_feedback = user_feedback;
+  }
+  const feedbackRecords = await models.pg.conversations.findAll({
+    attributes: ["user_feedback"],
+    where: whereClause,
+    returning: true, 
+  });
+  return { success: true, result: feedbackRecords.length };
 }
 
 
