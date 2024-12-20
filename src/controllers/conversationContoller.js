@@ -124,9 +124,9 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
   }
 };
 
-const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize,user_feedback }) => {
+const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize }) => {
   try {
-    const chats = await chatbotDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback);
+    const chats = await chatbotDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     return {
       success: true,
       data: chats?.conversations,

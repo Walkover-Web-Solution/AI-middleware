@@ -519,7 +519,6 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       'is_reset',
       'tools_call_data',
-      'message_id',
       'image_url'
     ],
     where: whereClause,
@@ -529,16 +528,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
     raw: true
   });
   conversations = conversations.reverse();
-  const totalEntries = await models.pg.conversations.count({
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id,
-      sub_thread_id: sub_thread_id
-    }
-  });
-  const totalPages = limit ? Math.ceil(totalEntries / limit) : 1;
-  return { conversations, totalPages, totalEntries };
+  return { conversations };
 }
 
 
