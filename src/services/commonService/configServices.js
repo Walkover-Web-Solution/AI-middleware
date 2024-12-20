@@ -11,6 +11,7 @@ import _ from "lodash";
 import { getChatBotOfBridgeFunction } from "../../controllers/chatBotController.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
+import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 const getAIModels = async (req, res) => {
   try {
     const service = req?.params?.service ? req?.params?.service.toLowerCase() : '';
@@ -670,23 +671,16 @@ const getThreadMessages = async(req,res,next)=>{
     let page = parseInt(req.query.pageNo) || null;
     let pageSize = parseInt(req.query.limit) || null;
     const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id=thread_id } = req.query
-    const { org_id } = req.body;
-    let starterQuestion = []
-    let bridge = {}
-     const {user_feedback} = req.query
+    const { sub_thread_id = thread_id } = req.query;
+    const  org_id  = req.profile.org_id;
+    let bridge = {};
 
     if (bridge_slugName) {
       bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
       bridge_id = bridge?._id?.toString();
-      starterQuestion = bridge?.starterQuestion;
-      
     }
-    let threads =  await getThreadMessageHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback });
-    threads = {
-      ...threads,
-      starterQuestion,
-    }
+    await chatbotHistoryValidationSchema.validateAsync({org_id,bridge_id,thread_id});
+    let threads =  await getThreadMessageHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
     res.locals = threads;
     req.statusCode = 200;
     return next();

@@ -48,6 +48,12 @@ const getViewOnlyChatBotSchema = Joi.object({
     org_id: Joi.number().required(),
     botId: Joi.string().required(),
 })
+
+const chatbotHistoryValidationSchema = Joi.object({
+    org_id: Joi.string().required(),
+      thread_id: Joi.string().required(),
+      bridge_id: Joi.string().required()
+})
 export {
     createChatBotSchema,
     updateChatBotSchema,
@@ -57,4 +63,5 @@ export {
     getChatBotOfBridgeSchema,
     updateChatBotConfigSchema,
     getViewOnlyChatBotSchema,
+    chatbotHistoryValidationSchema
 }
