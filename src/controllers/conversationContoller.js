@@ -130,8 +130,6 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
     return {
       success: true,
       data: chats?.conversations,
-      totalPages:chats?.totalPages,
-      totalEnteries:chats?.totalEntries
     };
   } catch (err) {
     console.error(err);

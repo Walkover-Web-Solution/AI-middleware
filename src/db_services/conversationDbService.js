@@ -519,7 +519,8 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       'is_reset',
       'tools_call_data',
-      'image_url'
+      'image_url',
+      'message_id'
     ],
     where: whereClause,
     order: [['id', 'DESC']],
