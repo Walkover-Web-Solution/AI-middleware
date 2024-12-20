@@ -69,8 +69,8 @@ async function getAllPromptHistory(bridge_id,page, pageSize) {
 
 
 async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback) {
-  const offset = (page - 1) * pageSize;
-  const limit = pageSize;
+  const offset = page && pageSize ? (page - 1) * pageSize : null;
+  const limit = pageSize || null;
   const whereClause = {
     org_id: org_id,
     thread_id: thread_id,
@@ -132,7 +132,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       sub_thread_id: sub_thread_id
     }
   });
-  const totalPages = Math.ceil(totalEntries / limit);
+  const totalPages = limit ? Math.ceil(totalEntries / limit) : 1;
   return { conversations, totalPages, totalEntries };
 }
 
@@ -494,6 +494,38 @@ const addThreadId = async (message_id, thread_id, type) => {
   );
 };
 
+
+async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize) {
+  const offset = page && pageSize ? (page - 1) * pageSize : null;
+  const limit = pageSize || null;
+  const whereClause = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+    sub_thread_id: sub_thread_id
+  };
+
+  let conversations = await models.pg.conversations.findAll({
+    attributes: [
+      [Sequelize.literal(`CASE WHEN message IS NULL OR message = '' THEN chatbot_message ELSE message END`), 'content'],
+      ['message_by', 'role'],
+      'createdAt',
+      'id',
+      'is_reset',
+      'tools_call_data',
+      'image_url'
+    ],
+    where: whereClause,
+    order: [['id', 'DESC']],
+    offset: offset,
+    limit: limit,
+    raw: true
+  });
+  conversations = conversations.reverse();
+  return { conversations };
+}
+
+
 const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
@@ -518,5 +550,6 @@ export default {
   create,
   addThreadId,
   userFeedbackCounts,
+  findThreadMessage,
   getSubThreads
 };

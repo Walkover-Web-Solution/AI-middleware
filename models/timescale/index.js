@@ -23,6 +23,8 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
             rejectUnauthorized: false
         }
     },
+      
+    logging: console.log
 });
 
 // const dbservice = async () => {
@@ -56,7 +58,6 @@ await fs.promises
   db.Sequelize = Sequelize;
   
 } catch (error) {
-  if(process.env.ENVIROMENT != 'local')
   console.error('Error while connecting to the Timescaledb:',error);
 }
   export default db;
