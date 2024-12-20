@@ -1,5 +1,6 @@
 import Joi from "joi";
-
+import joiObjectId from 'joi-objectid';
+Joi.objectId = joiObjectId(Joi);
 const createChatBotSchema = Joi.object({
     orgId: Joi.number().required(),
     title: Joi.string().required(),
@@ -48,6 +49,12 @@ const getViewOnlyChatBotSchema = Joi.object({
     org_id: Joi.number().required(),
     botId: Joi.string().required(),
 })
+
+const chatbotHistoryValidationSchema = Joi.object({
+    org_id: Joi.string().required(),
+      thread_id: Joi.string().required(),
+      bridge_id: Joi.objectId().required()
+})
 export {
     createChatBotSchema,
     updateChatBotSchema,
@@ -57,4 +64,5 @@ export {
     getChatBotOfBridgeSchema,
     updateChatBotConfigSchema,
     getViewOnlyChatBotSchema,
+    chatbotHistoryValidationSchema
 }
