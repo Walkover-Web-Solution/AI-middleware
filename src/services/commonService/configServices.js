@@ -665,15 +665,10 @@ const getThreadMessages = async(req,res,next)=>{
     let { bridge_id } = req.params;
     let page = parseInt(req.query.pageNo) || null;
     let pageSize = parseInt(req.query.limit) || null;
-    const { thread_id, bridge_slugName } = req.params;
+    const { thread_id } = req.params;
     const { sub_thread_id = thread_id } = req.query;
     const  org_id  = req.profile.org_id;
-    let bridge = {};
 
-    if (bridge_slugName) {
-      bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
-      bridge_id = bridge?._id?.toString();
-    }
     await chatbotHistoryValidationSchema.validateAsync({org_id,bridge_id,thread_id});
     let threads =  await getThreadMessageHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
     res.locals = threads;
