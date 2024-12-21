@@ -27,6 +27,7 @@ export default ((sequelize, DataTypes) => {
     input_tokens: DataTypes.FLOAT,
     output_tokens: DataTypes.FLOAT,
     expected_cost: DataTypes.FLOAT,
+    message_id : DataTypes.UUIDV4,
     created_at: DataTypes.DATE
   }, {
     sequelize,
