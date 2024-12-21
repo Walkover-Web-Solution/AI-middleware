@@ -9,10 +9,10 @@ import ModelsConfig from '../configs/modelConfiguration.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
     const { slugName, threadId: thread_id, versionId, bridge_id } = req.body;
-    let hello_id = req.body.helloId
+    let Hello_id = req.body.helloId
     const { org_id } = req.profile;
     let data = {};
-    if(!hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId, bridge_id));
+    if(!Hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId, bridge_id));
     try {
         await createThread({
             display_name: thread_id,
@@ -28,8 +28,9 @@ export const subscribe = async (req, res, next) => {
     const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
 
     try {
-        if(hello_id ?? false)
+        if(data?.hello_id?.hello_id ?? false)
             {
+                const hello_id = data?.hello_id?.hello_id;
                 const [widgetInfo, ChannelList] = await Promise.all([
                     getWidgetInfo(hello_id),
                     getChannelList(hello_id, thread_id),
