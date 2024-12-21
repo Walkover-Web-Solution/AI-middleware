@@ -3,6 +3,7 @@ import versionModel from "../mongoModel/bridge_version.js";
 import apiCallModel from "../mongoModel/apiCall.js";
 import ChatBotModel from "../mongoModel/chatBotModel.js";
 import { templateModel } from "../mongoModel/template.js";
+import { ObjectId } from "mongodb";
 const createBridges = async configuration => {
   try {
     const result = await new configurationModel({
@@ -337,15 +338,20 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
   }).select({ _id: 1, slugName: 1, starterQuestion: 1 }).lean()
      
 }
-const getBridgeBySlugname = async (orgId, slugName) => {
+const getBridgeBySlugname = async (orgId, slugName, versionId) => {
   try {
     const hello_id = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId
     }).select({ hello_id: 1 }).lean();
+
+    const modelConfig = await versionModel.findOne({
+      _id: new ObjectId(versionId)
+    }).select({ 'configuration.model': 1, service: 1 }).lean();
+
     
     if (!hello_id) return false; 
-    return hello_id;
+    return {hello_id ,modelConfig};
   } catch (error) {
     console.log("error:", error);
     return {

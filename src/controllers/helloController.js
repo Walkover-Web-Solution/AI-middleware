@@ -5,12 +5,14 @@ import {
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 import { createThread } from '../services/threadService.js';
+import ModelsConfig from '../configs/modelConfiguration.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
-    const { slugName, threadId: thread_id, } = req.body;
+    const { slugName, threadId: thread_id, versionId } = req.body;
     let hello_id = req.body.helloId
     const { org_id } = req.profile;
-    if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
+    let data = {};
+    if(!hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId));
     try {
         await createThread({
             display_name: thread_id,
@@ -21,6 +23,10 @@ export const subscribe = async (req, res, next) => {
     } catch (error) {
        console.log(error) 
     }
+    const model = data?.modelConfig?.configuration?.model
+    const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
+    const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
+
     try {
         if(hello_id ?? false)
             {
@@ -49,7 +55,8 @@ export const subscribe = async (req, res, next) => {
             }
         else{
             res.locals = {
-                mode : []
+                mode : [],
+                vision:vision ? true : false
             }
         }
         req.statusCode = 200;
