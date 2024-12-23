@@ -666,7 +666,7 @@ const getThreadMessages = async(req,res,next)=>{
     let pageSize = parseInt(req.query.limit) || null;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id = thread_id } = req.query;
-    const  org_id  = req.profile.org_id;
+    const  org_id  = req.profile.org.id;
     let bridge = {};
 
     if (bridge_slugName) {
