@@ -125,19 +125,11 @@ const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id
 };
 
 const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize }) => {
-  try {
     const chats = await chatbotDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     return {
       success: true,
       data: chats?.conversations,
     };
-  } catch (err) {
-    console.error(err);
-    return {
-      success: false,
-      message: err.message
-    };
-  }
 };
 export {
   getAllThreads,
