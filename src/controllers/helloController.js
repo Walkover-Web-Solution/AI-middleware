@@ -5,12 +5,14 @@ import {
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 import { createThread } from '../services/threadService.js';
+import ModelsConfig from '../configs/modelConfiguration.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
-    const { slugName, threadId: thread_id, } = req.body;
-    let hello_id = req.body.helloId
+    const { slugName, threadId: thread_id, versionId, bridge_id } = req.body;
+    let Hello_id = req.body.helloId
     const { org_id } = req.profile;
-    if(!hello_id) hello_id= (await ConfigurationServices.getBridgeBySlugname(org_id, slugName))?.hello_id;
+    let data = {};
+    if(!Hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId, bridge_id));
     try {
         await createThread({
             display_name: thread_id,
@@ -21,9 +23,14 @@ export const subscribe = async (req, res, next) => {
     } catch (error) {
        console.log(error) 
     }
+    const model = data?.modelConfig?.model
+    const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
+    const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
+
     try {
-        if(hello_id ?? false)
+        if(data?.hello_id?.hello_id ?? false)
             {
+                const hello_id = data?.hello_id?.hello_id;
                 const [widgetInfo, ChannelList] = await Promise.all([
                     getWidgetInfo(hello_id),
                     getChannelList(hello_id, thread_id),
@@ -44,12 +51,12 @@ export const subscribe = async (req, res, next) => {
                     widgetInfo: { ...widgetInfo, helloId: hello_id},
                     Jwt: socketJwt,
                     ChannelList,
-                    mode : ['human']
+                    mode : vision ? ['human','vision'] : ['human']
                 }
             }
         else{
             res.locals = {
-                mode : []
+                mode : vision ? ['vision'] : [],
             }
         }
         req.statusCode = 200;
