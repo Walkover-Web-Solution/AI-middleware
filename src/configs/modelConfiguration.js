@@ -1672,7 +1672,12 @@ class ModelsConfig {
           type: "text"
         },
         level: 0
-      }
+      },
+      "vision": {
+        "support": true,
+         "level": 0,
+         "default" : false
+    }
     };
     const outputConfig = {
       usage: [{
@@ -1857,7 +1862,12 @@ class ModelsConfig {
           type: "text"
         },
         level: 0
-      }
+      },
+      "vision": {
+        "support": true,
+         "level": 0,
+         "default" : false
+    }
     };
     const outputConfig = {
       usage: [{
@@ -2099,7 +2109,12 @@ class ModelsConfig {
               "type" : "text",
               },
               "level": 0
-          }
+          },
+          "vision": {
+            "support": true,
+             "level": 0,
+             "default" : false
+        }
       };
       const outputConfig = {
           "usage": [{
