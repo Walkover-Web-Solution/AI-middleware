@@ -96,7 +96,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       'chatbot_message',
       'updated_message',
       'tools_call_data',
-      'message_id',
+      ['message_id','thread_message_id'],
       'user_feedback',
       'sub_thread_id',
       "version_id",
