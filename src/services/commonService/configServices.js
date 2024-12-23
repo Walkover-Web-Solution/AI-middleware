@@ -661,13 +661,12 @@ const extraThreadID = async (req, res, next) => {
 };
 
 const getThreadMessages = async(req,res,next)=>{
-  try {
     let { bridge_id } = req.params;
     let page = parseInt(req.query.pageNo) || null;
     let pageSize = parseInt(req.query.limit) || null;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id = thread_id } = req.query;
-    const  org_id  = req.profile.org_id || req.profile.org.id;
+    const  org_id  = req.profile.org?.id || req.profile.org_id;
     let bridge = {};
 
     if (bridge_slugName) {
@@ -679,11 +678,6 @@ const getThreadMessages = async(req,res,next)=>{
     res.locals = threads;
     req.statusCode = 200;
     return next();
-  } catch (error) {
-    console.error("common error=>", error)
-    throw error;
-  }
-
 }
 
 const getAllSubThreadsController = async(req, res, next) => {

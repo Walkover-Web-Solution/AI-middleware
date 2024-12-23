@@ -100,7 +100,8 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       'user_feedback',
       'sub_thread_id',
       "version_id",
-      "image_url"
+      "image_url",
+      "urls"
     ],
     include: [
       {
@@ -110,9 +111,9 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         required: false,
         on: {
           id: models.pg.sequelize.where(
-            models.pg.sequelize.col('conversations.id'),
+            models.pg.sequelize.col('conversations.message_id'),
             '=',
-            models.pg.sequelize.col('raw_data.chat_id')
+            models.pg.sequelize.col('raw_data.message_id')
           )
         }
       }
