@@ -21,6 +21,9 @@ const ChatBotSchema = new Schema({
   orgId: {
     type: String
   },
+  rtLayerApiKey:{
+   type:String
+  },
   title: {
     type: String
   },

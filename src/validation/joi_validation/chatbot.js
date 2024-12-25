@@ -4,6 +4,7 @@ Joi.objectId = joiObjectId(Joi);
 const createChatBotSchema = Joi.object({
     orgId: Joi.number().required(),
     title: Joi.string().required(),
+    rt_layer_api_key: Joi.string().required,
     createdBy: Joi.number().required(),
     updatedBy: Joi.number().required(),
 })

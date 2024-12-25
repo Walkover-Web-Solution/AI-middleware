@@ -10,12 +10,13 @@ import { generateIdentifier } from "../services/utils/utilityService.js";
 import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
-    const { title } = req.body;
+    const { title, rt_layer_api_key} = req.body;
     const userId = req.profile.user.id;
     const orgId = req.profile.org.id;
     const dataToSave = {
         orgId,
         title,
+        rt_layer_api_key,
         createdBy: userId,
         updatedBy: userId,
     }
