@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import Sequelize from 'sequelize';
-import process from 'process';
+// import process from 'process';
 import * as url from 'url';
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -13,7 +13,7 @@ const db = {};
 
 try {
   
-const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
+const sequelize = new Sequelize("postgresql://tsdbadmin:wiu3nrnmhljj26z5@cnd9mf6ofq.x5aoank8hh.tsdb.cloud.timescale.com:35241/tsdb?sslmode=require", {
   dialect: 'postgres',
     protocol: 'postgres',
     port: 35362,
