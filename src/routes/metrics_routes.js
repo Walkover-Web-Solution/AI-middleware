@@ -1,7 +1,7 @@
 import express from "express";
-import { metrics, getRequestData, getRequestDataForPg } from "../controllers/request_controller.js";
-const routes = express.Router();
-routes.route('/request/:id').get(getRequestData);
-routes.route('/request/Pg/:id').get(getRequestDataForPg);
-routes.route('/:org_id').get(metrics);
-export default routes;
+import middleware from "../middlewares/middleware.js";
+import { metrics_data } from "../controllers/metrics_controller.js";
+const router = express.Router();
+
+router.get('/', middleware, metrics_data)
+export default router;

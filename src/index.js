@@ -7,6 +7,7 @@ import configurationController from "./controllers/configController.js";
 import apiKeyrouter from "./routes/apikeyRouter.js";
 import helloRoutes from './routes/helloRoutes.js';
 import threadRoutes from './routes/threadRoutes.js'
+import metricsRoutes from "./routes/metrics_routes.js"
 const app = express();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
@@ -50,6 +51,7 @@ app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
 app.use('/hello', helloRoutes);
 app.use('/thread', threadRoutes);
+app.use('/metrics', metricsRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
