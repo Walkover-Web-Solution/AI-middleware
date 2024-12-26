@@ -53,6 +53,9 @@ module.exports = {
       },
       service : {
         type : Sequelize.STRING
+      },
+      time_zone : {
+        type : Sequelize.STRING
       }
     });
     await queryInterface.addIndex('metrics_raw_data', {

@@ -29,9 +29,9 @@ module.exports = {
       
       `);
 
-  await queryInterface.sequelize.query(`
-  SELECT add_job('insert_into_daily_data', '4 minutes', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
-`)
+    await queryInterface.sequelize.query(`
+      SELECT add_job('insert_into_daily_data', '1 day', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
+    `)
 
   },
   // eslint-disable-next-line no-unused-vars

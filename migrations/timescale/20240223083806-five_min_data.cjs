@@ -54,6 +54,9 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
+      time_zone : {
+        type : Sequelize.STRING
+      }
 
     });
     await queryInterface.addIndex('fifteen_minute_data', {

@@ -11,11 +11,11 @@ module.exports = {
     BEGIN
       INSERT INTO fifteen_minute_data 
           (org_id, apikey_id, service, model, 
-           latency_sum,success_count,record_count, created_at, total_token_count,cost_sum, thread_id, version_id, bridge_id)
+           latency_sum,success_count,record_count, created_at, total_token_count,cost_sum, thread_id, version_id, bridge_id, time_zone)
       SELECT 
           org_id, apikey_id, service, model, 
-          latency_sum,success_count,record_count, interval, total_token_count,cost_sum,thread_id, version_id, bridge_id
-      FROM five_min_data_aggregate
+          latency_sum,success_count,record_count, interval, total_token_count,cost_sum,thread_id, version_id, bridge_id, time_zone
+      FROM fifteen_min_data_aggregate
       WHERE interval > (SELECT COALESCE(MAX(created_at), 'epoch'::timestamp) FROM fifteen_minute_data)
       ON CONFLICT (org_id, service,bridge_id,apikey_id,thread_id,version_id, model, created_at)
       DO UPDATE SET
@@ -30,7 +30,7 @@ module.exports = {
   `);
     
   await queryInterface.sequelize.query(`
-  SELECT add_job('insert_into_fifteen_minute_data',  '1 minutes', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
+  SELECT add_job('insert_into_fifteen_minute_data',  '15 minutes', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
 `)
 
   },
