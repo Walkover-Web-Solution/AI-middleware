@@ -3,5 +3,5 @@ import middleware from "../middlewares/middleware.js";
 import { metrics_data } from "../controllers/metrics_controller.js";
 const router = express.Router();
 
-router.get('/', middleware, metrics_data)
+router.post('/', middleware, metrics_data)
 export default router;

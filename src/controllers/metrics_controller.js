@@ -8,7 +8,7 @@ const metrics_data = async (req, res) => {
       startTime,
       endTime,
     } = req.query;
-    const { apikey_id, service, model, thread_id, bridge_id, version_id } = req.body;
+    const { apikey_id, service, model, thread_id, bridge_id, version_id, range, factor } = req.body;
     const values = [];
     const params = {
         org_id,
@@ -21,9 +21,10 @@ const metrics_data = async (req, res) => {
         startTime,
         endTime,
       };
-    const whereClause = buildWhereClause(params, values);
-    const table = selectTable(startTime, endTime);
-    const query = `SELECT * FROM ${table} ${whereClause}`;
+    const whereClause = buildWhereClause(params, values, factor);
+    // const table = selectTable(startTime, endTime, range);
+    const table = selectTable(range);
+    const query = `SELECT ${factor}, SUM(cost_sum) as cost_sum, AVG(latency_sum/NULLIF(record_count, 0)) as latency_sum, SUM(success_count) as success_count FROM ${table} ${whereClause}`;
     try {
       const data = await metrics_sevice.find(query, values);
       res.status(200).json({

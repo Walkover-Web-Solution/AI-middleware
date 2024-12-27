@@ -1,16 +1,16 @@
-export function selectTable(startTime, endTime) {
-    const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
-    const startDate = new Date(Date.UTC(new Date(startTime).getUTCFullYear(), new Date(startTime).getUTCMonth(), new Date(startTime).getUTCDate(), new Date(startTime).getUTCHours(), new Date(startTime).getUTCMinutes(), new Date(startTime).getUTCSeconds()));
-    const endDate = new Date(Date.UTC(new Date(endTime).getUTCFullYear(), new Date(endTime).getUTCMonth(), new Date(endTime).getUTCDate(), new Date(endTime).getUTCHours(), new Date(endTime).getUTCMinutes(), new Date(endTime).getUTCSeconds()));
+export function selectTable(range) {
+    // const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+    // const startDate = new Date(Date.UTC(new Date(startTime).getUTCFullYear(), new Date(startTime).getUTCMonth(), new Date(startTime).getUTCDate(), new Date(startTime).getUTCHours(), new Date(startTime).getUTCMinutes(), new Date(startTime).getUTCSeconds()));
+    // const endDate = new Date(Date.UTC(new Date(endTime).getUTCFullYear(), new Date(endTime).getUTCMonth(), new Date(endTime).getUTCDate(), new Date(endTime).getUTCHours(), new Date(endTime).getUTCMinutes(), new Date(endTime).getUTCSeconds()));
 
-    if (startDate.toDateString() === today.toDateString() && endDate.toDateString() === today.toDateString()) {
+    if (range === 1) {
         return 'fifteen_minute_data';
     } else {
-        return 'fifteen_minute_data';
+        return 'daily_data';
     }
 }
 
-export function buildWhereClause(params, values) {
+export function buildWhereClause(params, values, factor) {
     const conditions = [];
 
     if (params.org_id !== null && params.org_id !== undefined) {
@@ -41,6 +41,10 @@ export function buildWhereClause(params, values) {
         values.push(params.model);
         conditions.push(`model = '${params.model}'`);
     }
-    
-    return 'WHERE ' + conditions.join(' AND ');
+
+    let query = 'WHERE ' + conditions.join(' AND ');
+    if (factor) {
+        query += ` GROUP BY ${factor}`;
+    }
+    return query;
 }
