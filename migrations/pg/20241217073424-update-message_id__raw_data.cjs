@@ -18,7 +18,6 @@ module.exports = {
         FROM conversations
         WHERE raw_data.chat_id = conversations.id;
       `, { transaction });
-
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
@@ -31,7 +30,6 @@ module.exports = {
     try {
       // Remove the message_id column from raw_data
       await queryInterface.removeColumn('raw_data', 'message_id', { transaction });
-
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
