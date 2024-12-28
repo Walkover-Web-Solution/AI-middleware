@@ -2,26 +2,6 @@ import models from "../../models/index.js";
 import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
 
-async function createBulk(data) {
-  return await models.pg.conversations.bulkCreate(data);
-}
-async function find(org_id, thread_id, bridge_id) {
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [['message', 'content'], ['message_by', 'role'], 'createdAt', 'id', "function"],
-    where: {
-      org_id,
-      thread_id,
-      bridge_id
-    },
-    order: [['id', 'DESC']],
-    limit: 6,
-    raw: true
-  });
-  conversations = conversations.reverse();
-  // If you want to return the result directly
-  return conversations;
-}
-
 async function getHistory(bridge_id, timestamp) {
   try {
     const history = await models.pg.system_prompt_versionings.findAll({
@@ -41,29 +21,6 @@ async function getHistory(bridge_id, timestamp) {
   } catch (error) {
     console.error("get history system prompt error=>", error)
     return { success: false, message: "Prompt not found" };
-  }
-}
-async function getAllPromptHistory(bridge_id,page, pageSize) {
-  try {
-    const history = await models.pg.system_prompt_versionings.findAll({
-      where: {
-        bridge_id
-      },
-      order: [
-        ['updated_at', 'DESC'],
-      ],
-    raw: true,
-    limit: pageSize,
-    offset: (page - 1) * pageSize
-    });
-    if (history.length === 0) {
-      return { success: true, message: "No prompts found for the given bridge_id" };
-    }
-
-    return { success: true, history };
-  } catch (error) {
-    console.error("get history system prompt error=>", error);
-    return { success: false, message: "Error retrieving prompts" };
   }
 }
 
@@ -96,7 +53,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       'chatbot_message',
       'updated_message',
       'tools_call_data',
-      ['message_id','thread_message_id'],
+      'message_id',
       'user_feedback',
       'sub_thread_id',
       "version_id",
@@ -111,9 +68,9 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         required: false,
         on: {
           id: models.pg.sequelize.where(
-            models.pg.sequelize.col('conversations.id'),
+            models.pg.sequelize.col('conversations.message_id'),
             '=',
-            models.pg.sequelize.col('raw_data.chat_id')
+            models.pg.sequelize.col('raw_data.message_id')
           )
         }
       }
@@ -535,15 +492,12 @@ const getSubThreads = async (org_id,thread_id) =>{
 
 
 export default {
-  find,
-  createBulk,
   findAllThreads,
   findMessageByMessageId,
   deleteLastThread,
-  storeSystemPrompt,
   getHistory,
+  storeSystemPrompt,
   findMessage,
-  getAllPromptHistory,
   findThreadsForFineTune,
   system_prompt_data,
   updateMessage,
