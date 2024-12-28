@@ -17,4 +17,4 @@ const responseMiddleware = (req, res, next) => {
   return next();
 };
 
-export { responseMiddleware };
+export default responseMiddleware;
