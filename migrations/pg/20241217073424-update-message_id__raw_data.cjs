@@ -2,9 +2,16 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface) {
+  async up (queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
+      // Add the message_id column to raw_data
+      await queryInterface.addColumn('raw_data', 'message_id', {
+        type: Sequelize.STRING,
+        allowNull: true,
+      }, { transaction });
+
+      // Update the message_id in raw_data from conversations
       await queryInterface.sequelize.query(`
         UPDATE raw_data
         SET message_id = conversations.message_id
@@ -21,11 +28,8 @@ module.exports = {
   async down (queryInterface) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.sequelize.query(`
-        UPDATE raw_data
-        SET message_id = NULL
-        WHERE message_id IS NOT NULL;
-      `, { transaction });
+      // Remove the message_id column from raw_data
+      await queryInterface.removeColumn('raw_data', 'message_id', { transaction });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
@@ -33,4 +37,3 @@ module.exports = {
     }
   }
 };
-
