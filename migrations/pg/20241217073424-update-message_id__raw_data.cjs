@@ -7,7 +7,7 @@ module.exports = {
     try {
       // Add the message_id column to raw_data
       await queryInterface.addColumn('raw_data', 'message_id', {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: true,
       }, { transaction });
 
