@@ -13,7 +13,7 @@ module.exports = {
       },
       bridge_id:{
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: false
       },
       version_id : {
         type: Sequelize.STRING,
