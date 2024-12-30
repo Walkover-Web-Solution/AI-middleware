@@ -14,7 +14,7 @@ export default {
     }
   },
   test: {
-    url: timescaleServiceUrl,
+    url: "",
     dialect: 'postgres'
   },
   production: {

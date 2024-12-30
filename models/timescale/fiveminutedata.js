@@ -1,4 +1,4 @@
-import { Model } from "sequelize";
+import { Model, fn } from "sequelize";
 export default ((sequelize, DataTypes) => {
   class five_minute_data extends Model {
     /**
@@ -19,21 +19,32 @@ export default ((sequelize, DataTypes) => {
       type: DataTypes.INTEGER
     },
     org_id: DataTypes.STRING,
-    authkey_name: DataTypes.STRING,
-    sum_latency: DataTypes.FLOAT,
-    service: DataTypes.STRING,
+    bridge_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    version_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    thread_id: DataTypes.STRING,
     model: DataTypes.STRING,
-    success_count: DataTypes.FLOAT,
-    token_count: DataTypes.FLOAT,
-    expected_cost_sum: DataTypes.FLOAT,
-    record_count: {
-      type: DataTypes.FLOAT,
-      defaultValue: 0
+    service: DataTypes.STRING,
+    input_tokens: DataTypes.FLOAT,
+    output_tokens: DataTypes.FLOAT,
+    total_tokens: DataTypes.FLOAT,
+    apikey_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     created_at: {
       allowNull: false,
-      type: DataTypes.DATE
-    }
+      type: DataTypes.DATE,
+      defaultValue: fn('now')
+    },
+    latency: DataTypes.FLOAT,
+    success: DataTypes.BOOLEAN,
+    cost: DataTypes.FLOAT
   }, {
     sequelize,
     modelName: 'five_minute_data',
