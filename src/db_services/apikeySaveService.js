@@ -1,6 +1,4 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
-import configurationModel from "../mongoModel/configuration.js";
-import versionModel from "../mongoModel/bridge_version.js";
 
 const saveApi = async (data) => {
     try {
@@ -84,8 +82,6 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         }
 
         let apikeyCredentialResult;
-        let configurationModelResult;
-        let versionModelResult;
 
         if (Object.keys(updateFields).length > 0) {
             apikeyCredentialResult = await ApikeyCredential.updateOne(
@@ -94,18 +90,7 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
             );
         }
 
-        if (apikey) {
-            configurationModelResult = await configurationModel.updateMany(
-                { apikey_object_id: apikey_object_id },
-                { $set: { apikey } }
-            );
-            versionModelResult = await versionModel.updateMany(
-                { apikey_object_id: apikey_object_id },
-                { $set: { apikey } }
-            );
-        }
-
-        const totalMatchedCount = (apikeyCredentialResult?.matchedCount || 0) + (configurationModelResult?.matchedCount || 0) + (versionModelResult?.matchedCount || 0);
+        const totalMatchedCount = (apikeyCredentialResult?.matchedCount || 0);
 
         if (totalMatchedCount === 0) {
             return {
