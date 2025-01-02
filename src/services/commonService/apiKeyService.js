@@ -130,6 +130,17 @@ async function deleteApikey(req, res) {
                 error: error.details
             });
         }
+        const apikeyCredential = await  apikeySaveService.getApiKeyData(apikey_object_id)
+        if (!apikeyCredential) {
+            return res.status(404).json({
+                success: false,
+                message: 'API key not found.'
+            });
+        }
+
+        const versionIds = apikeyCredential.version_ids || [];
+        await apikeySaveService.getVersionsUsingId(versionIds, apikey_object_id)
+
         const result = await apikeySaveService.deleteApi(apikey_object_id);
             if (result.success) {
                 return res.status(200).json({
