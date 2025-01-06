@@ -6,7 +6,7 @@ async function migrateData() {
     try {
         await client.connect();
 
-        const db = client.db("AI_Middleware");
+        const db = client.db("AI_Middleware-test");
         const configurations = db.collection("configuration_versions");
         const apikeycredentials = db.collection("apikeycredentials");
 
