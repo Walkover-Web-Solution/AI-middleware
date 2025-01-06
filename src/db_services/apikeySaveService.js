@@ -139,10 +139,8 @@ async function getApiKeyData(apikey_object_id)
 {
     try {
         const result = await ApikeyCredential.findOne({ _id: apikey_object_id });
-        return {
-            success: true,
-            result: result
-        };
+        const resultObject = result.toObject();
+        return resultObject
     } catch (error) {
         console.error("Error getting API data: ", error);
         return {
@@ -152,55 +150,37 @@ async function getApiKeyData(apikey_object_id)
     }
 }
 
-async function getVersionsUsingId(versionIds, apikey_object_id){
+async function getVersionsUsingId(versionIds, service) {
+    if (versionIds.length > 0) {
+        // **2. Fetch all related configuration_versions documents**
+        let configurations = await versionModel.find({ _id: { $in: versionIds } }).lean();
 
-if (versionIds.length > 0) {
-    // **2. Fetch all related configuration_versions documents**
-    const configurations = await versionModel.find({ _id: { $in: versionIds } }).toArray();
-
-    // **3. Iterate over each configuration and update the apikey_object_id**
-    const bulkOperations = configurations.map(config => {
-        const configId = config._id;
-        const apikeyObject = config.apikey_object_id;
-
-        // Find the service(s) that reference the API key being deleted
-        const servicesToUpdate = [];
-        for (const [service, keyId] of Object.entries(apikeyObject)) {
-            if (keyId === apikey_object_id) {
-                servicesToUpdate.push(service);
+        // Iterate over each configuration and modify the apikey_object_id object
+        for (let config of configurations) {
+            if (config.apikey_object_id && config.apikey_object_id[service]) {
+                delete config.apikey_object_id[service]; // Remove the key for the service
+                // Update the modified configuration back to the database
+                try {
+                    await versionModel.updateOne({ _id: config._id }, { $set: { apikey_object_id: config.apikey_object_id } });
+                } catch (error) {
+                    console.error(`Failed to update configuration with ID ${config._id}:`, error);
+                    return {
+                        success: false,
+                        error: `Failed to update configuration with ID ${config._id}`
+                    };
+                }
             }
         }
-
-        if (servicesToUpdate.length === 0) {
-            // No services to update in this configuration
-            return null;
-        }
-
-        // Prepare the update object
-        const updateObj = {};
-        servicesToUpdate.forEach(service => {
-            updateObj[`apikey_object_id.${service}`] = "";
-        });
 
         return {
-            updateOne: {
-                filter: { _id: configId },
-                update: { $set: updateObj }
-            }
+            success: true,
+            configurations: configurations
         };
-    }).filter(operation => operation !== null); // Remove null operations
-
-    if (bulkOperations.length > 0) {
-        // **4. Perform bulk updates**
-        const bulkWriteResult = await versionModel.bulkWrite(bulkOperations);
-        console.log(`Bulk update result: ${JSON.stringify(bulkWriteResult)}`);
     }
     return {
-        success: true,
-        message: 'versions updated successfully'
-    }
-}
-
+        success: false,
+        message: 'No version IDs provided'
+    };
 }
 export default {
     saveApi,
