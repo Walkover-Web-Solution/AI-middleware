@@ -12,7 +12,7 @@ async function migratePopulateVersionIds() {
         await client.connect();
         console.log("Connected to MongoDB.");
 
-        const db = client.db("AI_Middleware");
+        const db = client.db("AI_Middleware-test");
         const configurations = db.collection("configuration_versions");
         const apikeycredentials = db.collection("apikeycredentials");
 
