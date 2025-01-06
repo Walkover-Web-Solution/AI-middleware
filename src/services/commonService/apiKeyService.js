@@ -130,6 +130,12 @@ async function deleteApikey(req, res) {
                 error: error.details
             });
         }
+        const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
+        const versionIds = apikeys_data?.version_ids || []
+        const service = apikeys_data?.service
+
+        await apikeySaveService.getVersionsUsingId(versionIds, service)
+
         const result = await apikeySaveService.deleteApi(apikey_object_id);
             if (result.success) {
                 return res.status(200).json({
