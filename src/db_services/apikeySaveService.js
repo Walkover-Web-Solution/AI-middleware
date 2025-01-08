@@ -151,37 +151,45 @@ async function getApiKeyData(apikey_object_id)
 }
 
 async function getVersionsUsingId(versionIds, service) {
-    if (versionIds.length > 0) {
-        // **2. Fetch all related configuration_versions documents**
-        let configurations = await versionModel.find({ _id: { $in: versionIds } }).lean();
-
-        // Iterate over each configuration and modify the apikey_object_id object
-        for (let config of configurations) {
-            if (config.apikey_object_id && config.apikey_object_id[service]) {
-                delete config.apikey_object_id[service]; // Remove the key for the service
-                // Update the modified configuration back to the database
-                try {
-                    await versionModel.updateOne({ _id: config._id }, { $set: { apikey_object_id: config.apikey_object_id } });
-                } catch (error) {
-                    console.error(`Failed to update configuration with ID ${config._id}:`, error);
-                    return {
-                        success: false,
-                        error: `Failed to update configuration with ID ${config._id}`
-                    };
-                }
-            }
-        }
-
+    if (!versionIds?.length) {
         return {
-            success: true,
-            configurations: configurations
+            success: false,
+            message: 'No version IDs provided'
         };
     }
-    return {
-        success: false,
-        message: 'No version IDs provided'
-    };
+
+    try {
+        const bulkOps = versionIds.map(versionId => ({
+            updateOne: {
+                filter: { 
+                    _id: versionId,
+                    $or: [
+                        { [`apikey_object_id.${service}`]: { $exists: true } },
+                        { service: service }
+                    ]
+                },
+                update: {
+                    $set: { [`apikey_object_id.${service}`]: '' }
+                }
+            }
+        }));
+
+        const result = await versionModel.bulkWrite(bulkOps);
+        
+        return {
+            success: true,
+            modifiedCount: result.modifiedCount
+        };
+
+    } catch (error) {
+        console.error('Error updating versions:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
 }
+
 export default {
     saveApi,
     getName,
