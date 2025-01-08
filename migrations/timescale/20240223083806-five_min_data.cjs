@@ -2,7 +2,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
 
-    await queryInterface.createTable("five_minute_data", {
+    await queryInterface.createTable("fifteen_minute_data", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -11,14 +11,23 @@ module.exports = {
       org_id: {
         type: Sequelize.STRING
       },
-      authkey_name: {
+      bridge_id:{
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      version_id : {
         type: Sequelize.STRING,
         allowNull: true
       },
-      sum_latency: {
-        type: Sequelize.FLOAT
+      thread_id : {
+        type: Sequelize.STRING,
+        allowNull: true
       },
-      avg_latency: {
+      apikey_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      latency_sum: {
         type: Sequelize.FLOAT
       },
       service: {
@@ -31,10 +40,10 @@ module.exports = {
         defaultValue: 0,
         type: Sequelize.FLOAT
       },
-      token_count: {
+      total_token_count: {
         type: Sequelize.FLOAT
       },
-      expected_cost_sum: {
+      cost_sum: {
         type: Sequelize.FLOAT
       },
       record_count: {
@@ -45,18 +54,22 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
+      time_zone : {
+        type : Sequelize.STRING
+      }
+
     });
-    await queryInterface.addIndex('five_minute_data', {
+    await queryInterface.addIndex('fifteen_minute_data', {
       fields: ['id', 'created_at'],
       unique: true,
-      name: 'five_minute_data_index_id_created_at',
+      name: 'fifteen_minute_data_index_id_created_at',
     });
 
     await queryInterface.sequelize.query(
-      "SELECT create_hypertable('five_minute_data', 'created_at');"
+      "SELECT create_hypertable('fifteen_minute_data',by_range('created_at', INTERVAL '1 hour'));"
     );
-    await queryInterface.addIndex("five_minute_data", {
-      fields: ["org_id", "service", "model", "created_at"],
+    await queryInterface.addIndex("fifteen_minute_data", {
+      fields: ["org_id", "service","bridge_id","version_id","thread_id","apikey_id" ,"model", "created_at"],
       unique: true,
       name: 'unique_constraint_org_service_model_created_at',
     });
@@ -64,6 +77,6 @@ module.exports = {
   },
   // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("five_minute_data");
+    await queryInterface.dropTable("fifteen_minute_data");
   },
 };
