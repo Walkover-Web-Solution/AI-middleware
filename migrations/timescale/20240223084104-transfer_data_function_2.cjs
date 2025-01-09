@@ -10,28 +10,28 @@ module.exports = {
     $$
     BEGIN
       INSERT INTO daily_data 
-          (org_id, authkey_name , service, model, 
-            avg_latency, success_count,record_count, created_at, token_count,expected_cost_sum)
+          (org_id, apikey_id , service, model, 
+            latency_sum, success_count,record_count, created_at, total_token_count,cost_sum, thread_id, version_id, bridge_id)
       SELECT 
-          org_id, authkey_name, service, model, 
-          avg_latency, success_count,record_count, interval, token_count,expected_cost_sum
+          org_id, apikey_id, service, model, 
+          latency_sum, success_count,record_count, interval, total_token_count,cost_sum, thread_id, version_id, bridge_id
       FROM daily_data_aggregate
       WHERE interval > (SELECT COALESCE(MAX(created_at), 'epoch'::timestamp) FROM daily_data)
-      ON CONFLICT (org_id, service, model, created_at)
+      ON CONFLICT (org_id, service,bridge_id,apikey_id,thread_id,version_id, model, created_at)
       DO UPDATE SET
-          avg_latency = (daily_data.avg_latency * daily_data.record_count + EXCLUDED.avg_latency * EXCLUDED.record_count) / (daily_data.record_count + EXCLUDED.record_count),
-          expected_cost_sum = daily_data.expected_cost_sum + EXCLUDED.expected_cost_sum,
-          record_count = daily_data.record_count + EXCLUDED.record_count,
-          success_count = daily_data.success_count + EXCLUDED.success_count,
-          token_count = daily_data.token_count + EXCLUDED.token_count;
-    END;
-    $$;
-    
-  `);
-    
-  await queryInterface.sequelize.query(`
-  SELECT add_job('insert_into_daily_data', '1 day', initial_start => '2024-02-20 18:31:00+00'::timestamptz);
-`)
+      cost_sum = daily_data.cost_sum + EXCLUDED.cost_sum,
+      latency_sum = daily_data.latency_sum + EXCLUDED.latency_sum,
+      record_count = daily_data.record_count + EXCLUDED.record_count,
+      success_count = daily_data.success_count + EXCLUDED.success_count,
+      total_token_count = daily_data.total_token_count + EXCLUDED.total_token_count;
+      END;
+      $$;
+      
+      `);
+
+    await queryInterface.sequelize.query(`
+      SELECT add_job('insert_into_daily_data', '1 day', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
+    `)
 
   },
   // eslint-disable-next-line no-unused-vars

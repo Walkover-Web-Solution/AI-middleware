@@ -11,12 +11,24 @@ module.exports = {
       org_id: {
         type: Sequelize.STRING
       },
-      authkey_name: {
-        type: Sequelize.STRING, 
-        allowNull: true        
+      bridge_id:{
+        type: Sequelize.STRING,
+        allowNull: false
       },
-      avg_latency: {
-        type: Sequelize.FLOAT 
+      version_id : {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      thread_id : {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      apikey_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      latency_sum: {
+        type: Sequelize.FLOAT
       },
       service: {
         type: Sequelize.STRING
@@ -24,14 +36,15 @@ module.exports = {
       model: {
         type: Sequelize.STRING
       },
-      token_count: {
-        type: Sequelize.FLOAT
-      },
-      expected_cost_sum: {
-        type: Sequelize.FLOAT
-      },
       success_count: {
-        type: Sequelize.FLOAT,
+        defaultValue: 0,
+        type: Sequelize.FLOAT
+      },
+      total_token_count: {
+        type: Sequelize.FLOAT
+      },
+      cost_sum: {
+        type: Sequelize.FLOAT
       },
       record_count: {
         type: Sequelize.FLOAT,
@@ -42,6 +55,7 @@ module.exports = {
         type: Sequelize.DATE
       },
 
+
     });
     await queryInterface.addIndex('daily_data', {
       fields: ['id', 'created_at'],
@@ -50,10 +64,10 @@ module.exports = {
     });
    
     await queryInterface.sequelize.query(
-      "SELECT create_hypertable('daily_data', 'created_at');"
+      "SELECT create_hypertable('daily_data', by_range('created_at', INTERVAL '1 day'));"
     );
     await queryInterface.addIndex("daily_data", {
-      fields: ["org_id", "service", "model","created_at"],
+      fields: ["org_id", "service","bridge_id","version_id","thread_id","apikey_id" ,"model", "created_at"],
       unique: true,
       name: 'unique_constraint_daily_org_service_model_created_at',
     });

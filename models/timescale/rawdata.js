@@ -1,4 +1,4 @@
-import { Model } from "sequelize";
+import { Model, fn } from "sequelize";
 export default ((sequelize, DataTypes) => {
   class raw_data extends Model {
     /**
@@ -14,21 +14,37 @@ export default ((sequelize, DataTypes) => {
   raw_data.init({
     id: {
       allowNull: false,
-      type: DataTypes.UUID,
+      autoIncrement: true,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      type: DataTypes.INTEGER
     },
     org_id: DataTypes.STRING,
-    authkey_name: DataTypes.STRING,
-    latency: DataTypes.FLOAT,
-    service: DataTypes.STRING,
-    status: DataTypes.BOOLEAN,
+    bridge_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    version_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    thread_id: DataTypes.STRING,
     model: DataTypes.STRING,
+    service: DataTypes.STRING,
     input_tokens: DataTypes.FLOAT,
     output_tokens: DataTypes.FLOAT,
-    expected_cost: DataTypes.FLOAT,
-    message_id : DataTypes.UUIDV4,
-    created_at: DataTypes.DATE
+    total_tokens: DataTypes.FLOAT,
+    apikey_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    created_at: {
+      allowNull: false,
+      type: DataTypes.DATE,
+      defaultValue: fn('now')
+    },
+    latency: DataTypes.FLOAT,
+    success: DataTypes.BOOLEAN,
+    cost: DataTypes.FLOAT
   }, {
     sequelize,
     modelName: 'raw_data',
