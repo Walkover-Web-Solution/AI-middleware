@@ -1,6 +1,7 @@
 import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
+import {deleteInCache} from "../../cache_service/index.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -95,7 +96,11 @@ async function updateApikey(req, res) {
             maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
             result.apikey = maskedApiKey
         }
+        if(result?.updatedData?.version_ids?.length > 0) {
+            result.updatedData.version_ids = result.updatedData.version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
+        }
         if (result.success) {
+            await deleteInCache(result?.updatedData?.version_ids)
             return res.status(200).json({
                 success: true,
                 message: "Apikey updated successfully",
@@ -131,13 +136,16 @@ async function deleteApikey(req, res) {
             });
         }
         const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
-        const versionIds = apikeys_data?.version_ids || []
+        let version_ids = apikeys_data?.version_ids || []
         const service = apikeys_data?.service
-
-        await apikeySaveService.getVersionsUsingId(versionIds, service)
+        if(version_ids?.length > 0) {
+            version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
+        }
+        await apikeySaveService.getVersionsUsingId(version_ids, service)
 
         const result = await apikeySaveService.deleteApi(apikey_object_id);
             if (result.success) {
+                await deleteInCache(result?.updatedData?.version_ids)
                 return res.status(200).json({
                     success: true,
                     message: 'Apikey deleted successfully'
