@@ -85,15 +85,14 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         let apikeyCredentialResult;
 
         if (Object.keys(updateFields).length > 0) {
-            apikeyCredentialResult = await ApikeyCredential.updateOne(
+            apikeyCredentialResult = await ApikeyCredential.findOneAndUpdate(
                 { _id: apikey_object_id },
-                { $set: updateFields }
-            );
+                { $set: updateFields },
+                { new: true }
+            ).lean();
         }
 
-        const totalMatchedCount = (apikeyCredentialResult?.matchedCount || 0);
-
-        if (totalMatchedCount === 0) {
+        if (!apikeyCredentialResult) {
             return {
                 success: false,
                 error: 'No records updated or bridge not found'
@@ -102,7 +101,8 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
 
         return {
             success: true,
-            apikey: apikey || updateFields.apikey
+            apikey: apikey || updateFields.apikey,
+            updatedData: apikeyCredentialResult
         };
     } catch (error) {
         console.error(error);
