@@ -230,6 +230,23 @@ const gettemplateById = async template_id =>{
     return null;
   }
 }
+const getBridges = async bridge_id => {
+  try {
+    const bridges = await configurationModel.findOne({
+      _id: bridge_id
+    });
+    return {
+      success: true,
+      bridges: bridges
+    };
+  } catch (error) {
+    console.log(error)
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
 
 
 export default {
@@ -244,5 +261,6 @@ export default {
   getBridgeIdBySlugname,
   gettemplateById,
   addActionInBridge,
-  removeActionInBridge
+  removeActionInBridge,
+  getBridges
 };
