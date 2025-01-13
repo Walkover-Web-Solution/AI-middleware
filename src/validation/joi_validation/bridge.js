@@ -318,10 +318,12 @@ const createThreadHistrorySchema = Joi.object({
     'number.base': 'The org_id must be a number' 
   }),
   thread_id: Joi.string().required(), 
+  sub_thread_id: Joi.string().required(), 
   model_name: Joi.string().required(),
   message: Joi.string().required(), 
   type: Joi.string().valid('chat').required(),
-  message_by: Joi.string().valid('assistant').required() 
+  message_by: Joi.string().valid('assistant').required(),
+  message_id: Joi.string()
 });
 export {
   updateBridgeSchema,
