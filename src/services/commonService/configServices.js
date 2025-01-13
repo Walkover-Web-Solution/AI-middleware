@@ -345,6 +345,7 @@ export const createEntry = async (req, res,next) => {
     const {
       message
     } = req.body;
+    const message_id = crypto.randomUUID();
     const org_id = req.profile.org.id
     const result = (await configurationService.getBridges(bridge_id))?.bridges;
     const payload ={
@@ -354,7 +355,9 @@ export const createEntry = async (req, res,next) => {
       model_name: result?.configuration?.model,
       message:message,
       type: "chat",
-      message_by:"assistant"
+      message_by:"assistant",
+      message_id : message_id,
+      sub_thread_id: thread_id
     }
     try {
       await createThreadHistrorySchema.validateAsync(payload);
