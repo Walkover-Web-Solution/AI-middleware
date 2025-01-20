@@ -49,4 +49,45 @@ const middleware = async (req, res, next) => {
   }
 };
 
-export default middleware;
+
+const combine_middleware = async (req, res, next) => {
+  try {
+    let token = req.get('Authorization');
+    token = token?.split(' ')?.[1] || token;
+    if (token) {
+      try {
+        const decodedToken = jwt.decode(token);
+        if (decodedToken) {
+          let checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
+          if (checkToken) {
+            checkToken.org_id = checkToken.org_id.toString();
+            req.profile = checkToken;
+            req.body.org_id = checkToken?.org_id?.toString();
+            if (!checkToken.user) req.profile.viewOnly = true;
+            return next();
+          }
+        }
+      } catch (e) {
+        console.error("Chatbot token verification failed", e);
+      }
+    }
+
+    if (req.headers['proxy_auth_token']) {
+      try {
+        req.profile = await makeDataIfProxyTokenGiven(req);
+        req.profile.org.id = req.profile.org.id.toString();
+        req.body.org_id = req.profile.org.id;
+        return next();
+      } catch (e) {
+        console.error("Proxy token verification failed", e);
+      }
+    }
+
+    return res.status(401).json({ message: 'unauthorized user' });
+  } catch (err) {
+    console.error("middleware error =>", err);
+    return res.status(401).json({ message: 'unauthorized user' });
+  }
+};
+
+export { middleware, combine_middleware };
