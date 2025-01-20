@@ -1,6 +1,6 @@
 import express from "express";
 import common from "../services/commonService/configServices.js";
-import middleware from "../middlewares/middleware.js";
+import {middleware} from "../middlewares/middleware.js";
 import { chatBotAuth } from "../middlewares/interfaceMiddlewares.js";
 let router = express.Router();
 router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);

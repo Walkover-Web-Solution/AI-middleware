@@ -27,7 +27,7 @@ async function createThreadController(req, res, next) {
 // Get all threads
 async function getAllThreadsController(req, res, next) {
     const { thread_id } = req.params;
-    const org_id = req.profile.org_id
+    const org_id = req?.profile?.org_id || req?.profile?.org?.id
     const threads = await getThreads(org_id, thread_id);
     res.locals = { threads, success: true };
     req.statusCode = 200;
