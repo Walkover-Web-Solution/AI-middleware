@@ -61,10 +61,9 @@ const combine_middleware = async (req, res, next) => {
           // Check for middleware authorization
           let middlewareToken = jwt.verify(token, process.env.SecretKey);
           if (middlewareToken) {
-            middlewareToken.org_id = middlewareToken.org_id.toString();
+            middlewareToken.org_id = middlewareToken.org.id.toString();
             req.profile = middlewareToken;
-            req.body.org_id = middlewareToken?.org_id?.toString();
-            if (!middlewareToken.user) req.profile.viewOnly = true;
+            req.body.org_id = middlewareToken?.org.id?.toString();
             return next();
           }
         }
@@ -98,8 +97,8 @@ const combine_middleware = async (req, res, next) => {
     }
 
     return res.status(401).json({ message: 'unauthorized user' });
-  } catch (err) {
-    console.error("middleware error =>", err);
+  } catch (e) {
+    console.error("middleware error =>",e);
     return res.status(401).json({ message: 'unauthorized user' });
   }
 };
