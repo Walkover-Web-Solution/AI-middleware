@@ -58,17 +58,30 @@ const combine_middleware = async (req, res, next) => {
       try {
         const decodedToken = jwt.decode(token);
         if (decodedToken) {
-          let checkToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
-          if (checkToken) {
-            checkToken.org_id = checkToken.org_id.toString();
-            req.profile = checkToken;
-            req.body.org_id = checkToken?.org_id?.toString();
-            if (!checkToken.user) req.profile.viewOnly = true;
+          // Check for middleware authorization
+          let middlewareToken = jwt.verify(token, process.env.SecretKey);
+          if (middlewareToken) {
+            middlewareToken.org_id = middlewareToken.org.id.toString();
+            req.profile = middlewareToken;
+            req.body.org_id = middlewareToken?.org.id?.toString();
             return next();
           }
         }
       } catch (e) {
-        console.error("Chatbot token verification failed", e);
+        console.error("Middleware token verification failed", e);
+        // Check for chatbot authorization if middleware verification fails
+        try {
+          let chatbotToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
+          if (chatbotToken) {
+            chatbotToken.org_id = chatbotToken.org_id.toString();
+            req.profile = chatbotToken;
+            req.body.org_id = chatbotToken?.org_id?.toString();
+            if (!chatbotToken.user) req.profile.viewOnly = true;
+            return next();
+          }
+        } catch (e) {
+          console.error("Chatbot token verification failed", e);
+        }
       }
     }
 
@@ -84,8 +97,8 @@ const combine_middleware = async (req, res, next) => {
     }
 
     return res.status(401).json({ message: 'unauthorized user' });
-  } catch (err) {
-    console.error("middleware error =>", err);
+  } catch (e) {
+    console.error("middleware error =>",e);
     return res.status(401).json({ message: 'unauthorized user' });
   }
 };
