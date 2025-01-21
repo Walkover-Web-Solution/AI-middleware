@@ -49,4 +49,58 @@ const middleware = async (req, res, next) => {
   }
 };
 
-export default middleware;
+
+const combine_middleware = async (req, res, next) => {
+  try {
+    let token = req.get('Authorization');
+    token = token?.split(' ')?.[1] || token;
+    if (token) {
+      try {
+        const decodedToken = jwt.decode(token);
+        if (decodedToken) {
+          // Check for middleware authorization
+          let middlewareToken = jwt.verify(token, process.env.SecretKey);
+          if (middlewareToken) {
+            middlewareToken.org_id = middlewareToken.org.id.toString();
+            req.profile = middlewareToken;
+            req.body.org_id = middlewareToken?.org.id?.toString();
+            return next();
+          }
+        }
+      } catch (e) {
+        console.error("Middleware token verification failed", e);
+        // Check for chatbot authorization if middleware verification fails
+        try {
+          let chatbotToken = jwt.verify(token, process.env.CHATBOTSECRETKEY);
+          if (chatbotToken) {
+            chatbotToken.org_id = chatbotToken.org_id.toString();
+            req.profile = chatbotToken;
+            req.body.org_id = chatbotToken?.org_id?.toString();
+            if (!chatbotToken.user) req.profile.viewOnly = true;
+            return next();
+          }
+        } catch (e) {
+          console.error("Chatbot token verification failed", e);
+        }
+      }
+    }
+
+    if (req.headers['proxy_auth_token']) {
+      try {
+        req.profile = await makeDataIfProxyTokenGiven(req);
+        req.profile.org.id = req.profile.org.id.toString();
+        req.body.org_id = req.profile.org.id;
+        return next();
+      } catch (e) {
+        console.error("Proxy token verification failed", e);
+      }
+    }
+
+    return res.status(401).json({ message: 'unauthorized user' });
+  } catch (e) {
+    console.error("middleware error =>",e);
+    return res.status(401).json({ message: 'unauthorized user' });
+  }
+};
+
+export { middleware, combine_middleware };

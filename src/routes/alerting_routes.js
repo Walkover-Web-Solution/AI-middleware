@@ -1,6 +1,6 @@
 import express from "express";
 import alertingContoller from "../controllers/alertingContoller.js";
-import middleware from "../middlewares/middleware.js";
+import {middleware} from "../middlewares/middleware.js";
 // import middleware from "../middlewares/middleware.js";
 
 let router = express.Router();
