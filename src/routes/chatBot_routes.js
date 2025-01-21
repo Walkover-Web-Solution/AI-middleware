@@ -1,7 +1,7 @@
 import express from "express";
 import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrRemoveAction, createOrgToken, deleteChatBot, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateAllDefaultResponseInOrg, updateChatBot, updateChatBotConfig, updateDetails } from "../controllers/chatBotController.js";
 import { chatBotAuth, chatBotTokenDecode } from "../middlewares/interfaceMiddlewares.js";
-import middleware from "../middlewares/middleware.js";
+import {middleware} from "../middlewares/middleware.js";
 import userOrgAccessCheck from "../middlewares/userOrgCheck.js";
 
 const routes = express.Router();
