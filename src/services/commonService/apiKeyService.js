@@ -96,9 +96,6 @@ async function updateApikey(req, res) {
             maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
             result.apikey = maskedApiKey
         }
-        if(result?.updatedData?.version_ids?.length > 0) {
-            result.updatedData.version_ids = result.updatedData.version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
-        }
         if (result.success) {
             await deleteInCache(result?.updatedData?.version_ids)
             return res.status(200).json({
