@@ -36,7 +36,7 @@ const updateUserDetails = async (req, res) => {
 
     const updateObject = {
         company_id,
-        company
+        company : {"meta":company?.meta}
     };
 
     try {
