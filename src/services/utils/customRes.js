@@ -7,10 +7,11 @@ class ResponseSender {
   }
 
   async sendResponse({ rtlLayer, webhook, data, reqBody, headers }) {
+    const { rtlOptions, ...dataToSend } = reqBody || {};
     if (rtlLayer) {
       await this.rtlayer.message(
-        { ...reqBody, ...data },
-        reqBody.rtlOptions
+        { ...dataToSend, ...data },
+        rtlOptions
       );
     }
     if (webhook) {
