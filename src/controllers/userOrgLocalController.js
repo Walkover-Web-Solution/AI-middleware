@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import axios from "axios";
 
 function generateAuthToken(user, org) {
 
@@ -26,38 +27,33 @@ const switchUserOrgLocal = async (req, res) => {
 }
 
 const updateUserDetails = async (req, res) => {
-    // if (process.env.ENVIROMENT !== 'local') return res.status(404).send();
-
-    const PUBLIC_REFERENCEID = req.headers?.['reference-id']
+    const PUBLIC_REFERENCEID = req.headers?.['reference-id'];
     const { company_id, company } = req.body;
-    const updateObject = {
-        company_id: company_id,
-        company: company,
-    };
-    try {
-        const apiUrl = `https://routes.msg91.com/${PUBLIC_REFERENCEID}/updateDetails`;
-        const response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                proxy_auth_token: req.headers['proxy_auth_token'],
-                Authkey: process.env.ADMIN_API_KEY
-            },
-            body: updateObject 
-       });
 
-    if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}, error: ${response.statusText}`);
+    if (!company_id || !company) {
+        return res.status(400).json({ message: "company_id and company are required." });
     }
 
-    const data = await response.json();
-    res.status(200).json({ message: "User details updated successfully", data });
+    const updateObject = {
+        company_id,
+        company
+    };
+
+    try {
+        const apiUrl = `https://routes.msg91.com/api/${PUBLIC_REFERENCEID}/updateDetails`;
+        const response = await axios.put(apiUrl, updateObject, {
+            headers: {
+                Authkey: process.env.ADMIN_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = response.data;
+        res.status(200).json({ message: "User details updated successfully", data });
     } catch (error) {
         console.error("Error updating user details:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(404).json({ message: "Something went wrong" });
     }
 };
-
 
 export {
     userOrgLocalToken,
