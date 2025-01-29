@@ -103,4 +103,8 @@ const combine_middleware = async (req, res, next) => {
   }
 };
 
-export { middleware, combine_middleware };
+
+const InternalAuth = async (req, res, next)=>{
+  return next()
+}
+export { middleware, combine_middleware, InternalAuth };
