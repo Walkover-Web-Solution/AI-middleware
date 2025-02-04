@@ -4,4 +4,5 @@
 package-lock.json
 ./package-lock.json
 /dump.rdb
+dump.rdb
 
