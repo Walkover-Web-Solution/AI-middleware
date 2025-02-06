@@ -11,7 +11,7 @@ import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/
 
 const getThreads = async (req, res,next) => {
   try {
-    let { bridge_id } = req.params;
+    let { bridge_id, version_id } = req.params;
     let page = parseInt(req.query.pageNo) || null;
     let pageSize = parseInt(req.query.limit) || null;
     const { thread_id, bridge_slugName } = req.params;
@@ -27,7 +27,7 @@ const getThreads = async (req, res,next) => {
       starterQuestion = bridge?.starterQuestion;
       
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback });
+    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id });
     threads = {
       ...threads,
       starterQuestion,
