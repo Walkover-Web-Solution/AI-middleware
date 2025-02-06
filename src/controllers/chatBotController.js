@@ -233,7 +233,7 @@ const loginUser = async (req, res) => {
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ userId: user_id, org_id, variables }, { exp,iat })}`,
+            token: `Bearer ${getToken({ user_id, org_id, variables }, { exp,iat })}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
@@ -256,7 +256,7 @@ const createOrgToken = async (req, res) => {
 const createOrRemoveAction = async (req, res) => {
     const { bridgeId } = req.params;
     const { type } = req.query;
-    const { actionJson } = req.body;
+    const { actionJson, version_id } = req.body;
     let { actionId } = req.body;
 
     if (!['add', 'remove'].includes(type)) return res.status(400).json({ error: "Invalid type", success: false });
@@ -266,9 +266,9 @@ const createOrRemoveAction = async (req, res) => {
 
     try {
         const response = type === 'add'
-            ? await configurationService.addActionInBridge(bridgeId, actionId, actionJson)
-            : await configurationService.removeActionInBridge(bridgeId, actionId);
-        filterDataOfBridgeOnTheBaseOfUI({ bridges: response }, bridgeId, false);
+            ? await configurationService.addActionInBridge(bridgeId, actionId, actionJson, version_id)
+            : await configurationService.removeActionInBridge(bridgeId, actionId, version_id);
+        // filterDataOfBridgeOnTheBaseOfUI({ bridges: response }, bridgeId, false);
 
         return res.status(200).json({ success: true, data: response });
     } catch (error) {

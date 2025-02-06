@@ -1,8 +1,8 @@
 import chatbotDbService from "../db_services/conversationDbService.js";
 
-const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search) => {
+const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback) => {
   try {
-    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search);
+    const chats = await chatbotDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback);
     return { success: true, data: chats };
   } catch (err) {
     console.log("getall threads=>", err);
@@ -40,12 +40,14 @@ const getChatData = async chat_id => {
     };
   }
 };
-const getThreadHistory = async (thread_id, org_id, bridge_id) => {
+const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize,user_feedback }) => {
   try {
-    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id);
+    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback);
     return {
       success: true,
-      data: chats
+      data: chats?.conversations,
+      totalPages:chats?.totalPages,
+      totalEnteries:chats?.totalEntries
     };
   } catch (err) {
     console.error(err);
@@ -55,72 +57,24 @@ const getThreadHistory = async (thread_id, org_id, bridge_id) => {
     };
   }
 };
-const savehistory = async (thread_id, userMessage, botMessage, org_id, bridge_id, model_name, type, messageBy, userRole = "user",tools={}) => {
-  try {
-    let chatToSave = [{
-      thread_id: thread_id,
-      org_id: org_id,
-      model_name: model_name,
-      message: userMessage || "",
-      message_by: userRole,
-      type: type,
-      bridge_id: bridge_id
-    }];
-    if(Object.keys(tools)?.length>0){
-      chatToSave.push({
-        thread_id: thread_id,
-        org_id: org_id,
-        model_name: model_name,
-        message: "",
-        message_by: "tools_call",
-        type: type,
-        bridge_id: bridge_id,
-        function:  tools
-      })
-    }
-    if (botMessage) {
-      chatToSave.push({
-        thread_id: thread_id,
-        org_id: org_id,
-        model_name: model_name,
-        message: messageBy != "tool_calls" ? botMessage : "",
-        message_by: messageBy,
-        type: type,
-        bridge_id: bridge_id,
-        function: messageBy === "tool_calls" ? botMessage : {}
-      });
-    }
-    if (userRole == "tool") {
-      const {
-        success
-      } = await chatbotDbService.deleteLastThread(org_id, thread_id, bridge_id);
-      chatToSave = chatToSave.slice(-1);
-      if (!success) {
-        // return { success:true,message: "successfully deleted last chat and saved bot response!" }
-        return {
-          success: false,
-          message: "failed to delete last chat!"
-        };
-      }
-    }
-    const result = await chatbotDbService.createBulk(chatToSave);
+const getThreadHistoryByMessageId = async ({ bridge_id, org_id, thread_id, message_id }) =>  await chatbotDbService.findMessageByMessageId(bridge_id, org_id, thread_id, message_id);
+
+const createThreadHistory = async (payload) => await chatbotDbService.create(payload);
+
+
+const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize }) => {
+    const chats = await chatbotDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     return {
       success: true,
-      message: "successfully saved chat history",
-      result: [...result]
+      data: chats?.conversations,
     };
-  } catch (error) {
-    console.error("saveconversation error=>", error);
-    return {
-      success: false,
-      message: error.message
-    };
-  }
 };
 export {
   getAllThreads,
-  savehistory,
   getThread,
   getThreadHistory,
-  getChatData
+  getChatData,
+  createThreadHistory,
+  getThreadHistoryByMessageId,
+  getThreadMessageHistory
 };

@@ -24,12 +24,19 @@ export default ((sequelize, DataTypes) => {
     message: DataTypes.TEXT,
     message_by: DataTypes.STRING,
     function: DataTypes.JSON,
+    updated_message: DataTypes.TEXT,
     // created_at: DataTypes.DATE,
     type: {
       type: DataTypes.ENUM('chat', 'completion', 'embedding'),
       // Using ENUM for type field
       allowNull: false
-    }
+    },
+    message_id : DataTypes.UUIDV4,
+    user_feedback: DataTypes.INTEGER,
+    is_reset: DataTypes.BOOLEAN,
+    version_id: DataTypes.STRING,
+    sub_thread_id: DataTypes.STRING,
+    external_reference: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'conversations',

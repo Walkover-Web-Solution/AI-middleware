@@ -1,6 +1,6 @@
 import Joi from "joi";
 const updateBridgeSchema = Joi.object({
-  bridge_id: Joi.string().alphanum().required(),
+  bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   bridgeType: Joi.string().valid('chatbot', 'api'),
   slugName: Joi.string().alphanum(),
   configuration: Joi.object({
@@ -143,6 +143,17 @@ const updateBridgeSchema = Joi.object({
         "stream": Joi.string(),
         "tools": Joi.string(),
         "tool_choice": Joi.string()
+      }),
+      'chatgpt-4o-latest': Joi.object({
+        "temperature": Joi.string(),
+        "max_tokens": Joi.string(),
+        "top_p": Joi.string(),
+        "logprobs": Joi.string(),
+        "frequency_penalty": Joi.string(),
+        "presence_penalty": Joi.string(),
+        "n": Joi.string(),
+        "stop": Joi.string(),
+        "stream": Joi.string()
       }),
       'gpt-4-0613': Joi.object({
         "temperature": Joi.string(),
@@ -301,6 +312,18 @@ const updateBridgeSchema = Joi.object({
     }).unknown() // Allow any additional properties within each model's configuration
   })
 });
+const createThreadHistrorySchema = Joi.object({
+  bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  org_id: Joi.number().required().messages({
+    'number.base': 'The org_id must be a number' 
+  }),
+  thread_id: Joi.string().required(), 
+  model_name: Joi.string().required(),
+  message: Joi.string().required(), 
+  type: Joi.string().valid('chat').required(),
+  message_by: Joi.string().valid('assistant').required() 
+});
 export {
-  updateBridgeSchema
+  updateBridgeSchema,
+  createThreadHistrorySchema
 };

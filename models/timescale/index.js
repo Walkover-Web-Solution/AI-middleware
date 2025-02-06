@@ -23,19 +23,17 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
             rejectUnauthorized: false
         }
     },
-      
-    logging: console.log
 });
 
-const dbservice = async () => {
-  try {
-    await sequelize.sync();
-  } catch (error) {
-    console.error('Unable to connect to the database:', error,444);
-      }
-};
+// const dbservice = async () => {
+//   try {
+//     await sequelize.sync();
+//   } catch (error) {
+//     console.error('Unable to connect to the database:', error,444);
+//       }
+// };
 
-dbservice();
+// dbservice();
 
 await fs.promises
   .readdir(__dirname)
@@ -58,6 +56,7 @@ await fs.promises
   db.Sequelize = Sequelize;
   
 } catch (error) {
+  if(process.env.ENVIROMENT != 'local')
   console.error('Error while connecting to the Timescaledb:',error);
 }
   export default db;

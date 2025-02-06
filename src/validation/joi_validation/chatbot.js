@@ -1,5 +1,6 @@
 import Joi from "joi";
-
+import joiObjectId from 'joi-objectid';
+Joi.objectId = joiObjectId(Joi);
 const createChatBotSchema = Joi.object({
     orgId: Joi.number().required(),
     title: Joi.string().required(),
@@ -21,7 +22,10 @@ const updateChatBotConfigSchema = Joi.object({
     widthUnit: Joi.string().allow("").required(),
     type: Joi.string().allow("").required(),
     botId: Joi.string().required(),
-    themeColor: Joi.string().required()
+    themeColor: Joi.string().required(),
+    chatbotTitle: Joi.string().allow("").required(),
+    chatbotSubtitle: Joi.string().allow("").required(),
+    iconUrl: Joi.string().allow("").optional(),
 })
 
 const addorRemoveBridgeInChatBotSchema = Joi.object({
@@ -45,6 +49,12 @@ const getViewOnlyChatBotSchema = Joi.object({
     org_id: Joi.number().required(),
     botId: Joi.string().required(),
 })
+
+const chatbotHistoryValidationSchema = Joi.object({
+    org_id: Joi.string().required(),
+      thread_id: Joi.string().required(),
+      bridge_id: Joi.objectId().required()
+})
 export {
     createChatBotSchema,
     updateChatBotSchema,
@@ -54,4 +64,5 @@ export {
     getChatBotOfBridgeSchema,
     updateChatBotConfigSchema,
     getViewOnlyChatBotSchema,
+    chatbotHistoryValidationSchema
 }

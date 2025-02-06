@@ -1,5 +1,5 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
-import configurationModel from "../mongoModel/configuration.js";
+import versionModel from "../mongoModel/bridge_version.js"
 
 const saveApi = async (data) => {
     try {
@@ -83,25 +83,16 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         }
 
         let apikeyCredentialResult;
-        let configurationModelResult;
 
         if (Object.keys(updateFields).length > 0) {
-            apikeyCredentialResult = await ApikeyCredential.updateOne(
+            apikeyCredentialResult = await ApikeyCredential.findOneAndUpdate(
                 { _id: apikey_object_id },
-                { $set: updateFields }
-            );
+                { $set: updateFields },
+                { new: true }
+            ).lean();
         }
 
-        if (apikey) {
-            configurationModelResult = await configurationModel.updateMany(
-                { apikey_object_id: apikey_object_id },
-                { $set: { apikey } }
-            );
-        }
-
-        const totalMatchedCount = (apikeyCredentialResult?.matchedCount || 0) + (configurationModelResult?.matchedCount || 0);
-
-        if (totalMatchedCount === 0) {
+        if (!apikeyCredentialResult) {
             return {
                 success: false,
                 error: 'No records updated or bridge not found'
@@ -110,7 +101,8 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
 
         return {
             success: true,
-            apikey: apikey || updateFields.apikey
+            apikey: apikey || updateFields.apikey,
+            updatedData: apikeyCredentialResult
         };
     } catch (error) {
         console.error(error);
@@ -143,11 +135,67 @@ async function deleteApi(apikey_object_id) {
     }
 }
 
+async function getApiKeyData(apikey_object_id)
+{
+    try {
+        const result = await ApikeyCredential.findOne({ _id: apikey_object_id });
+        const resultObject = result.toObject();
+        return resultObject
+    } catch (error) {
+        console.error("Error getting API data: ", error);
+        return {
+            success: false,
+            error: error
+        };
+    }
+}
+
+async function getVersionsUsingId(versionIds, service) {
+    if (!versionIds?.length) {
+        return {
+            success: false,
+            message: 'No version IDs provided'
+        };
+    }
+
+    try {
+        const bulkOps = versionIds.map(versionId => ({
+            updateOne: {
+                filter: { 
+                    _id: versionId,
+                    $or: [
+                        { [`apikey_object_id.${service}`]: { $exists: true } },
+                        { service: service }
+                    ]
+                },
+                update: {
+                    $set: { [`apikey_object_id.${service}`]: '' }
+                }
+            }
+        }));
+
+        const result = await versionModel.bulkWrite(bulkOps);
+        
+        return {
+            success: true,
+            modifiedCount: result.modifiedCount
+        };
+
+    } catch (error) {
+        console.error('Error updating versions:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
 
 export default {
     saveApi,
     getName,
     getAllApi,
     updateApikey,
-    deleteApi
+    deleteApi,
+    getApiKeyData,
+    getVersionsUsingId
 }

@@ -1,22 +1,25 @@
 import express from "express";
 import common from "../services/commonService/configServices.js";
-import middleware from "../middlewares/middleware.js";
-import createApi from "../services/commonService/apiCallService.js";
+import {middleware} from "../middlewares/middleware.js";
 import { chatBotAuth } from "../middlewares/interfaceMiddlewares.js";
 let router = express.Router();
-router.get('/getbridges/all', middleware, common.getAllBridges); //Done
-router.get('/getbridges/:bridge_id', middleware, common.getBridges); //Done
 router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);
+router.post('/threads/:thread_id/:bridge_id', middleware, common.createEntry);
+router.get('/userfeedbackcount/:bridge_id',middleware,common.userFeedbackCount);
 router.get('/history/:bridge_id', middleware, common.getMessageHistory);
-router.get('/models/:service', middleware, common.getAIModels); //Done
-router.post('/createbridges', middleware, common.createBridges); //Done
-router.post('/updatebridges/:bridge_id', middleware, common.updateBridges); //Done
-router.put('/createbridges/:bridge_id', middleware, common.updateBridges);
+router.get('/history/sub-thread/:thread_id', middleware, common.getAllSubThreadsController);
 router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
 router.get('/gethistory/:thread_id/:bridge_id', middleware, common.getThreads); //Public API for getting history for particular thread
-router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', chatBotAuth, common.getThreads); //Public API for getting history for particular thread
-router.post('/createapi/:bridge_id', middleware, createApi.createsApi); //vaisocket embed create api.
-router.put('/:bridge_id', middleware, common.updateBridgeType);
+router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', chatBotAuth, common.getThreads);//Route Depricated //Public API for getting history for particular thread
+router.get('/gethistory-chatbot/:thread_id/:bridge_slugName/:message_id', chatBotAuth, common.getMessageByMessageId);//Route Depricated //Public API for getting history for particular thread
+router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
+router.get('/gethistory/:thread_id/:bridge_id', middleware, common.getThreads); //Public API for getting history for particular thread
+router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', chatBotAuth, common.getThreads); //Public API for getting history for particular thread+
 router.get('/systemprompt/gethistory/:bridge_id/:timestamp', middleware, common.getSystemPromptHistory);
-router.get('/getallsystemprompts/:bridge_id', middleware, common.getAllSystemPromptHistory);
+router.post('/getFineTuneData/:bridge_id', middleware, common.FineTuneData);
+router.put('/gethistory/:bridge_id', middleware, common.updateThreadMessage);
+router.put('/status/:status', chatBotAuth, common.updateMessageStatus);
+router.get('/get-message-history-chatbot/:thread_id/:bridge_slugName', chatBotAuth, common.getThreadMessages)
+router.get('/get-message-history/:thread_id/:bridge_id', middleware, common.getThreadMessages)
+router.put('/bridge-status/:bridge_id', middleware, common.bridgeArchive);
 export default router;

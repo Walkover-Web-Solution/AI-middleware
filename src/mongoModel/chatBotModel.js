@@ -12,7 +12,10 @@ const ChatBotSchema = new Schema({
       width: '50',
       widthUnit: '%',
       type: 'popup',
-      themeColor: "#000000"
+      themeColor: "#000000",
+      chatbotTitle: "Chatbot",
+      chatbotSubtitle: "Chatbot subtitle",
+      iconUrl: ''
     }
   },
   orgId: {
