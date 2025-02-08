@@ -11,11 +11,11 @@ import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/
 
 const getThreads = async (req, res,next) => {
   try {
-    let { bridge_id, version_id } = req.params;
     let page = parseInt(req.query.pageNo) || null;
     let pageSize = parseInt(req.query.limit) || null;
+    let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id=thread_id } = req.query
+    const { sub_thread_id=thread_id, version_id } = req.query
     const { org_id } = req.body;
     let starterQuestion = []
     let bridge = {}
