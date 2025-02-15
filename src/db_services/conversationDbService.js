@@ -25,7 +25,7 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback, version_id) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
   const whereClause = {
@@ -34,6 +34,10 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     bridge_id: bridge_id,
     sub_thread_id: sub_thread_id
   };
+
+  if (version_id !== undefined) {
+    whereClause.version_id = version_id;
+  }
 
   if (user_feedback === "all" || !user_feedback) {
     whereClause.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
