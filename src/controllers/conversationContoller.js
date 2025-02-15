@@ -40,9 +40,9 @@ const getChatData = async chat_id => {
     };
   }
 };
-const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize,user_feedback }) => {
+const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize,user_feedback, version_id }) => {
   try {
-    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback);
+    const chats = await chatbotDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback, version_id);
     return {
       success: true,
       data: chats?.conversations,
