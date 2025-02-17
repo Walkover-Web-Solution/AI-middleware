@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import axios from "axios";
+import { storeInCache } from "../cache_service/index.js";
 
 function generateAuthToken(user, org) {
 
@@ -49,6 +50,7 @@ const updateUserDetails = async (req, res) => {
         });
         const data = response.data;
         res.status(200).json({ message: "User details updated successfully", data });
+        await storeInCache(company_id, data?.data?.company)
     } catch (error) {
         console.error("Error updating user details:", error);
         res.status(404).json({ message: "Something went wrong" });
