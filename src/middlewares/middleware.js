@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
+import { createOrFindUserAndCompany, getOrganizationById } from "../services/proxyService.js";
+import { encryptString, generateIdentifier } from "../services/utils/utilityService.js";
 dotenv.config();
 
 const makeDataIfProxyTokenGiven = async (req) => {
@@ -103,8 +105,56 @@ const combine_middleware = async (req, res, next) => {
   }
 };
 
-
+const EmbeddecodeToken = async (req, res, next) => {
+  const token = req?.get('Authorization');
+  if (!token) {
+    return res.status(498).json({ message: 'invalid token' });
+  }
+  try {
+    const decodedToken = jwt.decode(token);
+    if (decodedToken) {
+      // const orgTokenFromDb = await orgDbServices.find(decodedToken.org_id);
+      const orgTokenFromDb = await getOrganizationById(decodedToken?.org_id);
+      const orgToken = orgTokenFromDb?.meta?.auth_token;
+      if (orgToken) {
+        const checkToken = jwt.verify(token, orgToken);
+        if (checkToken) {
+          if (checkToken.user_id) checkToken.user_id = encryptString(checkToken.user_id);
+          const userDetails = {
+            name: generateIdentifier(14, 'emb', false),
+            email: `${decodedToken.org_id}${checkToken.user_id}@gtwy.ai`,
+            meta: { type: 'embed' },
+          };
+          const orgDetials = {
+            name: orgTokenFromDb?.name,
+            is_readable: true,
+            meta: {
+              status: '2', // here 2 indicates that user is guest in this org and on visiting viasocket normally, this org should not be visible to users whose status is '2' with the org.
+            },
+          };
+          const proxyObject = {
+            feature_id: process.env.PROXY_USER_REFERENCE_ID,
+            Cuser: userDetails,
+            company: orgDetials,
+          };
+          const proxyResponse = await createOrFindUserAndCompany(proxyObject); // proxy api call
+          req.Embed = {
+            ...checkToken,
+            user_id: proxyResponse.data.user.id,
+            org_name: orgTokenFromDb?.name,
+            org_id: proxyResponse.data.company.id,
+          };
+          return next();
+        }
+        return res.status(404).json({ message: 'unauthorized user' });
+      }
+    }
+    return res.status(401).json({ message: 'unauthorized user ' });
+  } catch (err) {
+    return res.status(401).json({ message: 'unauthorized user ', err });
+  }
+};
 const InternalAuth = async (req, res, next)=>{
   return next()
 }
-export { middleware, combine_middleware, InternalAuth };
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth };
