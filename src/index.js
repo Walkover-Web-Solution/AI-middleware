@@ -13,6 +13,7 @@ import mongoose from "mongoose";
 import config from "../config/config.js";
 // import metrisRoutes from "./routes/metrics_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
+import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
@@ -52,6 +53,7 @@ app.use('/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/internal', InternalRoutes);
+app.use('/rag', RagRouter);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);

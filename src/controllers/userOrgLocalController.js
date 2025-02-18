@@ -45,7 +45,7 @@ const updateUserDetails = async (req, res) => {
         const apiUrl = `https://routes.msg91.com/api/${PUBLIC_REFERENCEID}/updateDetails`;
         const response = await axios.put(apiUrl, updateObject, {
             headers: {
-                Authkey: process.env.ADMIN_API_KEY,
+                Authkey: process.env.PROXY_ADMIN_TOKEN,
                 'Content-Type': 'application/json'
             }
         });
