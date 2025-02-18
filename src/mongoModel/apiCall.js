@@ -16,10 +16,9 @@ const apiCall = new mongoose.Schema({
     type: [String],
     default: []
   },
-  short_description: {
+  function_name: {
     type: String,
-    // required: true,
-    default: ''
+    required: true,
   },
   axios: {
     type: String,

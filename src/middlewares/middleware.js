@@ -105,8 +105,6 @@ const combine_middleware = async (req, res, next) => {
   }
 };
 
-
-
 const EmbeddecodeToken = async (req, res, next) => {
   const token = req?.get('Authorization');
   if (!token) {
@@ -156,5 +154,7 @@ const EmbeddecodeToken = async (req, res, next) => {
     return res.status(401).json({ message: 'unauthorized user ', err });
   }
 };
-
-export { middleware, combine_middleware, EmbeddecodeToken };
+const InternalAuth = async (req, res, next)=>{
+  return next()
+}
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth };
