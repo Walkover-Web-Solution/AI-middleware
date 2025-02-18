@@ -66,9 +66,27 @@ function generateIdForOpenAiFunctionCall(prefix = 'call_', length = 26) {
   // Return the ID with the prefix
   return prefix + randomId;
 }
+
+function encryptString(input) {
+  input = input?.toString();
+  const specialCharMap = { '!': 'A', '@': 'B', '#': 'C', $: 'D', '%': 'E', '^': 'F', '&': 'G', '*': 'H', '(': 'I', ')': 'J', '-': 'K', _: 'L', '=': 'M', '+': 'N', '[': 'O', ']': 'P', '{': 'Q', '}': 'R', ';': 'S', ':': 'T', '\'': 'U', '"': 'V', ',': 'W', '.': 'X', '/': 'Y', '?': 'Z', '<': 'AA', '>': 'AAA', '|': 'LLL' };
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const specialChars = Object.keys(specialCharMap).map(escapeRegExp).join('');
+  const regex = new RegExp(`[${specialChars}]`, 'g');
+  return input.toUpperCase().replace(regex, (match) => specialCharMap[match] || match);
+}
+
+function objectToQueryParams(obj) {
+  return Object.keys(obj)
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
+    .join('&');
+}
+
 export {
   generateIdentifier,
   encrypt,
   decrypt,
-  generateIdForOpenAiFunctionCall
+  generateIdForOpenAiFunctionCall,
+  encryptString,
+  objectToQueryParams
 };
