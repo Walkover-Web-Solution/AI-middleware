@@ -19,6 +19,7 @@ import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
 import configurePostmanCollection from './routes/configurePostmanCollection.js';
+import InternalRoutes from './routes/InternalRoutes.js';
 import alerting from './routes/alerting_routes.js';
 import('./services/cacheService.js')
 app.use(cors({
@@ -50,6 +51,7 @@ app.use('/hello', helloRoutes);
 app.use('/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
+app.use('/internal', InternalRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
