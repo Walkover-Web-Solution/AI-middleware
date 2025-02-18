@@ -14,6 +14,7 @@ import config from "../config/config.js";
 // import metrisRoutes from "./routes/metrics_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
+import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
@@ -48,6 +49,7 @@ app.use('/alerting', alerting)
 app.use('/hello', helloRoutes);
 app.use('/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
+app.use('/org', AuthRouter);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
