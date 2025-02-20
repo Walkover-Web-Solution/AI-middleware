@@ -136,6 +136,7 @@ const EmbeddecodeToken = async (req, res, next) => {
             feature_id: process.env.PROXY_USER_REFERENCE_ID,
             Cuser: userDetails,
             company: orgDetials,
+            role_id: 2
           };
           const proxyResponse = await createOrFindUserAndCompany(proxyObject); // proxy api call
           req.Embed = {

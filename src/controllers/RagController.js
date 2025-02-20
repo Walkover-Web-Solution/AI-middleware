@@ -12,3 +12,32 @@ export const GetAllDocuments = async (req, res, next) => {
         req.statusCode = 200;
         return next();
 }; 
+
+export const create_vectors = async (req, res, next) => {
+    // TO DO: implement create_vectors logic
+    res.locals = {}
+    req.statusCode = 200;
+    return next();
+};
+
+export const get_vectors_and_text = async (req, res, next) => {
+    // TO DO: implement get_vectors_and_text logic
+    res.locals = {}
+    req.statusCode = 200;
+    return next();
+};
+
+export const get_all_docs = async (req, res, next) => {
+    // TO DO: implement get_all_docs logic
+    res.locals = {}
+    req.statusCode = 200;
+    return next();
+};
+
+export const delete_doc = async (req, res, next) => {
+    // TO DO: implement delete_doc logic
+    res.locals = {}
+    req.statusCode = 200;
+    return next();
+};
+
