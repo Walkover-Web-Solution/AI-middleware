@@ -27,12 +27,6 @@ export const get_vectors_and_text = async (req, res, next) => {
     return next();
 };
 
-export const get_all_docs = async (req, res, next) => {
-    // TO DO: implement get_all_docs logic
-    res.locals = {}
-    req.statusCode = 200;
-    return next();
-};
 
 export const delete_doc = async (req, res, next) => {
     // TO DO: implement delete_doc logic
