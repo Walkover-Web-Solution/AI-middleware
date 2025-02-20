@@ -1,10 +1,13 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load API key from .env file
+dotenv.config();
 
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY, // Set your Pinecone API key
+  apiKey: process.env.PINECONE_APIKEY
 });
 
-export default pinecone;
+const pineconeIndex = pinecone.Index("gtwyai"); 
+
+
+export default pineconeIndex;
