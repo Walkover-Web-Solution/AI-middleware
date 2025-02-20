@@ -24,6 +24,23 @@ const ragParentDataSchema = new mongoose.Schema({
   user_id: {
     type: String,
     required: false
+  },
+  url: {
+    type: String, 
+    required: false
+  },
+  chunking_type: {
+    type: String, 
+    enum: ['semantic', 'manual', 'recursive'], 
+    required: true
+  }, 
+  chunk_size: {
+    type: Number, 
+    required: true
+  }, 
+  chunk_overlap: {
+    type: Number, 
+    required: true
   }
 });
 
