@@ -5,16 +5,19 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
 
 export const GetAllDocuments = async (req, res, next) => {
-        const orgId = req.Embed.org_id;
-        const userId = req.Embed.user_id;
-        const result = await rag_parent_data.getAll({
-            'org_id': orgId.toString(),
-            'user_id': userId.toString()
-        });
-        res.locals = {result,orgId, userId}
-        req.statusCode = 200;
-        return next();
-}; 
+    const { org, user } = req.profile || {};
+    const result = await rag_parent_data.getAll({
+        user_id: user?.id,
+        org_id: org?.id
+    });
+    res.locals = {
+        "success": true,
+        "message": `Document deleted successfully`,
+        "data": result
+    };
+    req.statusCode = 200;
+    return next();
+};
 
 export const create_vectors = async (req, res, next) => {
     // TO DO: implement create_vectors logic
@@ -22,44 +25,44 @@ export const create_vectors = async (req, res, next) => {
         const { org, user } = req.profile || {};
         const embed = req.embed;
         const {
-          url,
-          chunking_type = 'recursive',
-          chunk_size= 512,
-          chunk_overlap = 70,
-          name,
-          description, 
-          docType 
+            url,
+            chunking_type = 'recursive',
+            chunk_size = 512,
+            chunk_overlap = 70,
+            name,
+            description,
+            docType 
         } = req.body;
 
-        if(!name || !description) throw new Error('Name and Description are required!!');
+        if (!name || !description) throw new Error('Name and Description are required!!');
 
-        const parentData = await rag_parent_data.create({ 
+        const parentData = await rag_parent_data.create({
             source: {
-                type: 'url', 
+                type: 'url',
                 data: {
                     url,
                     type :docType
                 }
             },
-            chunking_type, 
+            chunking_type,
             chunk_size,
             chunk_overlap,
             name,
             description,
-            user_id : embed ? user?.id : null, 
-            org_id : org?.id
-         });
-         const payload = {
-             event :"load",
-             data :{
-                url :url,
-                resourceId : parentData._id,
+            user_id: embed ? user?.id : null,
+            org_id: org?.id
+        });
+        const payload = {
+            event: "load",
+            data: {
+                url: url,
+                resourceId: parentData._id,
 
             }
-         }
-        
-        await queue.publishToQueue('rag-queue',payload );
-         
+        }
+
+        await queue.publishToQueue('rag-queue', payload);
+
         res.status(201).json(parentData);
 
     } catch (error) {
@@ -85,7 +88,7 @@ export const get_vectors_and_text = async (req, res, next) => {
     const mongoResults = await rag_parent_data.getChunksByIds(queryResponseIds)
     let text = mongoResults.map((result) => result.data).join("");
 
-    res.locals = {text}
+    res.locals = { text }
     req.statusCode = 200;
     return next();
 };
@@ -94,9 +97,9 @@ export const get_vectors_and_text = async (req, res, next) => {
 export const delete_doc = async (req, res, next) => {
     const orgId = req.profile.org.id;
     // const userId = req.profile.user.id;
-    const {id} =  req.params;
+    const { id } = req.params;
     const result = await rag_parent_data.deleteDocumentById(id);
-    await queue.publishToQueue('rag-queue',{event:"delete", data :{resourceId:id,orgId}} );
+    await queue.publishToQueue('rag-queue', { event: "delete", data: { resourceId: id, orgId } });
 
     res.locals = {
         "success": true,
@@ -109,9 +112,9 @@ export const delete_doc = async (req, res, next) => {
 
 export const updateDoc = async (req, res, next) => {
     // const userId = req.profile.user.id;
-    const {id} =  req.params;
-    const {name,description} = req.body;
-    const result = await rag_parent_data.updateDocumentData(id,{name, description});
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const result = await rag_parent_data.updateDocumentData(id, { name, description });
 
     res.locals = {
         "success": true,
