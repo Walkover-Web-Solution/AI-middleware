@@ -96,6 +96,7 @@ export const delete_doc = async (req, res, next) => {
         'org_id': orgId.toString(),
         'user_id': userId.toString()
     });
+    // TODO delete from pinecone
     res.locals = {
         "success": true,
         "message": `Deleted documents with chunk IDs: ${result.chunks_id_array}.`,
