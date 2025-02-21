@@ -1,9 +1,8 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { ContentLoader } from "../../utility";
 import { YoutubeLoader } from "@langchain/community/document_loaders/web/youtube";
 
-export class YTLoader implements ContentLoader {
-    async getContent(url: string, options?: { [key: string]: any }): Promise<string> {
+export class YTLoader  {
+    async getContent(url, options) {
         const loader = YoutubeLoader.createFromUrl(url, {
             // language: "en",
             addVideoInfo: true,
