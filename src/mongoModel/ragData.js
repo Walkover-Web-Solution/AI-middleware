@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
 const ragDataSchema = new mongoose.Schema({
-  chunk_id: {
-    type: String,
-    required: true,
-    unique: true
-  },
   org_id: {
     type: String,
     required: true
@@ -14,7 +9,10 @@ const ragDataSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  chunk: {
+  user_id:{
+    type :String,
+  },
+  data: {
     type: String,
     required: true
   },

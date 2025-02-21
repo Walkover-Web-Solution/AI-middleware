@@ -15,7 +15,7 @@ export class Doc {
 
     async chunk(chunkSize, overlap = 0) {
         if (!this.content) throw new Error("Content is required for chunking");
-        if (!this.metadata.agentId) throw new Error("AgentId is required for chunking");
+        if (!this.metadata.orgId ) throw new Error("OrgId is required for chunking");
         this.chunks = [];
 
         const textSplitter = new RecursiveCharacterTextSplitter({
@@ -27,9 +27,9 @@ export class Doc {
             this.chunks.push({
                 _id: (new mongoose.Types.ObjectId()).toString(),
                 data: split.pageContent,
-                resourceId: this.resourceId,
-                public: this.metadata?.public,
-                agentId: this.metadata.agentId,
+                org_id : this.metadata.orgId,
+                doc_id:  this.resourceId,
+                user_id : this.userId
             });
         }
         return this;
@@ -45,13 +45,13 @@ export class Doc {
         return this;
     }
 
-    async save(storage) {
-        await storage.save(this.chunks);
+    async save(storage,namespace) {
+        await storage.save(this.chunks,namespace);
         return this;
     }
 
-    async delete(storage) {
-        await storage.delete(this.resourceId);
+    async delete(storage ,namespace) {
+        await storage.delete(this.resourceId,namespace);
         return this;
     }
 }
@@ -73,24 +73,22 @@ export class MongoStorage {
 }
 
 export class PineconeStorage {
-    async save(chunks) {
-        let namespace = "default";
+    async save(chunks,namespace) {
         const pineconeData = chunks.map((chunk) => {
             return {
                 id: chunk._id,
                 values: chunk.data,
                 metadata: {
-                    docId: chunk.resourceId,
-                    public: chunk.public,
-                    agentId: chunk.agentId
+                    docId: chunk.doc_id,
+                    userId :chunk.user_id
                 }
             };
         });
         return savingVectorsInPineconeBatches(pineconeData, namespace);
     }
 
-    async delete(resourceId) {
-        return deleteResourceChunks("default", resourceId);
+    async delete(resourceId , namespace) {
+        return deleteResourceChunks(namespace, resourceId);
     }
 }
 

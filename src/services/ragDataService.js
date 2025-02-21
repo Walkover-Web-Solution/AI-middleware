@@ -51,7 +51,7 @@ export default class RagDataService {
 
     static async getChunksByResource(resourceId) {
         try {
-            const chunks = await RagDataModel.find({ resourceId });
+            const chunks = await RagDataModel.find({ doc_id: resourceId });
             return chunks;
         } catch (error) {
             throw new Error(`Failed to retrieve chunks for resource: ${error.message}`);
@@ -61,7 +61,7 @@ export default class RagDataService {
     static async deleteChunksByResource(resourceId) {
         try {
             // Delete chunks from database
-            const result = await RagDataModel.deleteMany({ resourceId });
+            const result = await RagDataModel.deleteMany({ doc_id:resourceId });
             return result;
         } catch (error) {
             throw new Error(`Failed to delete chunks for resource: ${error.message}`, 500);
