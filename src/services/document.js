@@ -1,9 +1,10 @@
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter, CharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "@langchain/openai";
 // import ChunkService from "../dbservices/chunk";
-import ChunkService  from "./ragDataService.js"
+import ChunkService from "./ragDataService.js"
 import mongoose from "mongoose";
 import { deleteResourceChunks, savingVectorsInPineconeBatches } from "../services/pinecone.js";
+import axios from "axios";
 
 export class Doc {
     constructor(resourceId, content, metadata = { public: false }) {
@@ -13,16 +14,31 @@ export class Doc {
         this.chunks = [];
     }
 
-    async chunk(chunkSize, overlap = 0) {
+    async chunk(chunkSize, overlap = 0, chunking_type = 'recursive', mongo_id) {
         if (!this.content) throw new Error("Content is required for chunking");
+        if(overlap >= chunkSize) throw new Error("Chunk overlap must be smaller than chunk size")
         if (!this.metadata.agentId) throw new Error("AgentId is required for chunking");
         this.chunks = [];
-
-        const textSplitter = new RecursiveCharacterTextSplitter({
-            chunkSize: chunkSize,
-            chunkOverlap: overlap,
-        });
-        const splits = await textSplitter.splitDocuments([{ pageContent: this.content, metadata: {} }]);
+        let splits = []
+        if (chunking_type === 'recursive') {
+            const textSplitter = new RecursiveCharacterTextSplitter({
+                chunkSize: chunkSize,
+                chunkOverlap: overlap,
+            });
+            splits = await textSplitter.splitDocuments([{ pageContent: this.content, metadata: {} }]);
+        }
+        else if (chunking_type === 'semantic') {
+            splits = (await axios.get(`${process.env.PYTHON_URL}/internal/chunking/semantic/${mongo_id}`))?.data?.chunk_texts
+        }
+        else if (chunking_type === 'manual') {
+            const text_splitter = new CharacterTextSplitter({
+                separator : "\n\n",
+                chunk_size : chunkSize,
+                chunk_overlap : overlap,
+        })
+        splits = await text_splitter.createDocuments([this.content])
+        }
+        else throw new Error("Invalid chunking type or method not supported.")
         for (const split of splits) {
             this.chunks.push({
                 _id: (new mongoose.Types.ObjectId()).toString(),
