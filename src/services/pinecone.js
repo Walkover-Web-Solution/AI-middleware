@@ -18,7 +18,7 @@ const embeddings = new OpenAIEmbeddings({
 });
 
 
-const pineconeIndex = pinecone.Index("gtwyai"); 
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX); 
 
 
 export const savingVectorsInPineconeBatches = async (vectors, namespace) => {
