@@ -2,6 +2,7 @@
 import embeddings from '../services/langchainOpenai.js';
 import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
+import queue from '../services/queue.js';
 
 export const GetAllDocuments = async (req, res, next) => {
         const orgId = req.Embed.org_id;
@@ -17,6 +18,51 @@ export const GetAllDocuments = async (req, res, next) => {
 
 export const create_vectors = async (req, res, next) => {
     // TO DO: implement create_vectors logic
+    try {
+        const { org, user } = req.profile;
+        const embed = req.embed;
+        const {
+          url,
+          chunking_type = 'recursive',
+          chunk_size= 512,
+          chunk_overlap = 70,
+          name,
+          description, 
+        } = req.body;
+
+        if(!name || !description) throw new Error('Name and Description are required!!');
+
+        const parentData = await rag_parent_data.create({ 
+            source: {
+                type: 'url', 
+                data: {
+                    url
+                }
+            },
+            chunking_type, 
+            chunk_size,
+            chunk_overlap,
+            name,
+            description,
+            user_id : embed ? user.id : null, 
+            org_id : org.id
+         });
+         const payload = {
+             event :"load",
+             data :{
+                url :url,
+                resourceId : parentData._id,
+
+            }
+         }
+        
+        await queue.publishToQueue('rag-queue',payload );
+         
+        res.status(201).json(parentData);
+
+    } catch (error) {
+        next(error);
+    }
     res.locals = {}
     req.statusCode = 200;
     return next();

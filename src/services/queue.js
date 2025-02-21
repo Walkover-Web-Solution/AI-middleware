@@ -25,8 +25,7 @@ class RabbitMqProducer {
     return RabbitMqProducer.instance;
   }
 
-  /* eslint class-methods-use-this: ["error", { "exceptMethods": ["publish"] }] */
-  async publish(queueName, payload) {
+  async publishToQueue(queueName, payload) {
     try {
       logger.debug('[PRODUCER] Preparing payload...');
       payload = (typeof payload === 'string') ? payload : JSON.stringify(payload);
@@ -43,3 +42,5 @@ class RabbitMqProducer {
 }
 
 export default RabbitMqProducer.getSingletonInstance();
+
+

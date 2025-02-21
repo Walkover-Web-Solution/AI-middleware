@@ -8,7 +8,7 @@ export async function pushLogInQueue(logData, queueName, max_retries = 2) {
     for (const log of logData) {
         for (let i = 0; i < max_retries; i++) {
             try {
-                await queue.publish(queueName || '', log || "Error in processing message");
+                await queue.publishToQueue(queueName || '', log || "Error in processing message");
                 break;
             } catch (error) {
                 if (i === max_retries - 1) {
