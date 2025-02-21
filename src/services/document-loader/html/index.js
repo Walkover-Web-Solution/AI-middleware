@@ -1,6 +1,6 @@
-import { WebLoader } from "./default";
-import { GoogleDocLoader } from "./google-doc";
-import { YTLoader } from "./youtube";
+import { WebLoader } from "./default.js";
+import { GoogleDocLoader } from "./google-doc.js";
+import { YTLoader } from "./youtube.js";
 
 
 const HTML_LOADERS = {
@@ -9,7 +9,7 @@ const HTML_LOADERS = {
     'www.youtube.com': new YTLoader(),
 };
 
-class HTMLLoader {
+export class HTMLLoader {
     constructor() {
         this.states = HTML_LOADERS;
     }
@@ -25,4 +25,3 @@ class HTMLLoader {
     }
 }
 
-module.exports = { HTMLLoader };
