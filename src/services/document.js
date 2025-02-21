@@ -96,7 +96,7 @@ export class PineconeStorage {
                 values: chunk.data,
                 metadata: {
                     docId: chunk.doc_id,
-                    userId :chunk.user_id
+                    userId :chunk.user_id,
                 }
             };
         });

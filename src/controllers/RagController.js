@@ -28,6 +28,7 @@ export const create_vectors = async (req, res, next) => {
           chunk_overlap = 70,
           name,
           description, 
+          docType 
         } = req.body;
 
         if(!name || !description) throw new Error('Name and Description are required!!');
@@ -36,7 +37,8 @@ export const create_vectors = async (req, res, next) => {
             source: {
                 type: 'url', 
                 data: {
-                    url
+                    url,
+                    type :docType
                 }
             },
             chunking_type, 
@@ -70,7 +72,7 @@ export const create_vectors = async (req, res, next) => {
 
 export const get_vectors_and_text = async (req, res, next) => {
     // TO DO: implement get_vectors_and_text logic
-    const { doc_id, query, top_k = 2 } = req.body;
+    const { doc_id, query, top_k = 3 } = req.body;
     const org_id = req.profile?.org?.id || "";
 
     if (!query) throw new Error("Query is required.");
@@ -81,7 +83,7 @@ export const get_vectors_and_text = async (req, res, next) => {
 
     // Query MongoDB using retrieved chunk IDs
     const mongoResults = await rag_parent_data.getChunksByIds(queryResponseIds)
-    let text = mongoResults.map((result) => result.chunk).join("");
+    let text = mongoResults.map((result) => result.data).join("");
 
     res.locals = {text}
     req.statusCode = 200;

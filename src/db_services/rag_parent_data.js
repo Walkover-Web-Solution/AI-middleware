@@ -35,7 +35,7 @@ async function remove(id,org_id) {
  * @returns {Array} - List of chunk documents
  */
 async function getChunksByIds(chunkIds) {
-    return await ragDataModel.find({ chunk_id: { $in: chunkIds } });
+    return await ragDataModel.find({ _id: { $in: chunkIds } });
 }
 
 async function getDocumentById(docId) {

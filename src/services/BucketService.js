@@ -48,6 +48,7 @@ class BucketService {
             await this.uploadFileToGCS(req.file, filename);
 
             req.body.url = imageUrl;
+            req.body.docType = "file";
             return next()
     }
 }
