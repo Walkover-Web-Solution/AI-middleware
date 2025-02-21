@@ -16,8 +16,8 @@ export const GetAllDocuments = async (req, res, next) => {
 }; 
 
 export const create_vectors = async (req, res, next) => {
-    // TO DO: implement create_vectors logic
-    res.locals = {}
+    // TODO: implement create_vectors logic
+    res.locals = {body:req.body}
     req.statusCode = 200;
     return next();
 };
@@ -50,6 +50,7 @@ export const delete_doc = async (req, res, next) => {
         'org_id': orgId.toString(),
         'user_id': userId.toString()
     });
+    // TODO delete from pinecone
     res.locals = {
         "success": true,
         "message": `Deleted documents with chunk IDs: ${result.chunks_id_array}.`,

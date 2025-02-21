@@ -30,19 +30,21 @@ const ragParentDataSchema = new mongoose.Schema({
     required: false
   },
   chunking_type: {
-    type: String, 
-    enum: ['semantic', 'manual', 'recursive'], 
+    type: String,
+    enum: ["semantic", "manual", "recursive"],
     required: true
-  }, 
+  },
   chunk_size: {
-    type: Number, 
+    type: Number,
     required: true
-  }, 
+  },
   chunk_overlap: {
-    type: Number, 
+    type: Number,
     required: true
   }
 });
+
+ragParentDataSchema.index({ org_id: 1 });
 
 const ragParentDataModel = mongoose.model("rag_parent_datas", ragParentDataSchema);
 
