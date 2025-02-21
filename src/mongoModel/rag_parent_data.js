@@ -56,6 +56,8 @@ const ragParentDataSchema = new mongoose.Schema({
   },
 });
 
+ragParentDataSchema.index({ org_id: 1 });
+
 const ragParentDataModel = mongoose.model("rag_parent_datas", ragParentDataSchema);
 
 export default ragParentDataModel;
