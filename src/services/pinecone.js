@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_APIKEY
+  apiKey: process.env.PINECONE_API_KEY
 });
 
 const pineconeIndex = pinecone.Index("gtwyai"); 
