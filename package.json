@@ -25,6 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^8.10.0",
+    "@google-cloud/storage": "^7.15.2",
     "@google/generative-ai": "^0.2.1",
     "@langchain/core": "^0.3.40",
     "@langchain/openai": "^0.4.4",
