@@ -19,7 +19,7 @@ export const GetAllDocuments = async (req, res, next) => {
 export const create_vectors = async (req, res, next) => {
     // TO DO: implement create_vectors logic
     try {
-        const { org, user } = req.profile;
+        const { org, user } = req.profile || {};
         const embed = req.embed;
         const {
           url,
@@ -44,8 +44,8 @@ export const create_vectors = async (req, res, next) => {
             chunk_overlap,
             name,
             description,
-            user_id : embed ? user.id : null, 
-            org_id : org.id
+            user_id : embed ? user?.id : null, 
+            org_id : org?.id
          });
          const payload = {
              event :"load",
@@ -91,16 +91,30 @@ export const get_vectors_and_text = async (req, res, next) => {
 
 export const delete_doc = async (req, res, next) => {
     const orgId = req.profile.org.id;
-    const userId = req.profile.user.id;
-    const result = await rag_parent_data.remove({
-        'org_id': orgId.toString(),
-        'user_id': userId.toString()
-    });
-    // TODO delete from pinecone
+    // const userId = req.profile.user.id;
+    const {id} =  req.params;
+    const result = await rag_parent_data.deleteDocumentById(id);
+    await queue.publishToQueue('rag-queue',{event:"delete", data :{resourceId:id,orgId}} );
+
     res.locals = {
         "success": true,
-        "message": `Deleted documents with chunk IDs: ${result.chunks_id_array}.`,
-        "data": result.delete_doc
+        "message": `Document deleted successfully`,
+        "data": result
+    }
+    req.statusCode = 200;
+    return next();
+};
+
+export const updateDoc = async (req, res, next) => {
+    // const userId = req.profile.user.id;
+    const {id} =  req.params;
+    const {name,description} = req.body;
+    const result = await rag_parent_data.updateDocumentData(id,{name, description});
+
+    res.locals = {
+        "success": true,
+        "message": `Document updated successfully`,
+        "data": result
     }
     req.statusCode = 200;
     return next();

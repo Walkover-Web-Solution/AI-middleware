@@ -4,18 +4,21 @@ import rabbitmqService from '../services/rabbitmq.js';
 import ragConsumer from './ragConsumer.js';
 
 dotenv.config();
-const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED === 'true';
+// const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED === 'true';
+const CONSUMER_ENABLED = true;
 const CONSUMERS = [ragConsumer];
 
 class Consumer {
   constructor(obj, connectionString) {
+    console.log("in contructor ")
     this.queueName = obj.queueName;
-    this.processor = obj.ragConsume;
+    this.processor = obj.process;
     this.bufferSize = obj.batchSize || 1; // Default value if prefetch is not provided
     this.logInInterval = obj.logInInterval || null;
     this.rabbitService = rabbitmqService(connectionString)
       .on('connect', (connection) => this.setup(connection))
       .on('error', (error) => console.log('[CONSUMER] Error in consumer connection:', error));
+      console.log("hello dosto ")
   }
 
   async setup(connection) {
@@ -51,7 +54,7 @@ class Consumer {
     });
   }
 }
-
+console.log(CONSUMER_ENABLED, "CONSUMER  ADSF ")
 if (CONSUMER_ENABLED) {
   (() => {
     CONSUMERS.forEach((consumer) => {

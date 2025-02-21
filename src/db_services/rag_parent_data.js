@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import ragDataModel from '../mongoModel/ragData.js';
 import ragParentDataModel from '../mongoModel/rag_parent_data.js';
 
@@ -38,14 +39,24 @@ async function getChunksByIds(chunkIds) {
 }
 
 async function getDocumentById(docId) {
-    return await ragDataModel.findById(docId);
+    return await ragParentDataModel.findById(docId);
 }
 
+async function deleteDocumentById(docId) {
+    return await ragParentDataModel.findOneAndDelete({_id:docId});
+}
+async function updateDocumentData(id , data) {
+    return await ragParentDataModel.findOneAndUpdate({
+        _id: id
+    }, data, { new: true });
+}
 export default{
     getAll,
     create,
     update,
     remove,
     getChunksByIds,
-    getDocumentById
+    getDocumentById,
+    deleteDocumentById,
+    updateDocumentData
 }
