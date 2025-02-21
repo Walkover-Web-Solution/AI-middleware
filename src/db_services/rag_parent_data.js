@@ -37,10 +37,15 @@ async function getChunksByIds(chunkIds) {
     return await ragDataModel.find({ chunk_id: { $in: chunkIds } });
 }
 
+async function getDocumentById(docId) {
+    return await ragDataModel.findById(docId);
+}
+
 export default{
     getAll,
     create,
     update,
     remove,
-    getChunksByIds
+    getChunksByIds,
+    getDocumentById
 }
