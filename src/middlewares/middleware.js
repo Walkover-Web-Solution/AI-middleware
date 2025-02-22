@@ -3,8 +3,6 @@ import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
 import { createOrFindUserAndCompany, getOrganizationById } from "../services/proxyService.js";
 import { encryptString, generateIdentifier } from "../services/utils/utilityService.js";
-import { createOrFindUserAndCompany, getOrganizationById } from "../services/proxyService.js";
-import { encryptString, generateIdentifier } from "../services/utils/utilityService.js";
 dotenv.config();
 
 const makeDataIfProxyTokenGiven = async (req) => {
