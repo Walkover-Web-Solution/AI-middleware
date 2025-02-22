@@ -36,7 +36,7 @@ async function processMsg(message, channel) {
                     break;
                 }
                 await rag_parent_data.update(data.resourceId, { content });
-                await queue.publishToQueue('rag-queue', { event :"chunk" , data : {resourceId,content,orgId :data1.org_id, userId : data1.user_id} })
+                await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : {resourceId,content,orgId :data1.org_id, userId : data1.user_id} })
                 pipelineStatus = "loaded";
                 break;
             case 'delete': {
