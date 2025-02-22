@@ -7,10 +7,11 @@ import { deleteResourceChunks, savingVectorsInPineconeBatches } from "../service
 import axios from "axios";
 
 export class Doc {
-    constructor(resourceId, content, metadata = { public: false }) {
+    constructor(resourceId, content, fileFormat, metadata = { public: false }) {
         this.content = content;
         this.resourceId = resourceId;
         this.metadata = metadata;
+        this.fileFormat = fileFormat;
         this.chunks = [];
     }
 
@@ -20,7 +21,10 @@ export class Doc {
         if(overlap >= chunkSize) throw new Error("Chunk overlap must be smaller than chunk size")
         this.chunks = [];
         let splits = []
-        if (chunking_type === 'recursive') {
+        if(this.fileFormat === 'csv') {
+            splits =  this.content.map((chunk) => ({ pageContent: chunk, metadata: {} }));
+        }
+        else if (chunking_type === 'recursive') {
             const textSplitter = new RecursiveCharacterTextSplitter({
                 chunkSize: chunkSize,
                 chunkOverlap: overlap,
@@ -35,8 +39,8 @@ export class Doc {
                 separator : "\n\n",
                 chunk_size : chunkSize,
                 chunk_overlap : overlap,
-        })
-        splits = await text_splitter.createDocuments([this.content])
+            })
+            splits = await text_splitter.createDocuments([this.content])
         }
         else throw new Error("Invalid chunking type or method not supported.")
         for (const split of splits) {
