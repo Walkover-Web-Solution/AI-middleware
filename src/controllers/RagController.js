@@ -5,14 +5,15 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
 
 export const GetAllDocuments = async (req, res, next) => {
-    const { org, user } = req.profile || {};
+    const { org } = req.profile || {};
+    const embed = req.Embed;
     const result = await rag_parent_data.getAll({
-        user_id: user?.id,
-        org_id: org?.id
+        user_id: embed ? embed.user_id : null,
+        org_id: embed ? embed.org_id : org?.id
     });
     res.locals = {
         "success": true,
-        "message": `Document deleted successfully`,
+        "message": `Document fetched successfully`,
         "data": result
     };
     req.statusCode = 200;
@@ -22,8 +23,8 @@ export const GetAllDocuments = async (req, res, next) => {
 export const create_vectors = async (req, res, next) => {
     // TO DO: implement create_vectors logic
     try {
-        const { org, user } = req.profile || {};
-        const embed = req.embed;
+        const { org } = req.profile || {};
+        const embed = req.Embed;
         const {
             url,
             chunking_type = 'recursive',
@@ -49,15 +50,14 @@ export const create_vectors = async (req, res, next) => {
             chunk_overlap,
             name,
             description,
-            user_id: embed ? user?.id : null,
-            org_id: org?.id
+            user_id: embed ? embed.user_id : null,
+            org_id: embed ? embed.org_id : org?.id
         });
         const payload = {
             event: "load",
             data: {
                 url: url,
                 resourceId: parentData._id,
-
             }
         }
 
@@ -66,11 +66,8 @@ export const create_vectors = async (req, res, next) => {
         res.status(201).json(parentData);
 
     } catch (error) {
-        next(error);
+        res.status(400).json({ message: error.message });
     }
-    res.locals = {}
-    req.statusCode = 200;
-    return next();
 };
 
 export const get_vectors_and_text = async (req, res, next) => {
@@ -95,7 +92,8 @@ export const get_vectors_and_text = async (req, res, next) => {
 
 
 export const delete_doc = async (req, res, next) => {
-    const orgId = req.profile.org.id;
+    const embed = req.Embed;
+    const orgId = embed ? embed.org_id : req.profile.org.id;
     // const userId = req.profile.user.id;
     const { id } = req.params;
     const result = await rag_parent_data.deleteDocumentById(id);

@@ -11,6 +11,8 @@ const upload = multer({ storage });
 const routes = express.Router();
 
 routes.route('/all').get(EmbeddecodeToken, GetAllDocuments);
+routes.route('/all').post(EmbeddecodeToken, upload.single('file'), bucketService.handleFileUpload, create_vectors);
+
 routes.post('/', middleware, upload.single('file'), bucketService.handleFileUpload, create_vectors); // <-- Fix applied
 routes.post('/query', middleware, get_vectors_and_text);
 routes.get('/docs', middleware, GetAllDocuments);

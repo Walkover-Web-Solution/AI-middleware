@@ -4,8 +4,7 @@ import rabbitmqService from '../services/rabbitmq.js';
 import ragConsumer from './ragConsumer.js';
 
 dotenv.config();
-// const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED === 'true';
-const CONSUMER_ENABLED = true;
+const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED;
 const CONSUMERS = [ragConsumer];
 
 class Consumer {
