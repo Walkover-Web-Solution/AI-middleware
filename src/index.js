@@ -1,13 +1,16 @@
 import 'express-async-errors';
 import express from "express";
 import cors from "cors";
+import { configDotenv } from 'dotenv';
 // import multer from 'multer';
+import './consumers/index.js';
 import configurationController from "./controllers/configController.js";
 import apiKeyrouter from "./routes/apikeyRouter.js";
 import helloRoutes from './routes/helloRoutes.js';
 import threadRoutes from './routes/threadRoutes.js'
 import metricsRoutes from "./routes/metrics_routes.js"
 const app = express();
+configDotenv();
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
 import config from "../config/config.js";
