@@ -4,6 +4,8 @@ import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
 
+const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
+
 export const GetAllDocuments = async (req, res, next) => {
     const { org } = req.profile || {};
     const embed = req.Embed;
@@ -61,7 +63,7 @@ export const create_vectors = async (req, res, next) => {
             }
         }
 
-        await queue.publishToQueue('rag-queue', payload);
+        await queue.publishToQueue(QUEUE_NAME, payload);
 
         res.status(201).json(parentData);
 
@@ -97,7 +99,7 @@ export const delete_doc = async (req, res, next) => {
     // const userId = req.profile.user.id;
     const { id } = req.params;
     const result = await rag_parent_data.deleteDocumentById(id);
-    await queue.publishToQueue('rag-queue', { event: "delete", data: { resourceId: id, orgId } });
+    await queue.publishToQueue(QUEUE_NAME, { event: "delete", data: { resourceId: id, orgId } });
 
     res.locals = {
         "success": true,
