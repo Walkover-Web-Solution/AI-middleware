@@ -1,5 +1,5 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { fetchCSV, getFileFormatByUrl } from "../../../utils/ragUtils.js";
+import { fetchAndProcessCSV, getFileFormatByUrl } from "../../../utils/ragUtils.js";
 
 export class GoogleDocLoader  {
     static format = {
@@ -19,7 +19,7 @@ export class GoogleDocLoader  {
             }
             case 'csv': {
                 const subsheetId = url.match(/[?&]gid=(\d+)/)?.[1];
-                const data = await fetchCSV(downloadUrl+ (subsheetId ? `&gid=${subsheetId}`: ''));
+                const data = await fetchAndProcessCSV(downloadUrl+ (subsheetId ? `&gid=${subsheetId}`: ''));
                 return data;
             }
         }
