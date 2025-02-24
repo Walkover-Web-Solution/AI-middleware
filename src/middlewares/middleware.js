@@ -20,7 +20,8 @@ const makeDataIfProxyTokenGiven = async (req) => {
     ip: "9.255.0.55",
     user: {
       id: responseData.data[0].id,
-      name: responseData.data[0].name
+      name: responseData.data[0].name,
+      meta: responseData.data[0].meta
     },
     org: {
       id: responseData.data[0].currentCompany.id,
@@ -44,6 +45,7 @@ const middleware = async (req, res, next) => {
 
     req.profile.org.id = req.profile.org.id.toString();
     req.body.org_id = req.profile.org.id;
+    req.IsEmbedUser = req.profile.user.meta?.type || false
     return next();
   } catch (err) {
     console.error("middleware error =>", err);
@@ -145,6 +147,17 @@ const EmbeddecodeToken = async (req, res, next) => {
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,
           };
+          req.profile = {
+            user:{
+              id: proxyResponse.data.user.id,
+              name: ""
+            },
+            org:{
+              id:proxyResponse.data.company.id,
+              name:orgTokenFromDb?.name
+            }
+          }
+          req.IsEmbedUser = true
           return next();
         }
         return res.status(404).json({ message: 'unauthorized user' });
