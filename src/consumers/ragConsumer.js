@@ -17,7 +17,7 @@ async function processMsg(message, channel) {
     console.log("Procesingngngn")
     let resourceId = '';
     try {
-        const msg = JSON.parse(message.content.toString());
+        const msg = JSON.parse(message.content);
         // const { version, event, data } = EventSchema.parse(msg);
         const { version, event, data } =msg;
         resourceId = data.resourceId;
@@ -28,15 +28,15 @@ async function processMsg(message, channel) {
                 console.log(data,"Data");
                 const loader = new DocumentLoader();
                 const content = await loader.getContent(data.url);
-                 const data1 = await rag_parent_data.getDocumentById(data.resourceId);
-                 const oldContent = data1.content;
+                const data1 = await rag_parent_data.getDocumentById(data.resourceId);
+                const oldContent = data1.content;
                 // TODO: Can we change the final status as "done"
-                if(oldContent === content)  {
+                if(oldContent === content || oldContent?.equals(content) )  {
                     pipelineStatus = "chunked";
                     break;
                 }
                 await rag_parent_data.update(data.resourceId, { content });
-                await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : {resourceId,content,orgId :data1.org_id, userId : data1.user_id} })
+                await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : {resourceId,content,orgId :data1.org_id, userId : data1.user_id, fileFormat: data1.source.fileFormat} })
                 pipelineStatus = "loaded";
                 break;
             case 'delete': {
@@ -47,7 +47,7 @@ async function processMsg(message, channel) {
                 break;
             }
             case 'chunk': {
-                const doc = new Doc(data.resourceId, data.content, { orgId: data.orgId, userId: data.userId });
+                const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
                 const chunk = await doc.chunk(512, 50);
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
