@@ -7,11 +7,11 @@ import queue from '../services/queue.js';
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
 export const GetAllDocuments = async (req, res, next) => {
-    const { org } = req.profile || {};
-    const embed = req.Embed;
+    const { org, user } = req.profile || {};
+    const embed = req.IsEmbedUser;
     const result = await rag_parent_data.getAll({
-        user_id: embed ? embed.user_id : null,
-        org_id: embed ? embed.org_id : org?.id
+        user_id: embed ? user.id : null,
+        org_id: org?.id
     });
     res.locals = {
         "success": true,
@@ -22,11 +22,11 @@ export const GetAllDocuments = async (req, res, next) => {
     return next();
 };
 
-export const create_vectors = async (req, res, next) => {
+export const create_vectors = async (req, res) => {
     // TO DO: implement create_vectors logic
     try {
-        const { org } = req.profile || {};
-        const embed = req.Embed;
+        const { org, user } = req.profile || {};
+        const embed = req.IsEmbedUser;
         const {
             url,
             chunking_type = 'recursive',
@@ -54,8 +54,8 @@ export const create_vectors = async (req, res, next) => {
             chunk_overlap,
             name,
             description,
-            user_id: embed ? embed.user_id : null,
-            org_id: embed ? embed.org_id : org?.id, 
+            user_id: embed ? user.id : null,
+            org_id:  org?.id, 
         });
         const payload = {
             event: "load",
