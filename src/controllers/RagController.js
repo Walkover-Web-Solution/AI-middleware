@@ -34,7 +34,8 @@ export const create_vectors = async (req, res, next) => {
             chunk_overlap = 70,
             name,
             description,
-            docType 
+            docType,
+            fileFormat
         } = req.body;
 
         if (!name || !description) throw new Error('Name and Description are required!!');
@@ -42,9 +43,10 @@ export const create_vectors = async (req, res, next) => {
         const parentData = await rag_parent_data.create({
             source: {
                 type: 'url',
+                fileFormat,
                 data: {
                     url,
-                    type :docType
+                    type :docType,
                 }
             },
             chunking_type,
@@ -53,7 +55,7 @@ export const create_vectors = async (req, res, next) => {
             name,
             description,
             user_id: embed ? embed.user_id : null,
-            org_id: embed ? embed.org_id : org?.id
+            org_id: embed ? embed.org_id : org?.id, 
         });
         const payload = {
             event: "load",
