@@ -18,7 +18,8 @@ export class GoogleDocLoader  {
                 return docs[0].pageContent;
             }
             case 'csv': {
-                const data = await fetchCSV(downloadUrl);
+                const subsheetId = url.match(/[?&]gid=(\d+)/)?.[1];
+                const data = await fetchCSV(downloadUrl+ (subsheetId ? `&gid=${subsheetId}`: ''));
                 return data;
             }
         }
