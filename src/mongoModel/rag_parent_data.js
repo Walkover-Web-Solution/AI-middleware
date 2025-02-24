@@ -14,8 +14,7 @@ const ragParentDataSchema = new mongoose.Schema({
     required: true,
   },
   content :{
-    type :String,
-
+    type : mongoose.Schema.Types.Mixed,
   },  
   user_id: {
     type: String,
@@ -31,6 +30,11 @@ const ragParentDataSchema = new mongoose.Schema({
           type: String,
           enum: ["file", "url"],
           required: true,
+        },
+        fileFormat: {
+          type: String, 
+          enum: ['csv', 'txt', 'pdf', 'docx', 'xlsx', 'pptx'], 
+          required: true
         },
         data: {
           type: Object,
