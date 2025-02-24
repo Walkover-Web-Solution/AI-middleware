@@ -1,5 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import { generateIdentifier } from './utils/utilityService.js';
+import { getFileFormatByUrl } from '../utils/ragUtils.js';
 
 class BucketService {
     constructor() {
@@ -30,6 +31,10 @@ class BucketService {
 
     // Middleware function
     async handleFileUpload(req, res, next) {
+            if (req.body.url){
+                req.body.fileFormat = getFileFormatByUrl(req.body.url);
+                return next();
+            }
             if (!req.file) {
                 return next()
             }
@@ -49,6 +54,7 @@ class BucketService {
 
             req.body.url = imageUrl;
             req.body.docType = "file";
+            req.body.fileFormat = req.file.mimetype.split("/")[1];
             return next()
     }
 }
