@@ -33,6 +33,7 @@ export class Doc {
         }
         else if (chunking_type === 'semantic') {
             splits = (await axios.get(`${process.env.PYTHON_URL}/internal/chunking/semantic/${mongo_id}`))?.data?.chunk_texts
+            splits= splits.map((chunk) => ({ pageContent: chunk}));
         }
         else if (chunking_type === 'manual') {
             const text_splitter = new CharacterTextSplitter({
