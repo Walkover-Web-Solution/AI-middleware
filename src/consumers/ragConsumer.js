@@ -19,7 +19,7 @@ async function processMsg(message, channel) {
     try {
         const msg = JSON.parse(message.content);
         // const { version, event, data } = EventSchema.parse(msg);
-        const { version, event, data } =msg;
+        const { version, event, data } = msg;
         resourceId = data.resourceId;
         console.log(`Event: ${event}`);
         let pipelineStatus = null;
@@ -36,7 +36,13 @@ async function processMsg(message, channel) {
                     break;
                 }
                 await rag_parent_data.update(data.resourceId, { content });
-                await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : {resourceId,content,orgId :data1.org_id, userId : data1.user_id, fileFormat: data1.source.fileFormat} })
+                const queuePayload =  { resourceId,
+                    content,orgId :data1.org_id, 
+                    userId : data1.user_id,
+                     fileFormat: data1.source.fileFormat,
+                     chunkingType :data1.chunking_type
+                    }
+                await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : queuePayload })
                 pipelineStatus = "loaded";
                 break;
             case 'delete': {
@@ -48,7 +54,7 @@ async function processMsg(message, channel) {
             }
             case 'chunk': {
                 const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
-                const chunk = await doc.chunk(512, 50);
+                const chunk = await doc.chunk(512, 50,data.chunkingType,data.resourceId);
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
                 try {
