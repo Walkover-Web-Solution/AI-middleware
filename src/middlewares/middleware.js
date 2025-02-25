@@ -171,4 +171,7 @@ const EmbeddecodeToken = async (req, res, next) => {
 const InternalAuth = async (req, res, next)=>{
   return next()
 }
-export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth };
+const ReturnAuth = async (req, res, next)=>{
+  return res.status(400).json({ message: 'unauthorized user ', auth: req.get('Authorization')});
+}
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, ReturnAuth };
