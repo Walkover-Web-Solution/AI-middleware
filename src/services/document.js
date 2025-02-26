@@ -5,6 +5,7 @@ import ChunkService from "./ragDataService.js"
 import mongoose from "mongoose";
 import { deleteResourceChunks, savingVectorsInPineconeBatches } from "../services/pinecone.js";
 import axios from "axios";
+import getChunksByAi from "../utils/ragUtils.js";
 
 export class Doc {
     constructor(resourceId, content, fileFormat, metadata = { public: false }) {
@@ -33,6 +34,7 @@ export class Doc {
         }
         else if (chunking_type === 'semantic') {
             splits = (await axios.get(`${process.env.PYTHON_URL}/internal/chunking/semantic/${mongo_id}`))?.data?.chunk_texts
+            splits = splits.map(split => ({pageContent: split}))
         }
         else if (chunking_type === 'manual') {
             const text_splitter = new CharacterTextSplitter({
@@ -41,6 +43,10 @@ export class Doc {
                 chunk_overlap : overlap,
             })
             splits = await text_splitter.createDocuments([this.content])
+        }
+        else if (chunking_type === 'ai'){
+            splits = await getChunksByAi(this.content, chunkSize, overlap)
+            splits = splits.map(split => ({pageContent: split}))
         }
         else throw new Error("Invalid chunking type or method not supported.")
         for (const split of splits) {
