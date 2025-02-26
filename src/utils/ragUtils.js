@@ -67,3 +67,56 @@ export async function fetchAndProcessCSV(url) {
     return descriptiveRows;
 
 }
+
+
+export async function getChunkingType(text) {
+    try {
+      const variables = {text : text};
+  
+      const response = await fetch("https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion", {
+        method: "POST",
+        headers: {
+          "pauthkey": "1b13a7a038ce616635899a239771044c",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user: "suggest the best type of chuking.",
+          bridge_id: "67bdb70c1201653d967e901a",
+          variables: variables
+        })
+      });
+  
+      const Response = await response.json();
+      const chunking_type = JSON.parse(Response.response?.data?.content).Suggestion;
+      return chunking_type
+    } catch (err) {
+      console.error("Error Getting chunk type=>", err);
+      throw err;
+    }
+  }
+
+export default async function getChunksByAi(text, chunk_size, chunk_overlap) {
+    try {
+        const variables = {text, chunk_size, chunk_overlap};
+        const response = await fetch("https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion", {
+        method: "POST",
+        headers: {
+            "pauthkey": "1b13a7a038ce616635899a239771044c",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user: "chunk the text",
+            bridge_id: "67bdb9b41201653d967e901c",
+            variables: variables
+        })
+        });
+
+        const Response = await response.json();
+
+        const chunks = JSON.parse(Response.response?.data?.content).chunks;
+        return chunks
+    } catch (err) {
+        console.error("Error Getting chunks", err);
+        throw err;
+    }
+}

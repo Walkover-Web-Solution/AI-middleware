@@ -9,6 +9,7 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import { Doc, MongoStorage, OpenAiEncoder, PineconeStorage } from '../services/document.js';
 import logger from '../logger.js';
 import queue from '../services/queue.js';
+import { getChunkingType } from '../utils/ragUtils.js';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -29,13 +30,21 @@ async function processMsg(message, channel) {
                 const loader = new DocumentLoader();
                 const content = await loader.getContent(data.url);
                 const data1 = await rag_parent_data.getDocumentById(data.resourceId);
+                const toUpdate = { content }
+                
+                if (data1.chunking_type === 'auto'){
+                    toUpdate.chunking_type = await getChunkingType(content);
+                    toUpdate.is_chunking_type_auto = true
+                    data1.chunking_type = toUpdate.chunking_type
+                }
+
                 const oldContent = data1.content;
                 // TODO: Can we change the final status as "done"
                 if(oldContent === content || oldContent?.equals(content) )  {
                     pipelineStatus = "chunked";
                     break;
                 }
-                await rag_parent_data.update(data.resourceId, { content });
+                await rag_parent_data.update(data.resourceId, toUpdate );
                 const queuePayload =  { resourceId,
                     content,orgId :data1.org_id, 
                     userId : data1.user_id,
