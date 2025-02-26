@@ -47,9 +47,13 @@ const ragParentDataSchema = new mongoose.Schema({
   },
   chunking_type: {
     type: String,
-    enum: ["semantic", "manual", "recursive"],
+    enum: ["semantic", "manual", "recursive", "ai", "auto"],
     required: true,
   },
+  is_chunking_type_auto: {
+    type: Boolean, 
+    default: false
+  }, 
   chunk_size: {
     type: Number,
     required: true,
