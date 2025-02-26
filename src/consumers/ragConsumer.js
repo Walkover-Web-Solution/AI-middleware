@@ -14,15 +14,15 @@ import queue from '../services/queue.js';
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 async function processMsg(message, channel) {
 
-    console.log("Procesingngngn")
     let resourceId = '';
+    const msg = JSON.parse(message.content);
     try {
-        const msg = JSON.parse(message.content);
         // const { version, event, data } = EventSchema.parse(msg);
         const { version, event, data } = msg;
         resourceId = data.resourceId;
-        console.log(`Event: ${event}`);
+        console.log(`Event: ${event}` + `: ${resourceId}`);
         let pipelineStatus = null;
+        
         switch (event) {
             case 'load':
                 console.log(data,"Data");
@@ -85,14 +85,22 @@ async function processMsg(message, channel) {
         // }
         channel.ack(message);
     } catch (error) {
-        console.log(error);
         // TODO: Add error message to the failed message
-        producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
+        if(msg.retryCount > 2) {
+            console.error("error in rag consumer",error);
+            producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
+        }else{
+            producer.publishToQueue(QUEUE_NAME, JSON.stringify({
+                ...msg, 
+                error: error.stack, 
+                retryCount: (msg.retryCount || 0) + 1,
+            }));
+        }
         // if (resourceId) {
         //     await ResourceService.updateMetadata(resourceId, { status: 'error', message: error?.message }).catch(error => console.log(error));
         //     // await rtlayer.message(JSON.stringify({ id: resourceId, status: 'error', message: error?.message }), { channel: "resource" }).catch(error => logger.error(error));
         // }
-        logger.error(`[message] Error processing message: ${error.message}`);
+        logger.error(`[message] Error processing rag message: ${error.message}`);
         channel.ack(message);
     }
 
