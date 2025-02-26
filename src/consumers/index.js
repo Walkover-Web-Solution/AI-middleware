@@ -17,7 +17,6 @@ class Consumer {
     this.rabbitService = rabbitmqService(connectionString)
       .on('connect', (connection) => this.setup(connection))
       .on('error', (error) => console.log('[CONSUMER] Error in consumer connection:', error));
-      console.log("hello dosto ")
   }
 
   async setup(connection) {
