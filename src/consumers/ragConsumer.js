@@ -22,9 +22,7 @@ async function processMsg(message, channel) {
         resourceId = data.resourceId;
         console.log(`Event: ${event}` + `: ${resourceId}`);
         let pipelineStatus = null;
-        if(resourceId){
-            throw new Error("Yeah buddy, Light weight baby!!!!!")
-        }
+        
         switch (event) {
             case 'load':
                 console.log(data,"Data");
