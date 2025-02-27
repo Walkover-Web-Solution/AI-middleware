@@ -44,7 +44,7 @@ export class Doc {
             })
             splits = await text_splitter.createDocuments([this.content])
         }
-        else if (chunking_type === 'ai'){
+        else if (chunking_type === 'agentic'){
             splits = await getChunksByAi(this.content, chunkSize, overlap)
             splits = splits.map(split => ({pageContent: split}))
         }

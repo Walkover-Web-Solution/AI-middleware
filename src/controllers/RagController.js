@@ -29,7 +29,7 @@ export const create_vectors = async (req, res) => {
         const embed = req.IsEmbedUser;
         const {
             url,
-            chunking_type = 'recursive',
+            chunking_type = 'auto',
             chunk_size = 512,
             chunk_overlap = 70,
             name,

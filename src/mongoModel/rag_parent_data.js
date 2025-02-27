@@ -47,7 +47,7 @@ const ragParentDataSchema = new mongoose.Schema({
   },
   chunking_type: {
     type: String,
-    enum: ["semantic", "manual", "recursive", "ai", "auto"],
+    enum: ["semantic", "manual", "recursive", "agentic", "auto"],
     required: true,
   },
   is_chunking_type_auto: {
