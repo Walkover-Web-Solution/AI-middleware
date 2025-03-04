@@ -26,6 +26,11 @@ export async function fetchAndProcessCSV(url) {
     const rows = [];
     let headersCaptured = false;
     let headers = [];
+    const result = {};
+
+    const callBridge = async (bridge_id, user) => JSON.parse((await axios.post("https://api.gtwy.ai/api/v2/model/chat/completion", {bridge_id, user}, {
+        headers: {pauthkey : process.env.PAUTHKEY}
+    })).data.response.data.content);
 
     await new Promise((resolve, reject) => {
         response.data
@@ -42,30 +47,40 @@ export async function fetchAndProcessCSV(url) {
     });
 
     const string = headers.join(',') + "\n" + rows.slice(0, 5).map(row => Object.values(row).join(',')).join('\n');
+    const chunkSuggestion = (await callBridge("67c2fbb8017a2cb2b26e99a2", string)).Suggestion;
 
-    const descriptiveSentence = await axios.post("https://api.gtwy.ai/api/v2/model/chat/completion", {
-        user: string, 
-        bridge_id : "67bc58cbd94d505d999ae1f4"
-    }, {
-        headers: {pauthkey : process.env.PAUTHKEY}
-    }).then(res => JSON.parse(res.data.response.data.content).descriptiveSentence)
-    .catch(err => console.error(err));
-   
-    function replaceVariables(template, values) {
-        return template.replace(/\{\{(.*?)\}\}/g, (match, key) => {
-            key = key.trim(); // Trim spaces around the key
-            return values.hasOwnProperty(key) ? values[key] : match; // Replace if key exists
-        });
+    if(chunkSuggestion.includes('row')){
+        const descriptiveSentence = (await callBridge("67bc58cbd94d505d999ae1f4", string)).descriptiveSentence;
+    
+        function replaceVariables(template, values) {
+            return template.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+                key = key.trim(); // Trim spaces around the key
+                return values.hasOwnProperty(key) ? values[key] : match; // Replace if key exists
+            });
+        }
+
+        let descriptiveRows = [];
+        for(let row of rows){
+            const result = replaceVariables(descriptiveSentence, row);
+            descriptiveRows.push(result);
+            
+        }
+        result.rowWiseData = descriptiveRows;
     }
 
-    let descriptiveRows = [];
-    for(let row of rows){
-        const result = replaceVariables(descriptiveSentence, row);
-        descriptiveRows.push(result);
-        
-    }
-    return descriptiveRows;
+    if(chunkSuggestion.includes('column')){
+        const columnWiseData = rows.reduce((acc, row) => {
+            for(const key in row){
+                if(!acc[key]) acc[key] = [];
+                acc[key].push(row[key]);
+            }
+            return acc;
+        }, {})
 
+        result.columnWiseData = Object.entries(columnWiseData).map(([header, values]) => [header, ...values].join("\n"));
+    }
+
+    return result;
 }
 
 
