@@ -107,6 +107,7 @@ export class PineconeStorage {
                 metadata: {
                     docId: chunk.doc_id,
                     userId :chunk.user_id,
+                    chunkType: chunk.metadata?.chunkType
                 }
             };
         });
