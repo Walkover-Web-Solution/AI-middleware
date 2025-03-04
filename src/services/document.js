@@ -23,7 +23,11 @@ export class Doc {
         this.chunks = [];
         let splits = []
         if(this.fileFormat === 'csv') {
-            splits =  this.content.map((chunk) => ({ pageContent: chunk, metadata: {} }));
+            Object.entries(this.content).map(([chunkType, chunks]) => {
+                chunks.forEach((chunk) => {
+                    splits.push({ pageContent: chunk, metadata: { chunkType: chunkType } });
+                })
+            })
         }
         else if (chunking_type === 'recursive') {
             const textSplitter = new RecursiveCharacterTextSplitter({
@@ -53,9 +57,10 @@ export class Doc {
             this.chunks.push({
                 _id: (new mongoose.Types.ObjectId()).toString(),
                 data: split.pageContent,
+                metadata: split.metadata,
                 org_id : this.metadata.orgId,
                 doc_id:  this.resourceId,
-                user_id : this.userId
+                user_id : this.userId, 
             });
         }
         return this;
