@@ -2,7 +2,7 @@ import showcaseService from '../db_services/showCaseDbservice.js';
 import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage({ credentials: JSON.parse(process.env.GCP_CREDENTIALS) });
-const bucketName = 'ai_middleware_testing';
+const bucketName = 'resources.gtwy.ai';
 const bucket = storage.bucket(bucketName);
 
 export const addDataForShowCaseController = async (req, res, next) => {
@@ -26,7 +26,7 @@ export const addDataForShowCaseController = async (req, res, next) => {
         blobStream.end(image.buffer);
     });
 
-    const imgUrl = `https://resources.gtwy.ai/${bucket.name}/${filename}`;
+    const imgUrl = `https://resources.gtwy.ai/${filename}`;
     const data = await showcaseService.create({ name, description, link, img_url: imgUrl });
 
     res.json({ success: true, data });
@@ -49,7 +49,7 @@ export const updateDataForShowCaseController = async (req, res, next) => {
         // Fetch existing record to get the old image URL
         const existingData = await showcaseService.getById(id);
         if (existingData && existingData.img_url) {
-            const oldImagePath = existingData.img_url.split(`https://resources.gtwy.ai/${bucketName}/`)[1];
+            const oldImagePath = existingData.img_url.split(`https://resources.gtwy.ai/`)[1];
             if (oldImagePath) {
                 await bucket.file(oldImagePath).delete().catch(() => {});
             }
@@ -59,7 +59,7 @@ export const updateDataForShowCaseController = async (req, res, next) => {
         const blob = bucket.file(filename);
         const blobStream = blob.createWriteStream({ metadata: { contentType: image.mimetype } });
         blobStream.end(image.buffer);
-        updateData.img_url = `https://resources.gtwy.ai/${bucketName}/${filename}`;
+        updateData.img_url = `https://resources.gtwy.ai/${filename}`;
     }
 
     const data = await showcaseService.update(id, updateData);
