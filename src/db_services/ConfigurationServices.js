@@ -177,10 +177,12 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
       _id: new ObjectId(versionId)
     }).select({ 'configuration.model': 1, service: 1 , apikey_object_id: 1 }).lean();
 
-    const model = slugName ? hello_id?.configuration :  modelConfig.configuration 
+    const model = versionId ?  modelConfig.configuration  : hello_id?.configuration 
+    const apikey_object_id = versionId ?  modelConfig.apikey_object_id  : hello_id?.apikey_object_id 
+
     if (!hello_id) return false; 
 
-    return {hello_id ,modelConfig:model};
+    return {hello_id ,modelConfig:model, apikey_object_id};
   } catch (error) {
     console.log("error:", error);
     return {
