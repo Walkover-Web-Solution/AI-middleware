@@ -166,18 +166,18 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
   }).select({ _id: 1, slugName: 1, starterQuestion: 1 }).lean()
      
 }
-const getBridgeBySlugname = async (orgId, slugName, versionId, bridge_id) => {
+const getBridgeBySlugname = async (orgId, slugName, versionId) => {
   try {
     const hello_id = await configurationModel.findOne({
       slugName: slugName,
       org_id: orgId,
-    }).select({ hello_id: 1, 'configuration.model': 1, service: 1}).lean();
+    }).select({ hello_id: 1, 'configuration.model': 1, service: 1, apikey_object_id: 1 }).lean();
 
     const modelConfig = await versionModel.findOne({
       _id: new ObjectId(versionId)
-    }).select({ 'configuration.model': 1, service: 1 }).lean();
+    }).select({ 'configuration.model': 1, service: 1 , apikey_object_id: 1 }).lean();
 
-    const model = bridge_id ? hello_id?.configuration :  modelConfig.configuration 
+    const model = slugName ? hello_id?.configuration :  modelConfig.configuration 
     if (!hello_id) return false; 
 
     return {hello_id ,modelConfig:model};
