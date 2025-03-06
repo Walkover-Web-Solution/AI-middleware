@@ -8,11 +8,11 @@ import { createThread } from '../services/threadService.js';
 import ModelsConfig from '../configs/modelConfiguration.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
-    const { slugName, threadId: thread_id, versionId, bridge_id } = req.body;
+    const { slugName, threadId: thread_id, versionId } = req.body;
     let Hello_id = req.body.helloId
     const { org_id } = req.profile;
     let data = {};
-    if(!Hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId, bridge_id));
+    if(!Hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId));
     try {
         await createThread({
             display_name: thread_id,
@@ -26,6 +26,7 @@ export const subscribe = async (req, res, next) => {
     const model = data?.modelConfig?.model
     const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
     const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
+    const services = Object.keys(data?.hello_id?.apikey_object_id);
 
     try {
         if(data?.hello_id?.hello_id ?? false)
@@ -59,6 +60,7 @@ export const subscribe = async (req, res, next) => {
                 mode : vision ? ['vision'] : [],
             }
         }
+        res.locals['supportedServices'] = services
         req.statusCode = 200;
         return next();
     } catch (error) {
