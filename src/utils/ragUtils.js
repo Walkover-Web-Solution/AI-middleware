@@ -49,6 +49,8 @@ export async function fetchAndProcessCSV(url) {
     const string = headers.join(',') + "\n" + rows.slice(0, 5).map(row => Object.values(row).join(',')).join('\n');
     const chunkSuggestion = (await callBridge("67c2fbb8017a2cb2b26e99a2", string)).Suggestion;
 
+    result.headers = headers;
+
     if(chunkSuggestion.includes('row')){
         const descriptiveSentence = (await callBridge("67bc58cbd94d505d999ae1f4", string)).descriptiveSentence;
     
