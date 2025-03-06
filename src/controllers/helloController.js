@@ -26,7 +26,7 @@ export const subscribe = async (req, res, next) => {
     const model = data?.modelConfig?.model
     const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
     const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
-    const services = data?.hello_id?.apikey_object_id ? Object.keys(data?.hello_id?.apikey_object_id) : []
+    const services = data?.apikey_object_id ? Object.keys(data?.apikey_object_id) : []
 
     try {
         if(data?.hello_id?.hello_id ?? false)
