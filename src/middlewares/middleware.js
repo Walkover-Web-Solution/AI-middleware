@@ -45,7 +45,7 @@ const middleware = async (req, res, next) => {
 
     req.profile.org.id = req.profile.org.id.toString();
     req.body.org_id = req.profile.org.id;
-    req.IsEmbedUser = req.profile.user.meta?.type || false
+    req.IsEmbedUser = req.profile.user.meta?.type || req.profile?.extraDetails?.tokenType || false
     return next();
   } catch (err) {
     console.error("middleware error =>", err);
@@ -171,4 +171,7 @@ const EmbeddecodeToken = async (req, res, next) => {
 const InternalAuth = async (req, res, next)=>{
   return next()
 }
-export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth };
+const ReturnAuth = async (req, res)=>{
+  return res.status(400).json({ message: 'unauthorized user ', auth: req.get('Authorization')});
+}
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, ReturnAuth };
