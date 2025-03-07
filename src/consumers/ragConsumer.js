@@ -10,6 +10,7 @@ import { Doc, MongoStorage, OpenAiEncoder, PineconeStorage } from '../services/d
 import logger from '../logger.js';
 import queue from '../services/queue.js';
 import { getChunkingType } from '../utils/ragUtils.js';
+import { sendAlert } from '../services/utils/utilityService.js';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -26,7 +27,6 @@ async function processMsg(message, channel) {
         
         switch (event) {
             case 'load':
-                console.log(data,"Data");
                 const loader = new DocumentLoader();
                 const content = await loader.getContent(data.url);
                 const data1 = await rag_parent_data.getDocumentById(data.resourceId);
@@ -96,9 +96,9 @@ async function processMsg(message, channel) {
     } catch (error) {
         // TODO: Add error message to the failed message
         if(msg.retryCount > 2) {
-            console.error("error in rag consumer",error);
             producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
         }else{
+            sendAlert('ERROR IN RAG CONSUMER', error, resourceId)
             producer.publishToQueue(QUEUE_NAME, JSON.stringify({
                 ...msg, 
                 error: error.stack, 

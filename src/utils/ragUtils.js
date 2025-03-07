@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Readable } from 'stream';
 import csvParser from 'csv-parser';
+import { sendAlert } from '../services/utils/utilityService.js';
 
 
 export function getFileFormatByUrl(url) {
@@ -17,6 +18,9 @@ export function getFileFormatByUrl(url) {
     ];
     
     const match = formats.find(({ regex }) => regex.test(url));
+    if(!match){
+        sendAlert('FILE FORMAT NOT SUPPORTED', {}, url)
+    }
     return match ? match.format : 'unknown';
 }
 
