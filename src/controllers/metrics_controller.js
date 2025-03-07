@@ -24,7 +24,7 @@ const metrics_data = async (req, res) => {
     const whereClause = buildWhereClause(params, values, factor);
     // const table = selectTable(startTime, endTime, range);
     const table = selectTable(range);
-    const query = `SELECT ${factor}, SUM(cost_sum) as cost_sum, AVG(latency_sum/NULLIF(record_count, 0)) as latency_sum, SUM(success_count) as success_count FROM ${table} ${whereClause}`;
+    const query = `SELECT ${factor}, SUM(cost_sum) as cost_sum, AVG(latency_sum/NULLIF(record_count, 0)) as latency_sum, SUM(success_count) as success_count, SUM(total_token_count) as total_tokens FROM ${table} ${whereClause}`;
     try {
       const data = await metrics_sevice.find(query, values);
       res.status(200).json({
