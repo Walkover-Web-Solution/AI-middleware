@@ -20,7 +20,7 @@ const testcaseSchema = new mongoose.Schema({
   },
     matching_type: {
       type: String,
-      enum: ['exact', 'ai', 'similar'],
+      enum: ['exact', 'ai', 'cosine'],
       required: true
     }
 });
