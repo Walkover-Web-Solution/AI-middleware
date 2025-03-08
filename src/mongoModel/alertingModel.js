@@ -22,13 +22,16 @@ const alertSchema = new mongoose.Schema({
   },
   alertType: {
     type: [String],
-    enum: ['Error', 'Variable'],
+    enum: ['Error', 'Variable', 'metrix_limit_reached'],
     default: [],
     required: true,
   },
   bridges: {
     type: [String],
     default: ['all'],
+  },
+  limit: {
+    type: Number
   },
   createdAt: {
     type: Date,
