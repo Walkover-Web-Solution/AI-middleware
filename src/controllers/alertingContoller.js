@@ -1,50 +1,27 @@
 import alertingDbservices from "../db_services/alertingDbservice.js";
 import validateFunctions from "../validation/joi_validation/alerting.js"
 
-async function createAlert(req,res) {
-  try {
-        const org_id = req.profile?.org?.id;
-        const {webhookConfiguration, name, bridges, alertType } = req.body;
-        try {
-          await validateFunctions.createAlertSchema.validateAsync({
-            org_id,
-            webhookConfiguration,
-            name,
-            bridges,
-            alertType
-          });
-        } catch (error) {
-          return res.status(422).json({
-            success: false,
-            error: error.details
-          });
-        }
-        const newAlert = await alertingDbservices.create({
-          org_id,
-          webhookConfiguration,
-          name,
-          bridges,
-          alertType
-        });
-        if (newAlert.success) {
-          return res.status(201).json({
-            "success": true,
-            "data": newAlert.data
-          });
-        } else {
-          return res.status(500).json({
-            "success": false,
-            "error": newAlert.error
-          });
-        }
-  }
-  catch(error){
-    console.error('Error in createAlert:', error);
-    res.status(400).json({
-      success: false,
-      error: error
-    });
-  }
+async function createAlert(req,res, next) {
+  const org_id = req.profile?.org?.id;
+  const {webhookConfiguration, name, bridges, alertType, limit } = req.body;
+  await validateFunctions.createAlertSchema.validateAsync({
+    org_id,
+    webhookConfiguration,
+    name,
+    bridges,
+    alertType,
+    limit
+  });
+  res.locals= await alertingDbservices.create({
+    org_id,
+    webhookConfiguration,
+    name,
+    bridges,
+    alertType,
+    limit
+  });
+  req.statusCode = 201;
+  return next();
 }
 
 async function getAllAlerts(req, res) {

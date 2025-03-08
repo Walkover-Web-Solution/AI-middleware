@@ -3,21 +3,9 @@ import AlertModel from '../mongoModel/alertingModel.js';
 
 
 async function create(alertData){
-  try {
-    const data = await new AlertModel({
+    return await new AlertModel({
       ...alertData
     }).save();
-    return {
-      "success": true,
-      "data": data
-    };
-  } catch (error) {
-    console.error("error:", error);
-    return {
-      success: false,
-      error: "something went wrong!!"
-    };
-  }
 }
 
 async function getAll(org_id){
