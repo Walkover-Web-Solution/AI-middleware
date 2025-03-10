@@ -2,6 +2,7 @@ import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache} from "../../cache_service/index.js"
+import { callOpenAIModelsApi, callGroqApi, callAnthropicApi } from "../utils/aiServices.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -21,6 +22,21 @@ const saveApikey = async(req,res) => {
               success: false,
               error: error.details
             });
+        }
+        let check;
+        switch (service) {
+            case 'openai':
+                check = await callOpenAIModelsApi(apikey)
+                break;
+            case 'anthropic':
+                check = await callAnthropicApi(apikey)
+                break;
+            case 'groq':
+                check = await callGroqApi(apikey)
+                break;
+        }
+        if(!check.success){
+            return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
         }
         apikey = await Helper.encrypt(apikey)
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});

@@ -5,7 +5,8 @@ const createAlertSchema = Joi.object({
     webhookConfiguration : Joi.object().required(),
     name : Joi.string().required(),
     bridges : Joi.array().items(Joi.string()).required(),
-    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error')).required(),
+    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error', 'metrix_limit_reached')).required(),
+    limit : Joi.number()
 })
 
 const getAlertSchema = Joi.object({
