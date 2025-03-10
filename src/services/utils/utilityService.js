@@ -1,5 +1,6 @@
 import { nanoid, customAlphabet } from 'nanoid';
 import crypto from 'crypto';
+import axios from 'axios'
 
 const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 // const basicAuthServices = require('../db_services/basic_auth_db_service.js')
@@ -82,11 +83,32 @@ function objectToQueryParams(obj) {
     .join('&');
 }
 
+async function sendAlert(message, error, bridgeId, orgId, channelId){
+  try{
+    await axios.post('https://flow.sokt.io/func/scriSmH2QaBH', {
+      channelId : channelId,
+      error: {
+        details: {
+          alert: message,
+          error_message: error.toString()
+        },
+        bridge_id: bridgeId,
+        org_id: orgId
+      }
+    });
+    return true;
+  }catch(err){
+    console.error('Error sending alert', err)
+    return false;
+  }
+}
+
 export {
   generateIdentifier,
   encrypt,
   decrypt,
   generateIdForOpenAiFunctionCall,
   encryptString,
-  objectToQueryParams
+  objectToQueryParams, 
+  sendAlert
 };
