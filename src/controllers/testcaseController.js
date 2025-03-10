@@ -1,4 +1,5 @@
 import testcaseSevice from "../db_services/testcaseDbservice.js"
+import { convertAIConversation } from "../services/utils/utilityService.js";
 async function getTestcases(req,res, next) {
     const bridge_id = req.query.bridge_id;
     const result = await testcaseSevice.getAllTestCases(bridge_id);
@@ -12,6 +13,7 @@ async function getTestcases(req,res, next) {
 
 async function saveTestcases(req,res, next) {
     const {bridge_id, type, conversation, expected, matching_type } = req.body;
+    convertAIConversation(conversation);
     const data = {
         bridge_id,
         type,
