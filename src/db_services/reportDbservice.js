@@ -46,6 +46,43 @@ async function get_data_from_pg(org_ids) {
     });
     totalHits = rawData.length;
 
+    // Execute the bridge stats query
+    const bridgeStatsQuery = `
+      WITH bridge_stats AS (
+        SELECT
+          c.bridge_id,
+          COUNT(c.id) AS hits,
+          SUM(rd.input_tokens + rd.output_tokens) AS total_tokens_used,
+          SUM(rd.expected_cost) AS total_cost
+        FROM
+          conversations c
+        JOIN
+          raw_data rd ON c.message_id = rd.message_id
+        WHERE
+          c.message_by = 'user'
+          AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
+          AND c."createdAt" < date_trunc('month', current_date)
+        GROUP BY
+          c.bridge_id
+      )
+      SELECT
+        bs.bridge_id AS "Bridge Name",
+        bs.hits,
+        bs.total_tokens_used AS "Tokens Used",
+        bs.total_cost AS "Cost"
+      FROM
+        bridge_stats bs
+      ORDER BY
+        bs.hits DESC
+      LIMIT 3;
+    `;
+
+    const bridgeStats = await models.pg.sequelize.query(bridgeStatsQuery, {
+      type: models.pg.sequelize.QueryTypes.SELECT
+    });
+
+    
+
     // Iterate through the conversations to accumulate usage data
     conversations.forEach(conversation => {
       const bridgeId = conversation.bridge_id;
@@ -116,7 +153,7 @@ async function get_data_from_pg(org_ids) {
           TotalCost: totalCost
         },
       ],
-      TopBridges: topBridges,
+      TopBridges: bridgeStats,
       NewBridgesCreated: topBridges.length,
       PerformanceMetrics: {
         TotalErrorsFailures: totalErrorsFailures
