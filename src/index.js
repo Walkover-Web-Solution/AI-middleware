@@ -27,6 +27,7 @@ import InternalRoutes from './routes/InternalRoutes.js';
 import alerting from './routes/alerting_routes.js';
 import showCaseRoutes from './routes/showCase_routes.js'
 import testcaseRoutes from './routes/testcase_routes.js'
+import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -61,6 +62,7 @@ app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
 app.use('/showcase',showCaseRoutes);
 app.use('/testcases',testcaseRoutes);
+app.use('/modelConfiguration',ModelsConfigRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
