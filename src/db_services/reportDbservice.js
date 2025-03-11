@@ -1,5 +1,6 @@
 import models from '../../models/index.js';
 import { Op } from 'sequelize';
+import configurationService  from '../db_services/ConfigurationServices.js';
 
 async function get_data_from_pg(org_ids) {
   const results = [];
@@ -66,7 +67,7 @@ async function get_data_from_pg(org_ids) {
           c.bridge_id
       )
       SELECT
-        bs.bridge_id AS "Bridge Name",
+        bs.bridge_id AS "bridge_id",
         bs.hits,
         bs.total_tokens_used AS "Tokens Used",
         bs.total_cost AS "Cost"
@@ -80,6 +81,11 @@ async function get_data_from_pg(org_ids) {
     const bridgeStats = await models.pg.sequelize.query(bridgeStatsQuery, {
       type: models.pg.sequelize.QueryTypes.SELECT
     });
+    for(let i = 0; i < bridgeStats.length; i++) {
+      const bridge_id = bridgeStats[i].bridge_id
+      bridgeStats[i].BridgeName = await configurationService.getBridgeNameById(bridge_id, org_id)
+
+    }
 
     
 
