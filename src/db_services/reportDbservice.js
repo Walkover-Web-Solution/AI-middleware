@@ -154,19 +154,19 @@ async function get_data_from_pg(org_ids) {
     const orgData = {
       UsageOverview: [
         {
-          TotalHits: totalHits,
-          TotalTokensConsumed: totalTokensConsumed,
-          TotalCost: totalCost
+          totalHits: totalHits,
+          totalTokensConsumed: totalTokensConsumed,
+          totalCost: totalCost
         },
       ],
-      TopBridges: bridgeStats,
+      topBridgesTable: bridgeStats,
       NewBridgesCreated: topBridges.length,
       PerformanceMetrics: {
-        TotalErrorsFailures: totalErrorsFailures
+        totalErrors: totalErrorsFailures
       },
       ClientFeedback: {
-        Dislikes: totalDislikes,
-        PositiveFeedback: totalPositiveFeedback
+        dislike: totalDislikes,
+        positiveFeedback: totalPositiveFeedback
       }
     };
 
