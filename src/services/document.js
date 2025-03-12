@@ -23,7 +23,7 @@ export class Doc {
         this.chunks = [];
         let splits = []
         if(this.fileFormat === 'csv') {
-            Object.entries(this.content).map(([chunkType, chunks]) => {
+            Object.entries(this.content).filter(([chunkType]) => chunkType !== 'headers').map(([chunkType, chunks]) => {
                 chunks.forEach((chunk) => {
                     splits.push({ pageContent: chunk, metadata: { chunkType: chunkType } });
                 })
@@ -54,9 +54,10 @@ export class Doc {
         }
         else throw new Error("Invalid chunking type or method not supported.")
         for (const split of splits) {
+            if(!split.pageContent?.trim()) continue;
             this.chunks.push({
                 _id: (new mongoose.Types.ObjectId()).toString(),
-                data: split.pageContent,
+                data: split.pageContent.trim(),
                 metadata: split.metadata,
                 org_id : this.metadata.orgId,
                 doc_id:  this.resourceId,

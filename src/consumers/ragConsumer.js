@@ -33,9 +33,11 @@ async function processMsg(message, channel) {
                 const toUpdate = { content }
                 
                 if (data1.chunking_type === 'auto'){
-                    toUpdate.chunking_type = await getChunkingType(content);
+                    if(data1.source?.fileFormat !== 'csv'){
+                        toUpdate.chunking_type = await getChunkingType(content);
+                        data1.chunking_type = toUpdate.chunking_type
+                    }
                     toUpdate.is_chunking_type_auto = true
-                    data1.chunking_type = toUpdate.chunking_type
                 }
 
                 const oldContent = data1.content;
@@ -63,7 +65,7 @@ async function processMsg(message, channel) {
             }
             case 'chunk': {
                 const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
-                const chunk = await doc.chunk(512, 50,data.chunkingType,data.resourceId);
+                const chunk = await doc.chunk(512, 50, data.chunkingType, data.resourceId);
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
                 try {
@@ -94,6 +96,7 @@ async function processMsg(message, channel) {
         // }
         channel.ack(message);
     } catch (error) {
+        console.error("Error in processing Message", error);
         // TODO: Add error message to the failed message
         if(msg.retryCount > 2) {
             producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
