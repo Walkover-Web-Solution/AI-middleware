@@ -2,69 +2,103 @@ import models from '../../models/index.js';
 import { Op } from 'sequelize';
 import configurationService from '../db_services/ConfigurationServices.js';
 
-/**
- * Retrieves and summarizes database metrics for specified organizations from the previous month
- * @param {Array<string|number>} org_ids - Array of organization IDs to query
- * @returns {Promise<Array>} Array of organization data objects
- */
 async function get_data_from_pg(org_ids) {
+  const results = [];
+
   // Get the start and end of the previous month
   const now = new Date();
   const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-  // Process each organization in parallel for better performance
-  const results = await Promise.all(org_ids.map(async (org_id) => {
+  // Prepare common date filters to avoid duplication
+  const conversationDateFilter = {
+    [Op.gte]: firstDayOfLastMonth,
+    [Op.lte]: lastDayOfLastMonth,
+  };
+
+  for (let org_id of org_ids) {
+    // Convert org_id to string if not already
     org_id = org_id.toString();
-    
-    // Set up date filter object once to reuse
-    const dateFilter = {
-      [Op.gte]: firstDayOfLastMonth,
-      [Op.lte]: lastDayOfLastMonth
-    };
-    
-    // Get raw data with aggregated stats in a single query
+
+    // Initialize variables to store totals
+    let totalHits = 0;
+    let totalTokensConsumed = 0;
+    let totalCost = 0;
+    let totalErrorCount = 0;
+    let totalDislikes = 0;
+    let totalPositiveFeedback = 0;
+    let totalSuccessCount = 0;
+    const topBridges = [];
+
+    // 1) Fetch all conversations related to the org_id for the previous month
+    //    Include user_feedback here to avoid a separate feedback query later.
+    const conversations = await models.pg.conversations.findAll({
+      where: {
+        org_id,
+        createdAt: conversationDateFilter
+      },
+      attributes: [
+        'bridge_id',
+        'message_by',
+        'message',
+        'tools_call_data',
+        'createdAt',
+        'message_id',
+        'user_feedback'
+      ]
+    });
+
+    // 2) Fetch all raw data for the same org_id/month
+    //    Include 'error' in attributes so we can count errors vs. successes without extra queries.
     const rawData = await models.pg.raw_data.findAll({
       where: {
         org_id,
-        created_at: dateFilter
+        created_at: conversationDateFilter
       },
-      attributes: ['service', 'status', 'input_tokens', 'output_tokens', 'expected_cost', 'message_id', 'error']
+      attributes: [
+        'service',
+        'status',
+        'input_tokens',
+        'output_tokens',
+        'expected_cost',
+        'message_id',
+        'error'
+      ]
     });
-    
-    // Calculate stats from raw data
-    const totalHits = rawData.length;
-    const totalTokensConsumed = rawData.reduce((sum, data) => 
-      sum + (data.input_tokens || 0) + (data.output_tokens || 0), 0);
-    const totalCost = rawData.reduce((sum, data) => sum + (data.expected_cost || 0), 0);
-    const totalSuccessCount = rawData.filter(data => !data.error || data.error === '').length;
-    const totalErrorCount = rawData.filter(data => data.error && data.error !== '').length;
-    
-    // Execute bridge stats query for top bridges
+
+    // total hits is simply the length of rawData
+    totalHits = rawData.length;
+
+    // Build a map (message_id -> rawData row) for quick lookups
+    const rawDataMap = new Map();
+    for (const r of rawData) {
+      rawDataMap.set(r.message_id, r);
+    }
+
+    // 3) Run the bridge stats query
     const bridgeStatsQuery = `
       WITH bridge_stats AS (
         SELECT
           c.bridge_id,
           COUNT(c.id) AS hits,
-          SUM(COALESCE(rd.input_tokens, 0) + COALESCE(rd.output_tokens, 0)) AS total_tokens_used,
-          SUM(COALESCE(rd.expected_cost, 0)) AS total_cost
+          SUM(rd.input_tokens + rd.output_tokens) AS total_tokens_used,
+          SUM(rd.expected_cost) AS total_cost
         FROM
           conversations c
-        LEFT JOIN
+        JOIN
           raw_data rd ON c.message_id = rd.message_id
         WHERE
-          c.message_by = 'user' AND c.org_id = $1
-          AND c."createdAt" >= $2
-          AND c."createdAt" <= $3
-          AND c.bridge_id IS NOT NULL
+          c.message_by = 'user' AND c.org_id = '${org_id}'
+          AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
+          AND c."createdAt" < date_trunc('month', current_date)
         GROUP BY
           c.bridge_id
       )
       SELECT
-        bs.bridge_id,
+        bs.bridge_id AS "bridge_id",
         bs.hits,
-        bs.total_tokens_used AS "tokens_used",
-        bs.total_cost AS "cost"
+        bs.total_tokens_used AS "Tokens Used",
+        bs.total_cost AS "Cost"
       FROM
         bridge_stats bs
       ORDER BY
@@ -72,6 +106,7 @@ async function get_data_from_pg(org_ids) {
       LIMIT 3;
     `;
 
+    // 4) Run the activeBridges query
     const activeBridgesQuery = `
       SELECT
         COUNT(DISTINCT c.bridge_id) AS active_bridges_count
@@ -79,104 +114,97 @@ async function get_data_from_pg(org_ids) {
         conversations c
       WHERE
         c.bridge_id IS NOT NULL
-        AND c.org_id = $1
-        AND c."createdAt" >= $2
-        AND c."createdAt" <= $3;
+        AND c.org_id = '${org_id}'
+        AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
+        AND c."createdAt" < date_trunc('month', current_date);
     `;
 
-    // Use parameterized queries to prevent SQL injection
-    const [bridgeStats, activeBridgesResult] = await Promise.all([
-      models.pg.sequelize.query(bridgeStatsQuery, {
-        type: models.pg.sequelize.QueryTypes.SELECT,
-        replacements: [org_id, firstDayOfLastMonth, lastDayOfLastMonth]
-      }),
-      models.pg.sequelize.query(activeBridgesQuery, {
-        type: models.pg.sequelize.QueryTypes.SELECT,
-        replacements: [org_id, firstDayOfLastMonth, lastDayOfLastMonth]
-      })
-    ]);
-
-    const activeBridges = parseInt(activeBridgesResult[0]?.active_bridges_count || 0, 10);
-    
-    // Fetch bridge names in parallel
-    await Promise.all(bridgeStats.map(async (bridge) => {
-      bridge.bridge_name = await configurationService.getBridgeNameById(bridge.bridge_id, org_id);
-      return bridge;
-    }));
-
-    // Get feedback data
-    const feedbackData = await models.pg.conversations.findAll({
-      where: {
-        org_id,
-        createdAt: dateFilter,
-        user_feedback: {
-          [Op.ne]: null
-        }
-      },
-      attributes: ['user_feedback']
+    const bridgeStats = await models.pg.sequelize.query(bridgeStatsQuery, {
+      type: models.pg.sequelize.QueryTypes.SELECT
+    });
+    const activeBridges = await models.pg.sequelize.query(activeBridgesQuery, {
+      type: models.pg.sequelize.QueryTypes.SELECT
     });
 
-    // Calculate feedback metrics
-    const feedbackMetrics = feedbackData.reduce((metrics, item) => {
-      try {
-        if (item.user_feedback) {
-          const feedback = JSON.parse(item.user_feedback);
-          metrics.dislikes += feedback.Dislikes || 0;
-          metrics.positiveFeedback += feedback.PositiveFeedback || 0;
-        }
-      } catch (error) {
-        console.error(`Error parsing feedback: ${error.message}`);
+    const activeBridges_count = parseInt(activeBridges[0].active_bridges_count, 10) || 0;
+
+    // Resolve bridge names
+    for (let i = 0; i < bridgeStats.length; i++) {
+      const bId = bridgeStats[i].bridge_id;
+      const bridgeName = await configurationService.getBridgeNameById(bId, org_id);
+      bridgeStats[i].BridgeName = bridgeName;
+    }
+
+    // 5) Iterate through the conversations to accumulate usage data and feedback
+    for (const conversation of conversations) {
+      const { bridge_id, message_id, user_feedback } = conversation;
+
+      // Pull tokens/cost from map
+      const correspondingRawData = rawDataMap.get(message_id);
+      if (correspondingRawData) {
+        totalTokensConsumed += correspondingRawData.input_tokens + correspondingRawData.output_tokens;
+        totalCost += correspondingRawData.expected_cost;
       }
-      return metrics;
-    }, { dislikes: 0, positiveFeedback: 0 });
 
-    // Count new bridges created in the period
-    const newBridgesQuery = `
-      SELECT COUNT(DISTINCT b.id) AS new_bridges_count
-      FROM bridges b
-      WHERE b.org_id = $1
-      AND b."createdAt" >= $2
-      AND b."createdAt" <= $3;
-    `;
+      // Tools call data => add to topBridges
+      if (conversation.tools_call_data) {
+        let bridgeData = topBridges.find(bridge => bridge.BridgeName === bridge_id);
+        if (!bridgeData) {
+          bridgeData = { BridgeName: bridge_id, Hits: 0, TokensUsed: 0, Cost: 0 };
+          topBridges.push(bridgeData);
+        }
+        bridgeData.Hits++;
+        if (correspondingRawData) {
+          bridgeData.TokensUsed += (correspondingRawData.input_tokens + correspondingRawData.output_tokens);
+          bridgeData.Cost += correspondingRawData.expected_cost;
+        }
+      }
 
-    const newBridgesResult = await models.pg.sequelize.query(newBridgesQuery, {
-      type: models.pg.sequelize.QueryTypes.SELECT,
-      replacements: [org_id, firstDayOfLastMonth, lastDayOfLastMonth]
-    });
-    
-    const newBridgesCount = parseInt(newBridgesResult[0]?.new_bridges_count || 0, 10);
+      // Parse user_feedback from conversation directly
+      if (user_feedback) {
+        const feedbackJson = JSON.parse(user_feedback);
+        if (feedbackJson.Dislikes) {
+          totalDislikes += feedbackJson.Dislikes;
+        }
+        if (feedbackJson.PositiveFeedback) {
+          totalPositiveFeedback += feedbackJson.PositiveFeedback;
+        }
+      }
+    }
 
-    // Format the results
-    return {
+    // 6) Calculate success vs error counts from the rawData we already fetched
+    for (const r of rawData) {
+      if (r.error && r.error.trim() !== '') {
+        totalErrorCount++;
+      } else {
+        totalSuccessCount++;
+      }
+    }
+
+    // 7) Construct final JSON for this org_id
+    const orgData = {
       [org_id]: {
         UsageOverview: {
           totalHits,
           totalTokensConsumed,
           totalCost,
-          activeBridges
+          activeBridges: activeBridges_count
         },
-        topBridgesTable: bridgeStats.map(bridge => ({
-          bridge_id: bridge.bridge_id,
-          bridge_name: bridge.bridge_name,
-          hits: bridge.hits,
-          tokens_used: bridge.tokens_used,
-          cost: bridge.cost
-        })),
-        NewBridgesCreated: newBridgesCount,
+        topBridgesTable: bridgeStats,
+        NewBridgesCreated: topBridges.length, // as in your original code
         PerformanceMetrics: {
           totalSuccess: totalSuccessCount,
-          totalError: totalErrorCount,
-          successRate: totalHits > 0 ? (totalSuccessCount / totalHits * 100).toFixed(2) + '%' : '0%'
+          totalError: totalErrorCount
         },
         ClientFeedback: {
-          dislike: feedbackMetrics.dislikes,
-          positiveFeedback: feedbackMetrics.positiveFeedback,
-          feedbackRate: totalHits > 0 ? 
-            ((feedbackMetrics.dislikes + feedbackMetrics.positiveFeedback) / totalHits * 100).toFixed(2) + '%' : '0%'
+          dislike: totalDislikes,
+          positiveFeedback: totalPositiveFeedback
         }
       }
     };
-  }));
+
+    results.push(orgData);
+  }
 
   return results;
 }
