@@ -13,7 +13,7 @@ const db = {};
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
   dialect: 'postgres',
-  host: process.env.DB_HOST,
+  host: '34.47.226.46',//process.env.DB_HOST,
   retry: {
     match: [/Deadlock/i, Sequelize.ConnectionError],
     max: 100,
