@@ -17,9 +17,10 @@ async function get_data_from_pg(org_ids) {
     let totalHits = 0;
     let totalTokensConsumed = 0;
     let totalCost = 0;
-    let totalErrorsFailures = 0;
+    let totalErrorCount = 0;
     let totalDislikes = 0;
     let totalPositiveFeedback = 0;
+    let totalSuccessCount = 0;
     const topBridges = [];
 
     // Fetch all conversations related to the org_id for the previous month
@@ -60,7 +61,7 @@ async function get_data_from_pg(org_ids) {
         JOIN
           raw_data rd ON c.message_id = rd.message_id
         WHERE
-          c.message_by = 'user'
+          c.message_by = 'user' AND c.org_id = '${org_id}'
           AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
           AND c."createdAt" < date_trunc('month', current_date)
         GROUP BY
@@ -78,12 +79,30 @@ async function get_data_from_pg(org_ids) {
       LIMIT 3;
     `;
 
+    const activeBridgesQuery = `
+      SELECT
+        COUNT(DISTINCT c.bridge_id) AS active_bridges_count
+      FROM
+        conversations c
+      WHERE
+        c.bridge_id IS NOT NULL
+        AND c.org_id = '${org_id}'
+        AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
+        AND c."createdAt" < date_trunc('month', current_date);
+    `;
+
     const bridgeStats = await models.pg.sequelize.query(bridgeStatsQuery, {
       type: models.pg.sequelize.QueryTypes.SELECT
     });
+
+    const activeBridges = await models.pg.sequelize.query(activeBridgesQuery, {
+      type: models.pg.sequelize.QueryTypes.SELECT
+    });
+    const activeBridges_count = activeBridges[0].active_bridges_count;
     for(let i = 0; i < bridgeStats.length; i++) {
       const bridge_id = bridgeStats[i].bridge_id
-      bridgeStats[i].BridgeName = await configurationService.getBridgeNameById(bridge_id, org_id)
+      const BridgeName = await configurationService.getBridgeNameById(bridge_id, org_id)
+      bridgeStats[i].BridgeName = BridgeName;
 
     }
 
@@ -135,38 +154,54 @@ async function get_data_from_pg(org_ids) {
     });
 
     // Calculate the total errors and failures from raw_data
-    const errorData = await models.pg.raw_data.findAll({
+    const errorDataWithText = await models.pg.raw_data.count({
       where: {
         org_id,
         error: {
-          [Op.ne]: ''  // Select records where the error column is not empty
+          [Op.ne]: ''  // Count records where the error column is not empty
         },
         created_at: {
           [Op.gte]: firstDayOfLastMonth,
           [Op.lte]: lastDayOfLastMonth,
         }
-      },
-      attributes: ['id']
+      }
     });
-    totalErrorsFailures = errorData.length;
+
+    const errorDataWithoutText = await models.pg.raw_data.count({
+      where: {
+        org_id,
+        error: {
+          [Op.eq]: ''  // Count records where the error column is empty
+        },
+        created_at: {
+          [Op.gte]: firstDayOfLastMonth,
+          [Op.lte]: lastDayOfLastMonth,
+        }
+      }
+    });
+
+    totalSuccessCount = errorDataWithoutText;
+    totalErrorCount = errorDataWithText;
 
     // Create the final JSON for this org_id
     const orgData = {
-      UsageOverview: [
-        {
+      [org_id]: {
+        UsageOverview: {
           totalHits: totalHits,
           totalTokensConsumed: totalTokensConsumed,
-          totalCost: totalCost
+          totalCost: totalCost,
+          activeBridges: parseInt(activeBridges_count, 10)
         },
-      ],
-      topBridgesTable: bridgeStats,
-      NewBridgesCreated: topBridges.length,
-      PerformanceMetrics: {
-        totalErrors: totalErrorsFailures
-      },
-      ClientFeedback: {
-        dislike: totalDislikes,
-        positiveFeedback: totalPositiveFeedback
+        topBridgesTable: bridgeStats,
+        NewBridgesCreated: topBridges.length,
+        PerformanceMetrics: {
+          totalSuccess: totalSuccessCount,
+          totalError: totalErrorCount
+        },
+        ClientFeedback: {
+          dislike: totalDislikes,
+          positiveFeedback: totalPositiveFeedback
+        }
       }
     };
 
