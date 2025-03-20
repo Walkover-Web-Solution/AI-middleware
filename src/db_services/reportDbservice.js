@@ -17,65 +17,9 @@ async function get_data_from_pg(org_ids) {
   };
 
   for (let org_id of org_ids) {
-    // Convert org_id to string if not already
     org_id = org_id.toString();
 
-    // Initialize variables to store totals
-    let totalHits = 0;
-    let totalTokensConsumed = 0;
-    let totalCost = 0;
-    let totalErrorCount = 0;
-    let totalDislikes = 0;
-    let totalPositiveFeedback = 0;
-    let totalSuccessCount = 0;
-    const topBridges = [];
-
-    // 1) Fetch all conversations related to the org_id for the previous month
-    //    Include user_feedback here to avoid a separate feedback query later.
-    const conversations = await models.pg.conversations.findAll({
-      where: {
-        org_id,
-        createdAt: conversationDateFilter
-      },
-      attributes: [
-        'bridge_id',
-        'message_by',
-        'message',
-        'tools_call_data',
-        'createdAt',
-        'message_id',
-        'user_feedback'
-      ]
-    });
-
-    // 2) Fetch all raw data for the same org_id/month
-    //    Include 'error' in attributes so we can count errors vs. successes without extra queries.
-    const rawData = await models.pg.raw_data.findAll({
-      where: {
-        org_id,
-        created_at: conversationDateFilter
-      },
-      attributes: [
-        'service',
-        'status',
-        'input_tokens',
-        'output_tokens',
-        'expected_cost',
-        'message_id',
-        'error'
-      ]
-    });
-
-    // total hits is simply the length of rawData
-    totalHits = rawData.length;
-
-    // Build a map (message_id -> rawData row) for quick lookups
-    const rawDataMap = new Map();
-    for (const r of rawData) {
-      rawDataMap.set(r.message_id, r);
-    }
-
-    // 3) Run the bridge stats query
+    // Prepare the SQL queries for each organization separately
     const bridgeStatsQuery = `
       WITH bridge_stats AS (
         SELECT
@@ -106,7 +50,6 @@ async function get_data_from_pg(org_ids) {
       LIMIT 3;
     `;
 
-    // 4) Run the activeBridges query
     const activeBridgesQuery = `
       SELECT
         COUNT(DISTINCT c.bridge_id) AS active_bridges_count
@@ -119,13 +62,78 @@ async function get_data_from_pg(org_ids) {
         AND c."createdAt" < date_trunc('month', current_date);
     `;
 
-    const bridgeStats = await models.pg.sequelize.query(bridgeStatsQuery, {
-      type: models.pg.sequelize.QueryTypes.SELECT
-    });
-    const activeBridges = await models.pg.sequelize.query(activeBridgesQuery, {
-      type: models.pg.sequelize.QueryTypes.SELECT
-    });
+    // Use Promise.all to fetch all required data in parallel
+    const [
+      conversations,
+      rawData,
+      bridgeStats,
+      activeBridges
+    ] = await Promise.all([
+      // Fetch conversations
+      models.pg.conversations.findAll({
+        where: {
+          org_id,
+          createdAt: conversationDateFilter
+        },
+        attributes: [
+          'bridge_id',
+          'message_by',
+          'message',
+          'tools_call_data',
+          'createdAt',
+          'message_id',
+          'user_feedback'
+        ]
+      }),
 
+      // Fetch rawData
+      models.pg.raw_data.findAll({
+        where: {
+          org_id,
+          created_at: conversationDateFilter
+        },
+        attributes: [
+          'service',
+          'status',
+          'input_tokens',
+          'output_tokens',
+          'expected_cost',
+          'message_id',
+          'error'
+        ]
+      }),
+
+      // Execute bridgeStats query
+      models.pg.sequelize.query(bridgeStatsQuery, {
+        type: models.pg.sequelize.QueryTypes.SELECT
+      }),
+
+      // Execute activeBridges query
+      models.pg.sequelize.query(activeBridgesQuery, {
+        type: models.pg.sequelize.QueryTypes.SELECT
+      })
+    ]);
+
+    // Initialize variables to store totals
+    let totalHits = 0;
+    let totalTokensConsumed = 0;
+    let totalCost = 0;
+    let totalErrorCount = 0;
+    let totalDislikes = 0;
+    let totalPositiveFeedback = 0;
+    let totalSuccessCount = 0;
+    const topBridges = [];
+
+    // totalHits is simply the length of rawData
+    totalHits = rawData.length;
+
+    // Build a map (message_id -> rawData row) for quick lookups
+    const rawDataMap = new Map();
+    for (const r of rawData) {
+      rawDataMap.set(r.message_id, r);
+    }
+
+    // Resolve activeBridges count
     const activeBridges_count = parseInt(activeBridges[0].active_bridges_count, 10) || 0;
 
     // Resolve bridge names
@@ -135,7 +143,7 @@ async function get_data_from_pg(org_ids) {
       bridgeStats[i].BridgeName = bridgeName;
     }
 
-    // 5) Iterate through the conversations to accumulate usage data and feedback
+    // Iterate through the conversations to accumulate usage data and feedback
     for (const conversation of conversations) {
       const { bridge_id, message_id, user_feedback } = conversation;
 
@@ -146,7 +154,7 @@ async function get_data_from_pg(org_ids) {
         totalCost += correspondingRawData.expected_cost;
       }
 
-      // Tools call data => add to topBridges
+      // Tools call => track usage in topBridges
       if (conversation.tools_call_data) {
         let bridgeData = topBridges.find(bridge => bridge.BridgeName === bridge_id);
         if (!bridgeData) {
@@ -172,7 +180,7 @@ async function get_data_from_pg(org_ids) {
       }
     }
 
-    // 6) Calculate success vs error counts from the rawData we already fetched
+    // Calculate the total errors vs. successes from the rawData
     for (const r of rawData) {
       if (r.error && r.error.trim() !== '') {
         totalErrorCount++;
@@ -181,7 +189,7 @@ async function get_data_from_pg(org_ids) {
       }
     }
 
-    // 7) Construct final JSON for this org_id
+    // Create the final JSON for this org_id
     const orgData = {
       [org_id]: {
         UsageOverview: {
@@ -191,7 +199,7 @@ async function get_data_from_pg(org_ids) {
           activeBridges: activeBridges_count
         },
         topBridgesTable: bridgeStats,
-        NewBridgesCreated: topBridges.length, // as in your original code
+        NewBridgesCreated: topBridges.length, // same logic as before
         PerformanceMetrics: {
           totalSuccess: totalSuccessCount,
           totalError: totalErrorCount
