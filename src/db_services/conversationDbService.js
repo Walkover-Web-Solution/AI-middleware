@@ -63,7 +63,8 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
       "version_id",
       "image_url",
       "urls",
-      "AiConfig"
+      "AiConfig",
+      "annotations"
     ],
     include: [
       {
