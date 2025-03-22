@@ -35,7 +35,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     sub_thread_id: sub_thread_id
   };
 
-  if (version_id !== undefined) {
+  if (version_id !== undefined && version_id) {
     whereClause.version_id = version_id;
   }
 
