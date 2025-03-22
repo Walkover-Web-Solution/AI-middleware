@@ -31,7 +31,7 @@ async function saveTestcases(req,res, next) {
 }
 
 async function updateTestcases(req, res, next) {
-    const { id, bridge_id, type, conversation, expected } = req.body;
+    const { _id: id, bridge_id, type, conversation, expected } = req.body;
     const data = { id };
 
     if (bridge_id !== undefined) data.bridge_id = bridge_id;
