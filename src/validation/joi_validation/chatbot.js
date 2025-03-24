@@ -26,6 +26,8 @@ const updateChatBotConfigSchema = Joi.object({
     chatbotTitle: Joi.string().allow("").required(),
     chatbotSubtitle: Joi.string().allow("").required(),
     iconUrl: Joi.string().allow("").optional(),
+    bridges:Joi.array().optional(),
+    allowBridgeSwitch:Joi.boolean().optional()
 })
 
 const addorRemoveBridgeInChatBotSchema = Joi.object({
