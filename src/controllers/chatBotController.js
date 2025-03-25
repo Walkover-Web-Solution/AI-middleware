@@ -8,6 +8,7 @@ import token from "../services/commonService/generateToken.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
 import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
+import configurationModel from "../mongoModel/configuration.js";
 
 const createChatBot = async (req, res) => {
     const { title } = req.body;
@@ -228,7 +229,17 @@ const loginUser = async (req, res) => {
     try {
         const { chatbot_id, user_id, org_id, exp, iat, variables } = req.chatBot;
         let chatBotConfig = {};
-        if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
+        if (chatbot_id) {
+            chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
+            if (chatBotConfig.config.allowBridgeSwitch == true){
+                let bridges = chatBotConfig.config.bridges;
+                for(var i=0;i<bridges.length;i++){
+                    const id = bridges[i].id;
+                    const bridge = await configurationModel.findOne({ _id: id }).select('slugName');
+                    bridges[i].slugName = bridge?.slugName || '';
+                }
+            }
+        }
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {
             config: chatBotConfig.config,
