@@ -103,6 +103,16 @@ async function sendAlert(message, error, bridgeId, orgId, channelId){
   }
 }
 
+function convertAIConversation(conversation){
+  for(let message of conversation){
+    if(message['role'] === 'tools_call'){
+      message['content'] = message['content'].map((toolCall) => {
+        return Object.values(toolCall)
+      })
+    }
+  }
+}
+
 export {
   generateIdentifier,
   encrypt,
@@ -110,5 +120,6 @@ export {
   generateIdForOpenAiFunctionCall,
   encryptString,
   objectToQueryParams, 
-  sendAlert
+  sendAlert, 
+  convertAIConversation
 };
