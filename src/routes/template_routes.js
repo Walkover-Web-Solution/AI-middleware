@@ -7,13 +7,13 @@ const router = Router();
 
  
 
-  router.post('/add',  addShowCaseTemplateController);
+  router.post('/add', middleware, addShowCaseTemplateController);
   
  
   router.get('/all',getShowCaseTemplateController);
 
   
-  router.put('/update/:id',updateShowCaseTemplateController);
+  router.put('/update/:id',middleware,updateShowCaseTemplateController);
   
 
 export default router;
