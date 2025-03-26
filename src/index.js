@@ -28,6 +28,7 @@ import alerting from './routes/alerting_routes.js';
 import showCaseRoutes from './routes/showCase_routes.js'
 import testcaseRoutes from './routes/testcase_routes.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
+import templateRoutes from './routes/template_routes.js'
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -63,6 +64,7 @@ app.use('/rag', RagRouter);
 app.use('/showcase',showCaseRoutes);
 app.use('/testcases',testcaseRoutes);
 app.use('/modelConfiguration',ModelsConfigRoutes);
+app.use('/template',templateRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
