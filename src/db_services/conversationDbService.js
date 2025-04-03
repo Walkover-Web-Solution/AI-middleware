@@ -494,6 +494,31 @@ const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
 
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
+  try {
+    const offset = (page - 1) * pageSize;
+    const history = await models.pg.user_bridge_config_history.findAll({
+      where: {
+        org_id: org_id,
+        version_id: version_id
+      },
+      order: [
+        ['time', 'DESC'],
+      ],
+      offset: offset,
+      limit: pageSize
+    });
+
+    if (history.length === 0) {
+      return { success: false, message: "No updates found" };
+    }
+
+    return { success: true, updates: history };
+  } catch (error) {
+    console.error("Error fetching user updates:", error);
+    return { success: false, message: "Error fetching updates" };
+  }
+}
 
 
 
@@ -512,5 +537,6 @@ export default {
   addThreadId,
   userFeedbackCounts,
   findThreadMessage,
-  getSubThreads
+  getSubThreads,
+  getUserUpdates
 };
