@@ -411,6 +411,16 @@ const getAllSubThreadsController = async(req, res, next) => {
   req.statusCode = 200;
   return next();
 }
+const getAllUserUpdates = async(req, res, next) => {
+  const {version_id}= req.params;
+  const org_id = req.profile.org.id
+  let page = parseInt(req.query.page) || null;
+  let pageSize = parseInt(req.query.limit) || null;
+  const userData = await conversationDbService.getUserUpdates(org_id, version_id, page, pageSize);
+  res.locals = { userData, success: true };
+  req.statusCode = 200;
+  return next();
+}
 
 
 export default {
@@ -427,5 +437,6 @@ export default {
   extraThreadID,
   userFeedbackCount,
   getThreadMessages,
-  getAllSubThreadsController
+  getAllSubThreadsController,
+  getAllUserUpdates
 } 
