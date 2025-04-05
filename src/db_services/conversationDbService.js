@@ -25,81 +25,93 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback, version_id) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
-  const whereClause = {
-    org_id: org_id,
-    thread_id: thread_id,
-    bridge_id: bridge_id,
-    sub_thread_id: sub_thread_id
-  };
-
+  
+  // Build the WHERE clause for the SQL query
+  let whereConditions = [
+    `conversations.org_id = '${org_id}'`,
+    `thread_id = '${thread_id}'`,
+    `bridge_id = '${bridge_id}'`,
+    `sub_thread_id = '${sub_thread_id}'`
+  ];
+  
   if (version_id !== undefined && version_id) {
-    whereClause.version_id = version_id;
+    whereConditions.push(`version_id = '${version_id}'`);
   }
-
+  
   if (user_feedback === "all" || !user_feedback) {
-    whereClause.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
+    whereConditions.push(`(user_feedback IS NULL OR user_feedback IN (0, 1, 2))`);
   } else {
-    whereClause.user_feedback = user_feedback;
+    whereConditions.push(`user_feedback = ${user_feedback}`);
   }
-
-
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [
-      ['message', 'content'],
-      ['message_by', 'role'],
-      'createdAt',
-      ['id', 'Id'],
-      'function',
-      'is_reset',
-      'chatbot_message',
-      'updated_message',
-      'tools_call_data',
-      'message_id',
-      'user_feedback',
-      'sub_thread_id',
-      "version_id",
-      "image_url",
-      "urls",
-      "AiConfig",
-      "annotations"
-    ],
-    include: [
-      {
-        model: models.pg.raw_data,
-        as: 'raw_data',
-        attributes: ['*'],
-        required: false,
-        on: {
-          id: models.pg.sequelize.where(
-            models.pg.sequelize.col('conversations.message_id'),
-            '=',
-            models.pg.sequelize.col('raw_data.message_id')
-          )
-        }
-      }
-    ],
-    where: whereClause,
-    order: [['id', 'DESC']],
-    offset: offset,
-    limit: limit,
-    raw: true
-  });
-  conversations = conversations.reverse();
-  const totalEntries = await models.pg.conversations.count({
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id,
-      sub_thread_id: sub_thread_id
-    }
-  });
+  
+  const whereClause = whereConditions.join(' AND ');
+  
+  // Count query for pagination
+  const countQuery = `
+    SELECT COUNT(*) as total
+    FROM conversations
+    WHERE conversations.org_id = '${org_id}'
+      AND thread_id = '${thread_id}'
+      AND bridge_id = '${bridge_id}'
+      AND sub_thread_id = '${sub_thread_id}'
+  `;
+  
+  // Main query with JOIN to raw_data
+  let query = `
+    SELECT 
+      conversations.message as content,
+      conversations.message_by as role,
+      conversations."createdAt",
+      conversations.id as "Id",
+      conversations.function,
+      conversations.is_reset,
+      conversations.chatbot_message,
+      conversations.updated_message,
+      conversations.tools_call_data,
+      conversations.message_id,
+      conversations.user_feedback,
+      conversations.sub_thread_id,
+      conversations.version_id,
+      conversations.image_url,
+      conversations.urls,
+      conversations."AiConfig",
+      conversations.annotations,
+      raw_data.*
+    FROM conversations
+    LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+    WHERE ${whereClause}
+    ORDER BY conversations.id DESC
+  `;
+  
+  // Add pagination if needed
+  if (limit !== null) {
+    query += ` LIMIT ${limit}`;
+  }
+  
+  if (offset !== null) {
+    query += ` OFFSET ${offset}`;
+  }
+  
+  // Execute queries
+  const [countResult, conversationsResult] = await Promise.all([
+    models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT }),
+    models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT })
+  ]);
+  
+  // Get total entries from count query
+  const totalEntries = parseInt(countResult[0].total);
+  
+  // Sort the results in ascending order (since we queried in DESC but need to reverse)
+  const conversations = conversationsResult.reverse();
+  
+  // Calculate pagination info
   const totalPages = limit ? Math.ceil(totalEntries / limit) : 1;
+  
   return { conversations, totalPages, totalEntries };
 }
-
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
     where: {
