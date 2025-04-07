@@ -141,7 +141,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   if(user_feedback && user_feedback !== "all")
     {
       whereClause.user_feedback = user_feedback  
-    }
+  }
 
   // Handle the date range filter
   if (startTimestamp && endTimestamp) {
@@ -165,6 +165,9 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
           Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
             [Sequelize.Op.like]: `%${keyword_search}%`,
           }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }), // Added for sub_thread_id search
         ],
       },
     ];
@@ -179,6 +182,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
         [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
         'message',
         'message_id',
+        'sub_thread_id', // Added sub_thread_id in the selected attributes
       ]
     : [
         'thread_id',
@@ -192,7 +196,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     attributes,
     where: whereClause,
     group: keyword_search
-      ? ['thread_id', 'bridge_id', 'message', 'message_id']
+      ? ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id'] // Added sub_thread_id in the group by
       : ['thread_id', 'bridge_id'],
     order: [
       [Sequelize.col('updatedAt'), 'DESC'],
@@ -215,6 +219,8 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
         matchedField = 'message_id';
     } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
         matchedField = 'thread_id';
+    } else if (thread.sub_thread_id && thread.sub_thread_id.toString().includes(keyword_search)) { // Check for sub_thread_id match
+        matchedField = 'sub_thread_id'; // If sub_thread_id matches, set matchedField to 'sub_thread_id'
     } else {
         matchedField = 'thread_id';
     }
@@ -241,7 +247,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
             message: thread.message,
             message_id: thread.message_id
         });
-    }
+      }
 
       // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
       if (matchedField === 'thread_id') {
