@@ -20,6 +20,7 @@ const getThreads = async (req, res,next) => {
     let starterQuestion = []
     let bridge = {}
      const {user_feedback} = req.query
+     const isChatbot = req.isChatbot || false;
 
     if (bridge_slugName) {
       bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
@@ -27,7 +28,7 @@ const getThreads = async (req, res,next) => {
       starterQuestion = bridge?.starterQuestion;
       
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id });
+    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot });
     threads = {
       ...threads,
       starterQuestion,
