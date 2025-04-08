@@ -9,12 +9,13 @@ export function getFileFormatByUrl(url) {
         { regex: /docs\.google\.com\/document\/d\//, format: 'txt' },
         { regex: /docs\.google\.com\/spreadsheets\/d\//, format: 'csv' },
         { regex: /docs\.google\.com\/presentation\/d\//, format: 'pdf' },
-        { regex: /onedrive\.live\.com\/.*\.docx/, format: 'txt' },
-        { regex: /onedrive\.live\.com\/.*\.xlsx/, format: 'csv' },
-        { regex: /onedrive\.live\.com\/.*\.pptx/, format: 'pdf' },
-        { regex: /sharepoint\.com\/.*\.docx/, format: 'txt' },
-        { regex: /sharepoint\.com\/.*\.xlsx/, format: 'csv' },
-        { regex: /sharepoint\.com\/.*\.pptx/, format: 'pdf' }
+        // { regex: /onedrive\.live\.com\/.*\.docx/, format: 'txt' },
+        // { regex: /onedrive\.live\.com\/.*\.xlsx/, format: 'csv' },
+        // { regex: /onedrive\.live\.com\/.*\.pptx/, format: 'pdf' },
+        // { regex: /sharepoint\.com\/.*\.docx/, format: 'txt' },
+        // { regex: /sharepoint\.com\/.*\.xlsx/, format: 'csv' },
+        // { regex: /sharepoint\.com\/.*\.pptx/, format: 'pdf' }, 
+        { regex: /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/, format: 'txt' }, // Use 'url' instead of 'txt'
     ];
     
     const match = formats.find(({ regex }) => regex.test(url));
