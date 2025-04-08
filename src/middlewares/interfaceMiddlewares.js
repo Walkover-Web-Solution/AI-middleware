@@ -42,6 +42,7 @@ const chatBotAuth = async (req, res, next) => { // todo pending
         checkToken.org_id = checkToken.org_id.toString()
         req.profile = checkToken;
         req.body.org_id = checkToken?.org_id?.toString();
+        req.isChatbot = true;
         if (!checkToken.user) req.profile.viewOnly = true;
         return next();
       }

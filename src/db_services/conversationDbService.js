@@ -25,7 +25,7 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
   
@@ -97,7 +97,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   
   // Execute queries
   const [countResult, conversationsResult] = await Promise.all([
-    models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT }),
+    !isChatbot ? models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT }) : null,
     models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT })
   ]);
   
