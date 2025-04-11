@@ -49,15 +49,19 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   
   const whereClause = whereConditions.join(' AND ');
   
-  // Count query for pagination
-  const countQuery = `
-    SELECT COUNT(*) as total
-    FROM conversations
-    WHERE conversations.org_id = '${org_id}'
-      AND thread_id = '${thread_id}'
-      AND bridge_id = '${bridge_id}'
-      AND sub_thread_id = '${sub_thread_id}'
-  `;
+  let countResult = [{ total: 0 }];
+  // Only execute count query if not chatbot
+  if (!isChatbot) {
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM conversations
+      WHERE conversations.org_id = '${org_id}'
+        AND thread_id = '${thread_id}'
+        AND bridge_id = '${bridge_id}'
+        AND sub_thread_id = '${sub_thread_id}'
+    `;
+    [countResult] = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
+  }
   
   // Main query with JOIN to raw_data
   let query = `
@@ -95,11 +99,8 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     query += ` OFFSET ${offset}`;
   }
   
-  // Execute queries
-  const [countResult, conversationsResult] = await Promise.all([
-    !isChatbot ? models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT }) : null,
-    models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT })
-  ]);
+  // Execute main query
+  const conversationsResult = await models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT });
   
   // Get total entries from count query
   const totalEntries = parseInt(countResult[0].total);
@@ -107,10 +108,10 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   // Sort the results in ascending order (since we queried in DESC but need to reverse)
   const conversations = conversationsResult.reverse();
   
-  // Calculate pagination info
-  const totalPages = limit ? Math.ceil(totalEntries / limit) : 1;
+  // Calculate pagination info only if not chatbot
+  const totalPages = isChatbot ? 1 : (limit ? Math.ceil(totalEntries / limit) : 1);
   
-  return { conversations, totalPages, totalEntries };
+  return { conversations, totalPages, totalEntries: isChatbot ? conversations.length : totalEntries };
 }
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
