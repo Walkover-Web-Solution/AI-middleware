@@ -60,7 +60,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         AND bridge_id = '${bridge_id}'
         AND sub_thread_id = '${sub_thread_id}'
     `;
-    [countResult] = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
+    countResult = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
   }
   
   // Main query with JOIN to raw_data
