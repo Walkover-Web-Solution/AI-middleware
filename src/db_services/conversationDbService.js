@@ -517,7 +517,7 @@ const getSubThreads = async (org_id,thread_id) =>{
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, proxy_auth_token) {
   try {
     const offset = (page - 1) * pageSize;
-    const userData = await axios?.get('https://routes.msg91.com/api/c/getUsers', {
+    const userData = await axios?.get(`${process.env.PROXY_BASE_URL}/c/getUsers`, {
       headers: {
         'proxy_auth_token': proxy_auth_token
       }
