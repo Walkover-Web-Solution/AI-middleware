@@ -517,6 +517,15 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
     const history = await models.pg.user_bridge_config_history.findAll({
+      attributes: [
+        'id',
+        'time',
+        'type',
+        'bridge_id', 
+        'version_id',
+        'org_id',
+        'user_name'
+      ],
       where: {
         org_id: org_id,
         version_id: version_id
