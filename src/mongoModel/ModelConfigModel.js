@@ -5,7 +5,7 @@ const ConfigurationSchema = new mongoose.Schema({
         type : String,
         required : true
     },
-    model : {
+    model_name : {
         type : String,
         required : true
     },
