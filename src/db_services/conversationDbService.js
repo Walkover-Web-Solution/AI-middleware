@@ -1,6 +1,7 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
+import axios from "axios";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -513,14 +514,24 @@ const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
 
-async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, proxy_auth_token) {
   try {
     const offset = (page - 1) * pageSize;
+    const userData = await axios?.get('https://routes.msg91.com/api/c/getUsers', {
+      headers: {
+        'proxy_auth_token': proxy_auth_token
+      }
+    }).then(response => response?.data?.data?.data).catch(error => {
+      console.error("Error fetching user data:", error);
+      return null;
+    });
+
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {
         org_id: org_id,
         version_id: version_id
       },
+      attributes: ['id', 'user_id', 'org_id', 'bridge_id', 'type', 'time', 'version_id'],
       order: [
         ['time', 'DESC'],
       ],
@@ -531,8 +542,15 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     if (history.length === 0) {
       return { success: false, message: "No updates found" };
     }
+    const updatedHistory = history?.map(entry => {
+      const user = userData?.find(user => user?.id === entry?.dataValues?.user_id);
+      return {
+        ...entry?.dataValues,
+        user_name: user ? user?.name : 'Unknown'
+      };
+    });
 
-    return { success: true, updates: history };
+    return { success: true, updates: updatedHistory };
   } catch (error) {
     console.error("Error fetching user updates:", error);
     return { success: false, message: "Error fetching updates" };
