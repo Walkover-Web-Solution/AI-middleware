@@ -103,7 +103,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   const conversationsResult = await models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT });
   
   // Get total entries from count query
-  const totalEntries = parseInt(countResult?.total || 0);
+  const totalEntries = parseInt(countResult?.[0]?.total || 0);
   
   // Sort the results in ascending order (since we queried in DESC but need to reverse)
   const conversations = conversationsResult.reverse();
