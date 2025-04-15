@@ -417,7 +417,8 @@ const getAllUserUpdates = async(req, res, next) => {
   const org_id = req.profile.org.id
   let page = parseInt(req.query.page) || null;
   let pageSize = parseInt(req.query.limit) || null;
-  const userData = await conversationDbService.getUserUpdates(org_id, version_id, page, pageSize);
+  let proxy_auth_token = req.headers.proxy_auth_token || null;
+  const userData = await conversationDbService.getUserUpdates(org_id, version_id, page, pageSize, proxy_auth_token);
   res.locals = { userData, success: true };
   req.statusCode = 200;
   return next();
