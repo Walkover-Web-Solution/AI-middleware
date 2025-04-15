@@ -5,7 +5,7 @@ const ConfigurationSchema = new mongoose.Schema({
         type : String,
         required : true
     },
-    model : {
+    model_name : {
         type : String,
         required : true
     },
@@ -139,6 +139,6 @@ const ConfigurationSchema = new mongoose.Schema({
     }
   });
   
-ConfigurationSchema.index({ model: 1, service: 1 }, { unique: true });
+ConfigurationSchema.index({ model_name: 1, service: 1 }, { unique: true });
 const ModelsConfigModel = mongoose.model("modelConfiguration", ConfigurationSchema);
 export default ModelsConfigModel;
