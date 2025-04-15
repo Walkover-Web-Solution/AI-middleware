@@ -2,6 +2,7 @@ import { sendAlert } from '../utils/utilityService.js';
 import { HTMLLoader } from './html/index.js';
 import { ImageLoader } from './image.js';
 import { PDFLoader } from './pdf.js';
+import { ScriptLoader } from './script.js';
 
 export class DocumentLoader {
     constructor() {
@@ -9,7 +10,8 @@ export class DocumentLoader {
             'default': new HTMLLoader(),
             'html': new HTMLLoader(),
             'pdf': new PDFLoader(),
-            'jpeg': new ImageLoader()
+            'jpeg': new ImageLoader(), 
+            'script' : new ScriptLoader(),
         };
     }
 
@@ -17,7 +19,14 @@ export class DocumentLoader {
         const parsedURL = new URL(url);
         const domain = parsedURL.hostname;
         const pathname = parsedURL.pathname;
-        const extension = pathname.includes(".") ? pathname.split(".").pop() : 'html';
+        let extension = 'html';
+        
+        if(domain === 'flow.sokt.io') {
+            extension =  'script';
+        }else if(pathname.includes('.')) {
+            extension = pathname.split(".").pop();
+        }
+
         if(extension && !this.states[extension]) {
             sendAlert('MISSING EXTENSION FOR RAG', {}, extension)
         }
