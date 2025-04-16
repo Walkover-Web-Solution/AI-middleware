@@ -514,16 +514,16 @@ const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
 
-async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, proxy_auth_token) {
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
-    const userData = await axios?.get(`${process.env.PROXY_BASE_URL}/c/getUsers`, {
+    const userData = await axios.get(`${process?.env?.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails?company_id=${org_id}`, {
       headers: {
-        'proxy_auth_token': proxy_auth_token
+        authkey: process.env.PROXY_ADMIN_TOKEN,
       }
     }).then(response => response?.data?.data?.data).catch(error => {
       console.error("Error fetching user data:", error);
-      return null;
+      return [];
     });
 
     const history = await models.pg.user_bridge_config_history.findAll({
