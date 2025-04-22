@@ -19,7 +19,7 @@ const getThreads = async (req, res,next) => {
     const { org_id } = req.body;
     let starterQuestion = []
     let bridge = {}
-     const {user_feedback} = req.query
+     const {user_feedback, error} = req.query
      const isChatbot = req.isChatbot || false;
 
     if (bridge_slugName) {
@@ -28,7 +28,7 @@ const getThreads = async (req, res,next) => {
       starterQuestion = bridge?.starterQuestion;
       
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot });
+    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot, error });
     threads = {
       ...threads,
       starterQuestion,
@@ -62,7 +62,7 @@ const getMessageHistory = async (req, res, next) => {
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
-    const {user_feedback} = req.query;
+    const {user_feedback, error} = req.query;
     let startTimestamp, endTimestamp;
 
     if (startTime !== 'undefined' && endTime !== 'undefined') {
@@ -70,7 +70,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback);
+    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback, error);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
