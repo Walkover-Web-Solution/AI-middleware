@@ -25,7 +25,7 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
   
@@ -46,6 +46,11 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   } else {
     whereConditions.push(`user_feedback = ${user_feedback}`);
   }
+
+  // Add condition for error if error is true
+  if (error == 'true') {
+    whereConditions.push(`raw_data.error != ''`);
+  }
   
   const whereClause = whereConditions.join(' AND ');
   
@@ -55,10 +60,12 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     const countQuery = `
       SELECT COUNT(*) as total
       FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
       WHERE conversations.org_id = '${org_id}'
         AND thread_id = '${thread_id}'
         AND bridge_id = '${bridge_id}'
         AND sub_thread_id = '${sub_thread_id}'
+        AND raw_data.error != '' -- Add the condition here
     `;
     [countResult] = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
   }
@@ -113,6 +120,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   
   return { conversations, totalPages, totalEntries: isChatbot ? conversations.length : totalEntries };
 }
+
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
     where: {
