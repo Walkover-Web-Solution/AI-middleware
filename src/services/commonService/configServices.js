@@ -19,8 +19,9 @@ const getThreads = async (req, res,next) => {
     const { org_id } = req.body;
     let starterQuestion = []
     let bridge = {}
-     const {user_feedback, error} = req.query
-     const isChatbot = req.isChatbot || false;
+    let {user_feedback, error} = req.query
+    error = error?.toLowerCase() === 'true' ? true : false;
+    const isChatbot = req.isChatbot || false;
 
     if (bridge_slugName) {
       bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
@@ -62,9 +63,9 @@ const getMessageHistory = async (req, res, next) => {
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
-    const {user_feedback, error} = req.query;
+    let {user_feedback, error} = req.query;
+    error = error?.toLowerCase() === 'true' ? true : false;
     let startTimestamp, endTimestamp;
-
     if (startTime !== 'undefined' && endTime !== 'undefined') {
       startTimestamp = convertToTimestamp(startTime);
       endTimestamp = convertToTimestamp(endTime);
