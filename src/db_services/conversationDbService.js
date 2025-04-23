@@ -513,6 +513,36 @@ const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
 
+async function sortThreadsByHits(threads) {
+  // Create a map to store the latest createdAt for each sub_thread_id
+  const latestSubThreadMap = new Map();
+  // Loop through each thread to find the latest createdAt for each sub_thread_id
+  for (const thread of threads) {
+    const { sub_thread_id } = thread;
+    if (sub_thread_id) {
+      const latestEntry = await models.pg.conversations.findOne({
+        attributes: ['createdAt'],
+        where: { sub_thread_id },
+        order: [['createdAt', 'DESC']],
+        limit: 1,
+        raw: true
+      });
+
+      if (latestEntry) {
+        latestSubThreadMap.set(sub_thread_id, latestEntry.createdAt);
+      }
+    }
+  }
+  // Sort the threads based on the latest createdAt of their sub_thread_id
+  threads.sort((a, b) => {
+    const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
+    const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
+    return dateB - dateA; // Sort in descending order
+  });
+
+  return threads;
+}
+
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
@@ -557,5 +587,6 @@ export default {
   userFeedbackCounts,
   findThreadMessage,
   getSubThreads,
-  getUserUpdates
+  getUserUpdates,
+  sortThreadsByHits
 };
