@@ -423,6 +423,14 @@ const getAllUserUpdates = async(req, res, next) => {
   return next();
 }
 
+const getAllData = async(req, res, next) => {
+  const data = await conversationDbService.getAllDatafromPg();
+  res.locals = { data, success: true };
+  req.statusCode = 200;
+  return next();
+}
+
+
 
 export default {
   getThreads,
@@ -439,5 +447,6 @@ export default {
   userFeedbackCount,
   getThreadMessages,
   getAllSubThreadsController,
-  getAllUserUpdates
+  getAllUserUpdates,
+  getAllData
 } 
