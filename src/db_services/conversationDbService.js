@@ -539,7 +539,48 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   }
 }
 
+async function getAllDatafromPg() {
+  try {
+    // calculate timestamp for 48 hours ago
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
+    // fetch distinct bridge_ids with records in the last 48 hours
+    const activeBridgeRecords = await models.pg.conversations.findAll({
+      attributes: [
+        [Sequelize.fn('DISTINCT', Sequelize.col('bridge_id')), 'bridge_id']
+      ],
+      where: {
+        createdAt: {
+          [Sequelize.Op.gte]: fortyEightHoursAgo
+        }
+      },
+      raw: true
+    });
+
+    // extract just the bridge_id values
+    const activeBridges = activeBridgeRecords.map(record => record.bridge_id);
+
+    // calculate average ressponse time in the last 48 hours
+const averageResponseTime = await models.pg.raw_data.findAll({
+  attributes: [
+    [Sequelize.literal(
+      `AVG((latency->>'over_all_time')::float - (latency->>'model_execution_time')::float)`
+    ), 'average_response_time']
+  ],
+  where: {
+    created_at: {
+      [Sequelize.Op.gte]: fortyEightHoursAgo
+    }
+  },
+  raw: true
+});
+
+    return { activeBridges, averageResponseTime };
+  } catch (error) {
+    console.error('getAllData error =>', error);
+    return { success: false, message: 'Error fetching active bridges' };
+  }
+}
 
 export default {
   findAllThreads,
@@ -557,5 +598,6 @@ export default {
   userFeedbackCounts,
   findThreadMessage,
   getSubThreads,
-  getUserUpdates
+  getUserUpdates,
+  getAllDatafromPg,
 };
