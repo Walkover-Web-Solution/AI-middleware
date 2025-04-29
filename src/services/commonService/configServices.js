@@ -423,13 +423,12 @@ const getAllUserUpdates = async(req, res, next) => {
   return next();
 }
 
+
 const getAllData = async (req, res, next) => {
   // fetch raw metrics and org list
+  const hours = parseInt(req.query.hours, 10) || 48;
 
-
-  // const bridge_ids = await configurationService.getBridgeNameById(bridgeId, org_id);
-
-  const raw = await conversationDbService.getAllDatafromPg();
+  const raw = await conversationDbService.getAllDatafromPg(hours);
   const orgResp = await getallOrgs();
 
   // normalize org list array from various response shapes
@@ -504,7 +503,17 @@ const getAllData = async (req, res, next) => {
     });
   }
 
-  // respond with organized data: orgs → bridge_ids → metrics
+  // fetch and attach each bridge's name
+  for (const [orgKey, orgEntry] of Object.entries(result.orgs)) {
+    await Promise.all(
+      Object.keys(orgEntry.bridges).map(async bridgeId => {
+        const bridgeName = await configurationService.getBridgeNameById(bridgeId, orgKey);
+        orgEntry.bridges[bridgeId].bridge_name = bridgeName;
+      })
+    );
+  }
+
+  // respond with organized data: orgs → bridge_ids → metrics (including bridge_name)
   res.locals = {
     data: {
       averageResponseTime: result.averageResponseTime,

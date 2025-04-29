@@ -539,73 +539,72 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   }
 }
 
-async function getAllDatafromPg() {
+async function getAllDatafromPg(hours = 48) {
   try {
-    // define time windows
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // determine window start based on input hours (24 or 48)
+    const windowStart = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-    // fetch active bridges in last 48 hours
+    // fetch active bridges within the window
     const activeBridgeRecords = await models.pg.conversations.findAll({
       attributes: ['bridge_id', 'org_id'],
-      where: { createdAt: { [Sequelize.Op.gte]: fortyEightHoursAgo } },
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
       group: ['bridge_id', 'org_id'],
       raw: true
     });
 
-const BridgePositiveNegativeCount = await models.pg.conversations.findAll({
-  attributes: [
-    'bridge_id',
-    'org_id',
-    [Sequelize.fn(
-      'SUM',
-      Sequelize.literal(`CASE WHEN user_feedback = 1 THEN 1 ELSE 0 END`)
-    ), 'positive_count'],
-    [Sequelize.fn(
-      'SUM',
-      Sequelize.literal(`CASE WHEN user_feedback = 2 THEN 1 ELSE 0 END`)
-    ), 'negative_count']
-  ],
-  where: {
-    createdAt: { [Sequelize.Op.gte]: fortyEightHoursAgo }
-  },
-  group: ['bridge_id', 'org_id'],
-  raw: true
-});
-    // build map for org_id lookup
-    const bridgeOrgMap = new Map();
-    activeBridgeRecords.forEach(r => bridgeOrgMap.set(r.bridge_id, r.org_id));
+    // fetch positive/negative feedback counts within the window
+    const BridgePositiveNegativeCount = await models.pg.conversations.findAll({
+      attributes: [
+        'bridge_id',
+        'org_id',
+        [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN user_feedback = 1 THEN 1 ELSE 0 END`)), 'positive_count'],
+        [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN user_feedback = 2 THEN 1 ELSE 0 END`)), 'negative_count']
+      ],
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
+      group: ['bridge_id', 'org_id'],
+      raw: true
+    });
+
+    // map bridge → org for later lookups
+    const bridgeOrgMap = new Map(activeBridgeRecords.map(r => [r.bridge_id, r.org_id]));
     const activeBridges = activeBridgeRecords.map(r => ({
       bridge_id: r.bridge_id,
       org_id: r.org_id
     }));
 
-    // fetch recent messages in last 24h for hit counting
+    // fetch all messages in the window for hit counts
     const recentMessages = await models.pg.conversations.findAll({
       attributes: ['bridge_id', 'message_by', 'createdAt'],
-      where: { createdAt: { [Sequelize.Op.gte]: twentyFourHoursAgo } },
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
       order: [['bridge_id', 'ASC'], ['createdAt', 'ASC']],
       raw: true
     });
-    // group messages per bridge
+
+    // group messages by bridge_id
     const hitBuffers = {};
-    for (const msg of recentMessages) {
+    recentMessages.forEach(msg => {
       const bid = msg.bridge_id;
       if (!hitBuffers[bid]) hitBuffers[bid] = [];
       hitBuffers[bid].push(msg.message_by);
-    }
-    // compute hit counts and include org_id
+    });
+
+    // compute hits per bridge (user→assistant or user→tools_call→assistant)
     const hitsPerBridge = {};
     for (const bid in hitBuffers) {
       const seq = hitBuffers[bid];
-      let count = 0, i = 0;
+      let count = 0;
+      let i = 0;
       while (i < seq.length) {
         if (seq[i] === 'user') {
           if (seq[i + 1] === 'assistant') {
-            count++; i += 2; continue;
+            count++;
+            i += 2;
+            continue;
           }
           if (seq[i + 1] === 'tools_call' && seq[i + 2] === 'assistant') {
-            count++; i += 3; continue;
+            count++;
+            i += 3;
+            continue;
           }
         }
         i++;
@@ -616,48 +615,49 @@ const BridgePositiveNegativeCount = await models.pg.conversations.findAll({
       };
     }
 
-    // overall average response time in last 48h
+    // overall average response time in window
     const averageResponseTimeArr = await models.pg.raw_data.findAll({
       attributes: [
         [Sequelize.literal(
           `AVG((latency->>'over_all_time')::float - (latency->>'model_execution_time')::float)`
         ), 'average_response_time']
       ],
-      where: { created_at: { [Sequelize.Op.gte]: fortyEightHoursAgo } },
+      where: { created_at: { [Sequelize.Op.gte]: windowStart } },
       raw: true
     });
-    const averageResponseTime = averageResponseTimeArr[0]?.average_response_time || 0;
+    const averageResponseTime = parseFloat(averageResponseTimeArr[0]?.average_response_time) || 0;
 
-    // calculate average response time per bridge
+    // per-bridge average response time in window
     const rawRecords = await models.pg.raw_data.findAll({
       attributes: ['message_id', 'latency'],
-      where: { created_at: { [Sequelize.Op.gte]: fortyEightHoursAgo } },
+      where: { created_at: { [Sequelize.Op.gte]: windowStart } },
       raw: true
     });
     const convoRecords = await models.pg.conversations.findAll({
-      attributes: ['message_id', 'bridge_id', 'message_by'],
+      attributes: ['message_id', 'bridge_id'],
       where: {
-        createdAt: { [Sequelize.Op.gte]: fortyEightHoursAgo },
+        createdAt: { [Sequelize.Op.gte]: windowStart },
         message_by: 'user'
       },
       raw: true
     });
-    const messageBridgeMap = new Map();
-    for (const c of convoRecords) {
-      messageBridgeMap.set(c.message_id, c.bridge_id);
-    }
+
+    // map message_id → bridge_id
+    const messageBridgeMap = new Map(convoRecords.map(c => [c.message_id, c.bridge_id]));
+
+    // accumulate latency diffs per bridge
     const tmp = {};
-    for (const r of rawRecords) {
+    rawRecords.forEach(r => {
       const bid = messageBridgeMap.get(r.message_id);
-      if (!bid) continue;
+      if (!bid) return;
       const totalTime = parseFloat(r.latency.over_all_time);
       const execTime = parseFloat(r.latency.model_execution_time);
       const diff = totalTime - execTime;
       if (!tmp[bid]) tmp[bid] = { sum: 0, count: 0 };
       tmp[bid].sum += diff;
       tmp[bid].count++;
-    }
-    // compute and include org_id
+    });
+
     const averageResponseTimePerBridge = {};
     for (const bid in tmp) {
       const avg = tmp[bid].count > 0 ? tmp[bid].sum / tmp[bid].count : 0;
