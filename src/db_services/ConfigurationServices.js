@@ -250,6 +250,22 @@ const getBridges = async bridge_id => {
   }
 };
 
+const getBridgeNameById = async (bridge_id, org_id) => {
+  try {
+    const bridge = await configurationModel.findOne(
+      { _id: bridge_id, org_id: org_id },
+      { name: 1 }
+    ).lean();
+    if (!bridge) {
+      return "";
+    }
+    return bridge.name
+  } catch (error) {
+    console.error("Error fetching bridge name =>", error);
+    return ""
+  }
+};
+
 
 export default {
   deleteBridge,
@@ -264,5 +280,6 @@ export default {
   gettemplateById,
   addActionInBridge,
   removeActionInBridge,
-  getBridges
+  getBridges,
+  getBridgeNameById
 };
