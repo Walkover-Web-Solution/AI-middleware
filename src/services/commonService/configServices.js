@@ -8,7 +8,7 @@ import conversationDbService from "../../db_services/conversationDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
-
+import { getallOrgs } from "../../utils/proxyUtils.js";
 const getThreads = async (req, res,next) => {
   try {
     let page = parseInt(req.query.pageNo) || null;
@@ -423,14 +423,98 @@ const getAllUserUpdates = async(req, res, next) => {
   return next();
 }
 
-const getAllData = async(req, res, next) => {
-  const data = await conversationDbService.getAllDatafromPg();
-  // const bridge_ids = data?.activeBridges;
-  // const bridge_data = await configurationService.getBridgeNameById(bridgeId, org_id);
-  res.locals = { data, success: true };
+const getAllData = async (req, res, next) => {
+  // fetch raw metrics and org list
+
+
+  // const bridge_ids = await configurationService.getBridgeNameById(bridgeId, org_id);
+
+  const raw = await conversationDbService.getAllDatafromPg();
+  const orgResp = await getallOrgs();
+
+  // normalize org list array from various response shapes
+  let orgList = [];
+  if (Array.isArray(orgResp?.org_ids?.data?.data)) {
+    orgList = orgResp.org_ids.data.data;
+  } else if (Array.isArray(orgResp?.data?.data)) {
+    orgList = orgResp.data.data;
+  } else if (Array.isArray(orgResp?.data)) {
+    orgList = orgResp.data;
+  } else if (Array.isArray(orgResp)) {
+    orgList = orgResp;
+  }
+
+  // build a lookup map from org_id → org name
+  const orgMap = new Map(orgList.map(o => [String(o.id), o.name]));
+
+  // prepare grouped result
+  const result = {
+    averageResponseTime: raw.averageResponseTime,
+    orgs: {}
+  };
+
+  // helper to ensure org bucket exists
+  const ensureOrg = orgId => {
+    const key = String(orgId);
+    if (!result.orgs[key]) {
+      result.orgs[key] = {
+        org_name: orgMap.get(key) || null,
+        bridges: {}
+      };
+    }
+    return result.orgs[key];
+  };
+
+  // group active bridges
+  if (Array.isArray(raw.activeBridges)) {
+    raw.activeBridges.forEach(({ bridge_id, org_id }) => {
+      const orgEntry = ensureOrg(org_id);
+      if (!orgEntry.bridges[bridge_id]) orgEntry.bridges[bridge_id] = {};
+      orgEntry.bridges[bridge_id].active = true;
+    });
+  }
+
+  // group hits per bridge
+  if (raw.hitsPerBridge && typeof raw.hitsPerBridge === "object") {
+    Object.entries(raw.hitsPerBridge).forEach(([bridgeId, val]) => {
+      const { org_id, hits } = val;
+      const orgEntry = ensureOrg(org_id);
+      if (!orgEntry.bridges[bridgeId]) orgEntry.bridges[bridgeId] = {};
+      orgEntry.bridges[bridgeId].hits = hits;
+    });
+  }
+
+  // group average response time per bridge
+  if (raw.averageResponseTimePerBridge && typeof raw.averageResponseTimePerBridge === "object") {
+    Object.entries(raw.averageResponseTimePerBridge).forEach(([bridgeId, val]) => {
+      const { org_id, average_response_time } = val;
+      const orgEntry = ensureOrg(org_id);
+      if (!orgEntry.bridges[bridgeId]) orgEntry.bridges[bridgeId] = {};
+      orgEntry.bridges[bridgeId].average_response_time = average_response_time;
+    });
+  }
+
+  // group positive/negative counts
+  if (Array.isArray(raw.BridgePositiveNegativeCount)) {
+    raw.BridgePositiveNegativeCount.forEach(({ bridge_id, org_id, positive_count, negative_count }) => {
+      const orgEntry = ensureOrg(org_id);
+      if (!orgEntry.bridges[bridge_id]) orgEntry.bridges[bridge_id] = {};
+      orgEntry.bridges[bridge_id].positive_count = positive_count;
+      orgEntry.bridges[bridge_id].negative_count = negative_count;
+    });
+  }
+
+  // respond with organized data: orgs → bridge_ids → metrics
+  res.locals = {
+    data: {
+      averageResponseTime: result.averageResponseTime,
+      orgs: result.orgs
+    },
+    success: true
+  };
   req.statusCode = 200;
   return next();
-}
+};
 
 
 
