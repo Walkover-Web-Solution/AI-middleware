@@ -433,14 +433,8 @@ const getAllData = async (req, res, next) => {
 
   // normalize org list array from various response shapes
   let orgList = [];
-  if (Array.isArray(orgResp?.org_ids?.data?.data)) {
-    orgList = orgResp.org_ids.data.data;
-  } else if (Array.isArray(orgResp?.data?.data)) {
+  if (Array.isArray(orgResp?.data?.data)) {
     orgList = orgResp.data.data;
-  } else if (Array.isArray(orgResp?.data)) {
-    orgList = orgResp.data;
-  } else if (Array.isArray(orgResp)) {
-    orgList = orgResp;
   }
 
   // build a lookup map from org_id → org name
