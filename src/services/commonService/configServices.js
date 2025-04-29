@@ -425,6 +425,8 @@ const getAllUserUpdates = async(req, res, next) => {
 
 const getAllData = async(req, res, next) => {
   const data = await conversationDbService.getAllDatafromPg();
+  // const bridge_ids = data?.activeBridges;
+  // const bridge_data = await configurationService.getBridgeNameById(bridgeId, org_id);
   res.locals = { data, success: true };
   req.statusCode = 200;
   return next();
