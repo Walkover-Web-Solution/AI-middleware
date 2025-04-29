@@ -21,4 +21,5 @@ router.get('/get-message-history-chatbot/:thread_id/:bridge_slugName', chatBotAu
 router.get('/get-message-history/:thread_id/:bridge_id', middleware, common.getThreadMessages)
 router.put('/bridge-status/:bridge_id', middleware, common.bridgeArchive);
 router.get('/getuserupdates/:version_id', middleware, common.getAllUserUpdates);
+router.get('/data', middleware, common.getAllData)
 export default router;
