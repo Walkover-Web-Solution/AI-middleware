@@ -1,6 +1,8 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
+import { findInCache, storeInCache } from "../cache_service/index.js";
+import { getUsers } from "../services/proxyService.js";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -546,11 +548,28 @@ async function sortThreadsByHits(threads) {
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
+    let pageNo = 1;
+    let userData = await findInCache(`user_data_${org_id}`);
+    userData = !userData?.length ? await (async () => {
+      let allUserData = [];
+      let hasMoreData = true;
+
+      while (hasMoreData) {
+        const response = await getUsers(org_id, pageNo, pageSize = 50)
+        allUserData = [...allUserData, ...response['data']];
+        hasMoreData = response?.totalEntityCount < allUserData;
+        pageNo++;
+      }
+      await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
+      return allUserData;
+    })() : JSON.parse(userData);
+
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {
         org_id: org_id,
         version_id: version_id
       },
+      attributes: ['id', 'user_id', 'org_id', 'bridge_id', 'type', 'time', 'version_id'],
       order: [
         ['time', 'DESC'],
       ],
@@ -562,7 +581,15 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
       return { success: false, message: "No updates found" };
     }
 
-    return { success: true, updates: history };
+    const updatedHistory = history?.map(entry => {
+      const user = Array.isArray(userData) ? userData.find(user => user?.id === entry?.dataValues?.user_id) : null;
+      return {
+        ...entry?.dataValues,
+        user_name: user ? user?.name : 'Unknown'
+      };
+    });
+
+    return { success: true, updates: updatedHistory };
   } catch (error) {
     console.error("Error fetching user updates:", error);
     return { success: false, message: "Error fetching updates" };
