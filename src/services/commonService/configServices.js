@@ -408,7 +408,9 @@ const getAllSubThreadsController = async(req, res, next) => {
   const {thread_id}= req.params;
   const org_id = req.profile.org.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id);
-  res.locals = { threads, success: true };
+  // sort the threads accroing to their hits in PG.
+  const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
+  res.locals = { threads: sortedThreads, success: true };
   req.statusCode = 200;
   return next();
 }
