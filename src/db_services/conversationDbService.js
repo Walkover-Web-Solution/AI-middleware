@@ -2,6 +2,7 @@ import models from "../../models/index.js";
 import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
 import axios from "axios";
+import { findInCache, storeInCache } from "../cache_service/index.js";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -517,14 +518,20 @@ const getSubThreads = async (org_id,thread_id) =>{
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
-    const userData = await axios.get(`${process?.env?.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails?company_id=${org_id}`, {
-      headers: {
-        authkey: process.env.PROXY_ADMIN_TOKEN,
-      }
-    }).then(response => response?.data?.data?.data).catch(error => {
-      console.error("Error fetching user data:", error);
-      return [];
-    });
+    let userData = await findInCache(`user_data_${org_id}`);
+    if (!userData) {
+      userData = await axios.get(`${process?.env?.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails?company_id=${org_id}&itemsPerPage=50`, {
+        headers: {
+          authkey: process.env.PROXY_ADMIN_TOKEN,
+        }
+      }).then(response => response?.data?.data?.data).catch(error => {
+        console.error("Error fetching user data:", error);
+        return [];
+      });
+      await storeInCache(`user_data_${org_id}`, userData, 86400); // Cache for 1 day      
+    } else {
+      userData = JSON.parse(userData);
+    }
 
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {
