@@ -518,20 +518,32 @@ const getSubThreads = async (org_id,thread_id) =>{
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {
     const offset = (page - 1) * pageSize;
+    let pageNo = 1;
     let userData = await findInCache(`user_data_${org_id}`);
-    if (!userData) {
-      userData = await axios.get(`${process?.env?.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails?company_id=${org_id}&itemsPerPage=50`, {
-        headers: {
-          authkey: process.env.PROXY_ADMIN_TOKEN,
+    userData = !userData.length ? await (async () => {
+      let allUserData = [];
+      let hasMoreData = true;
+      
+      while (hasMoreData) {
+        const response = await axios.get(`${process?.env?.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails?company_id=${org_id}&pageNo=${pageNo}`, {
+          headers: {
+            authkey: process.env.PROXY_ADMIN_TOKEN,
+          }
+        }).then(response => response?.data?.data?.data).catch(error => {
+          console.error("Error fetching user data:", error);
+          return [];
+        });
+
+        hasMoreData = response?.length > 0;
+        if (hasMoreData) {
+          allUserData = [...allUserData, ...response];
+          pageNo++;
         }
-      }).then(response => response?.data?.data?.data).catch(error => {
-        console.error("Error fetching user data:", error);
-        return [];
-      });
-      await storeInCache(`user_data_${org_id}`, userData, 86400); // Cache for 1 day      
-    } else {
-      userData = JSON.parse(userData);
-    }
+      }
+      
+      await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
+      return allUserData;
+    })() : JSON.parse(userData);
 
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {
@@ -549,8 +561,9 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     if (history.length === 0) {
       return { success: false, message: "No updates found" };
     }
+
     const updatedHistory = history?.map(entry => {
-      const user = userData?.find(user => user?.id === entry?.dataValues?.user_id);
+      const user = Array.isArray(userData) ? userData.find(user => user?.id === entry?.dataValues?.user_id) : null;
       return {
         ...entry?.dataValues,
         user_name: user ? user?.name : 'Unknown'
