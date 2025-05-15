@@ -5,5 +5,5 @@ const router = express.Router();
 router.get('/all', getAllModelConfig)
 router.get('/', getAllModelConfigForService)
 router.post('/', saveModelCongiguration)
-router.put('/update', updateModelConfiguration)
+router.put('/', updateModelConfiguration)
 export default router;
