@@ -39,7 +39,11 @@ async function getChunksByIds(chunkIds) {
 }
 
 async function getDocumentById(docId) {
-    return await ragParentDataModel.findById(docId);
+    return await ragParentDataModel.findById(docId).lean();
+}
+
+async function getDocumentsByQuery(query){
+    return (await ragParentDataModel.find(query)).map(obj => obj.toObject());
 }
 
 async function deleteDocumentById(docId) {
@@ -50,6 +54,11 @@ async function updateDocumentData(id , data) {
         _id: id
     }, data, { new: true });
 }
+
+async function insertMany(data){
+    return (await ragParentDataModel.insertMany(data)).map(obj => obj.toObject());
+}
+
 export default{
     getAll,
     create,
@@ -58,5 +67,7 @@ export default{
     getChunksByIds,
     getDocumentById,
     deleteDocumentById,
-    updateDocumentData
+    updateDocumentData,
+    insertMany, 
+    getDocumentsByQuery
 }
