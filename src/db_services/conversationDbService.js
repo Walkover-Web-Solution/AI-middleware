@@ -27,7 +27,7 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
   
@@ -48,6 +48,11 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   } else {
     whereConditions.push(`user_feedback = ${user_feedback}`);
   }
+
+  // Add condition for error if error is true
+  if (error) {
+    whereConditions.push(`raw_data.error != ''`);
+  }
   
   const whereClause = whereConditions.join(' AND ');
   
@@ -57,12 +62,14 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     const countQuery = `
       SELECT COUNT(*) as total
       FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
       WHERE conversations.org_id = '${org_id}'
         AND thread_id = '${thread_id}'
         AND bridge_id = '${bridge_id}'
         AND sub_thread_id = '${sub_thread_id}'
+        AND raw_data.error != ''
     `;
-    [countResult] = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
+    countResult = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
   }
   
   // Main query with JOIN to raw_data
@@ -105,7 +112,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   const conversationsResult = await models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT });
   
   // Get total entries from count query
-  const totalEntries = parseInt(countResult?.total || 0);
+  const totalEntries = parseInt(countResult?.[0]?.total || 0);
   
   // Sort the results in ascending order (since we queried in DESC but need to reverse)
   const conversations = conversationsResult.reverse();
@@ -115,6 +122,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   
   return { conversations, totalPages, totalEntries: isChatbot ? conversations.length : totalEntries };
 }
+
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   const recordsTodelete = await models.pg.conversations.findOne({
     where: {
@@ -136,157 +144,113 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback=null) {
-  const whereClause = {
-    bridge_id,
-    org_id,
+async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback = null, error = false) {
+  // Build the base WHERE clause
+  let whereClause = {
+    'conversations.bridge_id': bridge_id,
+    'conversations.org_id': org_id,
   };
-  if(user_feedback && user_feedback !== "all")
-    {
-      whereClause.user_feedback = user_feedback  
+
+  // If user_feedback is provided and is not 'all', include it in the WHERE clause
+  if (user_feedback && user_feedback !== "all") {
+    whereClause['conversations.user_feedback'] = user_feedback;
   }
 
-  // Handle the date range filter
+  // If there is a date range, add it to the WHERE clause
   if (startTimestamp && endTimestamp) {
-    whereClause.updatedAt = {
+    whereClause['conversations.updatedAt'] = {
       [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
     };
   }
 
-  // Handle the keyword search filter
-  if (keyword_search) {
-    whereClause[Sequelize.Op.and] = [
-      {
-        [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
-          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }), // Added for sub_thread_id search
-        ],
-      },
-    ];
+  // Create the raw SQL query
+  let query = `
+    SELECT 
+      conversations."thread_id", 
+      MIN(conversations.id) AS "id", 
+      conversations."bridge_id", 
+      MAX(conversations."updatedAt") AS "updatedAt" 
+    FROM 
+      conversations 
+    LEFT JOIN 
+      raw_data 
+      ON conversations.message_id = raw_data.message_id 
+    WHERE 
+      conversations."bridge_id" = :bridge_id 
+      AND conversations."org_id" = :org_id 
+  `;
+
+  // Dynamically adding filters to the WHERE clause
+  if (startTimestamp && endTimestamp) {
+    query += `AND conversations."updatedAt" BETWEEN :startTimestamp AND :endTimestamp `;
   }
 
-  // Define the common attributes to select
-  const attributes = keyword_search
-    ? [
-        'thread_id',
-        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
-        'bridge_id',
-        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
-        'message',
-        'message_id',
-        'sub_thread_id', // Added sub_thread_id in the selected attributes
-      ]
-    : [
-        'thread_id',
-        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
-        'bridge_id',
-        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
-      ];
+  if (keyword_search) {
+    query += `AND (conversations.message LIKE :keyword_search OR raw_data.message LIKE :keyword_search) `;
+  }
 
-  // Execute the query
-  const threads = await models.pg.conversations.findAll({
-    attributes,
-    where: whereClause,
-    group: keyword_search
-      ? ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id'] // Added sub_thread_id in the group by
-      : ['thread_id', 'bridge_id'],
-    order: [
-      [Sequelize.col('updatedAt'), 'DESC'],
-      ['thread_id', 'ASC'],
-    ],
+  if (user_feedback && user_feedback !== "all") {
+    query += `AND conversations."user_feedback" = :user_feedback `;
+  }
+
+  if (error){
+    query += `AND raw_data.error != '' `;
+  }
+
+  // Add GROUP BY, ORDER BY, LIMIT, and OFFSET
+  query += `
+    GROUP BY 
+      conversations."thread_id", 
+      conversations."bridge_id" 
+    ORDER BY 
+      MAX(conversations."updatedAt") DESC, 
+      conversations."thread_id" ASC 
+    LIMIT :limit OFFSET :offset;
+  `;
+
+  // Define query parameters
+  const queryParams = {
+    bridge_id,
+    org_id,
     limit,
     offset: (pageNo - 1) * limit,
+    keyword_search: keyword_search ? `%${keyword_search}%` : undefined,
+    startTimestamp: startTimestamp ? new Date(startTimestamp) : undefined,
+    endTimestamp: endTimestamp ? new Date(endTimestamp) : undefined,
+    user_feedback: user_feedback || undefined,
+  };
+
+  // Execute the raw SQL query using Sequelize
+  const threads = await models.pg.sequelize.query(query, {
+    replacements: queryParams,
+    type: Sequelize.QueryTypes.SELECT,
   });
 
-
-
+  // Map the raw query result into the desired format
   const uniqueThreads = new Map();
 
   threads.forEach(thread => {
-    let matchedField = null;
+    const uniqueKey = `${thread.bridge_id}-${thread.thread_id}`;
 
-    if (thread.message && thread.message.includes(keyword_search)) {
-        matchedField = 'message';
-    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
-        matchedField = 'message_id';
-    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
-        matchedField = 'thread_id';
-    } else if (thread.sub_thread_id && thread.sub_thread_id.toString().includes(keyword_search)) { // Check for sub_thread_id match
-        matchedField = 'sub_thread_id'; // If sub_thread_id matches, set matchedField to 'sub_thread_id'
-    } else {
-        matchedField = 'thread_id';
-    }
+    // Create the response object
+    const response = {
+      thread_id: thread.thread_id,
+      id: thread.id,
+      bridge_id: thread.bridge_id,
+      updatedAt: thread.updatedAt,
+    };
 
-    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
-    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
-
-    // Only add unique entries for `thread_id`, allow duplicates otherwise
-    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
-      // Create the response object
-      const response = {
-        thread_id: thread.thread_id,
-        id: thread.id,
-        bridge_id: thread.bridge_id,
-        matchedField
-      };
-      // Include additional fields only if matchedField is not 'thread_id'
-      if (matchedField !== 'thread_id' ) {
-        if (!response.message) {
-            response.message = [];  
-        }
-        // Push an object containing the message and message_id to the message array
-        response.message.push({
-            message: thread.message,
-            message_id: thread.message_id
-        });
-      }
-
-      // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
-      if (matchedField === 'thread_id') {
-        uniqueThreads.set(thread.thread_id, response);
-      }
-      else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
-        // Retrieve the existing thread object from the map
-        const existingThread = uniqueThreads.get(thread.thread_id);
-    
-        // Check if 'message' is present or exists in the existing thread
-        if (existingThread && existingThread.message) {
-            // If message exists, push the new message to the array
-            existingThread.message.push({
-                message: thread.message,
-                message_id: thread.message_id
-            });
-        } else {            
-            // Optionally, initialize the message array if needed
-            uniqueThreads.set(thread.thread_id, {
-                ...existingThread,
-                message: [{
-                    message: thread.message,
-                    message_id: thread.message_id
-                }]
-            });
-        }
-    }
-       else {
-        uniqueThreads.set(`${thread.thread_id}`, response);
-      }
+    // Only store unique thread entries
+    if (!uniqueThreads.has(uniqueKey)) {
+      uniqueThreads.set(uniqueKey, response);
     }
   });
 
-  // Convert the Map values to an array
+  // Convert the Map values to an array and return the result
   return Array.from(uniqueThreads.values());
 }
+
+
 
 
 
