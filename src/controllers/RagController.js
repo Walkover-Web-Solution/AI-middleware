@@ -44,6 +44,7 @@ export const create_vectors = async (req, res) => {
             source: {
                 type: 'url',
                 fileFormat,
+                scriptId: fileFormat === 'script' ? new URL(url).pathname.split('/').pop() : undefined,
                 data: {
                     url,
                     type :docType,
@@ -58,7 +59,7 @@ export const create_vectors = async (req, res) => {
             org_id:  org?.id, 
         });
         const payload = {
-            event: "load",
+            event: fileFormat === 'script' ? 'load_multiple' : 'load',
             data: {
                 url: url,
                 resourceId: parentData._id,

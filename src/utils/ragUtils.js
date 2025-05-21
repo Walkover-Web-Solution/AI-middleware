@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import { sendAlert } from '../services/utils/utilityService.js';
 
@@ -15,6 +14,7 @@ export function getFileFormatByUrl(url) {
         // { regex: /sharepoint\.com\/.*\.docx/, format: 'txt' },
         // { regex: /sharepoint\.com\/.*\.xlsx/, format: 'csv' },
         // { regex: /sharepoint\.com\/.*\.pptx/, format: 'pdf' }, 
+        { regex: /^https?:\/\/flow\.sokt\.io\/func\/[a-zA-Z0-9]+$/, format: 'script' },
         { regex: /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/, format: 'txt' }, // Use 'url' instead of 'txt'
     ];
     
@@ -116,6 +116,12 @@ export async function getChunkingType(text) {
       throw err;
     }
   }
+
+export function getScriptId(url){
+    const regex = /flow\.sokt\.io\/func\/([a-zA-Z0-9]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+}
 
 export default async function getChunksByAi(text, chunk_size, chunk_overlap) {
     try {
