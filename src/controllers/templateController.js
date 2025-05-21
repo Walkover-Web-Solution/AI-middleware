@@ -1,6 +1,6 @@
 import templateSevice from "../db_services/templateDbservice.js"
 async function allTemplates(req,res, next) {
-    const result = await templateSevice.getTemplates();
+    const result = await templateSevice.getAll();
     res.locals = {
         success: true,
         result
