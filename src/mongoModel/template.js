@@ -21,6 +21,4 @@ const template = new mongoose.Schema({
 
 const templateModel = mongoose.model("template", template);
 
-export {
-    templateModel
-};
+export default templateModel
