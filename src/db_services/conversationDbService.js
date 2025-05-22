@@ -73,32 +73,57 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   }
   
   // Main query with JOIN to raw_data
-  let query = `
-    SELECT 
-      conversations.message as content,
-      conversations.message_by as role,
-      conversations."createdAt",
-      conversations.id as "Id",
-      conversations.function,
-      conversations.is_reset,
-      conversations.chatbot_message,
-      conversations.updated_message,
-      conversations.tools_call_data,
-      conversations.message_id,
-      conversations.user_feedback,
-      conversations.sub_thread_id,
-      conversations.version_id,
-      conversations.image_url,
-      conversations.urls,
-      conversations."AiConfig",
-      conversations.annotations,
-      raw_data.*
-    FROM conversations
-    LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
-    WHERE ${whereClause}
-    ORDER BY conversations.id DESC
-  `;
-  
+  let query;
+  if (isChatbot) {
+    // Only select the required keys for chatbot
+    query = `
+      SELECT 
+        conversations.id as "Id",
+        conversations.message as content,
+        conversations.message_by as role,
+        conversations."createdAt",
+        conversations.chatbot_message,
+        conversations.tools_call_data,
+        conversations.user_feedback,
+        conversations.sub_thread_id,
+        conversations.image_url,
+        conversations.urls,
+        conversations.message_id,
+        raw_data.error,
+        raw_data."firstAttemptError"
+      FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+      WHERE ${whereClause}
+      ORDER BY conversations.id DESC
+    `;
+  } else {
+    query = `
+      SELECT 
+        conversations.message as content,
+        conversations.message_by as role,
+        conversations."createdAt",
+        conversations.id as "Id",
+        conversations.function,
+        conversations.is_reset,
+        conversations.chatbot_message,
+        conversations.updated_message,
+        conversations.tools_call_data,
+        conversations.message_id,
+        conversations.user_feedback,
+        conversations.sub_thread_id,
+        conversations.version_id,
+        conversations.image_url,
+        conversations.urls,
+        conversations."AiConfig",
+        conversations.annotations,
+        raw_data.*
+      FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+      WHERE ${whereClause}
+      ORDER BY conversations.id DESC
+    `;
+  }
+
   // Add pagination if needed
   if (limit !== null) {
     query += ` LIMIT ${limit}`;
