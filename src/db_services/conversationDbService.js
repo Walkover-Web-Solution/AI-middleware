@@ -78,6 +78,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     // Only select the required keys for chatbot
     query = `
       SELECT 
+        conversations.id as "Id",
         conversations.message as content,
         conversations.message_by as role,
         conversations."createdAt",
@@ -87,9 +88,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.sub_thread_id,
         conversations.image_url,
         conversations.urls,
-        conversations.message_id as id,
-        raw_data.service,
-        raw_data.model,
+        conversations.message_id,
         raw_data.error,
         raw_data."firstAttemptError"
       FROM conversations
