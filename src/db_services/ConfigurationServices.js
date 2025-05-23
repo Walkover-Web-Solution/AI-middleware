@@ -163,7 +163,7 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
   return await configurationModel.findOne({
     slugName: slugName,
     org_id: orgId
-  }).select({ _id: 1, slugName: 1, starterQuestion: 1 }).lean()
+  }).select({ _id: 1, slugName: 1, starterQuestion: 1, IsstarterQuestionEnable: 1 }).lean()
      
 }
 const getBridgeBySlugname = async (orgId, slugName, versionId) => {
