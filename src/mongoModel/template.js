@@ -16,7 +16,12 @@ const template = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now
-  }
+  },
+  visible: {
+    type: Boolean,
+    default: true
+  },
+  
 });
 
 const templateModel = mongoose.model("template", template);
