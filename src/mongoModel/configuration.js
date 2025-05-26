@@ -83,6 +83,9 @@ const configuration = new mongoose.Schema({
   },
   hello_id :{
     type: String
+  },
+  IsstarterQuestionEnable:{
+    type: Boolean
   }
 });
 
