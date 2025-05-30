@@ -235,13 +235,10 @@ const loginUser = async (req, res) => {
                     "buttonName": "",
                     "height": "100",
                     "heightUnit": "%",
-                    "width": "50",
+                    "width": "100",
                     "widthUnit": "%",
                     "type": "popup",
-                    "themeColor": "#000000",
-                    "chatbotTitle": "Chatbot",
-                    "chatbotSubtitle": "Chatbot subtitle",
-                    "iconUrl": ""
+                    "themeColor": "#000000"
                 },
                 userId: req.chatBot.userId,
                 token: `Bearer ${getToken({ user_id:req.chatBot.userId, userEmail: req.chatBot.userEmail, variables, ispublic }, { exp,iat })}`,
