@@ -226,8 +226,29 @@ const updateChatBotConfig = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { chatbot_id, user_id, org_id, exp, iat, variables } = req.chatBot;
+        // {'userId': user_id, "userEmail": user_email, 'ispublic': is_public}
+        const { chatbot_id, user_id, org_id, exp, iat, variables, ispublic } = req.chatBot;
         let chatBotConfig = {};
+        if(ispublic){
+            const dataToSend = {
+                config: {
+                    "buttonName": "",
+                    "height": "100",
+                    "heightUnit": "%",
+                    "width": "50",
+                    "widthUnit": "%",
+                    "type": "popup",
+                    "themeColor": "#000000",
+                    "chatbotTitle": "Chatbot",
+                    "chatbotSubtitle": "Chatbot subtitle",
+                    "iconUrl": ""
+                },
+                userId: req.chatBot.userId,
+                token: `Bearer ${getToken({ user_id:req.chatBot.userId, userEmail: req.chatBot.userEmail, variables, ispublic }, { exp,iat })}`,
+                chatbot_id: "Public_Agents",
+            };
+            return res.status(200).json({ data: dataToSend, success: true });
+        }
         if (chatbot_id) chatBotConfig = await ChatBotDbService.getChatBotConfig(chatbot_id)
         if (chatBotConfig.orgId !== org_id?.toString()) return res.status(401).json({ success: false, message: "chat bot id is no valid" });
         const dataToSend = {

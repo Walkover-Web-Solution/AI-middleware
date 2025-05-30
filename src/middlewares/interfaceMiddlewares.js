@@ -53,4 +53,23 @@ const chatBotAuth = async (req, res, next) => { // todo pending
   }
 };
 
-export { chatBotTokenDecode, chatBotAuth };
+const publicChatbotAuth = async (req, res, next) => {
+  try {
+    let checkToken = false;
+    const token = req.headers['Authorization'];
+    if (token) {
+      checkToken = jwt.decode(token, process.env.PUBLIC_CHATBOT_TOKEN, ['HS256']);
+      if (checkToken) {
+        req.chatBot = checkToken;
+        req.chatBot.limiter_key = checkToken.userId;
+        return next();
+      }
+    }
+    return res.status(498).json({ message: 'invalid token' });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ message: 'unauthorized user' });
+  }
+};
+
+export { chatBotTokenDecode, chatBotAuth, publicChatbotAuth };
