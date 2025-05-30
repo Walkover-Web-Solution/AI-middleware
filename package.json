@@ -50,7 +50,7 @@
     "joi": "^17.12.3",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
-    "langchain": "^0.3.19",
+    "langchain": "0.3.7",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
     "mongodb": "^6.3.0",
