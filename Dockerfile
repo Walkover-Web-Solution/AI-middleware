@@ -18,7 +18,7 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g npm@latest
-RUN npm install -g dotenv-cli
+RUN npm install -g dotenv-cli 
 
 COPY package.json package-lock*.json ./
 RUN npm install
