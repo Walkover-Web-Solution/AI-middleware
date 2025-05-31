@@ -211,7 +211,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   }
 
   if (keyword_search) {
-    query += `AND (conversations.message LIKE :keyword_search OR raw_data.error LIKE :keyword_search OR conversations.thread_id LIKE :keyword_search OR conversations.sub_thread_id LIKE :keyword_search) `;
+    query += `AND (conversations.message LIKE :keyword_search OR raw_data.error LIKE :keyword_search OR conversations.thread_id LIKE :keyword_search) `;
   }
 
   if (user_feedback && user_feedback !== "all") {
