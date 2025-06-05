@@ -33,13 +33,17 @@ const ragParentDataSchema = new mongoose.Schema({
         },
         fileFormat: {
           type: String, 
-          enum: ['csv', 'txt', 'pdf', 'docx', 'xlsx', 'pptx'], 
+          enum: ['csv', 'txt', 'pdf', 'docx', 'xlsx', 'pptx', 'script', 'unknown'], 
           required: true
         },
         data: {
           type: Object,
           required: true,
         },
+        scriptId: {
+          type: String, 
+          required: false
+        }
       },
       { _id: false } // Prevents automatic _id generation for subdocument
     ),

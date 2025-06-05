@@ -2,7 +2,7 @@ import configurationModel from "../mongoModel/configuration.js";
 import versionModel from "../mongoModel/bridge_version.js";
 import apiCallModel from "../mongoModel/apiCall.js";
 import ChatBotModel from "../mongoModel/chatBotModel.js";
-import { templateModel } from "../mongoModel/template.js";
+import templateModel from "../mongoModel/template.js";
 import { ObjectId } from "mongodb";
 
 const updateBridgeArchive = async (bridge_id, status) => {
@@ -163,7 +163,7 @@ const getBridgeIdBySlugname = async (orgId, slugName) => {
   return await configurationModel.findOne({
     slugName: slugName,
     org_id: orgId
-  }).select({ _id: 1, slugName: 1, starterQuestion: 1 }).lean()
+  }).select({ _id: 1, slugName: 1, starterQuestion: 1, IsstarterQuestionEnable: 1 }).lean()
      
 }
 const getBridgeBySlugname = async (orgId, slugName, versionId) => {

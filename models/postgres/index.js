@@ -14,12 +14,16 @@ const db = {};
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
   dialect: 'postgres',
   host: process.env.DB_HOST,
+  define: {
+    freezeTableName : true
+  },
   retry: {
     match: [/Deadlock/i, Sequelize.ConnectionError],
     max: 100,
     backoffBase: 3000,
     backoffExponent: 1.5
-  }
+  },
+  logging: false,
 });
 
 const dbservice = async () => {

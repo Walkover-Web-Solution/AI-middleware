@@ -22,13 +22,13 @@ async function getAllModelConfig(req,res, next) {
 }
 
 async function saveModelCongiguration(req,res, next) {
-    const {configuration, inputConfig, outputConfig, service, model} = req.body;
+    const {configuration, inputConfig, outputConfig, service, model_name} = req.body;
     const data = {
         configuration,
         inputConfig,
         outputConfig,
         service,
-        model
+        model_name
     }
     const result = await modelConfigDbService.saveModelConfig(data);
     res.locals = {
