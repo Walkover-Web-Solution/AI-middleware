@@ -72,4 +72,49 @@ const publicChatbotAuth = async (req, res, next) => {
   }
 };
 
-export { chatBotTokenDecode, chatBotAuth, publicChatbotAuth };
+const combinedAuthWithChatBotAndPublicChatbot = async (req, res, next) => {
+      try {
+        // Try public chatbot auth first
+        const publicAuthResult = await publicChatbotAuth(req, res, () => {});
+        if (publicAuthResult === undefined) {
+          // If public auth succeeded, proceed
+          return next();
+        }
+    
+        // If public auth failed, try chatbot auth
+        const chatBotAuthResult = await chatBotAuth(req, res, () => {});
+        if (chatBotAuthResult === undefined) {
+          // If chatbot auth succeeded, proceed
+          return next();
+        }
+    
+        // If both auth methods failed
+        return res.status(401).json({ message: 'unauthorized user' });
+      } catch (err) {
+        return res.status(401).json({ message: 'unauthorized user', error: err });
+      }
+    };
+    
+    const combinedAuthWithChatBotTokenDecodeAndPublicChatbot = async (req, res, next) => {
+      try {
+        // Try public chatbot auth first
+        const publicAuthResult = await publicChatbotAuth(req, res, () => {});
+        if (publicAuthResult === undefined) {
+          // If public auth succeeded, proceed
+          return next();
+        }
+    
+        // If public auth failed, try chatbot token decode
+        const chatBotTokenResult = await chatBotTokenDecode(req, res, () => {});
+        if (chatBotTokenResult === undefined) {
+          // If chatbot token decode succeeded, proceed
+          return next();
+        }
+    
+        // If both auth methods failed
+        return res.status(401).json({ message: 'unauthorized user' });
+      } catch (err) {
+        return res.status(401).json({ message: 'unauthorized user', error: err });
+      }
+    };
+export { chatBotTokenDecode, chatBotAuth, publicChatbotAuth, combinedAuthWithChatBotAndPublicChatbot, combinedAuthWithChatBotTokenDecodeAndPublicChatbot };
