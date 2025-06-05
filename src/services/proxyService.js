@@ -121,3 +121,24 @@ export async function createProxyToken(token_data) {
     throw error; // Re-throw the error for the caller to handle
   }
 }
+
+export async function getUsers(org_id, page = 1, pageSize = 10) {
+  try {
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
+      params: {
+        company_id: org_id,
+        pageNo: page,
+        itemsPerPage : pageSize
+      },
+      headers: {
+        authkey: process.env.PROXY_ADMIN_TOKEN
+      }
+    });
+    const data = response?.data?.data;
+    return data;
+  } catch (error) {
+    console.error('Error fetching user updates:', error.message);
+    return [];
+  }
+}
+

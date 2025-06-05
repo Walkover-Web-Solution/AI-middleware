@@ -1,6 +1,8 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
+import { findInCache, storeInCache } from "../cache_service/index.js";
+import { getUsers } from "../services/proxyService.js";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -25,79 +27,125 @@ async function getHistory(bridge_id, timestamp) {
 }
 
 
-async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize,user_feedback, version_id) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
-  const whereClause = {
-    org_id: org_id,
-    thread_id: thread_id,
-    bridge_id: bridge_id,
-    sub_thread_id: sub_thread_id
-  };
-
+  
+  // Build the WHERE clause for the SQL query
+  let whereConditions = [
+    `conversations.org_id = '${org_id}'`,
+    `thread_id = '${thread_id}'`,
+    `bridge_id = '${bridge_id}'`,
+    `sub_thread_id = '${sub_thread_id}'`
+  ];
+  
   if (version_id !== undefined && version_id) {
-    whereClause.version_id = version_id;
+    whereConditions.push(`version_id = '${version_id}'`);
   }
-
+  
   if (user_feedback === "all" || !user_feedback) {
-    whereClause.user_feedback = { [Sequelize.Op.or]: [null, 0,1,2] };
+    whereConditions.push(`(user_feedback IS NULL OR user_feedback IN (0, 1, 2))`);
   } else {
-    whereClause.user_feedback = user_feedback;
+    whereConditions.push(`user_feedback = ${user_feedback}`);
   }
 
+  // Add condition for error if error is true
+  if (error) {
+    whereConditions.push(`raw_data.error != ''`);
+  }
+  
+  const whereClause = whereConditions.join(' AND ');
+  
+  let countResult = [{ total: 0 }];
+  // Only execute count query if not chatbot
+  if (!isChatbot) {
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+      WHERE conversations.org_id = '${org_id}'
+        AND thread_id = '${thread_id}'
+        AND bridge_id = '${bridge_id}'
+        AND sub_thread_id = '${sub_thread_id}'
+        AND raw_data.error != ''
+    `;
+    countResult = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
+  }
+  
+  // Main query with JOIN to raw_data
+  let query;
+  if (isChatbot) {
+    // Only select the required keys for chatbot
+    query = `
+      SELECT 
+        conversations.id as "Id",
+        conversations.message as content,
+        conversations.message_by as role,
+        conversations."createdAt",
+        conversations.chatbot_message,
+        conversations.tools_call_data,
+        conversations.user_feedback,
+        conversations.sub_thread_id,
+        conversations.image_url,
+        conversations.urls,
+        conversations.message_id,
+        raw_data.error,
+        raw_data."firstAttemptError"
+      FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+      WHERE ${whereClause}
+      ORDER BY conversations.id DESC
+    `;
+  } else {
+    query = `
+      SELECT 
+        conversations.message as content,
+        conversations.message_by as role,
+        conversations."createdAt",
+        conversations.id as "Id",
+        conversations.function,
+        conversations.is_reset,
+        conversations.chatbot_message,
+        conversations.updated_message,
+        conversations.tools_call_data,
+        conversations.message_id,
+        conversations.user_feedback,
+        conversations.sub_thread_id,
+        conversations.version_id,
+        conversations.image_url,
+        conversations.urls,
+        conversations."AiConfig",
+        conversations.annotations,
+        raw_data.*
+      FROM conversations
+      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+      WHERE ${whereClause}
+      ORDER BY conversations.id DESC
+    `;
+  }
 
-  let conversations = await models.pg.conversations.findAll({
-    attributes: [
-      ['message', 'content'],
-      ['message_by', 'role'],
-      'createdAt',
-      ['id', 'Id'],
-      'function',
-      'is_reset',
-      'chatbot_message',
-      'updated_message',
-      'tools_call_data',
-      'message_id',
-      'user_feedback',
-      'sub_thread_id',
-      "version_id",
-      "image_url",
-      "urls",
-      "AiConfig",
-      "annotations"
-    ],
-    include: [
-      {
-        model: models.pg.raw_data,
-        as: 'raw_data',
-        attributes: ['*'],
-        required: false,
-        on: {
-          id: models.pg.sequelize.where(
-            models.pg.sequelize.col('conversations.message_id'),
-            '=',
-            models.pg.sequelize.col('raw_data.message_id')
-          )
-        }
-      }
-    ],
-    where: whereClause,
-    order: [['id', 'DESC']],
-    offset: offset,
-    limit: limit,
-    raw: true
-  });
-  conversations = conversations.reverse();
-  const totalEntries = await models.pg.conversations.count({
-    where: {
-      org_id: org_id,
-      thread_id: thread_id,
-      bridge_id: bridge_id,
-      sub_thread_id: sub_thread_id
-    }
-  });
-  const totalPages = limit ? Math.ceil(totalEntries / limit) : 1;
-  return { conversations, totalPages, totalEntries };
+  // Add pagination if needed
+  if (limit !== null) {
+    query += ` LIMIT ${limit}`;
+  }
+  
+  if (offset !== null) {
+    query += ` OFFSET ${offset}`;
+  }
+  
+  // Execute main query
+  const conversationsResult = await models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT });
+  
+  // Get total entries from count query
+  const totalEntries = parseInt(countResult?.[0]?.total || 0);
+  
+  // Sort the results in ascending order (since we queried in DESC but need to reverse)
+  const conversations = conversationsResult.reverse();
+  
+  // Calculate pagination info only if not chatbot
+  const totalPages = isChatbot ? 1 : (limit ? Math.ceil(totalEntries / limit) : 1);
+  
+  return { conversations, totalPages, totalEntries: isChatbot ? conversations.length : totalEntries };
 }
 
 async function deleteLastThread(org_id, thread_id, bridge_id) {
@@ -121,151 +169,113 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback=null) {
-  const whereClause = {
-    bridge_id,
-    org_id,
+async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback = null, error = false) {
+  // Build the base WHERE clause
+  let whereClause = {
+    'conversations.bridge_id': bridge_id,
+    'conversations.org_id': org_id,
   };
-  if(user_feedback && user_feedback !== "all")
-    {
-      whereClause.user_feedback = user_feedback  
-    }
 
-  // Handle the date range filter
+  // If user_feedback is provided and is not 'all', include it in the WHERE clause
+  if (user_feedback && user_feedback !== "all") {
+    whereClause['conversations.user_feedback'] = user_feedback;
+  }
+
+  // If there is a date range, add it to the WHERE clause
   if (startTimestamp && endTimestamp) {
-    whereClause.updatedAt = {
+    whereClause['conversations.updatedAt'] = {
       [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
     };
   }
 
-  // Handle the keyword search filter
-  if (keyword_search) {
-    whereClause[Sequelize.Op.and] = [
-      {
-        [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
-          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-        ],
-      },
-    ];
+  // Create the raw SQL query
+  let query = `
+    SELECT 
+      conversations."thread_id", 
+      MIN(conversations.id) AS "id", 
+      conversations."bridge_id", 
+      MAX(conversations."updatedAt") AS "updatedAt" 
+    FROM 
+      conversations 
+    LEFT JOIN 
+      raw_data 
+      ON conversations.message_id = raw_data.message_id 
+    WHERE 
+      conversations."bridge_id" = :bridge_id 
+      AND conversations."org_id" = :org_id 
+  `;
+
+  // Dynamically adding filters to the WHERE clause
+  if (startTimestamp && endTimestamp) {
+    query += `AND conversations."updatedAt" BETWEEN :startTimestamp AND :endTimestamp `;
   }
 
-  // Define the common attributes to select
-  const attributes = keyword_search
-    ? [
-        'thread_id',
-        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
-        'bridge_id',
-        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
-        'message',
-        'message_id',
-      ]
-    : [
-        'thread_id',
-        [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
-        'bridge_id',
-        [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
-      ];
+  if (keyword_search) {
+    query += `AND (conversations.message LIKE :keyword_search OR raw_data.error LIKE :keyword_search OR conversations.thread_id LIKE :keyword_search) `;
+  }
 
-  // Execute the query
-  const threads = await models.pg.conversations.findAll({
-    attributes,
-    where: whereClause,
-    group: keyword_search
-      ? ['thread_id', 'bridge_id', 'message', 'message_id']
-      : ['thread_id', 'bridge_id'],
-    order: [
-      [Sequelize.col('updatedAt'), 'DESC'],
-      ['thread_id', 'ASC'],
-    ],
+  if (user_feedback && user_feedback !== "all") {
+    query += `AND conversations."user_feedback" = :user_feedback `;
+  }
+
+  if (error){
+    query += `AND raw_data.error != '' `;
+  }
+
+  // Add GROUP BY, ORDER BY, LIMIT, and OFFSET
+  query += `
+    GROUP BY 
+      conversations."thread_id", 
+      conversations."bridge_id" 
+    ORDER BY 
+      MAX(conversations."updatedAt") DESC, 
+      conversations."thread_id" ASC 
+    LIMIT :limit OFFSET :offset;
+  `;
+
+  // Define query parameters
+  const queryParams = {
+    bridge_id,
+    org_id,
     limit,
     offset: (pageNo - 1) * limit,
+    keyword_search: keyword_search ? `%${keyword_search}%` : undefined,
+    startTimestamp: startTimestamp ? new Date(startTimestamp) : undefined,
+    endTimestamp: endTimestamp ? new Date(endTimestamp) : undefined,
+    user_feedback: user_feedback || undefined,
+  };
+
+  // Execute the raw SQL query using Sequelize
+  const threads = await models.pg.sequelize.query(query, {
+    replacements: queryParams,
+    type: Sequelize.QueryTypes.SELECT,
   });
 
-
-
+  // Map the raw query result into the desired format
   const uniqueThreads = new Map();
 
   threads.forEach(thread => {
-    let matchedField = null;
+    const uniqueKey = `${thread.bridge_id}-${thread.thread_id}`;
 
-    if (thread.message && thread.message.includes(keyword_search)) {
-        matchedField = 'message';
-    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
-        matchedField = 'message_id';
-    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
-        matchedField = 'thread_id';
-    } else {
-        matchedField = 'thread_id';
-    }
+    // Create the response object
+    const response = {
+      thread_id: thread.thread_id,
+      id: thread.id,
+      bridge_id: thread.bridge_id,
+      updatedAt: thread.updatedAt,
+    };
 
-    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
-    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
-
-    // Only add unique entries for `thread_id`, allow duplicates otherwise
-    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
-      // Create the response object
-      const response = {
-        thread_id: thread.thread_id,
-        id: thread.id,
-        bridge_id: thread.bridge_id,
-        matchedField
-      };
-      // Include additional fields only if matchedField is not 'thread_id'
-      if (matchedField !== 'thread_id' ) {
-        if (!response.message) {
-            response.message = [];  
-        }
-        // Push an object containing the message and message_id to the message array
-        response.message.push({
-            message: thread.message,
-            message_id: thread.message_id
-        });
-    }
-
-      // Store unique entry if `matchedField` is 'thread_id', otherwise allow duplicates
-      if (matchedField === 'thread_id') {
-        uniqueThreads.set(thread.thread_id, response);
-      }
-      else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
-        // Retrieve the existing thread object from the map
-        const existingThread = uniqueThreads.get(thread.thread_id);
-    
-        // Check if 'message' is present or exists in the existing thread
-        if (existingThread && existingThread.message) {
-            // If message exists, push the new message to the array
-            existingThread.message.push({
-                message: thread.message,
-                message_id: thread.message_id
-            });
-        } else {            
-            // Optionally, initialize the message array if needed
-            uniqueThreads.set(thread.thread_id, {
-                ...existingThread,
-                message: [{
-                    message: thread.message,
-                    message_id: thread.message_id
-                }]
-            });
-        }
-    }
-       else {
-        uniqueThreads.set(`${thread.thread_id}`, response);
-      }
+    // Only store unique thread entries
+    if (!uniqueThreads.has(uniqueKey)) {
+      uniqueThreads.set(uniqueKey, response);
     }
   });
 
-  // Convert the Map values to an array
+  // Convert the Map values to an array and return the result
   return Array.from(uniqueThreads.values());
 }
+
+
 
 
 
@@ -494,8 +504,227 @@ const getSubThreads = async (org_id,thread_id) =>{
     return await Thread.find({ org_id, thread_id });
 }
 
+async function sortThreadsByHits(threads) {
+  // Create a map to store the latest createdAt for each sub_thread_id
+  const latestSubThreadMap = new Map();
+  // Loop through each thread to find the latest createdAt for each sub_thread_id
+  for (const thread of threads) {
+    const { sub_thread_id } = thread;
+    if (sub_thread_id) {
+      const latestEntry = await models.pg.conversations.findOne({
+        attributes: ['createdAt'],
+        where: { sub_thread_id },
+        order: [['createdAt', 'DESC']],
+        limit: 1,
+        raw: true
+      });
 
+      if (latestEntry) {
+        latestSubThreadMap.set(sub_thread_id, latestEntry.createdAt);
+      }
+    }
+  }
+  // Sort the threads based on the latest createdAt of their sub_thread_id
+  threads.sort((a, b) => {
+    const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
+    const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
+    return dateB - dateA; // Sort in descending order
+  });
 
+  return threads;
+}
+
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
+  try {
+    const offset = (page - 1) * pageSize;
+    let pageNo = 1;
+    let userData = await findInCache(`user_data_${org_id}`);
+    userData = !userData?.length ? await (async () => {
+      let allUserData = [];
+      let hasMoreData = true;
+
+      while (hasMoreData) {
+        const response = await getUsers(org_id, pageNo, pageSize = 50)
+        allUserData = [...allUserData, ...response['data']];
+        hasMoreData = response?.totalEntityCount < allUserData;
+        pageNo++;
+      }
+      await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
+      return allUserData;
+    })() : JSON.parse(userData);
+
+    const history = await models.pg.user_bridge_config_history.findAll({
+      where: {
+        org_id: org_id,
+        version_id: version_id
+      },
+      attributes: ['id', 'user_id', 'org_id', 'bridge_id', 'type', 'time', 'version_id'],
+      order: [
+        ['time', 'DESC'],
+      ],
+      offset: offset,
+      limit: pageSize
+    });
+
+    if (history.length === 0) {
+      return { success: false, message: "No updates found" };
+    }
+
+    const updatedHistory = history?.map(entry => {
+      const user = Array.isArray(userData) ? userData.find(user => user?.id === entry?.dataValues?.user_id) : null;
+      return {
+        ...entry?.dataValues,
+        user_name: user ? user?.name : 'Unknown'
+      };
+    });
+
+    return { success: true, updates: updatedHistory };
+  } catch (error) {
+    console.error("Error fetching user updates:", error);
+    return { success: false, message: "Error fetching updates" };
+  }
+}
+
+async function getAllDatafromPg(hours = 48) {
+  try {
+    // determine window start based on input hours (24 or 48)
+    const windowStart = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+    // fetch active bridges within the window
+    const activeBridgeRecords = await models.pg.conversations.findAll({
+      attributes: ['bridge_id', 'org_id'],
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
+      group: ['bridge_id', 'org_id'],
+      raw: true
+    });
+
+    // fetch positive/negative feedback counts within the window
+    const BridgePositiveNegativeCount = await models.pg.conversations.findAll({
+      attributes: [
+        'bridge_id',
+        'org_id',
+        [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN user_feedback = 1 THEN 1 ELSE 0 END`)), 'positive_count'],
+        [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN user_feedback = 2 THEN 1 ELSE 0 END`)), 'negative_count']
+      ],
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
+      group: ['bridge_id', 'org_id'],
+      raw: true
+    });
+
+    // map bridge → org for later lookups
+    const bridgeOrgMap = new Map(activeBridgeRecords.map(r => [r.bridge_id, r.org_id]));
+    const activeBridges = activeBridgeRecords.map(r => ({
+      bridge_id: r.bridge_id,
+      org_id: r.org_id
+    }));
+
+    // fetch all messages in the window for hit counts
+    const recentMessages = await models.pg.conversations.findAll({
+      attributes: ['bridge_id', 'message_by', 'createdAt'],
+      where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
+      order: [['bridge_id', 'ASC'], ['createdAt', 'ASC']],
+      raw: true
+    });
+
+    // group messages by bridge_id
+    const hitBuffers = {};
+    recentMessages.forEach(msg => {
+      const bid = msg.bridge_id;
+      if (!hitBuffers[bid]) hitBuffers[bid] = [];
+      hitBuffers[bid].push(msg.message_by);
+    });
+
+    // compute hits per bridge (user→assistant or user→tools_call→assistant)
+    const hitsPerBridge = {};
+    for (const bid in hitBuffers) {
+      const seq = hitBuffers[bid];
+      let count = 0;
+      let i = 0;
+      while (i < seq.length) {
+        if (seq[i] === 'user') {
+          if (seq[i + 1] === 'assistant') {
+            count++;
+            i += 2;
+            continue;
+          }
+          if (seq[i + 1] === 'tools_call' && seq[i + 2] === 'assistant') {
+            count++;
+            i += 3;
+            continue;
+          }
+        }
+        i++;
+      }
+      hitsPerBridge[bid] = {
+        org_id: bridgeOrgMap.get(bid) || null,
+        hits: count
+      };
+    }
+
+    // overall average response time in window
+    const averageResponseTimeArr = await models.pg.raw_data.findAll({
+      attributes: [
+        [Sequelize.literal(
+          `AVG((latency->>'over_all_time')::float - (latency->>'model_execution_time')::float)`
+        ), 'average_response_time']
+      ],
+      where: { created_at: { [Sequelize.Op.gte]: windowStart } },
+      raw: true
+    });
+    const averageResponseTime = parseFloat(averageResponseTimeArr[0]?.average_response_time) || 0;
+
+    // per-bridge average response time in window
+    const rawRecords = await models.pg.raw_data.findAll({
+      attributes: ['message_id', 'latency'],
+      where: { created_at: { [Sequelize.Op.gte]: windowStart } },
+      raw: true
+    });
+    const convoRecords = await models.pg.conversations.findAll({
+      attributes: ['message_id', 'bridge_id'],
+      where: {
+        createdAt: { [Sequelize.Op.gte]: windowStart },
+        message_by: 'user'
+      },
+      raw: true
+    });
+
+    // map message_id → bridge_id
+    const messageBridgeMap = new Map(convoRecords.map(c => [c.message_id, c.bridge_id]));
+
+    // accumulate latency diffs per bridge
+    const tmp = {};
+    rawRecords.forEach(r => {
+      const bid = messageBridgeMap.get(r.message_id);
+      if (!bid) return;
+      const totalTime = parseFloat(r.latency.over_all_time);
+      const execTime = parseFloat(r.latency.model_execution_time);
+      const diff = totalTime - execTime;
+      if (!tmp[bid]) tmp[bid] = { sum: 0, count: 0 };
+      tmp[bid].sum += diff;
+      tmp[bid].count++;
+    });
+
+    const averageResponseTimePerBridge = {};
+    for (const bid in tmp) {
+      const avg = tmp[bid].count > 0 ? tmp[bid].sum / tmp[bid].count : 0;
+      averageResponseTimePerBridge[bid] = {
+        org_id: bridgeOrgMap.get(bid) || null,
+        average_response_time: avg
+      };
+    }
+
+    return {
+      activeBridges,
+      hitsPerBridge,
+      averageResponseTime,
+      averageResponseTimePerBridge,
+      BridgePositiveNegativeCount
+    };
+  } catch (error) {
+    console.error('getAllData error =>', error);
+    return { success: false, message: 'Error fetching active bridges' };
+  }
+}
 
 export default {
   findAllThreads,
@@ -512,5 +741,8 @@ export default {
   addThreadId,
   userFeedbackCounts,
   findThreadMessage,
-  getSubThreads
+  getSubThreads,
+  getUserUpdates,
+  sortThreadsByHits,
+  getAllDatafromPg,
 };
