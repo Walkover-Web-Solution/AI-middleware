@@ -726,6 +726,42 @@ async function getAllDatafromPg(hours = 48) {
   }
 }
 
+async function getSubThreadsByError(org_id, thread_id, bridge_id) {
+  try {
+    const result = await models.pg.conversations.findAll({
+      attributes: [
+        'sub_thread_id',
+        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('raw_data.created_at')), 'latest_error']
+      ],
+      include: [{
+        model: models.pg.raw_data,
+        as: 'raw_data',
+        required: true,
+        attributes: [],
+        where: {
+          error: {
+            [models.pg.Sequelize.Op.ne]: ''
+          }
+        }
+      }],
+      where: {
+        org_id,
+        thread_id,
+        bridge_id
+      },
+      group: ['sub_thread_id'],
+      order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
+      raw: true
+    });
+
+    return result.map(item => item.sub_thread_id);
+  } catch (error) {
+    console.error('getSubThreadsByError error =>', error);
+    return [];
+  }
+}
+  
+
 export default {
   findAllThreads,
   findMessageByMessageId,
@@ -745,4 +781,5 @@ export default {
   getUserUpdates,
   sortThreadsByHits,
   getAllDatafromPg,
+  getSubThreadsByError
 };
