@@ -5,6 +5,10 @@ const ConfigurationSchema = new mongoose.Schema({
         type : String,
         required : true
     },
+    specification : {
+      type : Object,
+      required : true
+    },
     model_name : {
         type : String,
         required : true
