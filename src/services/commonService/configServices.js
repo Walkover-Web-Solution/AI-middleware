@@ -407,9 +407,14 @@ const getThreadMessages = async(req,res,next)=>{
 
 const getAllSubThreadsController = async(req, res, next) => {
   const {thread_id}= req.params;
+  const {bridge_id, error} = req.query;
   const org_id = req.profile.org.id
-  const threads = await conversationDbService.getSubThreads(org_id, thread_id);
+  if(error){
+    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id);
+    return res.status(200).json({ sub_thread_ids: sub_thread_ids, success: true });
+  }
   // sort the threads accroing to their hits in PG.
+  const threads = await conversationDbService.getSubThreads(org_id, thread_id);
   const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };
   req.statusCode = 200;
