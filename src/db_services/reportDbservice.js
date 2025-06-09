@@ -217,4 +217,119 @@ async function get_data_from_pg(org_ids) {
   return results;
 }
 
-export default get_data_from_pg;
+async function get_data_for_daily_report(org_ids) {
+  const results = [];
+  
+  // Get today's date and yesterday's date for daily report
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  
+  // Set time to beginning and end of yesterday
+  yesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999);
+  
+  // Prepare date filter for yesterday
+  const dateFilter = {
+    [Op.gte]: yesterday,
+    [Op.lte]: endOfYesterday,
+  };
+  
+  for (let org_id of org_ids) {
+    org_id = org_id.toString();
+    
+    // Fetch conversations and raw data for yesterday
+    const [conversations, rawData] = await Promise.all([
+      // Fetch conversations
+      models.pg.conversations.findAll({
+        where: {
+          org_id,
+          createdAt: dateFilter
+        },
+        attributes: [
+          'bridge_id',
+          'message_id'
+        ]
+      }),
+      
+      // Fetch rawData
+      models.pg.raw_data.findAll({
+        where: {
+          org_id,
+          created_at: dateFilter
+        },
+        attributes: [
+          'message_id',
+          'error'
+        ]
+      })
+    ]);
+    
+    // Create a map of message_id to raw_data for quick lookup
+    const rawDataMap = new Map();
+    for (const r of rawData) {
+      rawDataMap.set(r.message_id, r);
+    }
+    
+    // Create a map to track error counts by bridge_id
+    const bridgeErrorCounts = new Map();
+    
+    // Process each conversation to count errors by bridge
+    for (const conversation of conversations) {
+      const { bridge_id, message_id } = conversation;
+      
+      if (!bridge_id) continue;
+      
+      // Initialize bridge in map if not exists
+      if (!bridgeErrorCounts.has(bridge_id)) {
+        bridgeErrorCounts.set(bridge_id, { 
+          errorCount: 0,
+          totalCount: 0
+        });
+      }
+      
+      // Increment total count for this bridge
+      const bridgeData = bridgeErrorCounts.get(bridge_id);
+      bridgeData.totalCount++;
+      
+      // Check if there was an error for this message
+      const rawDataEntry = rawDataMap.get(message_id);
+      if (rawDataEntry && rawDataEntry.error && rawDataEntry.error.trim() !== '') {
+        bridgeData.errorCount++;
+      }
+    }
+    
+    // Convert the map to an array of objects with bridge names
+    const bridgeErrorReport = [];
+    for (const [bridgeId, data] of bridgeErrorCounts.entries()) {
+      // Get bridge name from MongoDB
+      const bridgeName = await configurationService.getBridgeNameById(bridgeId, org_id);
+      
+      bridgeErrorReport.push({
+        bridge_id: bridgeId,
+        bridge_name: bridgeName || 'Unknown Bridge',
+        error_count: data.errorCount,
+        total_count: data.totalCount,
+        error_rate: data.totalCount > 0 ? (data.errorCount / data.totalCount * 100).toFixed(2) + '%' : '0%'
+      });
+    }
+    
+    // Sort by error count in descending order
+    bridgeErrorReport.sort((a, b) => b.error_count - a.error_count);
+    
+    // Create the final JSON for this org_id
+    const orgData = {
+      [org_id]: {
+        date: yesterday.toISOString().split('T')[0],
+        bridge_error_report: bridgeErrorReport
+      }
+    };
+    
+    results.push(orgData);
+  }
+  
+  return results;
+}
+
+export { get_data_for_daily_report, get_data_from_pg };
