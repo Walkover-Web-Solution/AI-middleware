@@ -69,6 +69,20 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
       data: chats?.conversations,
     };
 };
+
+const getAllThreadsUsingKeywordSearch = async ({ bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error }) => {
+  try {
+    const chats = await chatbotDbService.findAllThreadsUsingKeywordSearch(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
+    return { success: true, data: chats };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: err.message
+    };
+  }
+}
+
 export {
   getAllThreads,
   getThread,
@@ -76,5 +90,6 @@ export {
   getChatData,
   createThreadHistory,
   getThreadHistoryByMessageId,
-  getThreadMessageHistory
+  getThreadMessageHistory,
+  getAllThreadsUsingKeywordSearch
 };

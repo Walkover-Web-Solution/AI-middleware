@@ -275,6 +275,241 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   return Array.from(uniqueThreads.values());
 }
 
+async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search) {
+  const whereClause = {
+    bridge_id,
+    org_id,
+  };
+
+  // Handle the keyword search filter
+  if (keyword_search) {
+    whereClause[Sequelize.Op.and] = [
+      {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+        ],
+      },
+    ];
+  }
+
+  // Define the common attributes to select
+  const attributes = [
+    'thread_id',
+    [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+    'bridge_id',
+    [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+    'message',
+    'message_id',
+    'sub_thread_id',
+  ]
+
+
+  // Execute the query
+  const threads = await models.pg.conversations.findAll({
+    attributes,
+    where: whereClause,
+    group: ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id'],
+    order: [
+      [Sequelize.col('updatedAt'), 'DESC'],
+      ['thread_id', 'ASC'],
+    ],
+  });
+
+  const uniqueThreads = new Map();
+
+  threads.forEach(thread => {
+    let matchedField = null;
+
+    // Determine which field matched the search
+    if (thread.message && thread.message.includes(keyword_search)) {
+      matchedField = 'message';
+    } else if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
+      matchedField = 'message_id';
+    } else if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+      matchedField = 'thread_id';
+    } else if (thread.sub_thread_id && thread.sub_thread_id.toString().includes(keyword_search)) {
+      matchedField = 'sub_thread_id';
+    } else {
+      matchedField = 'thread_id';
+    }
+
+    // Additional check: if message contains sub_thread_id, also treat as sub_thread match
+    const isMessageContainsSubThreadId = thread.message && thread.sub_thread_id && thread.message.includes(thread.sub_thread_id.toString());
+
+    // If message contains sub_thread_id, prioritize sub_thread_id match
+    if (isMessageContainsSubThreadId && matchedField === 'message') {
+      matchedField = 'sub_thread_id';
+    }
+
+    // Define the key based on `bridge_id` and `thread_id` to ensure uniqueness only for `thread_id` matches
+    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
+
+    // Only add unique entries for `thread_id`, allow duplicates otherwise
+    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
+      // Create the response object
+      const response = {
+        thread_id: thread.thread_id,
+        id: thread.id,
+        bridge_id: thread.bridge_id,
+        matchedField
+      };
+
+      // Handle different matchedField cases
+      if (matchedField === 'message' || matchedField === 'message_id') {
+        // Check if message comes from a subthread or main thread
+        if (thread.sub_thread_id) {
+          // Message comes from subthread - add to sub_thread array
+          if (!response.sub_thread) {
+            response.sub_thread = [];
+          }
+          response.sub_thread.push({
+            sub_thread_id: thread.sub_thread_id,
+            messages: [{
+              message: thread.message,
+              message_id: thread.message_id
+            }]
+          });
+        } else {
+          // Message comes from main thread only - add to message array
+          if (!response.message) {
+            response.message = [];
+          }
+          response.message.push({
+            message: thread.message,
+            message_id: thread.message_id
+          });
+        }
+      } else if (matchedField === 'sub_thread_id') {
+        // For sub_thread_id matches, create sub_thread array
+        if (!response.sub_thread) {
+          response.sub_thread = [];
+        }
+        response.sub_thread.push({
+          sub_thread_id: thread.sub_thread_id,
+          messages: [{
+            message: thread.message,
+            message_id: thread.message_id
+          }]
+        });
+      }
+
+      // Store unique entry if `matchedField` is 'thread_id', otherwise handle duplicates
+      if (matchedField === 'thread_id') {
+        uniqueThreads.set(thread.thread_id, response);
+      } else if (matchedField !== 'thread_id' && uniqueThreads.has(thread.thread_id)) {
+        // Retrieve the existing thread object from the map
+        const existingThread = uniqueThreads.get(thread.thread_id);
+
+        if (matchedField === 'message' || matchedField === 'message_id') {
+          // Handle message array for existing thread
+          if (thread.sub_thread_id) {
+            // Message comes from subthread - add to sub_thread array
+            if (existingThread && existingThread.sub_thread) {
+              // Check if sub_thread_id already exists in the array
+              const existingSubThread = existingThread.sub_thread.find(st => st.sub_thread_id === thread.sub_thread_id);
+
+              if (existingSubThread) {
+                // Add message to existing sub_thread_id's messages array
+                existingSubThread.messages.push({
+                  message: thread.message,
+                  message_id: thread.message_id
+                });
+              } else {
+                // Create new sub_thread entry
+                existingThread.sub_thread.push({
+                  sub_thread_id: thread.sub_thread_id,
+                  messages: [{
+                    message: thread.message,
+                    message_id: thread.message_id
+                  }]
+                });
+              }
+            } else {
+              uniqueThreads.set(thread.thread_id, {
+                ...existingThread,
+                sub_thread: [{
+                  sub_thread_id: thread.sub_thread_id,
+                  messages: [{
+                    message: thread.message,
+                    message_id: thread.message_id
+                  }]
+                }]
+              });
+            }
+          } else {
+            // Message comes from main thread only - add to message array
+            if (existingThread && existingThread.message) {
+              existingThread.message.push({
+                message: thread.message,
+                message_id: thread.message_id
+              });
+            } else {
+              uniqueThreads.set(thread.thread_id, {
+                ...existingThread,
+                message: [{
+                  message: thread.message,
+                  message_id: thread.message_id
+                }]
+              });
+            }
+          }
+        } else if (matchedField === 'sub_thread_id') {
+          // Handle sub_thread array for existing thread
+          if (existingThread && existingThread.sub_thread) {
+            // Check if sub_thread_id already exists in the array
+            const existingSubThread = existingThread.sub_thread.find(st => st.sub_thread_id === thread.sub_thread_id);
+
+            if (existingSubThread) {
+              // Add message to existing sub_thread_id's messages array
+              existingSubThread.messages.push({
+                message: thread.message,
+                message_id: thread.message_id
+              });
+            } else {
+              // Create new sub_thread entry
+              existingThread.sub_thread.push({
+                sub_thread_id: thread.sub_thread_id,
+                messages: [{
+                  message: thread.message,
+                  message_id: thread.message_id
+                }]
+              });
+            }
+          } else {
+            uniqueThreads.set(thread.thread_id, {
+              ...existingThread,
+              sub_thread: [{
+                sub_thread_id: thread.sub_thread_id,
+                messages: [{
+                  message: thread.message,
+                  message_id: thread.message_id
+                }]
+              }]
+            });
+          }
+        }
+      } else {
+        uniqueThreads.set(`${thread.thread_id}`, response);
+      }
+    }
+  });
+
+  // Convert the Map values to an array
+  return Array.from(uniqueThreads.values());
+}
+
 
 
 
@@ -781,5 +1016,6 @@ export default {
   getUserUpdates,
   sortThreadsByHits,
   getAllDatafromPg,
-  getSubThreadsByError
+  getSubThreadsByError,
+  findAllThreadsUsingKeywordSearch
 };
