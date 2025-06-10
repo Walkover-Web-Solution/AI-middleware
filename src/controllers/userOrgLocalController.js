@@ -31,18 +31,13 @@ const switchUserOrgLocal = async (req, res) => {
 const updateUserDetails = async (req, res) => {
     const PUBLIC_REFERENCEID = process.env.PROXY_USER_REFERENCE_ID;
     const { company_id, company, user_id, user } = req.body;
-
-    // Validate required fields based on type
-    if ((company_id && !company) || (user_id && !user)) {
-        return res.status(400).json({ message: "Both ID and data are required for either company or user update" });
-    }
-
+    
     // Determine the type of update
     const isCompanyUpdate = company_id && company;
     const isUserUpdate = user_id && user;
 
     if (!isCompanyUpdate && !isUserUpdate) {
-        return res.status(400).json({ message: "Please provide either company_id with company data or user_id with user data" });
+        return res.status(400).json({ message: "Please provide both ID and data for either company or user update" });
     }
 
     // Prepare update object based on type
