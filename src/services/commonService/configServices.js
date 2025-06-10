@@ -1,5 +1,5 @@
 
-import { createThreadHistory, getAllThreads, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
@@ -71,7 +71,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback, error);
+    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
