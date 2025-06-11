@@ -56,17 +56,15 @@ const verify_auth_token_controller = async (req, res) => {
 
         const refreshToken = jwt.sign(
             { ...data },
-            process.env.SecretKey,
-            { expiresIn: '3d' }
+            process.env.SecretKey
         );
+
         
         return res.status(200).json({ 
             success: true, 
             message: "Auth token verified successfully",
             access_token: accessToken,
-            refresh_token: refreshToken,
-            token_type: 'Bearer',
-            expires_in: 259200 // 3 days in seconds
+            refresh_token: refreshToken
         });
     } catch (e) {
         return res.status(400).json({ 
@@ -78,8 +76,48 @@ const verify_auth_token_controller = async (req, res) => {
 
 
 
+const refresh_token_controller = async (req, res) => {
+    try {
+        const { refresh_token } = req.body;
+
+        if (!refresh_token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Refresh token is required'
+            });
+        }
+
+        try {
+            const decoded = jwt.verify(refresh_token, process.env.SecretKey);
+            
+            const accessToken = await createProxyToken({
+                company_id: decoded.company_id,
+                user_id: decoded.user_id
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Access token refreshed successfully',
+                access_token: accessToken
+            });
+
+        } catch (tokenError) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired refresh token'
+            });
+        }
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: `Error refreshing access token: ${e.message}`
+        });
+    }
+};
+
 export {
     CreateAuthToken,
     save_auth_token_in_db_controller,
-    verify_auth_token_controller
+    verify_auth_token_controller,
+    refresh_token_controller
 }
