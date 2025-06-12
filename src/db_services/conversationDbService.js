@@ -286,9 +286,6 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     whereClause[Sequelize.Op.and] = [
       {
         [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.cast(Sequelize.col('function'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
           { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
           Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
             [Sequelize.Op.like]: `%${keyword_search}%`,
