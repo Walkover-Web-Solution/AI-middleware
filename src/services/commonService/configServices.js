@@ -408,9 +408,10 @@ const getThreadMessages = async(req,res,next)=>{
 const getAllSubThreadsController = async(req, res, next) => {
   const {thread_id}= req.params;
   const {bridge_id, error} = req.query;
+  const isError = error === "false" ? false : true;
   const org_id = req.profile.org.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id);
-  if(error){
+  if(isError){
     const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id);
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
