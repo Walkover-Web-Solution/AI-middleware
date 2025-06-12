@@ -43,6 +43,10 @@ const ragParentDataSchema = new mongoose.Schema({
         scriptId: {
           type: String, 
           required: false
+        }, 
+        fileId: {
+          type: String, 
+          required: false
         }
       },
       { _id: false } // Prevents automatic _id generation for subdocument
@@ -69,6 +73,15 @@ const ragParentDataSchema = new mongoose.Schema({
   created_at : {
     type: Date,
     default: Date.now
+  }, 
+  metadata: {
+    type: Object,
+    default: {}
+  }, 
+  refreshedAt: {
+    type: Date, 
+    required: false, 
+    default: null
   }
 });
 

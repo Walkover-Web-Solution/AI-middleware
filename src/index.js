@@ -19,6 +19,7 @@ import config from "../config/config.js";
 import chatbot from "./routes/chatBot_routes.js";
 import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
+import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
@@ -75,7 +76,10 @@ app.use('/Template',templateRoute)
 app.use(responseMiddleware); // send response
 app.use(notFoundMiddleware); // added at the last, so that it runs after all routes is being checked
 app.use(errorHandlerMiddleware);
-app.listen(PORT, () => {
 
+
+initializeMonthlyLatencyReport();
+
+app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
