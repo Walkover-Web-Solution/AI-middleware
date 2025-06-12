@@ -29,17 +29,21 @@ const switchUserOrgLocal = async (req, res) => {
 }
 
 const updateUserDetails = async (req, res) => {
-    const PUBLIC_REFERENCEID = req.headers?.['reference-id'];
-    const { company_id, company } = req.body;
+    const PUBLIC_REFERENCEID = process.env.PROXY_USER_REFERENCE_ID;
+    const { company_id, company, user_id, user } = req.body;
+    
+    // Determine the type of update
+    const isCompanyUpdate = company_id && company;
+    const isUserUpdate = user_id && user;
 
-    if (!company_id || !company) {
-        return res.status(400).json({ message: "company_id and company are required." });
+    if (!isCompanyUpdate && !isUserUpdate) {
+        return res.status(400).json({ message: "Please provide both ID and data for either company or user update" });
     }
 
-    const updateObject = {
-        company_id,
-        company : {"meta":company?.meta}
-    };
+    // Prepare update object based on type
+    const updateObject = isCompanyUpdate
+        ? { company_id, company: { "meta": company?.meta } }
+        : { user_id, Cuser: { "meta": user?.meta } };
 
     try {
         const apiUrl = `https://routes.msg91.com/api/${PUBLIC_REFERENCEID}/updateDetails`;
@@ -50,11 +54,21 @@ const updateUserDetails = async (req, res) => {
             }
         });
         const data = response.data;
-        res.status(200).json({ message: "User details updated successfully", data });
-        await storeInCache(company_id, data?.data?.company)
+
+        // Cache based on type
+        if (isCompanyUpdate) {
+            await storeInCache(company_id, data?.data?.company);
+        } else {
+            await storeInCache(user_id, data?.data?.user);
+        }
+
+        res.status(200).json({
+            message: isCompanyUpdate ? "Company details updated successfully" : "User details updated successfully",
+            data
+        });
 
     } catch (error) {
-        console.error("Error updating user details:", error);
+        console.error("Error updating details:", error);
         res.status(404).json({ message: "Something went wrong" });
     }
 };
