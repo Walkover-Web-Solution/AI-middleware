@@ -69,6 +69,7 @@ app.use('/testcases',testcaseRoutes);
 app.use('/report',reportRoute);
 app.use('/modelConfiguration',ModelsConfigRoutes);
 app.use('/Template',templateRoute)
+app.use('/auth', AuthRouter)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
