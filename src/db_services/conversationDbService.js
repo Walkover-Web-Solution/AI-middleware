@@ -3,6 +3,7 @@ import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
 import { findInCache, storeInCache } from "../cache_service/index.js";
 import { getUsers } from "../services/proxyService.js";
+import { getDisplayName } from "../services/threadService.js";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -324,9 +325,34 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     ],
   });
 
+  // Create a map to store unique threads by their thread_id and sub_thread_id combination
+  const uniqueThreadMap = new Map();
+  
+  // Process each thread to identify unique combinations
+  for (const thread of threads) {
+    const key = `${thread.thread_id}_${thread.sub_thread_id || thread.thread_id}`;
+    if (!uniqueThreadMap.has(key)) {
+      uniqueThreadMap.set(key, thread);
+    }
+  }
+
+  // Get display names for all threads and format the response
+  const threadsWithDisplayNames = await Promise.all(
+    Array.from(uniqueThreadMap.values()).map(async (thread) => {
+      const displayName = await getDisplayName(thread.sub_thread_id);
+      return {
+        thread_id: thread.thread_id,
+        sub_thread_id: thread.sub_thread_id,
+        display_name: displayName || thread.sub_thread_id || thread.thread_id
+      };
+    })
+  );
+
+
+
   const uniqueThreads = new Map();
 
-  threads.forEach(thread => {
+  threads.forEach(async thread => {
     let matchedField = null;
 
     // Determine which field matched the search
@@ -419,6 +445,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
 
               if (existingSubThread) {
                 // Add message to existing sub_thread_id's messages array
+
                 existingSubThread.messages.push({
                   message: thread.message,
                   message_id: thread.message_id
@@ -427,6 +454,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
                 // Create new sub_thread entry
                 existingThread.sub_thread.push({
                   sub_thread_id: thread.sub_thread_id,
+                  display_name: threadsWithDisplayNames.find(t => t.sub_thread_id === thread.sub_thread_id)?.display_name,
                   messages: [{
                     message: thread.message,
                     message_id: thread.message_id
@@ -438,6 +466,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
                 ...existingThread,
                 sub_thread: [{
                   sub_thread_id: thread.sub_thread_id,
+                  display_name: threadsWithDisplayNames.find(t => t.sub_thread_id === thread.sub_thread_id)?.display_name,
                   messages: [{
                     message: thread.message,
                     message_id: thread.message_id
@@ -478,6 +507,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
               // Create new sub_thread entry
               existingThread.sub_thread.push({
                 sub_thread_id: thread.sub_thread_id,
+                display_name: threadsWithDisplayNames.find(t => t.sub_thread_id === thread.sub_thread_id)?.display_name,
                 messages: [{
                   message: thread.message,
                   message_id: thread.message_id
@@ -489,6 +519,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
               ...existingThread,
               sub_thread: [{
                 sub_thread_id: thread.sub_thread_id,
+                display_name: threadsWithDisplayNames.find(t => t.sub_thread_id === thread.sub_thread_id)?.display_name,
                 messages: [{
                   message: thread.message,
                   message_id: thread.message_id
@@ -504,7 +535,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
   });
 
   // Convert the Map values to an array
-  return Array.from(uniqueThreads.values());
+   return Array.from(uniqueThreads.values());
 }
 
 
