@@ -7,6 +7,7 @@ export class WebLoader {
     async getContent(url, options) {
         const loader = new PuppeteerWebBaseLoader(url, {
             launchOptions: {
+                timeout: 0,
                 headless: true,
                 args: ['--no-sandbox']
             },
