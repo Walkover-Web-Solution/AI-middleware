@@ -13,7 +13,7 @@ export class WebLoader {
                 // executablePath: '/path/to/your/chromium', 
             },
             gotoOptions: {
-                waitUntil: 'load',
+                waitUntil: 'domcontentloaded',
                 timeout: 60000, // Ensure that loading the page takes no more than 60 seconds
             }
         });
