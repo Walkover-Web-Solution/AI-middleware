@@ -1,10 +1,10 @@
 import express from "express";
-import {getWeeklyreports} from "../controllers/reportController.js";
+import {getWeeklyreports, getDailyreports} from "../controllers/reportController.js";
 
 
 let router = express.Router();
 
 router.post('/monthly', getWeeklyreports);
-
+router.post('/daily', getDailyreports);
 
 export default router;

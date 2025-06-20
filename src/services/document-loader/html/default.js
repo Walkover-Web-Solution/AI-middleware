@@ -6,6 +6,7 @@ export class WebLoader {
         // Puppeteer loader initialization with increased timeout and added options
         const loader = new PuppeteerWebBaseLoader(url, {
             launchOptions: {
+                timeout: 0,
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox'],
                 timeout: 60000, // Increase timeout to 60 seconds
