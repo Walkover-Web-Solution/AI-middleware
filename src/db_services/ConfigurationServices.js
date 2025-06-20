@@ -182,7 +182,7 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
 
     if (!hello_id) return false; 
 
-    return {hello_id ,modelConfig:model, apikey_object_id};
+    return {hello_id ,modelConfig:model, apikey_object_id, service: hello_id.service};
   } catch (error) {
     console.log("error:", error);
     return {
