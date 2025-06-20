@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:20
+FROM node:23
 
 EXPOSE 7072
 WORKDIR /app
