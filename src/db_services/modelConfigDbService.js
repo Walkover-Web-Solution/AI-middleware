@@ -17,10 +17,16 @@ async function saveModelConfig(modelConfigData) {
     return { id: result._id.toString(), ...modelConfigData };
 }
 
+async function deleteModelConfig(model_name, service) {
+    const result = await ModelsConfigModel.findOneAndDelete({ model_name, service });
+    return result;
+}
+
 
 export default {
     getAllModelConfigs,
     saveModelConfig,
-    getAllModelConfigsForService
+    getAllModelConfigsForService,
+    deleteModelConfig
 }
 
