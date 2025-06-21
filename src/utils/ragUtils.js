@@ -1,7 +1,7 @@
 import axios from 'axios';
 import csvParser from 'csv-parser';
 import { sendAlert } from '../services/utils/utilityService.js';
-
+import jwt from 'jsonwebtoken';
 
 export function getFileFormatByUrl(url) {
     const formats = [
@@ -147,4 +147,9 @@ export default async function getChunksByAi(text, chunk_size, chunk_overlap) {
         console.error("Error Getting chunks", err);
         throw err;
     }
+}
+
+export const genrateToken = async (orgId) => {
+    const token = await jwt.sign({ org_id: process.env.RAG_EMBED_ORG_ID, "project_id": process.env.RAG_EMBED_PROJECT_ID, "user_id": orgId }, process.env.RAG_EMBED_SECRET_KEY);
+    return token
 }
