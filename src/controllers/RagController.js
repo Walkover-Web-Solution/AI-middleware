@@ -3,7 +3,7 @@ import embeddings from '../services/langchainOpenai.js';
 import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
-
+import { genrateToken } from '../utils/ragUtils.js';
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
 export const GetAllDocuments = async (req, res, next) => {
@@ -147,3 +147,14 @@ export const refreshDoc = async (req, res, next) => {
     return next();
 };
 
+export const getEmebedToken = async (req, res, next) => {
+    const embed = req.Embed;
+    const orgId = embed ? embed.org_id : req.profile.org.id;
+    const token = await genrateToken(orgId);
+    res.locals = {
+        "success": true,
+        "token": token
+    }
+    req.statusCode = 200;
+    return next();
+};
