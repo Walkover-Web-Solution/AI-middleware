@@ -55,6 +55,7 @@ async function processMsg(message, channel) {
                 break;
             case 'load':
                 const loader = new DocumentLoader();
+                console.log("data.url", data.url);
                 const content = await loader.getContent(data.url, {fileId: ragData.source?.fileId});
                 await processContent(content, ragData, resourceId);
                 pipelineStatus = "loaded";
