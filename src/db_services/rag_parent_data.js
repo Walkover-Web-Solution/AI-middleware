@@ -49,6 +49,11 @@ async function updateDocumentsByQuery(query, data){
 async function deleteDocumentById(docId) {
     return await ragParentDataModel.findOneAndDelete({_id:docId});
 }
+
+async function deleteDocumentsByQuery(query) {
+    return await ragParentDataModel.deleteMany(query);
+}
+
 async function updateDocumentData(id , data) {
     return await ragParentDataModel.findOneAndUpdate({
         _id: id
@@ -71,5 +76,6 @@ export default{
     insertMany, 
     getDocumentsByQuery, 
     updateDocumentsByQuery,
-    updateDocumentByQuery
+    updateDocumentByQuery, 
+    deleteDocumentsByQuery
 }
