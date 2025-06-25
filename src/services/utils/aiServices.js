@@ -78,8 +78,39 @@ async function callGroqApi(apiKey) {
     }
 }
 
-  export {
-    callOpenAIModelsApi,
-    callAnthropicApi,
-    callGroqApi
+async function callOpenRouterApi(apiKey) {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek/deepseek-chat-v3-0324:free',
+        messages: [
+          {
+            role: 'user',
+            content: 'hii'
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
+}
+
+export {
+  callOpenAIModelsApi,
+  callAnthropicApi,
+  callGroqApi,
+  callOpenRouterApi
+}

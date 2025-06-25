@@ -11,102 +11,56 @@ const ConfigurationSchema = new mongoose.Schema({
     },
     configuration: {
       model: {
-        field: { type: String },
-        default: { type: String },
-        level: { type: Number }
+        type: { field: { type: String }, level: { type: Number },  default: { type: String } },
+        default: undefined, _id: false
       },
       creativity_level: {
-        field: { type: String },
-        min: { type: Number },
-        max: { type: Number },
-        step: { type: Number },
-        default: { type: Number },
-        level: { type: Number }
+        type: { field: { type: String }, min: { type: Number }, max: { type: Number }, step: { type: Number }, level: { type: Number },  default: { type: Number }, },
+        default: undefined, _id: false
       },
       max_tokens: {
-        field: { type: String },
-        min: { type: Number },
-        max: { type: Number },
-        step: { type: Number },
-        default: { type: Number },
-        level: { type: Number }
+        type: { field: { type: String }, min: { type: Number }, max: { type: Number }, step: { type: Number }, level: { type: Number },  default: { type: Number }, },
+        default: undefined, _id: false
       },
       probability_cutoff: {
-        field: { type: String },
-        min: { type: Number },
-        max: { type: Number },
-        step: { type: Number },
-        default: { type: Number },
-        level: { type: Number }
+        type: { field: { type: String }, min: { type: Number }, max: { type: Number }, step: { type: Number }, level: { type: Number },  default: { type: Number }, },
+        default: undefined, _id: false
       },
       log_probability: {
-        field: { type: String },
-        default: { type: Boolean },
-        level: { type: Number },
-        typeOf: { type: String }
+        type: { field: { type: String }, level: { type: Number }, typeOf: { type: String },  default: { type: Boolean } },
+        default: undefined, _id: false
       },
       repetition_penalty: {
-        field: { type: String },
-        min: { type: Number },
-        max: { type: Number },
-        step: { type: Number },
-        default: { type: Number },
-        level: { type: Number }
+        type: { field: { type: String }, min: { type: Number }, max: { type: Number }, step: { type: Number }, level: { type: Number },  default: { type: Number } },
+        default: undefined, _id: false
       },
       novelty_penalty: {
-        field: { type: String },
-        min: { type: Number },
-        max: { type: Number },
-        step: { type: Number },
-        default: { type: Number },
-        level: { type: Number }
+        type: { field: { type: String }, min: { type: Number }, max: { type: Number }, step: { type: Number }, level: { type: Number },  default: { type: Number } },
+        default: undefined, _id: false
       },
       response_count: {
-        field: { type: String },
-        default: { type: Number },
-        typeOf: { type: String },
-        level: { type: Number }
+        type: { field: { type: String }, typeOf: { type: String }, level: { type: Number },  default: { type: Number } },
+        default: undefined, _id: false
       },
       stop: {
-        field: { type: String },
-        default: { type: String },
-        level: { type: Number }
-      },
-      stream: {
-        field: { type: String },
-        default: { type: Boolean },
-        level: { type: Number },
-        typeOf: { type: String }
+        type: { field: { type: String }, level: { type: Number },  default: { type: String } },
+        default: undefined, _id: false
       },
       tools: {
-        field: { type: String },
-        level: { type: Number },
-        default: { type: Array },
-        typeOf: { type: String }
+        type: { field: { type: String }, level: { type: Number }, typeOf: { type: String },  default: { type: Array } },
+        default: undefined, _id: false
       },
       tool_choice: {
-        field: { type: String },
-        options: { type: Array },
-        default: { type: String },
-        level: { type: Number },
-        typeOf: { type: String }
+        type: { field: { type: String }, options: { type: Array }, level: { type: Number }, typeOf: { type: String },  default: { type: String } },
+        default: undefined, _id: false
       },
       response_type: {
-        field: { type: String },
-        options: { type: Array },
-        default: { type: Object },
-        level: { type: Number }
-      },
-      vision: {
-        support: { type: Boolean },
-        level: { type: Number },
-        default: { type: Boolean }
+        type: { field: { type: String }, options: { type: Array }, level: { type: Number },  default: { type: Object } },
+        default: undefined, _id: false
       },
       parallel_tool_calls: {
-        field: { type: String },
-        default: { type: Boolean },
-        level: { type: Number },
-        typeOf: { type: String }
+        type: { field: { type: String }, level: { type: Number }, typeOf: { type: String },  default: { type: Boolean } },
+        default: undefined, _id: false
       }
     },
     outputConfig: {
@@ -126,17 +80,21 @@ const ConfigurationSchema = new mongoose.Schema({
       message: { type: String },
       tools: { type: String },
       assistant: { type: String },
-      id: { type: String }
     },
-    inputConfig: {
-      system: {
-        role: { type: String },
-        content: { type: String },
-        contentKey: { type: String },
-        type: { type: String }
-      },
-      content_location: { type: String }
-    }
+    validationConfig: {
+      system_prompt: { type: Boolean },
+      type: { type: String },
+      vision: { type: Boolean },
+      tools: { type: Boolean },
+      specification: {
+        input_cost: { type: Number },
+        output_cost: { type: Number },
+        description: { type: String },
+        knowledge_cutoff: { type: String },
+        usecase: [{ type: String }]
+      }
+    },
+    status: { type: Number, default: 1}
   });
   
 ConfigurationSchema.index({ model_name: 1, service: 1 }, { unique: true });
