@@ -1,6 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import { generateIdentifier } from './utils/utilityService.js';
-import { getFileFormatByUrl } from '../utils/ragUtils.js';
+import { getFileFormat, getFileFormatByUrl } from '../utils/ragUtils.js';
 
 class BucketService {
     constructor() {
@@ -54,7 +54,7 @@ class BucketService {
 
             req.body.url = imageUrl;
             req.body.docType = "file";
-            req.body.fileFormat = req.file.mimetype.split("/")[1];
+            req.body.fileFormat = getFileFormat(req.file);
             return next()
     }
 }

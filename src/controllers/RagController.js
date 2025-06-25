@@ -102,7 +102,11 @@ export const delete_doc = async (req, res, next) => {
     // const userId = req.profile.user.id;
     const { id } = req.params;
     const result = await rag_parent_data.deleteDocumentById(id);
-    await queue.publishToQueue(QUEUE_NAME, { event: "delete", data: { resourceId: id, orgId } });
+    const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': id });
+    await rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': id });
+    for(const doc of [result, ...nestedDocs]){
+        await queue.publishToQueue(QUEUE_NAME, { event: "delete", data: { resourceId: doc._id.toString(), orgId } });
+    }
 
     res.locals = {
         "success": true,
