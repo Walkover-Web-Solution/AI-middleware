@@ -128,3 +128,22 @@ export const updateDoc = async (req, res, next) => {
     return next();
 };
 
+export const refreshDoc = async (req, res, next) => {
+    const { id : docId } = req.params;
+    const docData = await rag_parent_data.updateDocumentData(docId, { refreshedAt: new Date() });
+    res.locals = {
+        "success": true,
+        "message": `Document refreshed successfully`,
+        "data": docData
+    }
+    req.statusCode = 200;
+    await queue.publishToQueue(QUEUE_NAME, { 
+        event: 'load', 
+        data: {
+            url: docData.source.data.url, 
+            resourceId: docId
+        } 
+    });
+    return next();
+};
+
