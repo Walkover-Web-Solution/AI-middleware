@@ -5,6 +5,7 @@ import { findInCache, storeInCache } from "../cache_service/index.js";
 import { getUsers } from "../services/proxyService.js";
 import { getDisplayName } from "../services/threadService.js";
 
+
 async function getHistory(bridge_id, timestamp) {
   try {
     const history = await models.pg.system_prompt_versionings.findAll({
@@ -276,30 +277,42 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   return Array.from(uniqueThreads.values());
 }
 
-async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search) {
+async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search, version_id, startTimestamp, endTimestamp) {
   const whereClause = {
     bridge_id,
     org_id,
   };
 
-  // Handle the keyword search filter
+  // ✅ Filter by version_id if not "all"
+  if (version_id) {
+    whereClause.version_id = version_id;
+  }
+
+  // ✅ Filter by timestamp range using updatedAt
+  if (startTimestamp && endTimestamp) {
+    whereClause.updatedAt = {
+      [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
+    };
+  }
+
+  // ✅ Keyword search logic
   if (keyword_search) {
-    whereClause[Sequelize.Op.and] = [
-      {
-        [Sequelize.Op.or]: [
-          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
-          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-          Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
-            [Sequelize.Op.like]: `%${keyword_search}%`,
-          }),
-        ],
-      },
-    ];
+    if (!whereClause[Sequelize.Op.and]) whereClause[Sequelize.Op.and] = [];
+
+    whereClause[Sequelize.Op.and].push({
+      [Sequelize.Op.or]: [
+        { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+        Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+          [Sequelize.Op.like]: `%${keyword_search}%`,
+        }),
+        Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+          [Sequelize.Op.like]: `%${keyword_search}%`,
+        }),
+        Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
+          [Sequelize.Op.like]: `%${keyword_search}%`,
+        }),
+      ],
+    });
   }
 
   // Define the common attributes to select
@@ -311,6 +324,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     'message',
     'message_id',
     'sub_thread_id',
+    [Sequelize.fn('MAX', Sequelize.col('version_id')), 'version_id'],
   ];
 
   // Execute the query

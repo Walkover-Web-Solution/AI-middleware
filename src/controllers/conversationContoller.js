@@ -70,9 +70,9 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
     };
 };
 
-const getAllThreadsUsingKeywordSearch = async ({ bridge_id, org_id, keyword_search}) => {
+const getAllThreadsUsingKeywordSearch = async ({ bridge_id, org_id, keyword_search,version_id,startTimestamp,endTimestamp}) => {
   try {
-    const chats = await chatbotDbService.findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search);
+    const chats = await chatbotDbService.findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search,version_id,startTimestamp,endTimestamp);
     return { success: true, data: chats };
   } catch (err) {
     console.error(err);

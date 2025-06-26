@@ -63,6 +63,7 @@ const getMessageHistory = async (req, res, next) => {
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
+    const {version_id}=req.query;
     let {user_feedback, error} = req.query;
     error = error?.toLowerCase() === 'true' ? true : false;
     let startTimestamp, endTimestamp;
@@ -71,7 +72,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
+    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search,version_id,startTimestamp,endTimestamp }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
