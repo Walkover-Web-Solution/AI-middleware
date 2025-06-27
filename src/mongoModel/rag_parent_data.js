@@ -33,7 +33,7 @@ const ragParentDataSchema = new mongoose.Schema({
         },
         fileFormat: {
           type: String, 
-          enum: ['csv', 'txt', 'pdf', 'docx', 'xlsx', 'pptx', 'script', 'unknown'], 
+          enum: ['csv', 'txt', 'script', 'unknown'], 
           required: true
         },
         data: {
@@ -43,6 +43,24 @@ const ragParentDataSchema = new mongoose.Schema({
         scriptId: {
           type: String, 
           required: false
+        }, 
+        fileId: {
+          type: String, 
+          required: false
+        }, 
+        nesting: {
+          level: {
+            type: Number, 
+            enum: [0, 1, 2], 
+            default: 0
+          }, 
+          parentDocId : {
+            type: mongoose.Schema.Types.ObjectId
+          }, 
+          enabled: {
+            type: Boolean,
+            default: true
+          }
         }
       },
       { _id: false } // Prevents automatic _id generation for subdocument
@@ -53,6 +71,7 @@ const ragParentDataSchema = new mongoose.Schema({
     type: String,
     enum: ["semantic", "manual", "recursive", "agentic", "auto"],
     required: true,
+    default: "semantic"
   },
   is_chunking_type_auto: {
     type: Boolean, 
@@ -61,14 +80,25 @@ const ragParentDataSchema = new mongoose.Schema({
   chunk_size: {
     type: Number,
     required: true,
+    default:520
   },
   chunk_overlap: {
     type: Number,
     required: true,
+    default: 50
   },
   created_at : {
     type: Date,
     default: Date.now
+  }, 
+  metadata: {
+    type: Object,
+    default: {}
+  }, 
+  refreshedAt: {
+    type: Date, 
+    required: false, 
+    default: null
   }
 });
 

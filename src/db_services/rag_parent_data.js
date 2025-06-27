@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import ragDataModel from '../mongoModel/ragData.js';
 import ragParentDataModel from '../mongoModel/rag_parent_data.js';
 
@@ -13,20 +12,13 @@ async function create(data) {
 }
 
 async function update(id, data) {
-    return await ragParentDataModel.findByIdAndUpdate(id, data, { new: true });
+    return await ragParentDataModel.findByIdAndUpdate(id, data, { new: true }).lean();
 }
 
-async function remove(id,org_id) {
-    const { chunks_id_array = [] } = await ragParentDataModel.findOne({
-        '_id': id,
-        'org_id': org_id
-    }).select('chunks_id_array');
-    await ragDataModel.deleteMany({ 'chunk_id': { $in: chunks_id_array } });
-    const delete_doc = await ragParentDataModel.findByIdAndDelete(id);
-    return {
-        delete_doc,
-        chunks_id_array
-    }
+async function removeChunksByDocId(docId) {
+    return await ragDataModel.deleteMany({
+        doc_id: docId 
+    })
 }
 
 /**
@@ -46,9 +38,22 @@ async function getDocumentsByQuery(query){
     return (await ragParentDataModel.find(query)).map(obj => obj.toObject());
 }
 
+async function updateDocumentByQuery(query, data){
+    return await ragParentDataModel.findOneAndUpdate(query, data, { new: true });
+}
+
+async function updateDocumentsByQuery(query, data){
+    return await ragParentDataModel.updateMany(query, data);
+}
+
 async function deleteDocumentById(docId) {
     return await ragParentDataModel.findOneAndDelete({_id:docId});
 }
+
+async function deleteDocumentsByQuery(query) {
+    return await ragParentDataModel.deleteMany(query);
+}
+
 async function updateDocumentData(id , data) {
     return await ragParentDataModel.findOneAndUpdate({
         _id: id
@@ -63,11 +68,14 @@ export default{
     getAll,
     create,
     update,
-    remove,
+    removeChunksByDocId,
     getChunksByIds,
     getDocumentById,
     deleteDocumentById,
     updateDocumentData,
     insertMany, 
-    getDocumentsByQuery
+    getDocumentsByQuery, 
+    updateDocumentsByQuery,
+    updateDocumentByQuery, 
+    deleteDocumentsByQuery
 }

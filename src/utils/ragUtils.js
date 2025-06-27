@@ -7,13 +7,14 @@ export function getFileFormatByUrl(url) {
     const formats = [
         { regex: /docs\.google\.com\/document\/d\//, format: 'txt' },
         { regex: /docs\.google\.com\/spreadsheets\/d\//, format: 'csv' },
-        { regex: /docs\.google\.com\/presentation\/d\//, format: 'pdf' },
+        { regex: /docs\.google\.com\/presentation\/d\//, format: 'txt' },
         // { regex: /onedrive\.live\.com\/.*\.docx/, format: 'txt' },
         // { regex: /onedrive\.live\.com\/.*\.xlsx/, format: 'csv' },
         // { regex: /onedrive\.live\.com\/.*\.pptx/, format: 'pdf' },
         // { regex: /sharepoint\.com\/.*\.docx/, format: 'txt' },
         // { regex: /sharepoint\.com\/.*\.xlsx/, format: 'csv' },
         // { regex: /sharepoint\.com\/.*\.pptx/, format: 'pdf' }, 
+
         { regex: /^https?:\/\/flow\.sokt\.io\/func\/[a-zA-Z0-9]+$/, format: 'script' },
         { regex: /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[^\s]*)?$/, format: 'txt' }, // Use 'url' instead of 'txt'
     ];
@@ -24,6 +25,15 @@ export function getFileFormatByUrl(url) {
     }
     return match ? match.format : 'unknown';
 }
+
+export function getFileFormat(file) {
+    const ext = file.originalname.split('.').pop().toLowerCase();
+    const textFiles = ['txt', 'md', 'json', 'xml', 'html', 'docx', 'doc', 'pdf'];
+    const csvFiles = ['csv', 'tsv']; // should also include : xlsx, xls
+    if (textFiles.includes(ext)) return 'txt';
+    if (csvFiles.includes(ext)) return 'csv';
+    return 'unknown';
+  }
 
 
 export async function fetchAndProcessCSV(url) {
@@ -95,10 +105,10 @@ export async function getChunkingType(text) {
     try {
       const variables = {text : text};
   
-      const response = await fetch("https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion", {
+      const response = await fetch("https://api.gtwy.ai/api/v2/model/chat/completion", {
         method: "POST",
         headers: {
-          "pauthkey": "1b13a7a038ce616635899a239771044c",
+          "pauthkey": process.env.PAUTHKEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -123,7 +133,7 @@ export function getScriptId(url){
     return match ? match[1] : null;
 }
 
-export default async function getChunksByAi(text, chunk_size, chunk_overlap) {
+export async function getChunksByAi(text, chunk_size, chunk_overlap) {
     try {
         const variables = {text, chunk_size, chunk_overlap};
         const response = await fetch("https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion", {
@@ -147,4 +157,26 @@ export default async function getChunksByAi(text, chunk_size, chunk_overlap) {
         console.error("Error Getting chunks", err);
         throw err;
     }
+}
+
+export function extractUniqueUrls(text) {
+    const matches = text.match(/https?:\/\/[^\s<>()[\]{}"']+|www\.[^\s<>()[\]{}"']+/g) || [];
+    return [...new Set(matches.map(url => url.replace(/[.,!?;:)\]}]+$/, '')))];
+} 
+  
+
+export async function getNameAndDescByAI(content) {
+    const response = await fetch("https://api.gtwy.ai/api/v2/model/chat/completion", {
+        method: "POST",
+        headers: {
+            "pauthkey": process.env.PAUTHKEY,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user: content,
+            bridge_id: "6855527ed483b64c8fb9525c"
+        })
+    });
+    const { title, description } = JSON.parse((await response.json()).response?.data?.content);
+    return { name: title, description };
 }

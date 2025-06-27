@@ -5,24 +5,24 @@ import {
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 import { createThread } from '../services/threadService.js';
+import { subscribeSchema } from '../validation/joi_validation/bridge.js';
 import ModelsConfig from '../configs/modelConfiguration.js';
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
-    const { slugName, threadId: thread_id, versionId } = req.body;
-    let Hello_id = req.body.helloId
+    // Validate request body
+    const { error, value } = subscribeSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({
+            error: 'Validation failed',
+            details: error.details.map(detail => detail.message)
+        });
+    }
+
+    const { slugName, versionId } = value;
+    let Hello_id = value.helloId
     const { org_id } = req.profile;
     let data = {};
     if(!Hello_id)  data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName,versionId));
-    try {
-        await createThread({
-            display_name: thread_id,
-            thread_id,
-            org_id: org_id.toString(),
-            sub_thread_id: thread_id
-        });
-    } catch (error) {
-       console.log(error) 
-    }
     const model = data?.modelConfig?.model
     const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
     const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;

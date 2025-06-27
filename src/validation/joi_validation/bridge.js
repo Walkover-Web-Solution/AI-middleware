@@ -312,6 +312,7 @@ const updateBridgeSchema = Joi.object({
     }).unknown() // Allow any additional properties within each model's configuration
   })
 });
+
 const createThreadHistrorySchema = Joi.object({
   bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
   org_id: Joi.number().required().messages({
@@ -325,7 +326,18 @@ const createThreadHistrorySchema = Joi.object({
   message_by: Joi.string().valid('assistant').required(),
   message_id: Joi.string()
 });
+
+const subscribeSchema = Joi.object({
+  slugName: Joi.string().required().messages({
+    'string.empty': 'slugName is required',
+    'any.required': 'slugName is required'
+  }),
+  versionId: Joi.string().optional().allow(''),
+  helloId: Joi.string().optional().allow('')
+}).unknown(true);
+
 export {
   updateBridgeSchema,
-  createThreadHistrorySchema
+  createThreadHistrorySchema,
+  subscribeSchema
 };
