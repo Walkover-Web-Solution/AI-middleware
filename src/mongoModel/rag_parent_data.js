@@ -99,6 +99,11 @@ const ragParentDataSchema = new mongoose.Schema({
     type: Date, 
     required: false, 
     default: null
+  },
+  folder_id: {
+    type: String,
+    required: false,
+    default: null
   }
 });
 

@@ -32,6 +32,7 @@ import testcaseRoutes from './routes/testcase_routes.js'
 import templateRoute from './routes/template_route.js'
 import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
+import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -55,6 +56,7 @@ app.get('/healthcheck', async (req, res) => {
 app.use('/api/v1/config', configurationController);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
+app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
