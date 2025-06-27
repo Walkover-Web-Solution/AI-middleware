@@ -3,6 +3,7 @@ import Sequelize from "sequelize";
 import Thread from "../mongoModel/threadModel.js";
 import { findInCache, storeInCache } from "../cache_service/index.js";
 import { getUsers } from "../services/proxyService.js";
+import { getDisplayName } from "../services/threadService.js";
 
 async function getHistory(bridge_id, timestamp) {
   try {
@@ -275,9 +276,173 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   return Array.from(uniqueThreads.values());
 }
 
+async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search) {
+  const whereClause = {
+    bridge_id,
+    org_id,
+  };
 
+  // Handle the keyword search filter
+  if (keyword_search) {
+    whereClause[Sequelize.Op.and] = [
+      {
+        [Sequelize.Op.or]: [
+          { message: { [Sequelize.Op.like]: `%${keyword_search}%` } },
+          Sequelize.where(Sequelize.cast(Sequelize.col('thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('message_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
+        ],
+      },
+    ];
+  }
 
+  // Define the common attributes to select
+  const attributes = [
+    'thread_id',
+    [Sequelize.fn('MIN', Sequelize.col('id')), 'id'],
+    'bridge_id',
+    [Sequelize.fn('MAX', Sequelize.col('updatedAt')), 'updatedAt'],
+    'message',
+    'message_id',
+    'sub_thread_id',
+  ];
 
+  // Execute the query
+  const threads = await models.pg.conversations.findAll({
+    attributes,
+    where: whereClause,
+    group: ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id'],
+    order: [
+      [Sequelize.col('updatedAt'), 'DESC'],
+      ['thread_id', 'ASC'],
+    ],
+  });
+
+  // Get display names for unique sub_thread_ids
+  const uniqueSubThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
+  const displayNamesMap = new Map();
+  
+  await Promise.all(
+    uniqueSubThreadIds.map(async (subThreadId) => {
+      const displayName = await getDisplayName(subThreadId);
+      displayNamesMap.set(subThreadId, displayName || subThreadId);
+    })
+  );
+
+  // Helper function to determine which field matched the search
+  const getMatchedField = (thread, keyword_search) => {
+    if (thread.message && thread.message.includes(keyword_search)) {
+      // Check if message contains sub_thread_id, prioritize sub_thread_id match
+      const isMessageContainsSubThreadId = thread.sub_thread_id && 
+        thread.message.includes(thread.sub_thread_id.toString());
+      return isMessageContainsSubThreadId ? 'sub_thread_id' : 'message';
+    }
+    
+    if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
+      return 'message_id';
+    }
+    
+    if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
+      return 'thread_id';
+    }
+    
+    if (thread.sub_thread_id && thread.sub_thread_id.toString().includes(keyword_search)) {
+      return 'sub_thread_id';
+    }
+    
+    return 'thread_id';
+  };
+
+  // Helper function to create message object
+  const createMessageObj = (thread) => ({
+    message: thread.message,
+    message_id: thread.message_id
+  });
+
+  // Helper function to add sub_thread entry
+  const addSubThreadEntry = (response, thread, displayNamesMap) => {
+    if (!response.sub_thread) {
+      response.sub_thread = [];
+    }
+
+    const existingSubThread = response.sub_thread.find(st => st.sub_thread_id === thread.sub_thread_id);
+    
+    if (existingSubThread) {
+      existingSubThread.messages.push(createMessageObj(thread));
+    } else {
+      response.sub_thread.push({
+        sub_thread_id: thread.sub_thread_id,
+        display_name: displayNamesMap.get(thread.sub_thread_id),
+        messages: [createMessageObj(thread)]
+      });
+    }
+  };
+
+  // Helper function to add main thread message
+  const addMainThreadMessage = (response, thread) => {
+    if (!response.message) {
+      response.message = [];
+    }
+    response.message.push(createMessageObj(thread));
+  };
+
+  // Helper function to handle message/message_id matches
+  const handleMessageMatch = (response, thread, displayNamesMap) => {
+    if (thread.sub_thread_id) {
+      addSubThreadEntry(response, thread, displayNamesMap);
+    } else {
+      addMainThreadMessage(response, thread);
+    }
+  };
+
+  const uniqueThreads = new Map();
+
+  // Process threads synchronously (fixed async forEach issue)
+  for (const thread of threads) {
+    const matchedField = getMatchedField(thread, keyword_search);
+    const uniqueKey = matchedField === 'thread_id' ? `${thread.bridge_id}-${thread.thread_id}` : null;
+
+    // Only add unique entries for thread_id matches, allow duplicates otherwise
+    if (matchedField !== 'thread_id' || !uniqueThreads.has(uniqueKey)) {
+      const response = {
+        thread_id: thread.thread_id,
+        id: thread.id,
+        bridge_id: thread.bridge_id,
+        matchedField
+      };
+
+      // Handle different match types
+      if (matchedField === 'message' || matchedField === 'message_id') {
+        handleMessageMatch(response, thread, displayNamesMap);
+      } else if (matchedField === 'sub_thread_id') {
+        addSubThreadEntry(response, thread, displayNamesMap);
+      }
+
+      // Store or merge with existing thread
+      if (matchedField === 'thread_id') {
+        uniqueThreads.set(thread.thread_id, response);
+      } else if (uniqueThreads.has(thread.thread_id)) {
+        const existingThread = uniqueThreads.get(thread.thread_id);
+        
+        if (matchedField === 'message' || matchedField === 'message_id') {
+          handleMessageMatch(existingThread, thread, displayNamesMap);
+        } else if (matchedField === 'sub_thread_id') {
+          addSubThreadEntry(existingThread, thread, displayNamesMap);
+        }
+      } else {
+        uniqueThreads.set(thread.thread_id, response);
+      }
+    }
+  }
+
+  return Array.from(uniqueThreads.values());
+}
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
   try {
@@ -726,6 +891,42 @@ async function getAllDatafromPg(hours = 48) {
   }
 }
 
+async function getSubThreadsByError(org_id, thread_id, bridge_id) {
+  try {
+    const result = await models.pg.conversations.findAll({
+      attributes: [
+        'sub_thread_id',
+        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('raw_data.created_at')), 'latest_error']
+      ],
+      include: [{
+        model: models.pg.raw_data,
+        as: 'raw_data',
+        required: true,
+        attributes: [],
+        where: {
+          error: {
+            [models.pg.Sequelize.Op.ne]: ''
+          }
+        }
+      }],
+      where: {
+        org_id,
+        thread_id,
+        bridge_id
+      },
+      group: ['sub_thread_id'],
+      order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
+      raw: true
+    });
+
+    return result.map(item => item.sub_thread_id);
+  } catch (error) {
+    console.error('getSubThreadsByError error =>', error);
+    return [];
+  }
+}
+  
+
 export default {
   findAllThreads,
   findMessageByMessageId,
@@ -745,4 +946,6 @@ export default {
   getUserUpdates,
   sortThreadsByHits,
   getAllDatafromPg,
+  getSubThreadsByError,
+  findAllThreadsUsingKeywordSearch
 };

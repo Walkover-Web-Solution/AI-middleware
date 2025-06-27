@@ -5,7 +5,7 @@ import ChunkService from "./ragDataService.js"
 import mongoose from "mongoose";
 import { deleteResourceChunks, savingVectorsInPineconeBatches } from "../services/pinecone.js";
 import axios from "axios";
-import getChunksByAi from "../utils/ragUtils.js";
+import { getChunksByAi } from "../utils/ragUtils.js";
 
 export class Doc {
     constructor(resourceId, content, fileFormat, metadata = { public: false }) {

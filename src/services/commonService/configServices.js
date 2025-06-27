@@ -1,5 +1,5 @@
 
-import { createThreadHistory, getAllThreads, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
@@ -71,7 +71,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search,user_feedback, error);
+    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
@@ -407,8 +407,21 @@ const getThreadMessages = async(req,res,next)=>{
 
 const getAllSubThreadsController = async(req, res, next) => {
   const {thread_id}= req.params;
+  const {bridge_id, error} = req.query;
+  const isError = error === "false" ? false : true;
   const org_id = req.profile.org.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id);
+  if(isError){
+    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id);
+    const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
+      const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
+      return {
+        sub_thread_id,
+        display_name: thread ? thread.display_name : sub_thread_id
+      };
+    });
+    return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
+  }
   // sort the threads accroing to their hits in PG.
   const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };

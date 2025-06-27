@@ -19,8 +19,18 @@ async function getThreads(org_id, thread_id) {
     return await Thread.find({ org_id, thread_id });
 }
 
+async function getDisplayName(sub_thread_id) {
+    try {
+      const thread = await Thread.findOne({ sub_thread_id });
+      return thread?.display_name || thread?.sub_thread_id || null;
+    } catch (err) {
+      console.error("Error in getDisplayName:", err);
+      return null;
+    }
+  }
 
 export {
     createThread,
-    getThreads
+    getThreads,
+    getDisplayName
 }
