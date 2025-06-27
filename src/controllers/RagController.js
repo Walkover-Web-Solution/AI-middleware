@@ -7,12 +7,15 @@ import queue from '../services/queue.js';
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
 export const GetAllDocuments = async (req, res, next) => {
-    const { org, user } = req.profile || {};
+    const { org, user, IsEmbedUser } = req.profile || {};
+    const folder_id = req.profile.extraDetails?.folder_id;
+    const user_id = req.profile?.user?.id;
+
     const embed = req.IsEmbedUser;
-    const result = await rag_parent_data.getAll({
-        user_id: embed ? user.id : null,
-        org_id: org?.id
-    });
+    const query = {org_id: org?.id}
+    if(folder_id) query.folder_id = folder_id
+    if(embed || IsEmbedUser) query.user_id = embed ? (user.id || user_id): null
+    const result = await rag_parent_data.getAll(query);
     res.locals = {
         "success": true,
         "message": `Document fetched successfully`,
@@ -26,6 +29,8 @@ export const create_vectors = async (req, res) => {
     // TO DO: implement create_vectors logic
     try {
         const { org, user } = req.profile || {};
+        const folder_id = req.profile.extraDetails?.folder_id;
+        const user_id = req.profile?.user?.id;
         const embed = req.IsEmbedUser;
         const {
             url,
@@ -55,8 +60,9 @@ export const create_vectors = async (req, res) => {
             chunk_overlap,
             name,
             description,
-            user_id: embed ? user.id : null,
+            user_id: embed ? (user.id || user_id) : null,
             org_id:  org?.id, 
+            folder_id: folder_id,
         });
         const payload = {
             event: fileFormat === 'script' ? 'load_multiple' : 'load',
@@ -79,7 +85,6 @@ export const get_vectors_and_text = async (req, res, next) => {
     // TO DO: implement get_vectors_and_text logic
     const { doc_id, query, top_k = 3 } = req.body;
     const org_id = req.profile?.org?.id || "";
-
     if (!query) throw new Error("Query is required.");
     // Generate embedding
     const embedding = await embeddings.embedQuery(query);

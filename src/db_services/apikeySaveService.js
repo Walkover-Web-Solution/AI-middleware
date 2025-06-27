@@ -3,13 +3,15 @@ import versionModel from "../mongoModel/bridge_version.js"
 
 const saveApi = async (data) => {
     try {
-        const { org_id, apikey, service, name, comment } = data;
+        const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
         const result = await new ApikeyCredential({
             org_id,
             apikey,
             service,
             name,
-            comment
+            comment,
+            folder_id,
+            user_id
         }).save();
 
         return {
@@ -46,11 +48,12 @@ const getName = async (name, org_id)=>{
     }
 
 }
-const getAllApi = async(org_id)=>{
+const getAllApi = async(org_id, folder_id, user_id, isEmbedUser)=>{
     try {
-        const result  = await ApikeyCredential.find({
-            org_id: org_id
-        })
+        const query = { org_id: org_id }
+        if(folder_id) query.folder_id = folder_id
+        if(user_id && isEmbedUser) query.user_id = user_id
+        const result  = await ApikeyCredential.find(query)
         return {
             success: true,
             result : result

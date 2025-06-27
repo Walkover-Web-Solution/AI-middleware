@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
-import { createOrFindUserAndCompany, getOrganizationById } from "../services/proxyService.js";
-import { encryptString, generateIdentifier } from "../services/utils/utilityService.js";
+import { getOrganizationById } from "../services/proxyService.js";
+import { encryptString } from "../services/utils/utilityService.js";
+import { createOrGetUser } from "../utils/proxyUtils.js";
 dotenv.config();
 
 const makeDataIfProxyTokenGiven = async (req) => {
@@ -21,7 +22,9 @@ const makeDataIfProxyTokenGiven = async (req) => {
     user: {
       id: responseData.data[0].id,
       name: responseData.data[0].name,
-      meta: responseData.data[0].meta
+      meta: responseData.data[0].meta,
+      isEmbedUser: responseData.data[0].meta?.type === 'embed',
+      folder_id: responseData.data[0].meta?.folder_id
     },
     org: {
       id: responseData.data[0].currentCompany.id,
@@ -45,7 +48,7 @@ const middleware = async (req, res, next) => {
 
     req.profile.org.id = req.profile.org.id.toString();
     req.body.org_id = req.profile.org.id;
-    req.IsEmbedUser = req.profile.user.meta?.type || req.profile?.extraDetails?.tokenType || false
+    req.IsEmbedUser = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false
     return next();
   } catch (err) {
     console.error("middleware error =>", err);
@@ -122,27 +125,11 @@ const EmbeddecodeToken = async (req, res, next) => {
         const checkToken = jwt.verify(token, orgToken);
         if (checkToken) {
           if (checkToken.user_id) checkToken.user_id = encryptString(checkToken.user_id);
-          const userDetails = {
-            name: generateIdentifier(14, 'emb', false),
-            email: `${decodedToken.org_id}${checkToken.user_id}@gtwy.ai`,
-            meta: { type: 'embed' },
-          };
-          const orgDetials = {
-            name: orgTokenFromDb?.name,
-            is_readable: true,
-            meta: {
-              status: '2', // here 2 indicates that user is guest in this org and on visiting viasocket normally, this org should not be visible to users whose status is '2' with the org.
-            },
-          };
-          const proxyObject = {
-            feature_id: process.env.PROXY_USER_REFERENCE_ID,
-            Cuser: userDetails,
-            company: orgDetials,
-            role_id: 2
-          };
-          const proxyResponse = await createOrFindUserAndCompany(proxyObject); // proxy api call
+          const {proxyResponse, name, email} = await createOrGetUser(checkToken, decodedToken, orgTokenFromDb)
           req.Embed = {
             ...checkToken,
+            name,
+            email,
             user_id: proxyResponse.data.user.id,
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,

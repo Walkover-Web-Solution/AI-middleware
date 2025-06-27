@@ -22,7 +22,12 @@ const ragDataSchema = new mongoose.Schema({
   },
   metadata: {
     type: Object, 
-  }
+  },
+  folder_id: {
+    type: String,
+    required: false,
+    default: null
+  },
 });
 
 ragDataSchema.index({ org_id: 1 });
