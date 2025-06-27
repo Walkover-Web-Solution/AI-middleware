@@ -48,9 +48,9 @@ const getName = async (name, org_id)=>{
     }
 
 }
-const getAllApi = async(org_id, folder_id, user_id, isEmbedUser)=>{
+const getAllApiKeyService = async(org_id, folder_id, user_id, isEmbedUser)=>{
     try {
-        const query = { org_id: org_id }
+        const query = { org_id: org_id}
         if(folder_id) query.folder_id = folder_id
         if(user_id && isEmbedUser) query.user_id = user_id
         const result  = await ApikeyCredential.find(query)
@@ -196,7 +196,7 @@ async function getVersionsUsingId(versionIds, service) {
 export default {
     saveApi,
     getName,
-    getAllApi,
+    getAllApiKeyService,
     updateApikey,
     deleteApi,
     getApiKeyData,
