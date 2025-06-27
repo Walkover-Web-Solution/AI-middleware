@@ -19,7 +19,15 @@ const ApikeyCredentials = new mongoose.Schema({
     comment: {
         type: String,
         default: ""
-    } 
+    },
+    folder_id: {
+        type: String,
+        default: ""
+    },
+    user_id: {
+        type: String,
+        default: ""
+    }
 });
 ApikeyCredentials.index({name: 1, org_id: 1}, {unique: true})
 const ApikeyCredential = mongoose.model("ApikeyCredentials", ApikeyCredentials);

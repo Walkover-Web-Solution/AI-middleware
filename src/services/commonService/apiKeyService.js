@@ -8,13 +8,17 @@ const saveApikey = async(req,res) => {
     try {
         const {service, name, comment} = req.body;
         const org_id = req.profile?.org?.id;
+        const folder_id = req.profile?.extraDetails?.folder_id;
+        const user_id = req.profile.user.id
         let apikey = req.body.apikey
         try{
             await saveApikeySchema.validateAsync({
                 apikey,
                 service,
                 name,
-                comment
+                comment,
+                folder_id,
+                user_id
             });
         }
         catch (error) {
@@ -42,7 +46,7 @@ const saveApikey = async(req,res) => {
             return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
         }
         apikey = await Helper.encrypt(apikey)
-        const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment});
+        const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment, folder_id, user_id});
         
         const decryptedApiKey = await Helper.decrypt(apikey)
         const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
@@ -64,7 +68,10 @@ const saveApikey = async(req,res) => {
 const getAllApikeys = async(req, res) => {
     try {
         const org_id = req.profile?.org?.id;
-        const result = await apikeySaveService.getAllApi(org_id);
+        const folder_id = req.profile?.extraDetails?.folder_id;
+        const user_id = req.profile.user.id;
+        const isEmbedUser = req.profile.isEmbedUser
+        const result = await apikeySaveService.getAllApiKeyService(org_id, folder_id, user_id, isEmbedUser);
         if (result.success) {
             for (let apiKeyObj of result.result) {
                 const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
@@ -88,7 +95,7 @@ const getAllApikeys = async(req, res) => {
 async function updateApikey(req, res) {
     try {
         let apikey = req.body.apikey;
-        const { name, comment, service } = req.body;
+        const { name, comment, service, folder_id, user_id } = req.body;
         const { apikey_object_id } = req.params;
         try{
             await updateApikeySchema.validateAsync({
@@ -96,7 +103,9 @@ async function updateApikey(req, res) {
                 name,
                 comment,
                 service,
-                apikey_object_id
+                apikey_object_id,
+                folder_id,
+                user_id
             });
         }
         catch (error) {
