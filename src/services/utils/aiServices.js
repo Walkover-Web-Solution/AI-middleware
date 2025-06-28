@@ -108,9 +108,43 @@ async function callOpenRouterApi(apiKey) {
   }
 }
 
+async function callMistralApi(apiKey) {
+  try {
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'mistral-small-latest',
+        messages: [
+          {
+            role: 'user',
+            content: 'hi'
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+
 export {
   callOpenAIModelsApi,
   callAnthropicApi,
   callGroqApi,
-  callOpenRouterApi
+  callOpenRouterApi,
+  callMistralApi
 }
