@@ -29,6 +29,6 @@ const ApikeyCredentials = new mongoose.Schema({
         default: ""
     }
 });
-ApikeyCredentials.index({name: 1, org_id: 1}, {unique: true})
+ApikeyCredentials.index({name: 1, org_id: 1, folder_id: 1}, {unique: true})
 const ApikeyCredential = mongoose.model("ApikeyCredentials", ApikeyCredentials);
 export default ApikeyCredential;
