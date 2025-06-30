@@ -1,4 +1,5 @@
 import { sendAlert } from '../utils/utilityService.js';
+import { DocxLoader } from './docx.js';
 import { HTMLLoader } from './html/index.js';
 import { ImageLoader } from './image.js';
 import { PDFLoader } from './pdf.js';
@@ -12,6 +13,7 @@ export class DocumentLoader {
             'pdf': new PDFLoader(),
             'jpeg': new ImageLoader(), 
             'script' : new ScriptLoader(),
+            'docx': new DocxLoader()
         };
     }
 
