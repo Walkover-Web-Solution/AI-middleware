@@ -455,4 +455,133 @@ async function get_data_for_monthly_report(org_ids) {
   return results;
 }
 
-export { get_data_for_daily_report, get_data_from_pg, get_data_for_monthly_report };
+async function get_data_for_weekly_report(org_ids) {
+  const results = [];
+
+  // Get the start and end of the previous week
+  const now = new Date();
+  const day = now.getDay();
+  const prevMonday = new Date(now);
+  prevMonday.setDate(now.getDate() - day - 6); // Go back to previous Monday
+  prevMonday.setHours(0, 0, 0, 0);
+  
+  const prevSunday = new Date(prevMonday);
+  prevSunday.setDate(prevMonday.getDate() + 6); // Sunday is 6 days after Monday
+  prevSunday.setHours(23, 59, 59, 999);
+
+  // Prepare date filter
+  const dateFilter = {
+    [Op.gte]: prevMonday,
+    [Op.lte]: prevSunday,
+  };
+
+  for (let org_id of org_ids) {
+    org_id = org_id.toString();
+
+    // Fetch conversations and raw data with latency information
+    const [conversations, rawData] = await Promise.all([
+      models.pg.conversations.findAll({
+        where: {
+          org_id,
+          createdAt: dateFilter
+        },
+        attributes: ['bridge_id', 'message_id']
+      }),
+      models.pg.raw_data.findAll({
+        where: {
+          org_id,
+          created_at: dateFilter
+        },
+        attributes: ['message_id', 'latency']
+      })
+    ]);
+
+    // Skip this org if no data is available
+    if (conversations.length === 0 || rawData.length === 0) {
+      continue;
+    }
+
+    // Create a map of message_id to raw_data for quick lookup
+    const rawDataMap = new Map();
+    for (const r of rawData) {
+      if (r.latency) {
+        rawDataMap.set(r.message_id, r.latency);
+      }
+    }
+
+    // Create a map to track latency sums and counts by bridge_id
+    const bridgeLatencyStats = new Map();
+
+    // Process each conversation to calculate average latency by bridge
+    for (const conversation of conversations) {
+      const { bridge_id, message_id } = conversation;
+      
+      if (!bridge_id) continue;
+
+      const latency = rawDataMap.get(message_id);
+      if (!latency) continue;
+
+      // Calculate actual latency (overall_time - model_execution_time)
+      const actualLatency = latency.over_all_time - latency.model_execution_time;
+
+      // Initialize or update bridge stats
+      if (!bridgeLatencyStats.has(bridge_id)) {
+        bridgeLatencyStats.set(bridge_id, {
+          totalLatency: 0,
+          count: 0
+        });
+      }
+
+      const stats = bridgeLatencyStats.get(bridge_id);
+      stats.totalLatency += actualLatency;
+      stats.count++;
+    }
+
+    // Skip this org if no valid latency data was found
+    if (bridgeLatencyStats.size === 0) {
+      continue;
+    }
+
+    // Convert the map to an array of objects with bridge names and average latency
+    const bridgeLatencyReport = [];
+    for (const [bridgeId, stats] of bridgeLatencyStats.entries()) {
+      // Get bridge name from service
+      const bridgeName = await configurationService.getBridgeNameById(bridgeId, org_id);
+      
+      bridgeLatencyReport.push({
+        bridge_id: bridgeId,
+        bridge_name: bridgeName || 'Unknown Bridge',
+        avg_latency: stats.count > 0 ? (stats.totalLatency / stats.count).toFixed(2) : 0,
+        total_requests: stats.count
+      });
+    }
+
+    // Sort by average latency in descending order
+    bridgeLatencyReport.sort((a, b) => b.avg_latency - a.avg_latency);
+
+    // Create the final JSON for this org_id
+    const orgData = {
+      [org_id]: {
+        report_period: {
+          start_date: prevMonday.toISOString().split('T')[0],
+          end_date: prevSunday.toISOString().split('T')[0]
+        },
+        bridge_latency_report: bridgeLatencyReport
+      }
+    };
+
+    results.push(orgData);
+  }
+  
+  const url = 'https://flow.sokt.io/func/scri4zMzbGiR'
+  await fetch(url, { 
+    method: 'POST', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(results)
+  });
+  return results;
+}
+
+export { get_data_for_daily_report, get_data_from_pg, get_data_for_monthly_report, get_data_for_weekly_report };

@@ -20,6 +20,7 @@ import chatbot from "./routes/chatBot_routes.js";
 import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
+import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
@@ -82,6 +83,7 @@ app.use(errorHandlerMiddleware);
 
 
 initializeMonthlyLatencyReport();
+initializeWeeklyLatencyReport();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
