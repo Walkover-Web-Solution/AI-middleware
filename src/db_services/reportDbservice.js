@@ -573,7 +573,7 @@ async function get_data_for_weekly_report(org_ids) {
     results.push(orgData);
   }
   
-  const url = 'https://flow.sokt.io/func/scri4zMzbGiR'
+  const url = 'https://flow.sokt.io/func/scriJ3cCV4RX'
   await fetch(url, { 
     method: 'POST', 
     headers: {
