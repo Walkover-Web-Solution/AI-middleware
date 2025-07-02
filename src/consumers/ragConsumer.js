@@ -12,6 +12,7 @@ import queue from '../services/queue.js';
 import { extractUniqueUrls, getChunkingType, getFileFormatByUrl, getNameAndDescByAI, getScriptId } from '../utils/ragUtils.js';
 import { sendAlert } from '../services/utils/utilityService.js';
 import { ResponseSender } from '../services/utils/customRes.js';
+import { sendRagUpdates } from '../services/alertingService.js';
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 const rtLayer = new ResponseSender();
@@ -46,7 +47,7 @@ async function processMsg(message, channel) {
                         .map((_, idx) => ({ ...parentData, _id: undefined, source: { ...parentData.source, fileId: fileIds[idx] } }))
                 );
                 const parentDatas = [...clones, parentData];
-
+                sendRagUpdates(data.orgId, clones, 'create');
                 for (let parent of parentDatas){
                     await processContent(fileContents.shift(), parent, parent._id.toString()); 
                 }
@@ -112,6 +113,7 @@ async function processMsg(message, channel) {
         if(msg.retryCount > 1) {
             if(msg.event === 'load' && ragData?.source?.nesting?.level > 0){
                 rag_parent_data.deleteDocumentById(resourceId);
+                sendRagUpdates(ragData?.org_id, [ragData], 'delete');
             }
             producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
         }else{
@@ -157,10 +159,13 @@ async function processContent(content, ragParentData, resourceId){
     if(oldContent === content || oldContent?.equals?.(content) )  {
         return;
     }
+    const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': resourceId });
     await Promise.all([
         rag_parent_data.update(resourceId, toUpdate), 
-        rag_parent_data.removeChunksByDocId(resourceId)
+        rag_parent_data.removeChunksByDocId(resourceId), 
+        rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': resourceId })
     ]);
+    sendRagUpdates(ragParentData.org_id, nestedDocs, 'delete');
     const queuePayload = {
       resourceId,
       content,
@@ -199,6 +204,7 @@ async function processNestedLinks(content, ragParentData){
     }));
     
     const insertedDocuments = await rag_parent_data.insertMany(documents.filter(d => d.status === 'fulfilled').map(d => d.value));
+    sendRagUpdates(ragParentData.org_id, insertedDocuments, 'create');
     for(const document of insertedDocuments) {
         await queue.publishToQueue(QUEUE_NAME, { event: "load", data: { url: document.source.data.url, resourceId: document._id } });
     }

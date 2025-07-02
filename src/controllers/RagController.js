@@ -3,6 +3,7 @@ import embeddings from '../services/langchainOpenai.js';
 import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
+import { sendRagUpdates } from '../services/alertingService.js';
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
@@ -45,7 +46,7 @@ export const create_vectors = async (req, res) => {
 
         if (!name || !description) throw new Error('Name and Description are required!!');
 
-        const parentData = await rag_parent_data.create({
+        const parentData = (await rag_parent_data.create({
             source: {
                 type: 'url',
                 fileFormat,
@@ -63,7 +64,7 @@ export const create_vectors = async (req, res) => {
             user_id: embed ? (user.id || user_id) : null,
             org_id:  org?.id, 
             folder_id: folder_id,
-        });
+        })).toObject();
         const payload = {
             event: fileFormat === 'script' ? 'load_multiple' : 'load',
             data: {
@@ -73,7 +74,7 @@ export const create_vectors = async (req, res) => {
         }
 
         await queue.publishToQueue(QUEUE_NAME, payload);
-
+        sendRagUpdates(org?.id, [parentData], 'create');
         res.status(201).json(parentData);
 
     } catch (error) {
@@ -112,7 +113,7 @@ export const delete_doc = async (req, res, next) => {
     for(const doc of [result, ...nestedDocs]){
         await queue.publishToQueue(QUEUE_NAME, { event: "delete", data: { resourceId: doc._id.toString(), orgId } });
     }
-
+    sendRagUpdates(orgId, [result, ...nestedDocs], 'delete');
     res.locals = {
         "success": true,
         "message": `Document deleted successfully`,
@@ -126,8 +127,9 @@ export const updateDoc = async (req, res, next) => {
     // const userId = req.profile.user.id;
     const { id } = req.params;
     const { name, description } = req.body;
+    const orgId = req.Embed ? req.Embed.org_id : req.profile.org.id;
     const result = await rag_parent_data.updateDocumentData(id, { name, description });
-
+    sendRagUpdates(orgId, [result], 'update');
     res.locals = {
         "success": true,
         "message": `Document updated successfully`,
