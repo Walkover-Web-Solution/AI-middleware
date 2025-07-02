@@ -69,6 +69,7 @@ async function processMsg(message, channel) {
             }
             case 'chunk': {
                 const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
+                await generateNameAndDescByAI(ragData);
                 const chunk = await doc.chunk(512, 50, data.chunkingType, data.resourceId); // FIX: chunk size hardcoded. 
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
@@ -183,10 +184,7 @@ async function processNestedLinks(content, ragParentData){
     const urls = extractUniqueUrls(content);
     const documents = await Promise.allSettled(urls.map(async url => {
         const fileFormat = getFileFormatByUrl(url);
-        const { name, description } = await getNameAndDescByAI(url);
         return {
-            name, 
-            description,
             source: {
                 type: 'url', 
                 fileFormat, 
@@ -204,10 +202,18 @@ async function processNestedLinks(content, ragParentData){
     }));
     
     const insertedDocuments = await rag_parent_data.insertMany(documents.filter(d => d.status === 'fulfilled').map(d => d.value));
-    sendRagUpdates(ragParentData.org_id, insertedDocuments, 'create');
     for(const document of insertedDocuments) {
         await queue.publishToQueue(QUEUE_NAME, { event: "load", data: { url: document.source.data.url, resourceId: document._id } });
     }
+}
+
+async function generateNameAndDescByAI(ragData){
+    if(ragData.name && ragData.description) return;
+    let { name, description } = await getNameAndDescByAI(ragData.content.substring(0, 10_000));
+    name = ragData.name || name;
+    description = ragData.description || description;
+    const newDoc = await rag_parent_data.update(ragData._id, { name, description });
+    sendRagUpdates(ragData.org_id, [newDoc], 'create');
 }
 
 export default {
@@ -215,6 +221,7 @@ export default {
     process: processMsg,
     batchSize: 1
 }
+
 // this.queueName = obj.queueName;
 // this.processor = obj.ragConsume;
 // this.bufferSize = obj.batchSize || 1; // Default value if prefetch is not provided
