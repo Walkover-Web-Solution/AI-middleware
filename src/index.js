@@ -33,6 +33,7 @@ import templateRoute from './routes/template_route.js'
 import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
+import { DocumentLoader } from './services/document-loader/index.js';
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -53,6 +54,11 @@ try {
 app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
+app.get('/rag-testing', async (req, res) => {
+  const loader = new DocumentLoader();
+  const content = await loader.getContent(req.query.url || 'https://viasocket.com');
+  res.send(content);
+})
 app.use('/api/v1/config', configurationController);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
