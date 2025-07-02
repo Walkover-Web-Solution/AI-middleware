@@ -86,6 +86,10 @@ const configuration = new mongoose.Schema({
   },
   IsstarterQuestionEnable:{
     type: Boolean
+  },
+  page_config : {
+    type : Object,
+    default : {}
   }
 });
 
