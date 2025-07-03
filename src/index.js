@@ -54,13 +54,18 @@ try {
 app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
-app.get('/rag-testing', async (req, res) => {
+app.get('/rag-testing-async', async (req, res) => {
   res.send('Done');
   setTimeout(async () => {
     const loader = new DocumentLoader();
     const content = await loader.getContent(req.query.url || 'https://viasocket.com');
     console.log(content);
   }, 10000)
+})
+app.get('/rag-testing', async (req, res) => {
+  const loader = new DocumentLoader();
+  const content = await loader.getContent(req.query.url || 'https://viasocket.com');
+  res.send(content);
 })
 app.use('/api/v1/config', configurationController);
 app.use('/apikeys', apiKeyrouter);
