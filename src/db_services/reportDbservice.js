@@ -443,14 +443,17 @@ async function get_data_for_monthly_report(org_ids) {
 
     results.push(orgData);
   }
-  
+  const data = {
+    "results" : results,
+    "time" : "monthly"
+  }
   const url = 'https://flow.sokt.io/func/scri4zMzbGiR'
   await fetch(url, { 
     method: 'POST', 
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(results)
+    body: JSON.stringify(data)
   });
   return results;
 }
@@ -572,14 +575,17 @@ async function get_data_for_weekly_report(org_ids) {
 
     results.push(orgData);
   }
-  
-  const url = 'https://flow.sokt.io/func/scriJ3cCV4RX'
+  const data = {
+    "results" : results,
+    "time" : "weekly"
+  }
+  const url = 'https://flow.sokt.io/func/scri4zMzbGiR'
   await fetch(url, { 
     method: 'POST', 
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(results)
+    body: JSON.stringify(data)
   });
   return results;
 }
