@@ -112,6 +112,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.message_id,
         conversations.user_feedback,
         conversations.sub_thread_id,
+        conversations.thread_id,
         conversations.version_id,
         conversations.image_url,
         conversations.urls,
@@ -670,34 +671,31 @@ const getSubThreads = async (org_id,thread_id) =>{
 }
 
 async function sortThreadsByHits(threads) {
-  // Create a map to store the latest createdAt for each sub_thread_id
-  const latestSubThreadMap = new Map();
-  // Loop through each thread to find the latest createdAt for each sub_thread_id
-  for (const thread of threads) {
-    const { sub_thread_id } = thread;
-    if (sub_thread_id) {
-      const latestEntry = await models.pg.conversations.findOne({
-        attributes: ['createdAt'],
-        where: { sub_thread_id },
-        order: [['createdAt', 'DESC']],
-        limit: 1,
-        raw: true
-      });
+  const subThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
 
-      if (latestEntry) {
-        latestSubThreadMap.set(sub_thread_id, latestEntry.createdAt);
-      }
-    }
-  }
-  // Sort the threads based on the latest createdAt of their sub_thread_id
+  const latestEntries = await models.pg.conversations.findAll({
+    attributes: [
+      'sub_thread_id',
+      [models.pg.sequelize.fn('MAX', models.pg.sequelize.col('createdAt')), 'latestCreatedAt']
+    ],
+    where: { sub_thread_id: subThreadIds },
+    group: ['sub_thread_id'],
+    raw: true
+  });
+
+  const latestSubThreadMap = new Map(
+    latestEntries.map(entry => [entry.sub_thread_id, new Date(entry.latestCreatedAt)])
+  );
+
   threads.sort((a, b) => {
     const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
     const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
-    return dateB - dateA; // Sort in descending order
+    return dateB - dateA;
   });
 
   return threads;
 }
+
 
 async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
   try {

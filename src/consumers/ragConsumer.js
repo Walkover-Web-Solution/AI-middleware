@@ -9,9 +9,10 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import { Doc, MongoStorage, OpenAiEncoder, PineconeStorage } from '../services/document.js';
 import logger from '../logger.js';
 import queue from '../services/queue.js';
-import { getChunkingType, getScriptId } from '../utils/ragUtils.js';
+import { extractUniqueUrls, getChunkingType, getFileFormatByUrl, getNameAndDescByAI, getScriptId } from '../utils/ragUtils.js';
 import { sendAlert } from '../services/utils/utilityService.js';
 import { ResponseSender } from '../services/utils/customRes.js';
+import { sendRagUpdates } from '../services/alertingService.js';
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 const rtLayer = new ResponseSender();
@@ -46,7 +47,7 @@ async function processMsg(message, channel) {
                         .map((_, idx) => ({ ...parentData, _id: undefined, source: { ...parentData.source, fileId: fileIds[idx] } }))
                 );
                 const parentDatas = [...clones, parentData];
-
+                sendRagUpdates(data.orgId, clones, 'create');
                 for (let parent of parentDatas){
                     await processContent(fileContents.shift(), parent, parent._id.toString()); 
                 }
@@ -68,6 +69,7 @@ async function processMsg(message, channel) {
             }
             case 'chunk': {
                 const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
+                await generateNameAndDescByAI(ragData);
                 const chunk = await doc.chunk(512, 50, data.chunkingType, data.resourceId); // FIX: chunk size hardcoded. 
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
@@ -94,7 +96,7 @@ async function processMsg(message, channel) {
                 }
         }
         if (pipelineStatus) {
-            await rag_parent_data.updateDocumentsByQuery(updateCondition, { status: pipelineStatus }).catch(error => console.log(error));
+            await rag_parent_data.updateDocumentsByQuery(updateCondition, {metadata: { status: pipelineStatus }}).catch(error => console.log(error));
             await rtLayer.sendResponse({
                 rtlLayer: true,
                 reqBody: {
@@ -109,7 +111,11 @@ async function processMsg(message, channel) {
     } catch (error) {
         console.error("Error in processing Message", error);
         // TODO: Add error message to the failed message
-        if(msg.retryCount > 2) {
+        if(msg.retryCount > 1) {
+            if(msg.event === 'load' && ragData?.source?.nesting?.level > 0){
+                rag_parent_data.deleteDocumentById(resourceId);
+                sendRagUpdates(ragData?.org_id, [ragData], 'delete');
+            }
             producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
         }else{
             sendAlert('ERROR IN RAG CONSUMER', error, resourceId)
@@ -154,10 +160,13 @@ async function processContent(content, ragParentData, resourceId){
     if(oldContent === content || oldContent?.equals?.(content) )  {
         return;
     }
+    const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': resourceId });
     await Promise.all([
         rag_parent_data.update(resourceId, toUpdate), 
-        rag_parent_data.removeChunksByDocId(resourceId)
-    ])
+        rag_parent_data.removeChunksByDocId(resourceId), 
+        rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': resourceId })
+    ]);
+    sendRagUpdates(ragParentData.org_id, nestedDocs, 'delete');
     const queuePayload = {
       resourceId,
       content,
@@ -166,14 +175,53 @@ async function processContent(content, ragParentData, resourceId){
       fileFormat: ragParentData.source.fileFormat,
       chunkingType: ragParentData.chunking_type,
     };
+    processNestedLinks(content, ragParentData).catch(err => logger.error('Error processing nested links', err));
     await queue.publishToQueue(QUEUE_NAME, { event :"chunk" , data : queuePayload })
-
 }
+
+async function processNestedLinks(content, ragParentData){
+    if(ragParentData.source?.nesting?.level >= 1 || !ragParentData.source?.nesting?.enabled) return;
+    const urls = extractUniqueUrls(content);
+    const documents = await Promise.allSettled(urls.map(async url => {
+        const fileFormat = getFileFormatByUrl(url);
+        return {
+            source: {
+                type: 'url', 
+                fileFormat, 
+                data: {
+                    url, type: 'url'
+                }, 
+                nesting: {
+                    level: ragParentData.source.nesting.level + 1, 
+                    parentDocId: ragParentData.source.nesting.parentDocId || ragParentData._id
+                }
+            },
+            user_id: ragParentData.user_id,
+            org_id: ragParentData.org_id
+        }
+    }));
+    
+    const insertedDocuments = await rag_parent_data.insertMany(documents.filter(d => d.status === 'fulfilled').map(d => d.value));
+    for(const document of insertedDocuments) {
+        await queue.publishToQueue(QUEUE_NAME, { event: "load", data: { url: document.source.data.url, resourceId: document._id } });
+    }
+}
+
+async function generateNameAndDescByAI(ragData){
+    if(ragData.name && ragData.description) return;
+    let { name, description } = await getNameAndDescByAI(ragData.content.substring(0, 10_000));
+    name = ragData.name || name;
+    description = ragData.description || description;
+    const newDoc = await rag_parent_data.update(ragData._id, { name, description });
+    sendRagUpdates(ragData.org_id, [newDoc], 'create');
+}
+
 export default {
     queueName: QUEUE_NAME,
     process: processMsg,
     batchSize: 1
 }
+
 // this.queueName = obj.queueName;
 // this.processor = obj.ragConsume;
 // this.bufferSize = obj.batchSize || 1; // Default value if prefetch is not provided

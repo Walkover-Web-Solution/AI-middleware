@@ -29,7 +29,7 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
 const dbservice = async () => {
   try {
     await sequelize.sync();
-    console.log('Connection has been established successfully.');
+    console.log('Connection has been established successfully with postgres.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
