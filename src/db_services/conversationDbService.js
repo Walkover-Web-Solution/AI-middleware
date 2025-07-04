@@ -112,6 +112,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.message_id,
         conversations.user_feedback,
         conversations.sub_thread_id,
+        conversations.thread_id,
         conversations.version_id,
         conversations.image_url,
         conversations.urls,
