@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { createSubThreadWithAi, createThreadController, getAllThreadsController } from '../controllers/threadController.js';
-import { combine_middleware } from '../middlewares/middleware.js';
+import { combinedAuthWithChatBotAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
 
 const router = Router();
 // Define routes
-router.post('/', combine_middleware, createThreadController);
-router.post('/new', combine_middleware, createSubThreadWithAi);
-router.get('/:thread_id', combine_middleware, getAllThreadsController);
+router.post('/', combinedAuthWithChatBotAndPublicChatbot, createThreadController);
+router.post('/new', combinedAuthWithChatBotAndPublicChatbot, createSubThreadWithAi);
+router.get('/:thread_id', combinedAuthWithChatBotAndPublicChatbot, getAllThreadsController);
 
 export default router;

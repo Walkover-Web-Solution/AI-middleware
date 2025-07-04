@@ -8,6 +8,10 @@ async function create(alertData){
     }).save();
 }
 
+async function getByQuery(query){
+  return (await AlertModel.find(query)).map(obj => obj.toObject());
+}
+
 async function getAll(org_id){
  try {
     const alerts = await AlertModel.find({
@@ -32,6 +36,7 @@ async function getAll(org_id){
     };
   }
  }
+
  async function getById(id){
   try {
      const data = await AlertModel.findById(id);
@@ -104,5 +109,6 @@ export default{
   getAll,
   getById,
   deleteAlert,
-  updateAlert
+  updateAlert, 
+  getByQuery
 }
