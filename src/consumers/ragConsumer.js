@@ -12,6 +12,7 @@ import queue from '../services/queue.js';
 import { extractUniqueUrls, getChunkingType, getFileFormatByUrl, getNameAndDescByAI, getScriptId } from '../utils/ragUtils.js';
 import { sendAlert } from '../services/utils/utilityService.js';
 import { ResponseSender } from '../services/utils/customRes.js';
+import { sendRagUpdates } from '../services/alertingService.js';
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 const rtLayer = new ResponseSender();
@@ -46,7 +47,7 @@ async function processMsg(message, channel) {
                         .map((_, idx) => ({ ...parentData, _id: undefined, source: { ...parentData.source, fileId: fileIds[idx] } }))
                 );
                 const parentDatas = [...clones, parentData];
-
+                sendRagUpdates(data.orgId, clones, 'create');
                 for (let parent of parentDatas){
                     await processContent(fileContents.shift(), parent, parent._id.toString()); 
                 }
@@ -68,6 +69,7 @@ async function processMsg(message, channel) {
             }
             case 'chunk': {
                 const doc = new Doc(data.resourceId, data.content, data.fileFormat, { orgId: data.orgId, userId: data.userId });
+                await generateNameAndDescByAI(ragData);
                 const chunk = await doc.chunk(512, 50, data.chunkingType, data.resourceId); // FIX: chunk size hardcoded. 
                 await chunk.save(new MongoStorage());
                 await chunk.encode(new OpenAiEncoder());
@@ -112,6 +114,7 @@ async function processMsg(message, channel) {
         if(msg.retryCount > 1) {
             if(msg.event === 'load' && ragData?.source?.nesting?.level > 0){
                 rag_parent_data.deleteDocumentById(resourceId);
+                sendRagUpdates(ragData?.org_id, [ragData], 'delete');
             }
             producer.publishToQueue(QUEUE_NAME + "_FAILED", message.content.toString());
         }else{
@@ -157,10 +160,13 @@ async function processContent(content, ragParentData, resourceId){
     if(oldContent === content || oldContent?.equals?.(content) )  {
         return;
     }
+    const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': resourceId });
     await Promise.all([
         rag_parent_data.update(resourceId, toUpdate), 
-        rag_parent_data.removeChunksByDocId(resourceId)
+        rag_parent_data.removeChunksByDocId(resourceId), 
+        rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': resourceId })
     ]);
+    sendRagUpdates(ragParentData.org_id, nestedDocs, 'delete');
     const queuePayload = {
       resourceId,
       content,
@@ -178,10 +184,7 @@ async function processNestedLinks(content, ragParentData){
     const urls = extractUniqueUrls(content);
     const documents = await Promise.allSettled(urls.map(async url => {
         const fileFormat = getFileFormatByUrl(url);
-        const { name, description } = await getNameAndDescByAI(url);
         return {
-            name, 
-            description,
             source: {
                 type: 'url', 
                 fileFormat, 
@@ -204,11 +207,21 @@ async function processNestedLinks(content, ragParentData){
     }
 }
 
+async function generateNameAndDescByAI(ragData){
+    if(ragData.name && ragData.description) return;
+    let { name, description } = await getNameAndDescByAI(ragData.content.substring(0, 10_000));
+    name = ragData.name || name;
+    description = ragData.description || description;
+    const newDoc = await rag_parent_data.update(ragData._id, { name, description });
+    sendRagUpdates(ragData.org_id, [newDoc], 'create');
+}
+
 export default {
     queueName: QUEUE_NAME,
     process: processMsg,
     batchSize: 1
 }
+
 // this.queueName = obj.queueName;
 // this.processor = obj.ragConsume;
 // this.bufferSize = obj.batchSize || 1; // Default value if prefetch is not provided

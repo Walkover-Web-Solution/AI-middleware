@@ -32,6 +32,8 @@ import testcaseRoutes from './routes/testcase_routes.js'
 import templateRoute from './routes/template_route.js'
 import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
+import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
+import { DocumentLoader } from './services/document-loader/index.js';
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -52,9 +54,33 @@ try {
 app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
+app.get('/rag-testing-async', async (req, res) => {
+    res.send('Done');
+    setTimeout(async () => {
+      try {
+        const loader = new DocumentLoader();
+        const content = await loader.getContent(req.query.url || 'https://viasocket.com');
+        console.log(content);
+      } catch (error) {
+        console.error('Error in async operation:', error);
+      }
+    }, 10000)
+})
+
+app.get('/rag-testing', async (req, res) => {
+  try {
+    const loader = new DocumentLoader();
+    const content = await loader.getContent(req.query.url || 'https://viasocket.com');
+    res.send(content);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+})
 app.use('/api/v1/config', configurationController);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
+app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);
 app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
@@ -81,6 +107,49 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Graceful shutdown handler
+const shutdown = async (signal, reason) => {
+  console.log(`\nReceived ${signal} signal, starting graceful shutdown...`);
+  console.log(`Reason: ${reason}`);
+
+  try {
+    // Close database connection
+    await mongoose.connection.close();
+    console.log('Database connection closed successfully');
+
+    // Close server
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+    console.log('Server closed successfully');
+
+    // Exit process
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+// Handle different types of shutdown signals
+process.on('SIGINT', () => shutdown('SIGINT', 'User initiated shutdown (Ctrl+C)'));
+process.on('SIGTERM', () => shutdown('SIGTERM', 'System shutdown'));
+process.on('SIGQUIT', () => shutdown('SIGQUIT', 'Quit signal'));
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  shutdown('uncaughtException', `Uncaught exception: ${error.message}`);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection:', reason);
+  shutdown('unhandledRejection', `Unhandled rejection: ${reason}`);
 });

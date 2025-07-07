@@ -1,65 +1,37 @@
 import { MongoClient } from 'mongodb';
 
-async function migrateData() {
-    const client = new MongoClient('mongodb+srv://Arpitsagarjain:Walkover123@cluster0.eo2iuez.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
-    
+async function migrateStarterQuestion() {
+    const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test');
+
     try {
         await client.connect();
-        const db = client.db("AI_Middleware");
-        const configurations = db.collection("apicalls");
+        const db = client.db("AI_Middleware-test");
+        const configurations = db.collection("configurations");
 
-        const configCursor = configurations.find({});
-        while (await configCursor.hasNext()) {
-            const config = await configCursor.next();
-            let updateObj = {};
+        const cursor = configurations.find({});
 
-            // Case 1: endpoint to endpoint_name migration
-            if (config.endpoint && !config.endpoint_name) {
-                updateObj.endpoint_name = config.endpoint;
-            }
+        while (await cursor.hasNext()) {
+            const config = await cursor.next();
 
-            // Case 2: endpoint to function_name migration
-            if (config.endpoint && !config.function_name) {
-                updateObj.function_name = config.endpoint;
-            }
+            const starter = config.starterQuestion;
 
-            // Case 3: short_description/api_description to description migration
-            if (config.short_description) {
-                updateObj.description = config.short_description;
-                updateObj = { ...updateObj, short_description: "" };
-            } else if (config.api_description) {
-                updateObj.description = config.api_description;
-                updateObj = { ...updateObj, api_description: "" };
-            }
-
-            // Case 4: required_fields to required_params migration
-            if (config.required_fields) {
-                updateObj.required_params = config.required_fields;
-                updateObj = { ...updateObj, required_fields: "" };
-            }
-
-            // Only perform update if there are changes to make
-            if (Object.keys(updateObj).length > 0) {
-                await configurations.updateOne(
-                    { _id: config._id },
-                    {
-                        $set: updateObj,
-                        $unset: Object.keys(updateObj).reduce((acc, key) => {
-                            if (updateObj[key] === "") {
-                                acc[key] = "";
-                            }
-                            return acc;
-                        }, {})
-                    }
-                );
+            // Only modify if starterQuestion is an object with a 'questions' array
+            if (starter && typeof starter === 'object' && !Array.isArray(starter)) {
+                if (Array.isArray(starter.questions)) {
+                    await configurations.updateOne(
+                        { _id: config._id },
+                        { $set: { starterQuestion: starter.questions } }
+                    );
+                    console.log(`Updated starterQuestion for _id: ${config._id}`);
+                }
             }
         }
 
     } catch (error) {
-        console.error("Migration failed:", error);
+        console.error("starterQuestion migration failed:", error);
     } finally {
         await client.close();
     }
 }
 
-migrateData().catch(console.error);
+migrateStarterQuestion().catch(console.error);
