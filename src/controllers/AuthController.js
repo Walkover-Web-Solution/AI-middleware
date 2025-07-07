@@ -21,15 +21,24 @@ const CreateAuthToken = async (req, res) => {
 
 const save_auth_token_in_db_controller = async (req, res) => {
     try {
-        const { client_id, redirection_url } = req.body;
+        const { redirection_url } = req.body;
         const org_id = req.profile.org.id;
         
-        await auth_service.save_auth_token_in_db(client_id, redirection_url, org_id);
+        const result = await auth_service.save_auth_token_in_db(redirection_url, org_id);
         
-        return res.status(200).json({ 
-            success: true, 
-            message: "Auth token saved successfully" 
-        });
+        if (result.isNew) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "Auth token saved successfully",
+                client_id: result.client_id
+            });
+        } else {
+            return res.status(200).json({
+                success: true,
+                message: "Auth token already exists for this organization",
+                client_id: result.client_id
+            });
+        }
     } catch (e) {
         return res.status(400).json({ 
             success: false, 
