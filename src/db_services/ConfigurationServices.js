@@ -266,6 +266,28 @@ const getBridgeNameById = async (bridge_id, org_id) => {
   }
 };
 
+const getBridgeByUrlSlugname = async (url_slugName) => {
+  try {
+    const hello_id = await configurationModel.findOne({
+      "page_config.url_slugname": url_slugName,
+    }).select({ _id: 1, name: 1, service: 1 });
+
+    if (!hello_id) return false;
+
+    return {
+      _id: hello_id._id,
+      name: hello_id.name,
+      service: hello_id.service
+    };
+  } catch (error) {
+    console.log('error:', error);
+    return {
+      success: false,
+      error: 'something went wrong!!',
+    };
+  }
+};
+
 
 export default {
   deleteBridge,
@@ -281,5 +303,6 @@ export default {
   addActionInBridge,
   removeActionInBridge,
   getBridges,
-  getBridgeNameById
+  getBridgeNameById,
+  getBridgeByUrlSlugname
 };

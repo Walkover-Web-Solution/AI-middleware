@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const ragParentDataSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: false,
   },
   description: {
     type: String,
-    required: true,
+    required: false,
   },
   org_id: {
     type: String,
@@ -98,6 +98,11 @@ const ragParentDataSchema = new mongoose.Schema({
   refreshedAt: {
     type: Date, 
     required: false, 
+    default: null
+  },
+  folder_id: {
+    type: String,
+    required: false,
     default: null
   }
 });
