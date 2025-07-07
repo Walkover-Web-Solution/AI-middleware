@@ -1,7 +1,34 @@
 import Auth from "../mongoModel/authModel.js";
+import crypto from "crypto";
 
-const save_auth_token_in_db = async (client_id, redirection_url, org_id, refresh_token) => {
+const generate_client_id = () => {
+    return crypto.randomBytes(16).toString('hex');
+};
+
+const find_auth_by_org_id = async (org_id) => {
     try {
+        const result = await Auth.findOne({ org_id });
+        return result;
+    } catch (error) {
+        throw new Error(`Failed to find auth by org_id: ${error.message}`);
+    }
+};
+
+const save_auth_token_in_db = async (redirection_url, org_id, refresh_token) => {
+    try {
+        // Check if record with org_id already exists
+        const existingAuth = await find_auth_by_org_id(org_id);
+        
+        if (existingAuth) {
+            return {
+                isNew: false,
+                client_id: existingAuth.client_id
+            };
+        }
+        
+        // Generate a new client_id
+        const client_id = generate_client_id();
+        
         const refresh_token_expires_at = new Date();
         refresh_token_expires_at.setDate(refresh_token_expires_at.getDate() + 30); // 30 days expiry
 
@@ -12,7 +39,11 @@ const save_auth_token_in_db = async (client_id, redirection_url, org_id, refresh
             refresh_token,
             refresh_token_expires_at
         });
-        return true;
+        
+        return {
+            isNew: true,
+            client_id
+        };
     } catch (error) {
         throw new Error(`Failed to save auth token: ${error.message}`);
     }
@@ -32,5 +63,7 @@ const verify_auth_token = async (client_id, redirection_url) => {
 
 export default {
     save_auth_token_in_db,
-    verify_auth_token
+    verify_auth_token,
+    find_auth_by_org_id,
+    generate_client_id
 };
