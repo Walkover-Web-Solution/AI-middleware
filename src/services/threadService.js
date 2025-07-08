@@ -15,8 +15,8 @@ async function createThread(data) {
     return existingThread;
 }
 
-async function getThreads(org_id, thread_id) {
-    return await Thread.find({ org_id, thread_id });
+async function getThreads(org_id, thread_id, bridge_id) {
+    return await Thread.find({ org_id, thread_id, bridge_id });
 }
 
 async function getDisplayName(sub_thread_id) {
