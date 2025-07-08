@@ -107,6 +107,49 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Graceful shutdown handler
+const shutdown = async (signal, reason) => {
+  console.log(`\nReceived ${signal} signal, starting graceful shutdown...`);
+  console.log(`Reason: ${reason}`);
+
+  try {
+    // Close database connection
+    await mongoose.connection.close();
+    console.log('Database connection closed successfully');
+
+    // Close server
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+    console.log('Server closed successfully');
+
+    // Exit process
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+// Handle different types of shutdown signals
+process.on('SIGINT', () => shutdown('SIGINT', 'User initiated shutdown (Ctrl+C)'));
+process.on('SIGTERM', () => shutdown('SIGTERM', 'System shutdown'));
+process.on('SIGQUIT', () => shutdown('SIGQUIT', 'Quit signal'));
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  shutdown('uncaughtException', `Uncaught exception: ${error.message}`);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection:', reason);
+  shutdown('unhandledRejection', `Unhandled rejection: ${reason}`);
 });
