@@ -8,7 +8,7 @@ const client = createClient({
 });
 
 client.on('error', (error) => {
-  console.error("Redis",error)
+  console.error("Redis:",error)
 });
 
 client.on('ready', () => {
