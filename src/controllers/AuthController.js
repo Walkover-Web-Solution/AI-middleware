@@ -97,10 +97,29 @@ const refresh_token_controller = async (req, res, next) => {
     return next();
 };
 
+const get_client_info_controller = async (req, res, next) => {
+    const { client_id } = req.params;
+
+    if (!client_id) {
+        throw new Error('Client id is required');
+    }
+
+    const result = await auth_service.find_auth_by_client_id(client_id);
+
+    res.locals = {
+        success: true,
+        message: 'Client info found successfully',
+        result
+    }
+    req.statusCode = 200;
+    return next();
+};
+
 export {
     CreateAuthToken,
     save_auth_token_in_db_controller,
     verify_auth_token_controller,
     refresh_token_controller,
+    get_client_info_controller,
     get_auth_token_in_db_controller
 }

@@ -61,9 +61,19 @@ const verify_auth_token = async (client_id, redirection_url) => {
     }
 };
 
+const find_auth_by_client_id = async (client_id) => {
+    try {
+        const result = await Auth.findOne({ client_id },{name: 1, client_id: 1});
+        return result;
+    } catch (error) {
+        throw new Error(`Failed to find auth by client_id: ${error.message}`);
+    }
+};
+
 export default {
     save_auth_token_in_db,
     verify_auth_token,
     find_auth_by_org_id,
-    generate_client_id
+    generate_client_id,
+    find_auth_by_client_id
 };
