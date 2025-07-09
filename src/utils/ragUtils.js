@@ -1,7 +1,7 @@
 import axios from 'axios';
 import csvParser from 'csv-parser';
 import { sendAlert } from '../services/utils/utilityService.js';
-
+import jwt from 'jsonwebtoken';
 
 export function getFileFormatByUrl(url) {
     const formats = [
@@ -179,4 +179,9 @@ export async function getNameAndDescByAI(content) {
     });
     const { title, description } = JSON.parse((await response.json()).response?.data?.content);
     return { name: title, description };
+}
+
+export const genrateToken = async (orgId) => {
+    const token = await jwt.sign({ org_id: process.env.RAG_EMBED_ORG_ID, "project_id": process.env.RAG_EMBED_PROJECT_ID, "user_id": orgId }, process.env.RAG_EMBED_SECRET_KEY);
+    return token
 }
