@@ -19,7 +19,7 @@ const CreateAuthToken = async (req, res) => {
 
 
 
-const save_auth_token_in_db_controller = async (req, res) => {
+const save_auth_token_in_db_controller = async (req, res, next) => {
     const { name, redirection_url } = req.body;
     const org_id = req.profile.org.id;
     
@@ -33,7 +33,7 @@ const save_auth_token_in_db_controller = async (req, res) => {
     return next();
 };
 
-const get_auth_token_in_db_controller = async (req, res) => {
+const get_auth_token_in_db_controller = async (req, res, next) => {
     const org_id = req.profile.org.id;
     
     const result = await auth_service.find_auth_by_org_id(org_id);
@@ -74,7 +74,7 @@ const verify_auth_token_controller = async (req, res) => {
 
 
 
-const refresh_token_controller = async (req, res) => {
+const refresh_token_controller = async (req, res, next) => {
     const { refresh_token } = req.body;
 
     if (!refresh_token) {

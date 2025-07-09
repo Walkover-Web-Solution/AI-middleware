@@ -16,27 +16,33 @@ const find_auth_by_org_id = async (org_id) => {
 
 const save_auth_token_in_db = async (name, redirection_url, org_id) => {
     try {
+        // Check if record with org_id already exists
+        const existingAuth = await find_auth_by_org_id(org_id);
+        
+        if (existingAuth) {
+            return {
+                isNew: false,
+                client_id: existingAuth.client_id,
+                redirection_url: existingAuth.redirection_url,
+                name: existingAuth.name
+            };
+        }
+        
         // Generate a new client_id
         const client_id = generate_client_id();
         
-        // Use upsert to either create or update the document
-        const result = await Auth.updateOne(
-            { org_id },
-            { 
-                $set: {
-                    name,
-                    client_id,
-                    redirection_url
-                }
-            },
-            { upsert: true, new: true }
-        );
-
+        await Auth.create({
+            name,
+            client_id,
+            redirection_url,
+            org_id
+        });
+        
         return {
-            isNew: result.upsertedCount > 0,
-            client_id: result.value.client_id,
-            redirection_url: result.value.redirection_url,
-            name: result.value.name
+            isNew: true,
+            client_id,
+            redirection_url,
+            name
         };
     } catch (error) {
         throw new Error(`Failed to save auth token: ${error.message}`);
