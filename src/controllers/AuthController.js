@@ -98,7 +98,7 @@ const refresh_token_controller = async (req, res, next) => {
 };
 
 const get_client_info_controller = async (req, res, next) => {
-    const { client_id } = req.params;
+    const { client_id } = req.query;
 
     if (!client_id) {
         throw new Error('Client id is required');
