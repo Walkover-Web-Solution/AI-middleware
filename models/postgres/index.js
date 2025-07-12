@@ -10,7 +10,6 @@ dotenv.config();
 
 const basename = path.basename(new URL(import.meta.url).pathname);
 const db = {};
-console.log("dbname is here", process.env.DB_NAME, process.env.DB_PASS,process.env.DB_HOST,process.env.DB_USER)
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
   dialect: 'postgres',
