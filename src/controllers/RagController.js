@@ -3,6 +3,7 @@ import embeddings from '../services/langchainOpenai.js';
 import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
+import configurationServices from '../db_services/ConfigurationServices.js';
 import { genrateToken } from '../utils/ragUtils.js';
 import { sendRagUpdates } from '../services/alertingService.js';
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -107,6 +108,8 @@ export const delete_doc = async (req, res, next) => {
     const orgId = embed ? embed.org_id : req.profile.org.id;
     // const userId = req.profile.user.id;
     const { id } = req.params;
+    // Remove doc id from configuration collections before deleting the document
+    await configurationServices.removeDocIdFromConfigs(id, orgId);
     const result = await rag_parent_data.deleteDocumentById(id);
     const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': id });
     await rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': id });
