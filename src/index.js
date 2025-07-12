@@ -12,7 +12,7 @@ import threadRoutes from './routes/threadRoutes.js'
 import metricsRoutes from "./routes/metrics_routes.js"
 const app = express();
 configDotenv();
-console.log("dbname is here", process.env.DB_NAME)
+console.log("dbname is here", process.env.DB_NAME, process.env.DB_PASS)
 const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
 import config from "../config/config.js";
