@@ -2,7 +2,7 @@
 import { createThread, getThreads } from '../services/threadService.js';
 import { ResponseSender } from '../services/utils/customRes.js';
 import { generateIdentifier } from '../services/utils/utilityService.js';
-
+import configurationService from '../db_services/ConfigurationServices.js';
 const responseSender = new ResponseSender();
 
 // Create a new thread
@@ -72,8 +72,10 @@ async function createSubThreadWithAi(req, res, next) {
 // Get all threads
 async function getAllThreadsController(req, res, next) {
     const { thread_id } = req.params;
-    const { bridge_id } = req.query;
+    const { slugName } = req.query;
     const org_id = req?.profile?.org_id || req?.profile?.org?.id
+    const data = await configurationService.getBridgeIdBySlugname(org_id, slugName);
+    const bridge_id = data?._id?.toString();
     const threads = await getThreads(org_id, thread_id, bridge_id);
     res.locals = { threads, success: true };
     req.statusCode = 200;
