@@ -64,32 +64,37 @@ async function updateMissingBridgeIds() {
                     thread_id,
                     sub_thread_id 
                 };
-                
-                // Find corresponding bridge_id in PostgreSQL 'conversations' table
-                // Using limit:1 since we've grouped by all fields and only need one result
+
+                // Find all corresponding bridge_ids in PostgreSQL 'conversations' table
+                // Removed limit:1 to get all possible bridge_ids
                 const pgConversations = await models.pg.conversations.findAll({
                     attributes: ['bridge_id', 'org_id', 'thread_id', 'sub_thread_id'],
                     where: whereCondition,
                     group: ['bridge_id', 'org_id', 'thread_id', 'sub_thread_id'], // Group to avoid duplicates
-                    limit: 1,
                     raw: true
                 });
                 
-                // PostgreSQL returns at most one row (GROUP BY + LIMIT 1)
-                const pgRecord = pgConversations[0];
-                const bridgeIdFromPg = pgRecord && pgRecord.bridge_id;
-
-                // Fetch all existing Mongo docs with same identifiers (might have bridge_id already)
-                const relatedMongoDocs = await threadsCollection
-                    .find({ org_id, thread_id, sub_thread_id })
-                    .toArray();
-
-                const bridgeIdAlreadyExists = relatedMongoDocs.some(doc => doc.bridge_id === bridgeIdFromPg);
-
-                if (!bridgeIdAlreadyExists) {
-                    // No doc with this bridge_id yet – decide where to store it
-                    if (!thread.bridge_id) {
-                        // Current doc missing bridge_id → update it
+                // PostgreSQL may return multiple rows with different bridge_ids
+                if (pgConversations.length === 0) {
+                    console.log(`No bridge_id found in PostgreSQL for thread ${thread_id}, org_id ${org_id}, sub_thread_id ${sub_thread_id}`);
+                    skippedCount++;
+                    continue;
+                }
+                
+                console.log(`Found ${pgConversations.length} bridge_id(s) for thread ${thread_id}`);
+                
+                // Process the bridge_ids found in PostgreSQL
+                for (let i = 0; i < pgConversations.length; i++) {
+                    const pgRecord = pgConversations[i];
+                    const bridgeIdFromPg = pgRecord.bridge_id;
+                    
+                    if (!bridgeIdFromPg) {
+                        console.log(`Skipping record with null/empty bridge_id for thread ${thread_id}`);
+                        continue;
+                    }
+                    
+                    // For the first bridge_id, update the existing thread
+                    if (i === 0) {
                         await threadsCollection.updateOne(
                             { _id: thread._id },
                             { $set: { bridge_id: bridgeIdFromPg } }
@@ -97,20 +102,18 @@ async function updateMissingBridgeIds() {
                         console.log(`Updated thread ${thread_id} with bridge_id: ${bridgeIdFromPg}`);
                         updatedCount++;
                     } else {
-                        // Current doc already had some bridge_id (shouldn't happen in this loop)
+                        // For additional bridge_ids, create new documents with the same values but different bridge_id
+                        const { _id: _omit, ...threadClone } = thread;
+                        
+                        // Clone the entire document and only change the bridge_id
+                        const newThreadDoc = {
+                            ...threadClone,
+                            bridge_id: bridgeIdFromPg
+                        };
+                        await threadsCollection.insertOne(newThreadDoc);
+                        console.log(`Created new thread document for additional bridge_id: ${bridgeIdFromPg}`);
+                        updatedCount++;
                     }
-                } else {
-                    // A doc with this bridge_id already exists; current doc still needs one → create clone with new bridge_id
-                    const { _id: _omit, ...threadClone } = thread;
-
-                    // Clone the entire document and only change the bridge_id
-                    const newThreadDoc = {
-                        ...threadClone,
-                        bridge_id: bridgeIdFromPg
-                    };
-                    await threadsCollection.insertOne(newThreadDoc);
-                    console.log(`Inserted duplicate thread for new bridge_id: ${bridgeIdFromPg}`);
-                    updatedCount++;
                 }
             } catch (threadError) {
                 console.error(`Error processing thread ${thread._id}:`, threadError);
