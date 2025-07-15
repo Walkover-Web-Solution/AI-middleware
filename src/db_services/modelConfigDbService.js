@@ -1,6 +1,13 @@
 import ModelsConfigModel from "../mongoModel/ModelConfigModel.js";
 
 
+async function checkModelConfigExists(service, model_name) {
+    const query = { service, model_name };
+    
+    const existingConfig = await ModelsConfigModel.findOne(query).lean();
+    return existingConfig ? true : false;
+}
+
 async function getAllModelConfigsForService(service) {
     const modelConfigs = await ModelsConfigModel.find({ 'service': service }).lean();
     return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));
@@ -22,11 +29,18 @@ async function deleteModelConfig(model_name, service) {
     return result;
 }
 
+async function deleteUserModelConfig(model_name, service, org_id) {
+    const result = await ModelsConfigModel.findOneAndDelete({ model_name, service, org_id });
+    return result;
+}
+
 
 export default {
     getAllModelConfigs,
     saveModelConfig,
     getAllModelConfigsForService,
-    deleteModelConfig
+    deleteModelConfig,
+    deleteUserModelConfig,
+    checkModelConfigExists
 }
 
