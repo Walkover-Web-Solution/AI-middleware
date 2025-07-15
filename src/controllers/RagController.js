@@ -41,7 +41,8 @@ export const create_vectors = async (req, res) => {
             name,
             description,
             docType,
-            fileFormat
+            fileFormat, 
+            nestedCrawling
         } = req.body;
 
         if (!name || !description) throw new Error('Name and Description are required!!');
@@ -54,6 +55,9 @@ export const create_vectors = async (req, res) => {
                 data: {
                     url,
                     type :docType,
+                },
+                nesting: {
+                    enabled: nestedCrawling
                 }
             },
             chunking_type,
