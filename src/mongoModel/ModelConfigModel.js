@@ -94,9 +94,11 @@ const ConfigurationSchema = new mongoose.Schema({
         usecase: [{ type: String }]
       }
     },
-    status: { type: Number, default: 1}
-  });
-  
+    status: { type: Number, default: 1},
+    display_name: { type: String, required: false},
+    org_id  : { type: String, required: false}
+});
+
 ConfigurationSchema.index({ model_name: 1, service: 1 }, { unique: true });
 const ModelsConfigModel = mongoose.model("modelConfiguration", ConfigurationSchema);
 export default ModelsConfigModel;

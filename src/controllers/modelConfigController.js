@@ -1,5 +1,6 @@
-import { modelConfigSchema } from "../validation/joi_validation/modelConfigValidation.js";
+import { modelConfigSchema, UserModelConfigSchema } from "../validation/joi_validation/modelConfigValidation.js";
 import modelConfigDbService from "../db_services/modelConfigDbService.js"
+const { validateModel } = await import('../services/utils/model_validation.js');
 
 async function getAllModelConfigForService(req,res, next) {
     const service = req.query.service
@@ -67,10 +68,86 @@ async function saveModelCongiguration(req,res, next) {
     }
 }
 
+async function saveUserModelCongiguration(req,res, next) {
+    try {
+        const org_id = req.profile.org.id;
+        
+        // Merge org_id with request body for validation
+        const dataToValidate = { ...req.body, org_id };
+        
+        const { error, value } = UserModelConfigSchema.validate(dataToValidate);
+        if (error) {
+            return res.status(400).json({ success: false, error: error.details[0].message });
+        }
+
+        // check models validity and support
+        const model_name = value.model_name;
+        const service = value.service;
+        const isModelSupported = await validateModel(service, model_name);
+        
+        if (!isModelSupported) {
+            return res.status(400).json({ 
+                success: false, 
+                error: `Model '${model_name}' is not supported by service '${service}'` 
+            });
+        }
+
+    
+
+        // Check if model with same service and model_name already exists for this org
+        const modelExists = await modelConfigDbService.checkModelConfigExists(value.service, value.model_name);
+        if (modelExists) {
+            return res.status(409).json({ 
+                success: false, 
+                error: `Model configuration with service '${value.service}' and model_name '${value.model_name}' already exists` 
+            });
+        }
+        
+        const result = await modelConfigDbService.saveModelConfig(value);
+        res.locals = {
+            success: true,
+            message: `Model configuration saved successfully`,
+            result
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function deleteUserModelConfiguration(req, res, next) {
+    try {
+        const { model_name, service } = req.query;
+        const org_id = req.profile.org.id;
+
+        if (!model_name || !service || !org_id) {
+            return res.status(400).json({ success: false, error: "model_name and service are required query parameters." });
+        }
+
+        const result = await modelConfigDbService.deleteUserModelConfig(model_name, service, org_id);
+
+        if (!result) {
+            return res.status(404).json({ success: false, message: "Model configuration not found." });
+        }
+
+        res.locals = {
+            success: true,
+            message: `Model configuration '${model_name}' for service '${service}' deleted successfully.`
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (err) {
+        next(err);
+    }
+}
+
 
 export {
     getAllModelConfig,
     getAllModelConfigForService,
     saveModelCongiguration,
+    saveUserModelCongiguration,
+    deleteUserModelConfiguration,
     deleteModelConfiguration
 }
