@@ -172,21 +172,19 @@ async function deleteApikey(req, res) {
         if(version_ids?.length > 0) {
             version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
         }
-        await apikeySaveService.getVersionsUsingId(version_ids, service)
-
         const result = await apikeySaveService.deleteApi(apikey_object_id);
-            if (result.success) {
-                await deleteInCache(result?.updatedData?.version_ids)
-                return res.status(200).json({
-                    success: true,
-                    message: 'Apikey deleted successfully'
-                });
-            } else {
-                return res.status(400).json({
-                    success: false,
-                    message: result.error
-                });
-            }
+        if (result.success) {
+        await deleteInCache(result?.updatedData?.version_ids)
+        return res.status(200).json({
+        success: true,
+        message: 'Apikey deleted successfully'
+        });
+        } else {
+        return res.status(400).json({
+        success: false,
+        message: result.error
+        });
+        }
     } catch (error) {
         return res.status(400).json({
             success: false,
