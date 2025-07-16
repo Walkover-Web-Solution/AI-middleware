@@ -169,6 +169,7 @@ async function deleteApikey(req, res) {
         const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
         let version_ids = apikeys_data?.version_ids || []
         const service = apikeys_data?.service
+        await apikeySaveService.getVersionsUsingId(version_ids, service)
         if(version_ids?.length > 0) {
             version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
         }
