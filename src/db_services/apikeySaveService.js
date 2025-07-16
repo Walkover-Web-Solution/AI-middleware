@@ -1,9 +1,11 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
 import versionModel from "../mongoModel/bridge_version.js"
+import configurationModel from "../mongoModel/configuration.js";
 
 const saveApi = async (data) => {
     try {
         const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
+        const version_ids = []
         const result = await new ApikeyCredential({
             org_id,
             apikey,
@@ -11,7 +13,8 @@ const saveApi = async (data) => {
             name,
             comment,
             folder_id,
-            user_id
+            user_id,
+            version_ids
         }).save();
 
         return {
@@ -189,10 +192,12 @@ async function getVersionsUsingId(versionIds, service) {
         
         return {
             success: true,
-            modifiedCount: result.modifiedCount
+            modifiedCount: versionResult.modifiedCount + configResult.modifiedCount,
+            versionModifiedCount: versionResult.modifiedCount,
+            parentModifiedCount: configResult.modifiedCount
         };
     } catch (error) {
-        console.error('Error updating versions:', error);
+        console.error('Error updating versions and parents:', error);
         return {
             success: false,
             error: error.message
