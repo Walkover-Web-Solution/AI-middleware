@@ -1,9 +1,11 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
 import versionModel from "../mongoModel/bridge_version.js"
+import configurationModel from "../mongoModel/configuration.js";
 
 const saveApi = async (data) => {
     try {
         const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
+        const version_ids = []
         const result = await new ApikeyCredential({
             org_id,
             apikey,
@@ -11,7 +13,8 @@ const saveApi = async (data) => {
             name,
             comment,
             folder_id,
-            user_id
+            user_id,
+            version_ids
         }).save();
 
         return {
@@ -162,7 +165,16 @@ async function getVersionsUsingId(versionIds, service) {
     }
 
     try {
-        const bulkOps = versionIds.map(versionId => ({
+        // First, fetch all version documents to get their parent_ids
+        const versionDocs = await versionModel.find({ _id: { $in: versionIds } }).lean();
+        
+        // Extract parent_ids from version documents
+        const parentIds = versionDocs
+            .filter(doc => doc.parent_id)
+            .map(doc => doc.parent_id);
+        
+        // Create bulk operations for version documents
+        const versionBulkOps = versionIds.map(versionId => ({
             updateOne: {
                 filter: { 
                     _id: versionId,
@@ -177,15 +189,45 @@ async function getVersionsUsingId(versionIds, service) {
             }
         }));
 
-        const result = await versionModel.bulkWrite(bulkOps);
+        // Execute bulk operations for versions
+        const versionResult = await versionModel.bulkWrite(versionBulkOps);
+        
+        // Handle parent documents if any parent_ids exist
+        let configResult = { modifiedCount: 0 };
+        if (parentIds.length > 0) {
+            // Process each document individually instead of using updateMany
+            let modifiedCount = 0;
+            
+            for (const parentId of parentIds) {
+                try {
+                    const updateResult = await configurationModel.updateOne(
+                        { _id: parentId },
+                        { $unset: { [`apikey_object_id.${service}`]: "" } }
+                    );
+                    
+                    if (updateResult.modifiedCount > 0) {
+                        modifiedCount++;
+                    }
+                    
+                    // Log the result for debugging
+                    console.log(`Update result for ${parentId}:`, JSON.stringify(updateResult));
+                } catch (updateError) {
+                    console.error(`Error updating document ${parentId}:`, updateError);
+                }
+            }
+            
+            configResult.modifiedCount = modifiedCount;
+        }
         
         return {
             success: true,
-            modifiedCount: result.modifiedCount
+            modifiedCount: versionResult.modifiedCount + configResult.modifiedCount,
+            versionModifiedCount: versionResult.modifiedCount,
+            parentModifiedCount: configResult.modifiedCount
         };
 
     } catch (error) {
-        console.error('Error updating versions:', error);
+        console.error('Error updating versions and parents:', error);
         return {
             success: false,
             error: error.message
