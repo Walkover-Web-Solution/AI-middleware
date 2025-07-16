@@ -173,9 +173,7 @@ async function deleteApikey(req, res) {
         if(version_ids?.length > 0) {
             version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
         }
-await apikeySaveService.getVersionsUsingId(version_ids, service)
-
-const result = await apikeySaveService.deleteApi(apikey_object_id);
+        const result = await apikeySaveService.deleteApi(apikey_object_id);
         if (result.success) {
         await deleteInCache(result?.updatedData?.version_ids)
         return res.status(200).json({
