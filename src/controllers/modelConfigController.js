@@ -1,6 +1,7 @@
 import { modelConfigSchema, UserModelConfigSchema } from "../validation/joi_validation/modelConfigValidation.js";
 import modelConfigDbService from "../db_services/modelConfigDbService.js"
 const { validateModel } = await import('../services/utils/model_validation.js');
+import ConfigurationServices from "../db_services/ConfigurationServices.js";
 
 async function getAllModelConfigForService(req,res, next) {
     const service = req.query.service
@@ -30,7 +31,7 @@ async function deleteModelConfiguration(req, res, next) {
         if (!model_name || !service) {
             return res.status(400).json({ success: false, error: "model_name and service are required query parameters." });
         }
-
+        
         const result = await modelConfigDbService.deleteModelConfig(model_name, service);
 
         if (!result) {
@@ -123,6 +124,18 @@ async function deleteUserModelConfiguration(req, res, next) {
 
         if (!model_name || !service || !org_id) {
             return res.status(400).json({ success: false, error: "model_name and service are required query parameters." });
+        }
+
+        const usageCheck = await ConfigurationServices.findIdsByModelAndService(model_name, service, org_id);
+        
+        if (usageCheck.success && 
+            (usageCheck.data.agents.length > 0 || usageCheck.data.versions.length > 0)) {
+            // Model is in use, return error with details
+            return res.status(409).json({ 
+                success: false, 
+                error: "Cannot delete model configuration as it is currently in use",
+                usageDetails: usageCheck.data
+            });
         }
 
         const result = await modelConfigDbService.deleteUserModelConfig(model_name, service, org_id);

@@ -289,6 +289,48 @@ const getBridgeByUrlSlugname = async (url_slugName) => {
 };
 
 
+
+
+const findIdsByModelAndService = async (model, service, org_id) => {
+  try {
+    // Find matching configurations in configurationModel
+    const configMatches = await configurationModel.find({
+      'configuration.model': model,
+      service: service,
+      org_id: org_id
+    }).select({ _id: 1, name: 1 }).lean();
+
+    // Find matching configurations in versionModel
+    const versionMatches = await versionModel.find({
+      'configuration.model': model,
+      service: service,
+      org_id: org_id
+    }).select({ _id: 1, name: 1 }).lean();
+
+    // Prepare result object
+    const result = {
+      agents: configMatches.map(item => ({
+        id: item._id.toString(),
+        name: item.name || 'Unnamed Agent'
+      })),
+      versions: versionMatches.map(item => ({
+        id: item._id.toString()
+      }))
+    };
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('Error finding IDs by model and service:', error);
+    return {
+      success: false,
+      error: 'Something went wrong while searching for configurations'
+    };
+  }
+};
+
 export default {
   deleteBridge,
   getApiCallById,
@@ -304,5 +346,6 @@ export default {
   removeActionInBridge,
   getBridges,
   getBridgeNameById,
-  getBridgeByUrlSlugname
+  getBridgeByUrlSlugname,
+  findIdsByModelAndService
 };
