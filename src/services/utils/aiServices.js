@@ -161,7 +161,8 @@ async function callGeminiApi(apiKey) {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
     }
 
     const data = await response.json();
