@@ -666,8 +666,8 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
 }
 
 
-const getSubThreads = async (org_id,thread_id) =>{
-    return await Thread.find({ org_id, thread_id });
+const getSubThreads = async (org_id,thread_id, bridge_id) =>{
+    return await Thread.find({ org_id, thread_id, bridge_id });
 }
 
 async function sortThreadsByHits(threads) {
