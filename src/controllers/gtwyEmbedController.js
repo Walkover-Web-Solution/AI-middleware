@@ -5,10 +5,13 @@ import { generateIdentifier } from "../services/utils/utilityService.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
       const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+      const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
+      const config = folder?.config || {};
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
         token: await createProxyToken(embedDetails),
+        config
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
 }
@@ -27,6 +30,24 @@ const getAllEmbed = async (req, res) => {
     res.status(200).json({ data: data.map(folder => ({...folder.toObject(), folder_id: folder._id})) });
 }
 
+const updateEmbed = async (req, res) => {
+    const folder_id = req.body.folder_id;
+    const config = req.body.config;
+    const org_id = req.profile.org.id;
+    
+    const folder = await FolderModel.findOne({ _id: folder_id, org_id });
+    if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    folder.config = config;
+    await folder.save();
+    
+    res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });
+}
+
+
+
 const genrateToken = async (req, res) => {
   let gtwyAccessToken;
   const data = await getOrganizationById(req.profile.org.id)
@@ -44,4 +65,4 @@ const genrateToken = async (req, res) => {
   res.status(200).json({ gtwyAccessToken });
 }
 
-export { embedLogin, createEmbed, getAllEmbed, genrateToken };
+export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed };
