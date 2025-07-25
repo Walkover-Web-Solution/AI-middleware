@@ -149,7 +149,7 @@ const EmbeddecodeToken = async (req, res, next) => {
         }
         return res.status(404).json({ message: 'unauthorized user' });
       }
-      else{
+      else if (orgToken) {
         const checkToken = jwt.verify(token, orgToken);
         if(checkToken){
         req.isGtwyUser = true;
