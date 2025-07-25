@@ -5,7 +5,7 @@ import {
 } from '../utils/helloUtils.js';
 import ConfigurationServices from '../db_services/ConfigurationServices.js';
 import { subscribeSchema } from '../validation/joi_validation/bridge.js';
-import ModelsConfig from '../configs/modelConfiguration.js';
+import modelConfigService from '../db_services/modelConfigDbService.js'
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
     // Validate request body
@@ -31,8 +31,9 @@ export const subscribe = async (req, res, next) => {
         data = (await ConfigurationServices.getBridgeByUrlSlugname(url_slugName));
     }
     const model = data?.modelConfig?.model
-    const modelName = Object.keys(ModelsConfig).find(key => ModelsConfig[key]().configuration.model.default === model);
-    const vision = modelName ? ModelsConfig[modelName]().configuration.vision : null;
+    const service = data?.service;
+    const modelConfig = await modelConfigService.getModelConfigsByNameAndService(model, service);
+    const vision = modelConfig[0]?.validationConfig?.vision;
     const services = data?.apikey_object_id ? Object.keys(data?.apikey_object_id) : []
 
     try {
