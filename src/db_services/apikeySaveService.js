@@ -1,9 +1,11 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
 import versionModel from "../mongoModel/bridge_version.js"
+import configurationModel from "../mongoModel/configuration.js";
 
 const saveApi = async (data) => {
     try {
         const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
+        const version_ids = []
         const result = await new ApikeyCredential({
             org_id,
             apikey,
@@ -11,7 +13,8 @@ const saveApi = async (data) => {
             name,
             comment,
             folder_id,
-            user_id
+            user_id,
+            version_ids
         }).save();
 
         return {
@@ -162,34 +165,80 @@ async function getVersionsUsingId(versionIds, service) {
     }
 
     try {
-        const bulkOps = versionIds.map(versionId => ({
-            updateOne: {
-                filter: { 
-                    _id: versionId,
-                    $or: [
-                        { [`apikey_object_id.${service}`]: { $exists: true } },
-                        { service: service }
-                    ]
-                },
-                update: {
-                    $set: { [`apikey_object_id.${service}`]: '' }
-                }
-            }
-        }));
+        // First, fetch all version documents to get their parent_ids (only fetch parent_id field)
+        const versionDocs = await versionModel.find(
+            { _id: { $in: versionIds } }, 
+            { parent_id: 1 }
+        ).lean();
+        
+        // Extract unique parent_ids from version documents
+        const parentIds = [...new Set(
+            versionDocs
+                .filter(doc => doc.parent_id)
+                .map(doc => doc.parent_id)
+        )];
 
-        const result = await versionModel.bulkWrite(bulkOps);
+        // Process version documents using bulkWrite
+        const versionResult = await processBulkUpdates(
+            versionModel, 
+            versionIds, 
+            service
+        );
+        
+        // Process parent documents using bulkWrite if any exist
+        const configResult = parentIds.length > 0 
+            ? await processBulkUpdates(configurationModel, parentIds, service)
+            : { modifiedCount: 0 };
         
         return {
             success: true,
-            modifiedCount: result.modifiedCount
+            modifiedCount: versionResult.modifiedCount + configResult.modifiedCount,
+            versionModifiedCount: versionResult.modifiedCount,
+            parentModifiedCount: configResult.modifiedCount
         };
-
     } catch (error) {
-        console.error('Error updating versions:', error);
+        console.error('Error updating versions and parents:', error);
         return {
             success: false,
             error: error.message
         };
+    }
+}
+
+/**
+ * Helper function to process bulk updates for a collection
+ * @param {Object} model - Mongoose model to update
+ * @param {Array} ids - Array of document IDs to update
+ * @param {String} service - Service name to unset in apikey_object_id
+ * @returns {Object} Result with modifiedCount
+ */
+async function processBulkUpdates(model, ids, service) {
+    if (!ids.length) return { modifiedCount: 0 };
+    
+    try {
+        // Create bulk operations
+        const bulkOps = ids.map(id => ({
+            updateOne: {
+                filter: { _id: id },
+                update: { $unset: { [`apikey_object_id.${service}`]: "" } }
+            }
+        }));
+        
+        // Execute bulk operations
+        const bulkResult = await model.bulkWrite(bulkOps);
+        
+        // Log results for debugging
+        console.log(`Bulk update results for ${model.modelName}:`, 
+            JSON.stringify({
+                matchedCount: bulkResult.matchedCount,
+                modifiedCount: bulkResult.modifiedCount
+            })
+        );
+        
+        return { modifiedCount: bulkResult.modifiedCount };
+    } catch (error) {
+        console.error(`Error in bulk update for ${model.modelName}:`, error);
+        return { modifiedCount: 0 };
     }
 }
 

@@ -2,7 +2,7 @@ import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache} from "../../cache_service/index.js"
-import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi } from "../utils/aiServices.js"
+import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi } from "../utils/aiServices.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -43,6 +43,9 @@ const saveApikey = async(req,res) => {
                 break;
             case 'mistral':
                 check = await callMistralApi(apikey)
+                break;
+            case 'gemini':
+                check = await callGeminiApi(apikey)
                 break;
         }
         if(!check.success){
@@ -169,24 +172,23 @@ async function deleteApikey(req, res) {
         const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
         let version_ids = apikeys_data?.version_ids || []
         const service = apikeys_data?.service
+        await apikeySaveService.getVersionsUsingId(version_ids, service)
         if(version_ids?.length > 0) {
             version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
         }
-        await apikeySaveService.getVersionsUsingId(version_ids, service)
-
         const result = await apikeySaveService.deleteApi(apikey_object_id);
-            if (result.success) {
-                await deleteInCache(result?.updatedData?.version_ids)
-                return res.status(200).json({
-                    success: true,
-                    message: 'Apikey deleted successfully'
-                });
-            } else {
-                return res.status(400).json({
-                    success: false,
-                    message: result.error
-                });
-            }
+        if (result.success) {
+        await deleteInCache(result?.updatedData?.version_ids)
+        return res.status(200).json({
+        success: true,
+        message: 'Apikey deleted successfully'
+        });
+        } else {
+        return res.status(400).json({
+        success: false,
+        message: result.error
+        });
+        }
     } catch (error) {
         return res.status(400).json({
             success: false,
