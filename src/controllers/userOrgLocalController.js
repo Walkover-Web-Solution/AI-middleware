@@ -77,7 +77,6 @@ const embedUser = async (req, res) => {
     //   const projectSettings = await projects_db_service.findFields(project_id, 'settings');
     const embedDetails = !req.isGtwyUser ?
         {
-            
             user_id: req.Embed.user_id,
             company_id: req?.Embed?.org_id,
             company_name: req.Embed.org_name,
