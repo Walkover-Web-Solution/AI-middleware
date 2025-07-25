@@ -90,6 +90,9 @@ const configuration = new mongoose.Schema({
   page_config : {
     type : Object,
     default : {}
+  },
+  apikey_object_id: {
+    type: Object
   }
 });
 
