@@ -18,9 +18,10 @@ const embedLogin = async (req, res) => {
 
 const createEmbed = async (req, res) => {
     const name = req.body.name;
+    const config = req.body.config;
     const org_id =  req.profile.org.id
     const type = "embed"
-    const folder = await FolderModel.create({ name, org_id, type });
+    const folder = await FolderModel.create({ name, org_id, type, config });
     res.status(200).json({ data:{...folder.toObject(), folder_id: folder._id} });
 }
 
@@ -53,7 +54,7 @@ const genrateToken = async (req, res) => {
   const data = await getOrganizationById(req.profile.org.id)
   gtwyAccessToken = data?.meta?.gtwyAccessToken;
   if(!gtwyAccessToken) {
-    gtwyAccessToken = generateIdentifier(20);
+    gtwyAccessToken = generateIdentifier(32);
     await updateOrganizationData(req.profile.org.id,  {
       meta: {
         ...data?.meta,
