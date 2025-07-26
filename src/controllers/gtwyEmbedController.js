@@ -53,7 +53,7 @@ const genrateToken = async (req, res) => {
   let gtwyAccessToken;
   const data = await getOrganizationById(req.profile.org.id)
   gtwyAccessToken = data?.meta?.gtwyAccessToken;
-  if(!gtwyAccessToken || gtwyAccessToken?.length < 32) {
+  if(!gtwyAccessToken) {
     gtwyAccessToken = generateIdentifier(32);
     await updateOrganizationData(req.profile.org.id,  {
       meta: {
