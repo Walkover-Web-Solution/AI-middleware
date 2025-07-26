@@ -121,7 +121,7 @@ const EmbeddecodeToken = async (req, res, next) => {
       // const orgTokenFromDb = await orgDbServices.find(decodedToken.org_id);
       const orgTokenFromDb = await getOrganizationById(decodedToken?.org_id);
       const orgToken = orgTokenFromDb?.meta?.auth_token;
-      if (orgToken) {
+      if (orgToken && !decodedToken?.gtwyAIDocs) {
         const checkToken = jwt.verify(token, orgToken);
         if (checkToken) {
           if (checkToken.user_id) checkToken.user_id = encryptString(checkToken.user_id);
@@ -149,6 +149,18 @@ const EmbeddecodeToken = async (req, res, next) => {
         }
         return res.status(404).json({ message: 'unauthorized user' });
       }
+      else if (orgToken) {
+        const checkToken = jwt.verify(token, orgToken);
+        if(checkToken){
+        req.isGtwyUser = true;
+        req.company_id = decodedToken?.org_id
+        req.company_name = orgTokenFromDb?.name
+        req.email = orgTokenFromDb?.email;
+        req.user_id = orgTokenFromDb?.created_by;
+        return next();
+      }
+    }
+    return res.status(404).json({ message: 'unauthorized user' });
     }
     return res.status(401).json({ message: 'unauthorized user ' });
   } catch (err) {
