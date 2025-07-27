@@ -241,7 +241,7 @@ const loginUser = async (req, res) => {
                     "themeColor": "#000000"
                 },
                 userId: req.chatBot.userId,
-                token: `Bearer ${getToken({ user_id:req.chatBot.userId, userEmail: req.chatBot.userEmail, org_id:"public", variables, ispublic }, { exp,iat })}`,
+                token: `Bearer ${getToken({ user_id:req.chatBot.userId, userEmail: req.chatBot.userEmail, org_id:"public", variables, ispublic }, { exp,iat }, true)}`,
                 chatbot_id: "Public_Agents",
             };
             return res.status(200).json({ data: dataToSend, success: true });
@@ -251,7 +251,7 @@ const loginUser = async (req, res) => {
         const dataToSend = {
             config: chatBotConfig.config,
             userId: user_id,
-            token: `Bearer ${getToken({ user_id, org_id, variables }, { exp,iat })}`,
+            token: `Bearer ${getToken({ user_id, org_id, variables }, { exp,iat }, false)}`,
             chatbot_id,
         };
         return res.status(200).json({ data: dataToSend, success: true });
