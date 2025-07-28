@@ -2,7 +2,7 @@ import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache} from "../../cache_service/index.js"
-import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi } from "../utils/aiServices.js"
+import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi } from "../utils/aiServices.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -43,6 +43,9 @@ const saveApikey = async(req,res) => {
                 break;
             case 'mistral':
                 check = await callMistralApi(apikey)
+                break;
+            case 'gemini':
+                check = await callGeminiApi(apikey)
                 break;
         }
         if(!check.success){

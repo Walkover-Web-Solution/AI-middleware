@@ -139,6 +139,38 @@ async function callMistralApi(apiKey) {
   }
 }
 
+async function callGeminiApi(apiKey) {
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: 'hi'
+              }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
 
 
 export {
@@ -146,5 +178,6 @@ export {
   callAnthropicApi,
   callGroqApi,
   callOpenRouterApi,
-  callMistralApi
+  callMistralApi,
+  callGeminiApi
 }
