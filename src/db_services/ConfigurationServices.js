@@ -288,6 +288,66 @@ const getBridgeByUrlSlugname = async (url_slugName) => {
   }
 };
 
+// Remove document id from doc_ids arrays in configuration and version collections
+const removeDocIdFromConfigs = async (docId, orgId) => {
+  try {
+    console.log(`Attempting to remove docId: ${docId} from configurations with orgId: ${orgId}`);
+    
+    // First, find documents that contain this ID to verify they exist
+    const configsWithId = await configurationModel.find({ doc_ids: docId }).lean();
+    const versionsWithId = await versionModel.find({ doc_ids: docId }).lean();
+    
+    console.log(`Found ${configsWithId.length} configs and ${versionsWithId.length} versions with docId`);
+    if (configsWithId.length > 0) {
+      console.log('Sample config:', JSON.stringify({
+        _id: configsWithId[0]._id,
+        org_id: configsWithId[0].org_id,
+        doc_ids: configsWithId[0].doc_ids
+      }));
+    }
+    
+    if (versionsWithId.length > 0) {
+      console.log('Sample version:', JSON.stringify({
+        _id: versionsWithId[0]._id,
+        org_id: versionsWithId[0].org_id,
+        doc_ids: versionsWithId[0].doc_ids
+      }));
+    }
+    
+    // Try a more direct approach with explicit string conversion
+    const stringId = String(docId);
+    console.log(`Using string ID: ${stringId}`);
+    
+    // Get the MongoDB collections directly
+    const configCollection = configurationModel.collection;
+    const versionCollection = versionModel.collection;
+    
+    // Use direct MongoDB driver calls
+    const resConfig = await configCollection.updateMany(
+      { doc_ids: stringId },
+      { $pull: { doc_ids: stringId } }
+    );
+    
+    const resVersion = await versionCollection.updateMany(
+      { doc_ids: stringId },
+      { $pull: { doc_ids: stringId } }
+    );
+    
+    console.log('Update results:', { 
+      configResult: JSON.stringify(resConfig),
+      versionResult: JSON.stringify(resVersion)
+    });
+    
+    const removedFromConfigs = resConfig?.modifiedCount ?? resConfig?.nModified ?? 0;
+    const removedFromVersions = resVersion?.modifiedCount ?? resVersion?.nModified ?? 0;
+    const totalRemoved = removedFromConfigs + removedFromVersions;
+    console.log(`Removed doc id ${docId} from ${removedFromConfigs} configuration docs and ${removedFromVersions} version docs (total ${totalRemoved}).`);
+    return { success: true, removedFromConfigs, removedFromVersions, totalRemoved };
+  } catch (error) {
+    console.error("Error removing doc id from configs =>", error);
+    return { success: false, error: error?.message || 'something went wrong!!' };
+  }
+};
 
 export default {
   deleteBridge,
@@ -304,5 +364,7 @@ export default {
   removeActionInBridge,
   getBridges,
   getBridgeNameById,
-  getBridgeByUrlSlugname
+  getBridgeByUrlSlugname,
+  removeDocIdFromConfigs,
+  
 };
