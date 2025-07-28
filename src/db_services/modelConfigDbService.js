@@ -22,11 +22,17 @@ async function deleteModelConfig(model_name, service) {
     return result;
 }
 
+async function getModelConfigsByNameAndService(model_name, service) {
+    const modelConfigs = await ModelsConfigModel.find({ model_name, service }).lean();
+    return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));
+}
+
 
 export default {
     getAllModelConfigs,
     saveModelConfig,
     getAllModelConfigsForService,
-    deleteModelConfig
+    deleteModelConfig,
+    getModelConfigsByNameAndService
 }
 
