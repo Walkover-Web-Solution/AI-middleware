@@ -15,7 +15,7 @@ module.exports = {
       UPDATE conversations 
       SET image_url_temp = CASE 
         WHEN image_url IS NOT NULL AND image_url != '' THEN ARRAY[image_url]
-        ELSE NULL
+        ELSE ARRAY[]::text[]
       END
     `);
 
