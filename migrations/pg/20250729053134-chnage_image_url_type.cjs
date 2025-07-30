@@ -23,7 +23,7 @@ module.exports = {
     await queryInterface.removeColumn('conversations', 'image_url');
 
     // Rename the temporary column to the original name
-    await queryInterface.renameColumn('conversations', 'image_url_temp', 'image_url');
+    await queryInterface.renameColumn('conversations', 'image_url_temp', 'image_urls');
   },
 
   async down (queryInterface, Sequelize) {
