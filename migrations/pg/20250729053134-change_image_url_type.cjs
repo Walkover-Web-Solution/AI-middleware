@@ -3,19 +3,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    // First, add a temporary column to store array data
+    // First, add a temporary column to store array of JSON data
     await queryInterface.addColumn('conversations', 'image_url_temp', {
-      type: Sequelize.ARRAY(Sequelize.TEXT),
+      type: Sequelize.ARRAY(Sequelize.JSON),
       allowNull: true
     });
 
-    // Convert existing text data to array format
-    // If image_url is not null and not empty, wrap it in an array
+    // Convert existing text data to array of JSON format
+    // If image_url is not null and not empty, create JSON object with permanent_url
     await queryInterface.sequelize.query(`
       UPDATE conversations 
       SET image_url_temp = CASE 
-        WHEN image_url IS NOT NULL AND image_url != '' THEN ARRAY[image_url]
-        ELSE ARRAY[]::text[]
+        WHEN image_url IS NOT NULL AND image_url != '' THEN 
+          ARRAY[json_build_object('revised_prompt', '', 'permanent_url', image_url)]
+        ELSE ARRAY[]::json[]
       END
     `);
 
@@ -33,17 +34,18 @@ module.exports = {
       allowNull: true
     });
 
-    // Convert array data back to text format (take first element)
+    // Convert JSON array data back to text format (extract permanent_url from first element)
     await queryInterface.sequelize.query(`
       UPDATE conversations 
       SET image_url_temp = CASE 
-        WHEN image_url IS NOT NULL AND array_length(image_url, 1) > 0 THEN image_url[1]
+        WHEN image_urls IS NOT NULL AND array_length(image_urls, 1) > 0 THEN 
+          image_urls[1]->>'permanent_url'
         ELSE NULL
       END
     `);
 
-    // Drop the array column
-    await queryInterface.removeColumn('conversations', 'image_url');
+    // Drop the JSON array column
+    await queryInterface.removeColumn('conversations', 'image_urls');
 
     // Rename the temporary column back to the original name
     await queryInterface.renameColumn('conversations', 'image_url_temp', 'image_url');
