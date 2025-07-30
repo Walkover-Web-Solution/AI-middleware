@@ -87,7 +87,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.tools_call_data,
         conversations.user_feedback,
         conversations.sub_thread_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations.message_id,
         raw_data.error,
@@ -114,7 +114,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.sub_thread_id,
         conversations.thread_id,
         conversations.version_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations."AiConfig",
         conversations.annotations,
@@ -653,7 +653,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       'is_reset',
       'tools_call_data',
-      'image_url'
+      'image_urls'
     ],
     where: whereClause,
     order: [['id', 'DESC']],
