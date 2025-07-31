@@ -159,6 +159,7 @@ export async function getChunksByAi(text, chunk_size, chunk_overlap) {
     }
 }
 
+
 export const genrateToken = async (orgId) => {
     const token = await jwt.sign({ org_id: process.env.RAG_EMBED_ORG_ID, "project_id": process.env.RAG_EMBED_PROJECT_ID, "user_id": orgId }, process.env.RAG_EMBED_SECRET_KEY);
     return token
@@ -168,6 +169,7 @@ export function extractUniqueUrls(text) {
     const matches = text.match(/https?:\/\/[^\s<>()[\]{}"']+|www\.[^\s<>()[\]{}"']+/g) || [];
     return [...new Set(matches.map(url => url.replace(/[.,!?;:)\]}]+$/, '')))];
 }
+
 
 export async function getNameAndDescByAI(content) {
     const response = await fetch("https://api.gtwy.ai/api/v2/model/chat/completion", {

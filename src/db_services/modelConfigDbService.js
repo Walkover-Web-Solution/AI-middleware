@@ -34,6 +34,11 @@ async function deleteUserModelConfig(model_name, service, org_id) {
     return result;
 }
 
+async function getModelConfigsByNameAndService(model_name, service) {
+    const modelConfigs = await ModelsConfigModel.find({ model_name, service }).lean();
+    return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));
+}
+
 
 export default {
     getAllModelConfigs,
@@ -41,6 +46,7 @@ export default {
     getAllModelConfigsForService,
     deleteModelConfig,
     deleteUserModelConfig,
-    checkModelConfigExists
+    checkModelConfigExists,
+    getModelConfigsByNameAndService
 }
 

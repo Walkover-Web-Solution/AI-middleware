@@ -27,6 +27,10 @@ const ApikeyCredentials = new mongoose.Schema({
     user_id: {
         type: String,
         default: ""
+    },
+    version_ids: {
+        type: Array,
+        default: []
     }
 });
 ApikeyCredentials.index({name: 1, org_id: 1, folder_id: 1}, {unique: true})

@@ -87,7 +87,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.tools_call_data,
         conversations.user_feedback,
         conversations.sub_thread_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations.message_id,
         raw_data.error,
@@ -114,7 +114,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.sub_thread_id,
         conversations.thread_id,
         conversations.version_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations."AiConfig",
         conversations.annotations,
@@ -653,7 +653,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       'is_reset',
       'tools_call_data',
-      'image_url'
+      'image_urls'
     ],
     where: whereClause,
     order: [['id', 'DESC']],
@@ -666,8 +666,8 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
 }
 
 
-const getSubThreads = async (org_id,thread_id) =>{
-    return await Thread.find({ org_id, thread_id });
+const getSubThreads = async (org_id,thread_id, bridge_id) =>{
+    return await Thread.find({ org_id, thread_id, bridge_id });
 }
 
 async function sortThreadsByHits(threads) {
@@ -709,7 +709,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
       while (hasMoreData) {
         const response = await getUsers(org_id, pageNo, pageSize = 50)
         allUserData = [...allUserData, ...response['data']];
-        hasMoreData = response?.totalEntityCount < allUserData;
+        hasMoreData = response?.totalEntityCount > allUserData.length;
         pageNo++;
       }
       await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
