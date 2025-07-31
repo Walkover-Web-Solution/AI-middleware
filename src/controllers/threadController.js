@@ -74,9 +74,13 @@ async function getAllThreadsController(req, res, next) {
     const { thread_id } = req.params;
     const { slugName } = req.query;
     const org_id = req?.profile?.org_id || req?.profile?.org?.id
-    const data = await configurationService.getBridgeIdBySlugname(org_id, slugName);
+    const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);
     const bridge_id = data?._id?.toString();
-    const threads = await getThreads(org_id, thread_id, bridge_id);
+    const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
+    const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);
+    const bridge_id = data?._id?.toString();
+    const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
+    const threads = await getThreads(bridge_org_id, thread_id, bridge_id);
     res.locals = { threads, success: true };
     req.statusCode = 200;
     return next();
