@@ -15,13 +15,13 @@ const getToken = (data, expire) => {
   if(expire?.exp&&expire?.iat){
     token = jwt.sign(
       { ...expire,...data },
-      process.env.CHATBOTSECRETKEY,
+      data.org_id === "public" ? process.env.PUBLIC_CHATBOT_TOKEN : process.env.CHATBOTSECRETKEY,
       
     );
   }else{
     token = jwt.sign(
       { ...data },
-      process.env.CHATBOTSECRETKEY,
+      data.org_id === "public" ? process.env.PUBLIC_CHATBOT_TOKEN : process.env.CHATBOTSECRETKEY,
       { expiresIn: '48h' }
     );
   }
