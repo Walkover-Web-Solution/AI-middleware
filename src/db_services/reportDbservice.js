@@ -348,9 +348,9 @@ function getReportDateRange(reportType) {
       endDate: lastDayOfLastMonth
     };
   } else if (reportType === 'weekly') {
-    const day = now.getDay();
+    const day = now.getDay() || 7; // Convert Sunday (0) to 7 for easier calculation
     const prevMonday = new Date(now);
-    prevMonday.setDate(now.getDate() - day - 6); // Go back to previous Monday
+    prevMonday.setDate(now.getDate() - (day + 6)); // Go back to previous Monday
     prevMonday.setHours(0, 0, 0, 0);
     
     const prevSunday = new Date(prevMonday);
