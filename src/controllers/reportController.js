@@ -1,4 +1,4 @@
-import {get_data_from_pg, get_data_for_daily_report, get_data_for_monthly_report, get_data_for_weekly_report} from '../db_services/reportDbservice.js';
+import {get_data_from_pg, get_data_for_daily_report, get_latency_report_data} from '../db_services/reportDbservice.js';
 import { getallOrgs } from '../utils/proxyUtils.js';
 
 
@@ -17,7 +17,7 @@ async function getMonthlyreports(req,res, next) {
     if (Array.isArray(orgResp?.data?.data)) {
         orgIds = orgResp.data.data.map(org => String(org.id));
     }
-    const data = await get_data_for_monthly_report(orgIds);
+    const data = await get_latency_report_data(orgIds, 'monthly');
     res.locals = { data, success: true };
     req.statusCode = 200;
     return next();
@@ -29,7 +29,7 @@ async function getWeeklyreports(req,res, next) {
     if (Array.isArray(orgResp?.data?.data)) {
         orgIds = orgResp.data.data.map(org => String(org.id));
     }
-    const data = await get_data_for_weekly_report(orgIds);
+    const data = await get_latency_report_data(orgIds, 'weekly');
     if (res) {
         res.locals = { data, success: true };
         req.statusCode = 200;
