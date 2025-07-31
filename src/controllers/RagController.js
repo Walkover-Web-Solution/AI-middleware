@@ -5,6 +5,11 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
 import { genrateToken } from '../utils/ragUtils.js';
 import { sendRagUpdates } from '../services/alertingService.js';
+import { generateIdentifier } from '../services/utils/utilityService.js';
+import { getOrganizationById, updateOrganizationData } from '../services/proxyService.js';
+import token from "../services/commonService/generateToken.js";
+
+
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
 export const GetAllDocuments = async (req, res, next) => {
@@ -41,7 +46,8 @@ export const create_vectors = async (req, res) => {
             name,
             description,
             docType,
-            fileFormat
+            fileFormat, 
+            nestedCrawling
         } = req.body;
 
         if (!name || !description) throw new Error('Name and Description are required!!');
@@ -54,6 +60,9 @@ export const create_vectors = async (req, res) => {
                 data: {
                     url,
                     type :docType,
+                },
+                nesting: {
+                    enabled: nestedCrawling
                 }
             },
             chunking_type,
@@ -81,16 +90,42 @@ export const create_vectors = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-
+export const getKnowledgeBaseToken = async (req, res) => {
+    const org_id =  req.profile.org.id
+       let auth_token = generateIdentifier(14);
+       const data = await getOrganizationById(org_id)
+       
+       if(!data?.meta?.accessKey) {
+       auth_token= await updateOrganizationData(org_id,  {
+           meta: {
+             ...data?.meta,
+             auth_token : auth_token,
+           },
+         },
+       )
+    auth_token = auth_token?.data?.company?.meta.auth_token
+}
+       
+    const knowledgeBaseToken = token.generateToken({ payload: { org_id, user_id: req.profile.user.id, gtwyAIDocs:"true"}, accessKey: auth_token})
+    return res.status(200).json({ result:  knowledgeBaseToken });
+};
 export const get_vectors_and_text = async (req, res, next) => {
     // TO DO: implement get_vectors_and_text logic
     const { doc_id, query, top_k = 3 } = req.body;
     const org_id = req.profile?.org?.id || "";
     if (!query) throw new Error("Query is required.");
     // Generate embedding
+
+    const start = process.hrtime.bigint();
     const embedding = await embeddings.embedQuery(query);
+    const embedTime = process.hrtime.bigint() - start;
     // Query Pinecone (using service)
+    const start2 = process.hrtime.bigint();
     const queryResponseIds = await queryPinecone(embedding, org_id, doc_id, top_k);
+    const queryTime = process.hrtime.bigint() - start2;
+    console.log(`Embedding took ${Number(embedTime) / 1_000_000} ms`);
+    console.log(`Query took ${Number(queryTime) / 1_000_000} ms`);
+    
 
     // Query MongoDB using retrieved chunk IDs
     const mongoResults = await rag_parent_data.getChunksByIds(queryResponseIds)
