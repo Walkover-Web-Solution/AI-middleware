@@ -104,7 +104,7 @@ async function deleteUserModelConfiguration(req, res, next) {
     const org_id = req.profile.org.id;
 
     if (!model_name || !service || !org_id) {
-        return res.status(400).json({ success: false, error: "model_name and service are required query parameters." });
+        return res.status(400).json({ success: false, error: "model_name, service, and org_id are required parameters." });
     }
 
     const usageCheck = await ConfigurationServices.findIdsByModelAndService(model_name, service, org_id);
