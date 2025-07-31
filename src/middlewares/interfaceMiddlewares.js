@@ -90,7 +90,7 @@ const combinedAuthWithChatBotAndPublicChatbot = async (req, res, next) => {
       try {
         // Try public chatbot auth first
         await publicChatbotAuth(req, res, () => {});
-        if (req.chatBot?.ispublic) {
+        if (req?.chatBot?.ispublic) {
           // If public auth succeeded, proceed
           return next();
         }

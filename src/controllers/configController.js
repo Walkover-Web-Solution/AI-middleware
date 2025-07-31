@@ -9,7 +9,7 @@ router.get('/userfeedbackcount/:bridge_id',middleware,common.userFeedbackCount);
 router.get('/history/:bridge_id', middleware, common.getMessageHistory);
 router.get('/history/sub-thread/:thread_id', middleware, common.getAllSubThreadsController);
 router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
-router.get('/gethistory/:thread_id/:bridge_id', middleware, common.getThreads); //Public API for getting history for particular thread
+router.get('/gethistory/:thread_id/:bridge_id', combinedAuthWithChatBotAndPublicChatbot, common.getThreads); //Public API for getting history for particular thread
 router.get('/gethistory-chatbot/:thread_id/:bridge_slugName', combinedAuthWithChatBotAndPublicChatbot, common.getThreads);//Route Depricated //Public API for getting history for particular thread
 router.get('/gethistory-chatbot/:thread_id/:bridge_slugName/:message_id', combinedAuthWithChatBotAndPublicChatbot, common.getMessageByMessageId);//Route Depricated //Public API for getting history for particular thread
 router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
