@@ -110,7 +110,7 @@ const configuration = new mongoose.Schema({
   },
   page_config : {
     type : pageConfigSchema,
-    default : {},
+    default : null,
   },
   apikey_object_id: {
     type: Object
