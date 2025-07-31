@@ -73,7 +73,10 @@ async function createSubThreadWithAi(req, res, next) {
 async function getAllThreadsController(req, res, next) {
     const { thread_id } = req.params;
     const { slugName } = req.query;
-    let org_id = req?.profile?.org_id || req?.profile?.org?.id
+    const org_id = req?.profile?.org_id || req?.profile?.org?.id
+    const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);
+    const bridge_id = data?._id?.toString();
+    const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
     const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);
     const bridge_id = data?._id?.toString();
     const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
