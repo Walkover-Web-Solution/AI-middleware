@@ -1,8 +1,8 @@
 import ModelsConfigModel from "../mongoModel/ModelConfigModel.js";
 
 
-async function checkModelConfigExists(service, model_name) {
-    const query = { service, model_name };
+async function checkModelConfigExists(service, model_name, org_id) {
+    const query = { service, model_name, org_id };
     
     const existingConfig = await ModelsConfigModel.findOne(query).lean();
     return existingConfig ? true : false;
