@@ -84,7 +84,7 @@ async function saveUserModelCongiguration(req,res, next) {
 
 
     // Check if model with same service and model_name already exists for this org
-    const modelExists = await modelConfigDbService.checkModelConfigExists(value.service, value.model_name, org_id);
+    const modelExists = await modelConfigDbService.checkModelConfigExists(value.service, value.model_name);
     if (modelExists) {
         throw new Error(`Model configuration with service '${value.service}' and model_name '${value.model_name}' already exists`);
     }
