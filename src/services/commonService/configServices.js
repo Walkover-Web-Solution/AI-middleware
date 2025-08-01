@@ -16,7 +16,7 @@ const getThreads = async (req, res,next) => {
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id=thread_id, version_id } = req.query
-    let { org_id } = req.body;
+    let { org_id } = req?.profile?.org?.id || req.profile.org_id;
     let starterQuestion = []
     let bridge = {}
     let {user_feedback, error} = req.query
@@ -45,7 +45,7 @@ const getThreads = async (req, res,next) => {
 const getMessageByMessageId = async (req, res, next) => {
   let { bridge_id, message_id } = req.params;
   const { thread_id, bridge_slugName } = req.params;
-  let { org_id } = req.body;
+  let { org_id } = req?.profile?.org?.id || req.profile.org_id;
 
   if (bridge_slugName) {
     bridge_id = req.chatBot?.ispublic ? (await configurationService.getBridgeByUrlSlugname(bridge_slugName))?._id: (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
@@ -60,7 +60,7 @@ const getMessageByMessageId = async (req, res, next) => {
 const getMessageHistory = async (req, res, next) => {
   try {
     const { bridge_id } = req.params;
-    const { org_id } = req.body;
+    const { org_id } = req?.profile?.org?.id || req.profile.org_id;
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime } = req.query;
@@ -104,9 +104,7 @@ const deleteBridges = async (req, res,next) => {
     const {
       bridge_id
     } = req.params;
-    const {
-      org_id
-    } = req.body;
+    const org_id = req.profile.org?.id || req.profile.org_id;
     const result = await configurationService.deleteBridge(bridge_id, org_id);
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
