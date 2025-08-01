@@ -1,12 +1,23 @@
 import Joi from "joi";
 
 const modelConfigSchema = Joi.object({
-    service: Joi.string().required(),
-    model_name: Joi.string().required(),
+    service : Joi.string().valid('openai', 'google', 'anthropic', 'groq', 'open_router', 'mistral').optional(),
+    model_name: Joi.string().pattern(/^[^\s]+$/).message('model_name must not contain spaces').required(),
     status: Joi.number().default(1),
     configuration: Joi.object().unknown(true).required(),
     outputConfig: Joi.object().unknown(true).required(),
     validationConfig: Joi.object().unknown(true).required()
 });
 
-export { modelConfigSchema };
+const UserModelConfigSchema = Joi.object({
+    org_id: Joi.string().required(),
+    service: Joi.string().valid('openai', 'google', 'anthropic', 'groq', 'open_router', 'mistral').required(),
+    model_name: Joi.string().pattern(/^[^\s]+$/).message('model_name must not contain spaces').required(),
+    display_name: Joi.string().required(),
+    status: Joi.number().default(1),
+    configuration: Joi.object().unknown(true).required(),
+    outputConfig: Joi.object().unknown(true).required(),
+    validationConfig: Joi.object().unknown(true).required()
+});
+
+export { modelConfigSchema, UserModelConfigSchema };

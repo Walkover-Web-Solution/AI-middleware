@@ -178,11 +178,12 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
     }).select({ 'configuration.model': 1, service: 1 , apikey_object_id: 1 }).lean();
 
     const model = versionId ?  modelConfig.configuration  : hello_id?.configuration 
+    const service = versionId ?  modelConfig.service  : hello_id?.service 
     const apikey_object_id = versionId ?  modelConfig.apikey_object_id  : hello_id?.apikey_object_id 
 
     if (!hello_id) return false; 
 
-    return {hello_id ,modelConfig:model, apikey_object_id, service: hello_id.service};
+    return {hello_id ,modelConfig:model, apikey_object_id, service};
   } catch (error) {
     console.log("error:", error);
     return {
@@ -290,6 +291,40 @@ const getBridgeByUrlSlugname = async (url_slugName) => {
 };
 
 
+
+
+const findIdsByModelAndService = async (model, service, org_id) => {
+  // Find matching configurations in configurationModel
+  const configMatches = await configurationModel.find({
+    'configuration.model': model,
+    service: service,
+    org_id: org_id
+  }).select({ _id: 1, name: 1 }).lean();
+
+  // Find matching configurations in versionModel
+  const versionMatches = await versionModel.find({
+    'configuration.model': model,
+    service: service,
+    org_id: org_id
+  }).select({ _id: 1, name: 1 }).lean();
+
+  // Prepare result object
+  const result = {
+    agents: configMatches.map(item => ({
+      id: item._id.toString(),
+      name: item.name || 'Unnamed Agent'
+    })),
+    versions: versionMatches.map(item => ({
+      id: item._id.toString()
+    }))
+  };
+
+  return {
+    success: true,
+    data: result
+  };
+};
+
 export default {
   deleteBridge,
   getApiCallById,
@@ -305,5 +340,6 @@ export default {
   removeActionInBridge,
   getBridges,
   getBridgeNameById,
-  getBridgeByUrlSlugname
+  getBridgeByUrlSlugname,
+  findIdsByModelAndService
 };

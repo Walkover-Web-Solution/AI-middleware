@@ -73,17 +73,29 @@ const updateUserDetails = async (req, res) => {
     }
 };
 const embedUser = async (req, res) => {
-    const { name: embeduser_name, email: embeduser_email } = req.Embed;
+    const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
     //   const projectSettings = await projects_db_service.findFields(project_id, 'settings');
-      const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email };
-      const response = {
-        ...req?.Embed,
-        user_id: req.Embed.user_id,
+    const embedDetails = !req.isGtwyUser ?
+        {
+            user_id: req.Embed.user_id,
+            company_id: req?.Embed?.org_id,
+            company_name: req.Embed.org_name,
+            tokenType: 'embed',
+            embeduser_name, embeduser_email
+        }
+        : {
+            company_id: req.company_id,
+            company_name: req.company_name,
+            user_id: req.user_id
+        };
+    const response = {
+        ...(req?.Embed || {}),
+        ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
         token: await createProxyToken(embedDetails),
-      };
-      return res.status(200).json({ data: response, message: 'logged in successfully' });
-  };
-  
+    };
+    return res.status(200).json({ data: response, message: 'logged in successfully' });
+};
+
 export {
     userOrgLocalToken,
     switchUserOrgLocal,

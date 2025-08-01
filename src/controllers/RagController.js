@@ -5,6 +5,10 @@ import rag_parent_data from '../db_services/rag_parent_data.js';
 import queue from '../services/queue.js';
 import { genrateToken } from '../utils/ragUtils.js';
 import { sendRagUpdates } from '../services/alertingService.js';
+import { generateIdentifier } from '../services/utils/utilityService.js';
+import { getOrganizationById, updateOrganizationData } from '../services/proxyService.js';
+import token from "../services/commonService/generateToken.js";
+
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 
@@ -86,7 +90,25 @@ export const create_vectors = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-
+export const getKnowledgeBaseToken = async (req, res) => {
+    const org_id =  req.profile.org.id
+       let auth_token = generateIdentifier(14);
+       const data = await getOrganizationById(org_id)
+       
+       if(!data?.meta?.accessKey) {
+       auth_token= await updateOrganizationData(org_id,  {
+           meta: {
+             ...data?.meta,
+             auth_token : auth_token,
+           },
+         },
+       )
+    auth_token = auth_token?.data?.company?.meta.auth_token
+}
+       
+    const knowledgeBaseToken = token.generateToken({ payload: { org_id, user_id: req.profile.user.id, gtwyAIDocs:"true"}, accessKey: auth_token})
+    return res.status(200).json({ result:  knowledgeBaseToken });
+};
 export const get_vectors_and_text = async (req, res, next) => {
     // TO DO: implement get_vectors_and_text logic
     const { doc_id, query, top_k = 3 } = req.body;
