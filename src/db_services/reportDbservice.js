@@ -428,8 +428,14 @@ async function get_latency_report_data(org_ids, reportType) {
       const latency = rawDataMap.get(message_id);
       if (!latency) continue;
 
-      // Calculate actual latency (overall_time - model_execution_time)
-      const actualLatency = latency.over_all_time - latency.model_execution_time;
+      // Calculate function time logs total
+      let functionTimeTotal = 0;
+      if (latency.function_time_logs && Array.isArray(latency.function_time_logs)) {
+        functionTimeTotal = latency.function_time_logs.reduce((sum, log) => sum + (log.time_taken || 0), 0);
+      }
+
+      // Calculate actual latency (overall_time - model_execution_time - function_time_logs)
+      const actualLatency = latency.over_all_time - latency.model_execution_time - functionTimeTotal;
 
       // Initialize or update bridge stats
       if (!bridgeLatencyStats.has(bridge_id)) {
