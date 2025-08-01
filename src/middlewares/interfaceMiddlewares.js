@@ -75,6 +75,7 @@ const publicChatbotAuth = async (req, res, next) => {
           ...req.chatBot,
           ispublic : true,
         }
+        req.profile = checkToken;
         req.chatBot.limiter_key = checkToken.user_id;
         return next();
       }
