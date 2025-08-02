@@ -90,6 +90,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.image_urls,
         conversations.urls,
         conversations.message_id,
+        conversations.fallback_model,
         raw_data.error,
         raw_data."firstAttemptError"
       FROM conversations
@@ -118,6 +119,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.urls,
         conversations."AiConfig",
         conversations.annotations,
+        conversations.fallback_model,
         raw_data.*
       FROM conversations
       LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
