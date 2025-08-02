@@ -1,5 +1,13 @@
 import ModelsConfigModel from "../mongoModel/ModelConfigModel.js";
 
+async function checkModel(model_name, service){
+    //function to check if a model configuration exists 
+    const existingConfig = await ModelsConfigModel.findOne({ model_name, service });
+    if (!existingConfig) {
+        return false;
+    }
+    return true;
+}
 
 async function checkModelConfigExists(service, model_name) {
     const query = { service, model_name };
@@ -39,6 +47,23 @@ async function getModelConfigsByNameAndService(model_name, service) {
     return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));
 }
 
+async function updateModelConfigs(model_name, service, updates) {
+    //function to update provided model parameters    
+
+    // Convert updates to dot notation for configuration
+    const setObject = {};
+    for (const key in updates) {
+        setObject[`configuration.${key}`] = updates[key];
+    }
+
+    // Perform direct DB update
+    const result = await ModelsConfigModel.updateOne(
+        { model_name, service },
+        { $set: setObject }
+    );
+
+    return result.modifiedCount > 0;
+}
 
 export default {
     getAllModelConfigs,
@@ -47,6 +72,8 @@ export default {
     deleteModelConfig,
     deleteUserModelConfig,
     checkModelConfigExists,
-    getModelConfigsByNameAndService
+    getModelConfigsByNameAndService,
+    checkModel,
+    updateModelConfigs
 }
 
