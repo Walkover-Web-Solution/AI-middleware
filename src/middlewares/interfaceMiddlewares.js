@@ -75,6 +75,7 @@ const publicChatbotAuth = async (req, res, next) => {
           ...req.chatBot,
           ispublic : true,
         }
+        req.isChatbot = true;
         req.chatBot.limiter_key = checkToken.user_id;
         return next();
       }
@@ -97,7 +98,7 @@ const combinedAuthWithChatBotAndPublicChatbot = async (req, res, next) => {
     
         // If public auth failed, try chatbot auth
         await chatBotAuth(req, res, () => {});
-        if (!req.chatBot?.ispublic) {
+        if (!req.chatBot?.ispublic && req.chatBot) {
           // If chatbot auth succeeded, proceed
           return next();
         }
@@ -121,7 +122,7 @@ const combinedAuthWithChatBotTokenDecodeAndPublicChatbot = async (req, res, next
     
         // If public auth failed, try chatbot token decode
        await chatBotTokenDecode(req, res, () => {});
-        if (!req?.chatBot?.ispublic) {
+        if (!req?.chatBot?.ispublic && req.chatBot) {
           // If chatbot token decode succeeded, proceed
           return next();
         }
