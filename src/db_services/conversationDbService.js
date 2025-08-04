@@ -925,6 +925,63 @@ async function getSubThreadsByError(org_id, thread_id, bridge_id) {
     return [];
   }
 }
+
+async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
+  try {
+    if (!threads || threads.length === 0) {
+      return threads;
+    }
+
+    // Extract thread_id and sub_thread_id from threads
+    const threadIds = threads.map(thread => ({
+      thread_id: thread.thread_id,
+      sub_thread_id: thread.sub_thread_id
+    }));
+
+    // Query PostgreSQL to get latest conversation activity for each thread
+    const conversationActivity = await models.pg.conversations.findAll({
+      attributes: [
+        'thread_id',
+        'sub_thread_id',
+        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('createdAt')), 'latest_activity']
+      ],
+      where: {
+        org_id,
+        bridge_id,
+        [models.pg.Sequelize.Op.or]: threadIds.map(({ thread_id, sub_thread_id }) => ({
+          thread_id,
+          sub_thread_id
+        }))
+      },
+      group: ['thread_id', 'sub_thread_id'],
+      order: [[models.pg.Sequelize.literal('latest_activity'), 'DESC']],
+      raw: true
+    });
+
+    // Create a map for quick lookup of latest activity
+    const activityMap = new Map();
+    conversationActivity.forEach(item => {
+      const key = `${item.thread_id}_${item.sub_thread_id}`;
+      activityMap.set(key, new Date(item.latest_activity));
+    });
+
+    // Sort threads based on latest activity (DESC - most recent first)
+    const sortedThreads = threads.sort((a, b) => {
+      const keyA = `${a.thread_id}_${a.sub_thread_id}`;
+      const keyB = `${b.thread_id}_${b.sub_thread_id}`;
+      
+      const activityA = activityMap.get(keyA) || new Date(0); // Default to epoch if not found
+      const activityB = activityMap.get(keyB) || new Date(0);
+      
+      return activityB - activityA; // DESC order
+    });
+
+    return sortedThreads;
+  } catch (error) {
+    console.error('sortThreadsByLatestActivity error =>', error);
+    return threads; // Return original threads if sorting fails
+  }
+}
   
 
 export default {
@@ -947,5 +1004,6 @@ export default {
   sortThreadsByHits,
   getAllDatafromPg,
   getSubThreadsByError,
-  findAllThreadsUsingKeywordSearch
+  findAllThreadsUsingKeywordSearch,
+  sortThreadsByLatestActivity
 };

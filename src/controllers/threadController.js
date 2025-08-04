@@ -3,6 +3,7 @@ import { createThread, getThreads } from '../services/threadService.js';
 import { ResponseSender } from '../services/utils/customRes.js';
 import { generateIdentifier } from '../services/utils/utilityService.js';
 import configurationService from '../db_services/ConfigurationServices.js';
+import conversationDbService from '../db_services/conversationDbService.js';
 const responseSender = new ResponseSender();
 
 // Create a new thread
@@ -78,7 +79,11 @@ async function getAllThreadsController(req, res, next) {
     const bridge_id = data?._id?.toString();
     const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
     const threads = await getThreads(bridge_org_id, thread_id, bridge_id);
-    res.locals = { threads, success: true };
+    
+    // Sort threads by latest conversation activity from PostgreSQL
+    const sortedThreads = await conversationDbService.sortThreadsByLatestActivity(threads, bridge_org_id, bridge_id);
+    
+    res.locals = { threads: sortedThreads, success: true };
     req.statusCode = 200;
     return next();
 }
