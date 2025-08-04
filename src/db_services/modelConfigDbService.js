@@ -50,16 +50,31 @@ async function getModelConfigsByNameAndService(model_name, service) {
 async function updateModelConfigs(model_name, service, updates) {
     //function to update provided model parameters    
 
-    // Convert updates to dot notation for configuration
-    const setObject = {};
+    const allowedUpdates = {};
+    let errorKey="";
+
     for (const key in updates) {
-        setObject[`configuration.${key}`] = updates[key];
+        // Block configuration.model and its subfields, and only allow changes for configuration and validationConfig
+        const isBlockedModelField = key === "configuration.model" || key.startsWith("configuration.model.");
+        const isAllowedRoot = key.startsWith("configuration.") || key.startsWith("validationConfig");
+
+        if (isBlockedModelField || !isAllowedRoot) {
+            errorKey = key;
+            continue;
+        }
+        // Allow everything else
+        allowedUpdates[key] = updates[key];
     }
 
-    // Perform direct DB update
+    // No valid updates to perform
+    if (Object.keys(allowedUpdates).length === 0){
+        return {error:"keyError",key:errorKey};
+    }
+
+
     const result = await ModelsConfigModel.updateOne(
         { model_name, service },
-        { $set: setObject }
+        { $set: allowedUpdates }
     );
 
     return result.modifiedCount > 0;

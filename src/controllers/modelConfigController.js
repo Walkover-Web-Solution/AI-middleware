@@ -152,13 +152,22 @@ async function updateModelConfiguration(req, res) {
         // Step 4: Convert updates into MongoDB
         const success = await modelConfigDbService.updateModelConfigs(model_name, service, updates);
 
+        if(success.error ==="keyError"){
+            return res.status(400).json({
+                Error:`Changes to ${success.key} is not allowed.`
+            })
+        }
         if (!success) {
             return res.status(500).json({
                 error: "Update failed. Configuration found, but fields may be unchanged or invalid."
             });
         }
+        
 
-        res.status(200).json({ "success": true, "message":"Updated configuration successfully" });
+        res.status(200).json({ 
+            "success": true, 
+            "message":"Updated configuration successfully" 
+        });
 
     } catch (err) {
         console.error("Error updating configuration:", err);
