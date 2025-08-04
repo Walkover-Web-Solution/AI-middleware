@@ -9,8 +9,5 @@ router.post('/', middleware, saveModelConfiguration)
 router.post('/user', middleware, saveUserModelConfiguration)
 router.delete('/', middleware, deleteModelConfiguration)
 router.delete('/user', middleware, deleteUserModelConfiguration)
-router.post('/', saveModelConfiguration)
 router.put('/', updateModelConfiguration)
-
-router.delete('/', deleteModelConfiguration)
 export default router;
