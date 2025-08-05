@@ -193,27 +193,24 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
   }
 };
 
-const getBridgesByUserId = async (orgId, userId) => {
+const getBridgesByUserId = async (orgId, userId, agent_id) => {
   try {
     const bridges = await configurationModel.find({
       org_id: orgId,
-      user_id: Number(userId)
+      user_id: Number(userId),
+      _id: agent_id
+
     }, {
       "_id": 1,
       "name": 1,
       "service": 1,
-      "org_id": 1,
       "configuration.model": 1,
       "configuration.prompt": 1,
       "bridgeType": 1,
       "slugName": 1,
       "status": 1,
-      "versions": 1,
       "published_version_id": 1,
-      "total_tokens": 1,
       "variables_state": 1,
-      "agent_variables": 1,
-      "bridge_status": 1,
       "meta":1
     });
     return bridges.map(bridge => bridge._doc);
