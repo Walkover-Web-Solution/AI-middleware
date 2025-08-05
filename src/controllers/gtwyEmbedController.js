@@ -64,12 +64,11 @@ const genrateToken = async (req, res) => {
   res.status(200).json({ gtwyAccessToken });
 }
 
-const getEmbedByUserId = async (req, res) => {
-    const user_id = req.params.user_id;
+const getEmbedDataByUserId = async (req, res) => {
+    const user_id = req.profile.user.id;
     const org_id = req.profile.org.id;
     const agent_id =  req?.query?.agent_id;
-    
     const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
-      return res.status(200).json(data);
+    return res.status(200).json(data);
 }
-export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedByUserId };
+export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };
