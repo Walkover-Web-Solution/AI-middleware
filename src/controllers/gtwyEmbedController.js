@@ -1,3 +1,4 @@
+import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
@@ -5,13 +6,10 @@ import { generateIdentifier } from "../services/utils/utilityService.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
       const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
-      const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
-      const config = folder?.config || {};
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
         token: await createProxyToken(embedDetails),
-        config
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
 }
@@ -66,4 +64,20 @@ const genrateToken = async (req, res) => {
   res.status(200).json({ gtwyAccessToken });
 }
 
-export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed };
+const getEmbedDataByUserId = async (req, res, next) => {
+  const user_id = req.profile.user.id;
+  const org_id = req.profile.org.id;
+  const agent_id = req?.query?.agent_id;
+  
+  const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
+  
+  res.locals = {
+    success: true, 
+    message: "Get Agents data successfully",
+    data
+  };
+
+  req.statusCode = 200;
+  return next();
+};
+export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };
