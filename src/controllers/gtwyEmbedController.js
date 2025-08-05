@@ -70,7 +70,17 @@ const genrateToken = async (req, res) => {
 const getEmbedByUserId = async (req, res) => {
     const user_id = req.params.user_id;
     const org_id = req.profile.org.id;
+    const variables =  req?.query?.variables;
+    
     const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id);
-    res.status(200).json({ data });
+    if(variables){
+      const variablesState = data.map(bridge => ({
+          _id: bridge._id,
+          variables_state: bridge.variables_state || {}
+      }));
+      return res.status(200).json({variablesState });
+     }
+  
+  res.status(200).json({ data });
 }
 export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedByUserId };
