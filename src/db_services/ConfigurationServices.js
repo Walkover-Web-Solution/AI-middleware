@@ -195,14 +195,10 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
 
 const getBridgesByUserId = async (orgId, userId, agent_id) => {
   try {
-    const query = { org_id: orgId }; // Start with required org_id
-
-    // Add user_id if present
+    const query = { org_id: orgId };
     if (userId) {
       query.user_id = Number(userId);
     }
-
-    // Add agent_id if present
     if (agent_id) {
       query._id = agent_id;
     }
@@ -214,15 +210,13 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
       "configuration.prompt": 1,
       "bridgeType": 1,
       "slugName": 1,
-      "status": 1,
-      "published_version_id": 1,
       "variables_state": 1,
       "meta": 1
     });
     return bridges.map(bridge => bridge._doc);
   } catch (error) {
     console.error("Error fetching bridges:", error);
-    return [];
+     return { success: false, error: "Agent not found!!" }
   }
 };
 
