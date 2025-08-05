@@ -214,6 +214,7 @@ const getBridgesByUserId = async (orgId, userId) => {
       "variables_state": 1,
       "agent_variables": 1,
       "bridge_status": 1,
+      "meta":1
     });
     return bridges.map(bridge => bridge._doc);
   } catch (error) {

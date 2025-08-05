@@ -73,7 +73,8 @@ const getEmbedByUserId = async (req, res) => {
     if(variables){
       const variablesState = data.map(bridge => ({
           _id: bridge._id,
-          variables_state: bridge.variables_state || {}
+          variables_state: bridge.variables_state || {},
+          meta: bridge.meta || {}
       }));
       return res.status(200).json({variablesState });
      }
