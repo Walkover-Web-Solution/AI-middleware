@@ -6,13 +6,10 @@ import { generateIdentifier } from "../services/utils/utilityService.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
       const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
-      const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
-      const config = folder?.config || {};
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
         token: await createProxyToken(embedDetails),
-        config
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
 }
