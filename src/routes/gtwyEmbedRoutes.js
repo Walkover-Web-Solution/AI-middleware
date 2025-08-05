@@ -9,6 +9,6 @@ routes.route('/').post(middleware, createEmbed)
 routes.route('/').get(middleware, getAllEmbed)
 routes.route('/').put(middleware, updateEmbed)
 routes.route('/token').get(middleware, genrateToken)
-routes.route('/getAgents').get(middleware, getEmbedDataByUserId)
+routes.route('/getAgents').get(GtwyEmbeddecodeToken, getEmbedDataByUserId)
 
 export default routes;

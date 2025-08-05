@@ -197,7 +197,7 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
   try {
     const query = { org_id: orgId };
     if (userId) {
-      query.user_id = Number(userId);
+      query.user_id = String(userId);
     }
     if (agent_id) {
       query._id = agent_id;
