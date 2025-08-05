@@ -195,12 +195,18 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
 
 const getBridgesByUserId = async (orgId, userId, agent_id) => {
   try {
-    const bridges = await configurationModel.find({
-      org_id: orgId,
-      user_id: Number(userId),
-      _id: agent_id
+    const query = { org_id: orgId }; // Start with required org_id
 
-    }, {
+    // Add user_id if present
+    if (userId) {
+      query.user_id = Number(userId);
+    }
+
+    // Add agent_id if present
+    if (agent_id) {
+      query._id = agent_id;
+    }
+    const bridges = await configurationModel.find(query, {
       "_id": 1,
       "name": 1,
       "service": 1,
@@ -211,7 +217,7 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
       "status": 1,
       "published_version_id": 1,
       "variables_state": 1,
-      "meta":1
+      "meta": 1
     });
     return bridges.map(bridge => bridge._doc);
   } catch (error) {
