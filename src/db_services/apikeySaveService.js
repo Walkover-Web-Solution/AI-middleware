@@ -51,18 +51,28 @@ const getName = async (name, org_id)=>{
     }
 
 }
-const getAllApiKeyService = async(org_id, folder_id, user_id, isEmbedUser)=>{
+const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
     try {
-        const query = { org_id: org_id}
-        query.folder_id = folder_id
-        if(user_id && isEmbedUser) query.user_id = user_id
-        const result  = await ApikeyCredential.find(query)
+        const query = { org_id: org_id }
+
+        if (folder_id) {
+            query.folder_id = folder_id
+        } else {
+            query.$or = [
+                { folder_id: "" },
+                { folder_id: null },
+                { folder_id: { $exists: false } }
+            ]
+        }
+        if (user_id && isEmbedUser) query.user_id = user_id
+
+        const result = await ApikeyCredential.find(query)
         return {
             success: true,
-            result : result
+            result: result
         }
-    } 
-    catch(error) {
+    }
+    catch (error) {
         console.error("Error getting all API: ", error);
         return {
             success: false,
