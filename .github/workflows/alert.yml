@@ -1,0 +1,27 @@
+name: Deployment Notification
+
+on:
+  push:
+    branches:
+      - testing
+      - main
+
+jobs:
+  call-api-on-testing:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/testing'
+
+    steps:
+      - name: Deployment on testing Branch
+        run: |
+          response=$(curl -s -X GET "https://flow.sokt.io/func/scria19d90rL?env=DEV&key=BE")
+          echo "$response"
+  call-api-on-main:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deployment on main Branch
+        run: |
+          response=$(curl -s -X GET "https://flow.sokt.io/func/scria19d90rL?env=PROD&key=BE")
+          echo "$response"

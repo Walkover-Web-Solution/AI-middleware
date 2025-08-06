@@ -16,7 +16,7 @@ const getThreads = async (req, res,next) => {
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id=thread_id, version_id } = req.query
-    const { org_id } = req.body;
+    let { org_id } = req.body;
     let starterQuestion = []
     let bridge = {}
     let {user_feedback, error} = req.query
@@ -24,10 +24,10 @@ const getThreads = async (req, res,next) => {
     const isChatbot = req.isChatbot || false;
 
     if (bridge_slugName) {
-      bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+      bridge =req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName): await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
       bridge_id = bridge?._id?.toString();
       starterQuestion = !bridge?.IsstarterQuestionEnable ? []: bridge?.starterQuestion;
-      
+      org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
     }
     let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot, error });
     threads = {
@@ -45,11 +45,12 @@ const getThreads = async (req, res,next) => {
 const getMessageByMessageId = async (req, res, next) => {
   let { bridge_id, message_id } = req.params;
   const { thread_id, bridge_slugName } = req.params;
-  const { org_id } = req.body;
+  let { org_id } = req.body;
 
   if (bridge_slugName) {
-    bridge_id = (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
+    bridge_id = req.chatBot?.ispublic ? (await configurationService.getBridgeByUrlSlugname(bridge_slugName))?._id: (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
     bridge_id = bridge_id?.toString();
+    org_id = req.chatBot?.ispublic ? bridge_id?.org_id : org_id;
   }
   const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
   res.locals = {success:true,thread};

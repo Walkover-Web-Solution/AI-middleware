@@ -332,18 +332,54 @@ async function get_data_for_daily_report(org_ids) {
   return results;
 }
 
-async function get_data_for_monthly_report(org_ids) {
-  const results = [];
-
-  // Get the start and end of the previous month
+/**
+ * Get date range for report based on type
+ * @param {string} reportType - 'monthly' or 'weekly'
+ * @returns {Object} Object with startDate and endDate
+ */
+function getReportDateRange(reportType) {
   const now = new Date();
-  const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+  if (reportType === 'monthly') {
+    const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    return {
+      startDate: firstDayOfLastMonth,
+      endDate: lastDayOfLastMonth
+    };
+  } else if (reportType === 'weekly') {
+    const day = now.getDay() || 7; // Convert Sunday (0) to 7 for easier calculation
+    const prevMonday = new Date(now);
+    prevMonday.setDate(now.getDate() - (day + 6)); // Go back to previous Monday
+    prevMonday.setHours(0, 0, 0, 0);
+    
+    const prevSunday = new Date(prevMonday);
+    prevSunday.setDate(prevMonday.getDate() + 6); // Sunday is 6 days after Monday
+    prevSunday.setHours(23, 59, 59, 999);
+    
+    return {
+      startDate: prevMonday,
+      endDate: prevSunday
+    };
+  }
+  
+  throw new Error(`Invalid report type: ${reportType}`);
+}
+
+/**
+ * Unified function to get latency report data for specified period
+ * @param {Array} org_ids - Array of organization IDs
+ * @param {string} reportType - 'monthly' or 'weekly'
+ * @returns {Array} Report results
+ */
+async function get_latency_report_data(org_ids, reportType) {
+  const results = [];
+  const { startDate, endDate } = getReportDateRange(reportType);
 
   // Prepare date filter
   const dateFilter = {
-    [Op.gte]: firstDayOfLastMonth,
-    [Op.lte]: lastDayOfLastMonth,
+    [Op.gte]: startDate,
+    [Op.lte]: endDate,
   };
 
   for (let org_id of org_ids) {
@@ -434,8 +470,8 @@ async function get_data_for_monthly_report(org_ids) {
     const orgData = {
       [org_id]: {
         report_period: {
-          start_date: firstDayOfLastMonth.toISOString().split('T')[0],
-          end_date: lastDayOfLastMonth.toISOString().split('T')[0]
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
         },
         bridge_latency_report: bridgeLatencyReport
       }
@@ -444,15 +480,22 @@ async function get_data_for_monthly_report(org_ids) {
     results.push(orgData);
   }
   
-  const url = 'https://flow.sokt.io/func/scri4zMzbGiR'
+  // Send data to external service
+  const data = {
+    "results": results,
+    "time": reportType
+  };
+  
+  const url = 'https://flow.sokt.io/func/scri4zMzbGiR';
   await fetch(url, { 
     method: 'POST', 
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(results)
+    body: JSON.stringify(data)
   });
+  
   return results;
 }
 
-export { get_data_for_daily_report, get_data_from_pg, get_data_for_monthly_report };
+export { get_data_for_daily_report, get_data_from_pg, get_latency_report_data };

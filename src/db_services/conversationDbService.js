@@ -87,9 +87,10 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.tools_call_data,
         conversations.user_feedback,
         conversations.sub_thread_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations.message_id,
+        conversations.fallback_model,
         raw_data.error,
         raw_data."firstAttemptError"
       FROM conversations
@@ -114,10 +115,11 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         conversations.sub_thread_id,
         conversations.thread_id,
         conversations.version_id,
-        conversations.image_url,
+        conversations.image_urls,
         conversations.urls,
         conversations."AiConfig",
         conversations.annotations,
+        conversations.fallback_model,
         raw_data.*
       FROM conversations
       LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
@@ -653,7 +655,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       'is_reset',
       'tools_call_data',
-      'image_url'
+      'image_urls'
     ],
     where: whereClause,
     order: [['id', 'DESC']],
