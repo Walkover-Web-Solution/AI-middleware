@@ -192,6 +192,34 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
     };
   }
 };
+
+const getBridgesByUserId = async (orgId, userId, agent_id) => {
+  try {
+    const query = { org_id: orgId };
+    if (userId) {
+      query.user_id = String(userId);
+    }
+    if (agent_id) {
+      query._id = agent_id;
+    }
+    const bridges = await configurationModel.find(query, {
+      "_id": 1,
+      "name": 1,
+      "service": 1,
+      "configuration.model": 1,
+      "configuration.prompt": 1,
+      "bridgeType": 1,
+      "slugName": 1,
+      "variables_state": 1,
+      "meta": 1
+    });
+    return bridges.map(bridge => bridge._doc);
+  } catch (error) {
+    console.error("Error fetching bridges:", error);
+     return { success: false, error: "Agent not found!!" }
+  }
+};
+
 const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
   try {
     const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
@@ -271,14 +299,15 @@ const getBridgeByUrlSlugname = async (url_slugName) => {
   try {
     const hello_id = await configurationModel.findOne({
       "page_config.url_slugname": url_slugName,
-    }).select({ _id: 1, name: 1, service: 1 });
+    }).select({ _id: 1, name: 1, service: 1, org_id: 1 });
 
     if (!hello_id) return false;
 
     return {
       _id: hello_id._id,
       name: hello_id.name,
-      service: hello_id.service
+      service: hello_id.service,
+      org_id: hello_id.org_id
     };
   } catch (error) {
     console.log('error:', error);
@@ -289,6 +318,40 @@ const getBridgeByUrlSlugname = async (url_slugName) => {
   }
 };
 
+
+
+
+const findIdsByModelAndService = async (model, service, org_id) => {
+  // Find matching configurations in configurationModel
+  const configMatches = await configurationModel.find({
+    'configuration.model': model,
+    service: service,
+    org_id: org_id
+  }).select({ _id: 1, name: 1 }).lean();
+
+  // Find matching configurations in versionModel
+  const versionMatches = await versionModel.find({
+    'configuration.model': model,
+    service: service,
+    org_id: org_id
+  }).select({ _id: 1, name: 1 }).lean();
+
+  // Prepare result object
+  const result = {
+    agents: configMatches.map(item => ({
+      id: item._id.toString(),
+      name: item.name || 'Unnamed Agent'
+    })),
+    versions: versionMatches.map(item => ({
+      id: item._id.toString()
+    }))
+  };
+
+  return {
+    success: true,
+    data: result
+  };
+};
 
 export default {
   deleteBridge,
@@ -305,5 +368,7 @@ export default {
   removeActionInBridge,
   getBridges,
   getBridgeNameById,
-  getBridgeByUrlSlugname
+  getBridgeByUrlSlugname,
+  findIdsByModelAndService,
+  getBridgesByUserId
 };
