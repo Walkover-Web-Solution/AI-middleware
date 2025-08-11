@@ -114,6 +114,10 @@ const configuration = new mongoose.Schema({
   },
   apikey_object_id: {
     type: Object
+  },
+  meta: {
+    type: Object,
+    default: {}
   }
 });
 

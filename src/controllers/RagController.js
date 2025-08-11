@@ -18,9 +18,17 @@ export const GetAllDocuments = async (req, res, next) => {
     const user_id = req.profile?.user?.id;
 
     const embed = req.IsEmbedUser;
-    const query = {org_id: org?.id}
-    if(folder_id) query.folder_id = folder_id
-    if(embed || IsEmbedUser) query.user_id = embed ? (user.id || user_id): null
+    const query = { org_id: org?.id }
+    if (folder_id) {
+        query.folder_id = folder_id
+    } else {
+        query.$or = [
+            { folder_id: "" },
+            { folder_id: null },
+            { folder_id: { $exists: false } }
+        ]
+    }
+    if (embed || IsEmbedUser) query.user_id = embed ? (user.id || user_id) : null
     const result = await rag_parent_data.getAll(query);
     res.locals = {
         "success": true,

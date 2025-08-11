@@ -45,8 +45,9 @@ async function deleteModelConfiguration(req, res, next) {
     return next();
 }
 
+
 async function saveModelConfiguration(req,res, next) {
-    const { error, value } = modelConfigSchema.validate(req.body);
+    const { error, value } = modelConfigSchema.validate(req.body, { stripUnknown: true });
     if (error) {
         throw new Error(error.details[0].message);
     }

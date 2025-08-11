@@ -1,3 +1,4 @@
+import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
@@ -66,4 +67,20 @@ const genrateToken = async (req, res) => {
   res.status(200).json({ gtwyAccessToken });
 }
 
-export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed };
+const getEmbedDataByUserId = async (req, res, next) => {
+  const user_id = req.profile.user.id;
+  const org_id = req.profile.org.id;
+  const agent_id = req?.query?.agent_id;
+  
+  const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
+  
+  res.locals = {
+    success: true, 
+    message: "Get Agents data successfully",
+    data
+  };
+
+  req.statusCode = 200;
+  return next();
+};
+export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };
