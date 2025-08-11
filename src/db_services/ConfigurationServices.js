@@ -192,6 +192,34 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
     };
   }
 };
+
+const getBridgesByUserId = async (orgId, userId, agent_id) => {
+  try {
+    const query = { org_id: orgId };
+    if (userId) {
+      query.user_id = String(userId);
+    }
+    if (agent_id) {
+      query._id = agent_id;
+    }
+    const bridges = await configurationModel.find(query, {
+      "_id": 1,
+      "name": 1,
+      "service": 1,
+      "configuration.model": 1,
+      "configuration.prompt": 1,
+      "bridgeType": 1,
+      "slugName": 1,
+      "variables_state": 1,
+      "meta": 1
+    });
+    return bridges.map(bridge => bridge._doc);
+  } catch (error) {
+    console.error("Error fetching bridges:", error);
+     return { success: false, error: "Agent not found!!" }
+  }
+};
+
 const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
   try {
     const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
@@ -341,5 +369,6 @@ export default {
   getBridges,
   getBridgeNameById,
   getBridgeByUrlSlugname,
-  findIdsByModelAndService
+  findIdsByModelAndService,
+  getBridgesByUserId
 };
