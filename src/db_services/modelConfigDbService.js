@@ -1,5 +1,13 @@
 import ModelsConfigModel from "../mongoModel/ModelConfigModel.js";
 
+async function checkModel(model_name, service){
+    //function to check if a model configuration exists 
+    const existingConfig = await ModelsConfigModel.findOne({ model_name, service });
+    if (!existingConfig) {
+        return false;
+    }
+    return true;
+}
 
 async function checkModelConfigExists(service, model_name) {
     const query = { service, model_name };
@@ -39,6 +47,38 @@ async function getModelConfigsByNameAndService(model_name, service) {
     return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));
 }
 
+async function updateModelConfigs(model_name, service, updates) {
+    //function to update provided model parameters    
+
+    const allowedUpdates = {};
+    let errorKey="";
+
+    for (const key in updates) {
+        // Block configuration.model and its subfields, and only allow changes for configuration and validationConfig
+        const isBlockedModelField = key === "configuration.model" || key.startsWith("configuration.model.");
+        const isAllowedRoot = key.startsWith("configuration.") || key.startsWith("validationConfig");
+
+        if (isBlockedModelField || !isAllowedRoot) {
+            errorKey = key;
+            continue;
+        }
+        // Allow everything else
+        allowedUpdates[key] = updates[key];
+    }
+
+    // No valid updates to perform
+    if (Object.keys(allowedUpdates).length === 0){
+        return {error:"keyError",key:errorKey};
+    }
+
+
+    const result = await ModelsConfigModel.updateOne(
+        { model_name, service },
+        { $set: allowedUpdates }
+    );
+
+    return result.modifiedCount > 0;
+}
 
 export default {
     getAllModelConfigs,
@@ -47,6 +87,8 @@ export default {
     deleteModelConfig,
     deleteUserModelConfig,
     checkModelConfigExists,
-    getModelConfigsByNameAndService
+    getModelConfigsByNameAndService,
+    checkModel,
+    updateModelConfigs
 }
 
