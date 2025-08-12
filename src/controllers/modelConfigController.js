@@ -45,7 +45,8 @@ async function deleteModelConfiguration(req, res, next) {
     return next();
 }
 
-async function saveModelCongiguration(req,res, next) {
+
+async function saveModelConfiguration(req,res, next) {
     const { error, value } = modelConfigSchema.validate(req.body, { stripUnknown: true });
     if (error) {
         throw new Error(error.details[0].message);
@@ -61,7 +62,7 @@ async function saveModelCongiguration(req,res, next) {
     return next();
 }
 
-async function saveUserModelCongiguration(req,res, next) {
+async function saveUserModelConfiguration(req,res, next) {
     const org_id = req.profile.org.id;
     
     // Merge org_id with request body for validation
@@ -134,11 +135,53 @@ async function deleteUserModelConfiguration(req, res, next) {
 }
 
 
+async function updateModelConfiguration(req, res) {
+    try {
+        // Step 1: Extract required fields from body (even if extra fields exist)
+        const { model_name, service, updates } = req.body;
+
+        // Step 2: Validate required fields
+        if (!model_name || !service || typeof updates !== 'object') {
+            return res.status(400).json({ error: "Required fields: model_name, service, and updates (object)" });
+        }
+        // Step 3: check if the model exists
+        const exists = await modelConfigDbService.checkModel(model_name, service);
+        if(!exists){
+            return res.status(400).json({ error: "Provided model does not exists." })
+        }
+
+        // Step 4: Convert updates into MongoDB
+        const success = await modelConfigDbService.updateModelConfigs(model_name, service, updates);
+
+        if(success.error ==="keyError"){
+            return res.status(400).json({
+                Error:`Changes to ${success.key} is not allowed.`
+            })
+        }
+        if (!success) {
+            return res.status(500).json({
+                error: "Update failed. Configuration found, but fields may be unchanged or invalid."
+            });
+        }
+        
+
+        res.status(200).json({ 
+            "success": true, 
+            "message":"Updated configuration successfully" 
+        });
+
+    } catch (err) {
+        console.error("Error updating configuration:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 export {
     getAllModelConfig,
     getAllModelConfigForService,
-    saveModelCongiguration,
-    saveUserModelCongiguration,
+    saveModelConfiguration,
+    saveUserModelConfiguration,
     deleteUserModelConfiguration,
-    deleteModelConfiguration
+    deleteModelConfiguration,
+    updateModelConfiguration
 }
