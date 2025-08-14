@@ -76,7 +76,7 @@ const getAllApikeys = async(req, res) => {
         const org_id = req.profile?.org?.id;
         const folder_id = req.profile?.extraDetails?.folder_id;
         const user_id = req.profile.user.id;
-        const isEmbedUser = req.profile.isEmbedUser
+        const isEmbedUser = req.IsEmbedUser
         const result = await apikeySaveService.getAllApiKeyService(org_id, folder_id, user_id, isEmbedUser);
         if (result.success) {
             for (let apiKeyObj of result.result) {
