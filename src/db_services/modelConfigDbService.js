@@ -1,4 +1,5 @@
 import ModelsConfigModel from "../mongoModel/ModelConfigModel.js";
+import { flatten } from "flat";
 
 async function checkModel(model_name, service){
     //function to check if a model configuration exists 
@@ -53,7 +54,10 @@ async function updateModelConfigs(model_name, service, updates) {
     const allowedUpdates = {};
     let errorKey="";
 
-    for (const key in updates) {
+    // Flatten nested objects into dot notation
+    const flattenedUpdates = flatten(updates, { safe: true });
+    
+    for (const key in flattenedUpdates) {
         // Block configuration.model and its subfields, and only allow changes for configuration and validationConfig
         const isBlockedModelField = key === "configuration.model" || key.startsWith("configuration.model.");
         const isAllowedRoot = key.startsWith("configuration.") || key.startsWith("validationConfig.");
@@ -63,7 +67,7 @@ async function updateModelConfigs(model_name, service, updates) {
             continue;
         }
         // Allow everything else
-        allowedUpdates[key] = updates[key];
+        allowedUpdates[key] = flattenedUpdates[key];
     }
 
     // No valid updates to perform
@@ -74,7 +78,8 @@ async function updateModelConfigs(model_name, service, updates) {
 
     const result = await ModelsConfigModel.updateOne(
         { model_name, service },
-        { $set: allowedUpdates }
+        { $set: allowedUpdates },
+        { strict: false}
     );
 
     return result.modifiedCount > 0;
