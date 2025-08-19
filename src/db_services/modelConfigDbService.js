@@ -9,14 +9,6 @@ async function checkModel(model_name, service){
     }
     return true;
 }
-async function checkModel(model_name, service){
-    //function to check if a model configuration exists 
-    const existingConfig = await ModelsConfigModel.findOne({ model_name, service });
-    if (!existingConfig) {
-        return false;
-    }
-    return true;
-}
 
 async function checkModelConfigExists(service, model_name) {
     const query = { service, model_name };
