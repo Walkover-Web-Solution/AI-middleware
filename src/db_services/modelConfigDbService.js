@@ -94,9 +94,5 @@ export default {
     checkModelConfigExists,
     getModelConfigsByNameAndService,
     checkModel,
-    updateModelConfigs,
-    getModelConfigsByNameAndService,
-    checkModel,
     updateModelConfigs
 }
-
