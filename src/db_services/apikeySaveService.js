@@ -64,7 +64,7 @@ const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
                 { folder_id: { $exists: false } }
             ]
         }
-        if (user_id && isEmbedUser) query.user_id = user_id
+        if (user_id && isEmbedUser) query.user_id = String(user_id)
 
         const result = await ApikeyCredential.find(query)
         return {
