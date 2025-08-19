@@ -75,10 +75,37 @@ async function updateModelConfigs(model_name, service, updates) {
         return {error:"keyError",key:errorKey};
     }
 
+    // First, get the existing document to check which keys exist
+    const existingDoc = await ModelsConfigModel.findOne(
+        { model_name, service },
+        { _id: 0, __v: 0 } // Exclude _id and __v fields
+    );
+
+    if (!existingDoc) {
+        return { error: "documentNotFound" };
+    }
+
+    // Flatten the existing document to match the structure of allowedUpdates
+    // Convert to plain object to avoid Mongoose document issues
+    const plainDoc = existingDoc.toObject ? existingDoc.toObject() : existingDoc;
+    const flattenedExistingDoc = flatten(plainDoc, { safe: true });
+
+    // Filter allowedUpdates to only include keys that exist in the document
+    const existingKeyUpdates = {};
+    for (const key in allowedUpdates) {
+        if (flattenedExistingDoc.hasOwnProperty(key)) {
+            existingKeyUpdates[key] = allowedUpdates[key];
+        }
+    }
+
+    // If no existing keys to update, return early
+    if (Object.keys(existingKeyUpdates).length === 0) {
+        return { error: "not found" };
+    }
 
     const result = await ModelsConfigModel.updateOne(
         { model_name, service },
-        { $set: allowedUpdates },
+        { $set: existingKeyUpdates },
         { strict: false}
     );
 

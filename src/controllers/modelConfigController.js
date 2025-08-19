@@ -147,7 +147,7 @@ async function updateModelConfiguration(req, res) {
         // Step 3: check if the model exists
         const exists = await modelConfigDbService.checkModel(model_name, service);
         if(!exists){
-            return res.status(400).json({ error: "Provided model does not exists." })
+            return res.status(404).json({ error: "The model you provided does not exist" })
         }
 
         // Step 4: Convert updates into MongoDB
@@ -163,7 +163,12 @@ async function updateModelConfiguration(req, res) {
                 error: "Update failed. Configuration found, but fields may be unchanged or invalid."
             });
         }
-        
+        if (success.error === "not found"){
+            return res.status(404).json({
+                error: "The provided key does not exist."
+            })
+        }
+
 
         res.status(200).json({ 
             "success": true, 
