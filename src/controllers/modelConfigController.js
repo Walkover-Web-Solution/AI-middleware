@@ -142,12 +142,12 @@ async function updateModelConfiguration(req, res) {
 
         // Step 2: Validate required fields
         if (!model_name || !service || typeof updates !== 'object') {
-            return res.status(400).json({ error: "Required fields: model_name, service, and updates (object)" });
+            return res.status(400).json({success: false, message: "Required fields: model_name, service, and updates (object)" });
         }
         // Step 3: check if the model exists
         const exists = await modelConfigDbService.checkModel(model_name, service);
         if(!exists){
-            return res.status(404).json({ error: "The model you provided does not exist" })
+            return res.status(404).json({ success: false, message: "The model you provided does not exist" })
         }
 
         // Step 4: Convert updates into MongoDB
@@ -155,25 +155,29 @@ async function updateModelConfiguration(req, res) {
 
         if(success.error ==="keyError"){
             return res.status(400).json({
-                Error:`Changes to ${success.key} is not allowed.`
+                success: false,
+                message:`Changes to ${success.key} is not allowed.`
             })
         }
         if (!success) {
             return res.status(500).json({
-                error: "Update failed. Configuration found, but fields may be unchanged or invalid."
+                success: false,
+                message: "Update failed. Configuration found, but fields may be unchanged or invalid."
             });
         }
         if (success.error === "not found"){
             return res.status(404).json({
-                error: "The provided key does not exist."
+                success: false,
+                message: "The provided key does not exist."
             })
         }
 
-
-        res.status(200).json({ 
-            "success": true, 
-            "message":"Updated configuration successfully" 
-        });
+        res.locals = {
+            success: true,
+            message: "Updated configuration successfully" 
+        };
+        req.statusCode = 200;
+        return next();
 
     } catch (err) {
         console.error("Error updating configuration:", err);
