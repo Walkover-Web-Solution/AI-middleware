@@ -17,12 +17,6 @@ async function checkModelConfigExists(service, model_name) {
     return existingConfig ? true : false;
 }
 
-async function checkModelConfigExists(service, model_name) {
-    const query = { service, model_name };
-    
-    const existingConfig = await ModelsConfigModel.findOne(query).lean();
-    return existingConfig ? true : false;
-}
 
 async function getAllModelConfigsForService(service) {
     const modelConfigs = await ModelsConfigModel.find({ 'service': service }).lean();
