@@ -45,7 +45,8 @@ async function deleteModelConfiguration(req, res, next) {
     return next();
 }
 
-async function saveModelCongiguration(req,res, next) {
+
+async function saveModelConfiguration(req,res, next) {
     const { error, value } = modelConfigSchema.validate(req.body, { stripUnknown: true });
     if (error) {
         throw new Error(error.details[0].message);
@@ -61,7 +62,8 @@ async function saveModelCongiguration(req,res, next) {
     return next();
 }
 
-async function saveUserModelCongiguration(req,res, next) {
+async function saveUserModelConfiguration(req,res, next) {
+
     const org_id = req.profile.org.id;
     
     // Merge org_id with request body for validation
@@ -94,6 +96,7 @@ async function saveUserModelCongiguration(req,res, next) {
         success: true,
         message: `Model configuration saved successfully`,
         result
+
     };
     req.statusCode = 200;
     return next();
@@ -134,11 +137,48 @@ async function deleteUserModelConfiguration(req, res, next) {
 }
 
 
+async function updateModelConfiguration(req, res, next) {
+    // Step 1: Extract required fields from body (even if extra fields exist)
+    const { model_name, service, updates } = req.body;
+
+    // Step 2: Validate required fields
+    if (!model_name || !service || typeof updates !== 'object') {
+        throw new Error("Required fields: model_name, service, and updates (object)");
+    }
+    // Step 3: check if the model exists
+    const exists = await modelConfigDbService.checkModel(model_name, service);
+    if(!exists){
+        throw new Error("The model you provided does not exist")
+    }
+
+    // Step 4: Convert updates into MongoDB
+    const success = await modelConfigDbService.updateModelConfigs(model_name, service, updates);
+
+    if(success.error ==="keyError"){
+        throw new Error(`Changes to ${success.key} is not allowed.`)
+    }
+    if (!success) {
+        throw new Error("Update failed. Configuration found, but fields may be unchanged or invalid.");
+    }
+    if (success.error === "not found"){
+        throw new Error("The provided key does not exist.")
+    }
+
+    res.locals = {
+        success: true,
+        message: "Updated configuration successfully" 
+    };
+    req.statusCode = 200;
+    return next();
+}
+
 export {
     getAllModelConfig,
     getAllModelConfigForService,
-    saveModelCongiguration,
-    saveUserModelCongiguration,
+    saveModelConfiguration,
+    saveUserModelConfiguration,
     deleteUserModelConfiguration,
-    deleteModelConfiguration
+    deleteModelConfiguration,
+    updateModelConfiguration
+
 }
