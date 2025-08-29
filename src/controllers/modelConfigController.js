@@ -135,7 +135,7 @@ async function deleteUserModelConfiguration(req, res, next) {
 }
 
 
-async function updateModelConfiguration(req, res) {
+async function updateModelConfiguration(req, res, next) {
     // Step 1: Extract required fields from body (even if extra fields exist)
     const { model_name, service, updates } = req.body;
 
