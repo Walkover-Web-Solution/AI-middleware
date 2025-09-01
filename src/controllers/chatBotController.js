@@ -7,7 +7,7 @@ import { getToken } from "../services/utils/usersServices.js";
 import token from "../services/commonService/generateToken.js";
 import ChatBotDbService from "../db_services/ChatBotDbService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
-import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema } from "../validation/joi_validation/chatbot.js";
+import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema, createOrRemoveActionValidationSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res) => {
     const { title } = req.body;
@@ -276,8 +276,7 @@ const createOrRemoveAction = async (req, res) => {
     const { type } = req.query;
     const { actionJson, version_id } = req.body;
     let { actionId } = req.body;
-
-    if (!['add', 'remove'].includes(type)) return res.status(400).json({ error: "Invalid type", success: false });
+    await createOrRemoveActionValidationSchema.validateAsync({ bridgeId, type, actionJson, version_id, actionId });
 
     if (type !== "remove" && !actionId) // add for create and update the action 
         actionId = generateIdentifier(12);
