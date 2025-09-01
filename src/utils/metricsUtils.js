@@ -11,12 +11,24 @@ export function selectTable(range) {
 }
 
 export function selectBucket(range) {
-    if (range === 1) {
-        return "time_bucket('15 minutes', created_at) AS created_at";
-    } else if(range === 2 || range === 3 || range === 4 || range === 5){
+    if(range === 1){
         return "time_bucket('1 hour', created_at) AS created_at";
-    } else {
-        return "created_at::date AS created_at";
+    }else if(range === 2){
+        return "time_bucket('3 hours', created_at) AS created_at";
+    }else if (range === 3){
+        return "time_bucket('6 hours', created_at) AS created_at";
+    }else if (range === 4){
+        return "time_bucket('12 hours', created_at) AS created_at";
+    }else if (range === 5){
+        return "time_bucket('1 day', created_at) AS created_at";
+    }else if (range === 6){
+        return "time_bucket('2 days', created_at) AS created_at";
+    }else if (range === 7){
+        return "time_bucket('7 days', created_at) AS created_at";
+    }else if (range === 8){
+        return "time_bucket('14 days', created_at) AS created_at";
+    }else if (range === 9){
+        return "time_bucket('30 days', created_at) AS created_at";
     }
 }
 
@@ -75,7 +87,7 @@ export function buildWhereClause(params, values, factor, range) {
         }
     }
     if (factor) {
-        query += ` GROUP BY ${factor}`;
+        query += ` GROUP BY ${factor}, created_at`;
     }
     return query;
 }
