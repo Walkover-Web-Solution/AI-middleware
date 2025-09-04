@@ -16,6 +16,10 @@ const FolderSchema = new mongoose.Schema({
     type: Object,
     default: {}
   },
+  apikey_object_id: {
+    type: Object,
+    default: {}
+  },
   created_at: {
     type: Date,
     default: Date.now
