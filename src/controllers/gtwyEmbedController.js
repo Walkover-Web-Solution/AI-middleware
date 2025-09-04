@@ -21,8 +21,9 @@ const createEmbed = async (req, res) => {
     const name = req.body.name;
     const config = req.body.config;
     const org_id =  req.profile.org.id
+    const apikey_object_id = req.body.apikey_object_id;
     const type = "embed"
-    const folder = await FolderModel.create({ name, org_id, type, config });
+    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id });
     res.status(200).json({ data:{...folder.toObject(), folder_id: folder._id} });
 }
 
@@ -36,6 +37,7 @@ const updateEmbed = async (req, res) => {
     const folder_id = req.body.folder_id;
     const config = req.body.config;
     const org_id = req.profile.org.id;
+    const apikey_object_id = req.body.apikey_object_id;
     
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
     if (!folder) {
@@ -43,6 +45,7 @@ const updateEmbed = async (req, res) => {
     }
 
     folder.config = config;
+    folder.apikey_object_id = apikey_object_id;
     await folder.save();
     
     res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });
