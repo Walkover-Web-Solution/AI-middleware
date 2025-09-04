@@ -17,6 +17,7 @@ async function checkModelConfigExists(service, model_name) {
     return existingConfig ? true : false;
 }
 
+
 async function getAllModelConfigsForService(service) {
     const modelConfigs = await ModelsConfigModel.find({ 'service': service }).lean();
     return modelConfigs.map(mc => ({ ...mc, _id: mc._id.toString() }));

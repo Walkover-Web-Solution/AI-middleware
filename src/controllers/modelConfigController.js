@@ -63,6 +63,7 @@ async function saveModelConfiguration(req,res, next) {
 }
 
 async function saveUserModelConfiguration(req,res, next) {
+
     const org_id = req.profile.org.id;
     
     // Merge org_id with request body for validation
@@ -95,6 +96,7 @@ async function saveUserModelConfiguration(req,res, next) {
         success: true,
         message: `Model configuration saved successfully`,
         result
+
     };
     req.statusCode = 200;
     return next();
@@ -135,7 +137,7 @@ async function deleteUserModelConfiguration(req, res, next) {
 }
 
 
-async function updateModelConfiguration(req, res) {
+async function updateModelConfiguration(req, res, next) {
     // Step 1: Extract required fields from body (even if extra fields exist)
     const { model_name, service, updates } = req.body;
 
@@ -178,4 +180,5 @@ export {
     deleteUserModelConfiguration,
     deleteModelConfiguration,
     updateModelConfiguration
+
 }

@@ -3,14 +3,14 @@ export function selectTable(range) {
     // const startDate = new Date(Date.UTC(new Date(startTime).getUTCFullYear(), new Date(startTime).getUTCMonth(), new Date(startTime).getUTCDate(), new Date(startTime).getUTCHours(), new Date(startTime).getUTCMinutes(), new Date(startTime).getUTCSeconds()));
     // const endDate = new Date(Date.UTC(new Date(endTime).getUTCFullYear(), new Date(endTime).getUTCMonth(), new Date(endTime).getUTCDate(), new Date(endTime).getUTCHours(), new Date(endTime).getUTCMinutes(), new Date(endTime).getUTCSeconds()));
 
-    if (range === 1) {
+    if (range === 1 || range === 2 || range === 3 || range === 4 || range === 5) {
         return 'fifteen_minute_data';
     } else {
         return 'daily_data';
     }
 }
 
-export function buildWhereClause(params, values, factor) {
+export function buildWhereClause(params, values, factor, range, start_date=null, end_date=null) {
     const conditions = [];
 
     if (params.org_id !== null && params.org_id !== undefined) {
@@ -43,8 +43,31 @@ export function buildWhereClause(params, values, factor) {
     }
 
     let query = 'WHERE ' + conditions.join(' AND ');
+    if (range) {
+        if(range == 1){
+            query += ` AND created_at >= NOW() - INTERVAL '1 hour'`;
+        }else if(range == 2){
+            query += ` AND created_at >= NOW() - INTERVAL '3 hours'`;
+        }else if(range == 3){
+            query += ` AND created_at >= NOW() - INTERVAL '6 hours'`;
+        }else if(range == 4){
+            query += ` AND created_at >= NOW() - INTERVAL '12 hours'`;
+        }else if(range == 5){
+            query += ` AND created_at >= NOW() - INTERVAL '1 day'`;
+        }else if(range == 6){
+            query += ` AND created_at >= NOW() - INTERVAL '2 days'`;
+        }else if(range == 7){
+            query += ` AND created_at >= NOW() - INTERVAL '7 days'`;
+        }else if(range == 8){
+            query += ` AND created_at >= NOW() - INTERVAL '14 days'`;
+        }else if(range == 9){
+            query += ` AND created_at >= NOW() - INTERVAL '30 days'`;
+        }else if(range == 10){
+            query += ` AND created_at BETWEEN '${start_date}' AND '${end_date}'`;
+        }
+    }
     if (factor) {
-        query += ` GROUP BY ${factor}`;
+        query += ` GROUP BY ${factor}, created_at, cost_sum, total_token_count, success_count`;
     }
     return query;
 }

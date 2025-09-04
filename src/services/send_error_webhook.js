@@ -51,7 +51,7 @@ async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
       }
     }
   } catch (error) {
-    logger.error(`Error in send_error_to_webhook: ${error.message}`);
+    throw new Error(`Error in send_error_to_webhook: ${error.message}`);
   }
 }
 
@@ -124,7 +124,6 @@ async function sendRequest(url, data, method, headers) {
     return response.json();
   } catch (error) {
     throw new Error(`Unexpected error: ${url}, ${error.toString()}`);
-    return { error: 'Unexpected error', details: error.toString() };
   }
 }
 
