@@ -1,5 +1,7 @@
 import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
+import configurationModel from "../mongoModel/configuration.js";
+import { deleteInCache } from "../cache_service/index.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
 import { generateIdentifier } from "../services/utils/utilityService.js";
 
@@ -42,6 +44,20 @@ const updateEmbed = async (req, res) => {
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
     if (!folder) {
         return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    // Find bridge object using apikey_object_id and delete from cache
+    const bridgeObject = await configurationModel.findOne({ folder_id : folder_id });
+    if (bridgeObject) {
+        // Delete cache using object id
+        await deleteInCache(bridgeObject._id.toString());
+        
+        // Delete cache for all version_ids in a single batch operation
+        // Access versions from _doc since direct access returns undefined
+        const versionIds = bridgeObject._doc?.versions;
+        if (versionIds?.length > 0) {
+            await deleteInCache(versionIds);
+        }
     }
 
     folder.config = config;
