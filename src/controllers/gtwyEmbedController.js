@@ -52,10 +52,12 @@ const updateEmbed = async (req, res) => {
         // Delete cache using object id
         await deleteInCache(bridgeObject._id.toString());
         
-        // Delete cache for each version_id in the array
+        // Delete cache for all version_ids in a single batch operation
         // Access versions from _doc since direct access returns undefined
         const versionIds = bridgeObject._doc?.versions;
-        versionIds?.forEach(versionId => deleteInCache(versionId.toString()));
+        if (versionIds?.length > 0) {
+            await deleteInCache(versionIds);
+        }
     }
 
     folder.config = config;
