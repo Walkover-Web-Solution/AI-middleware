@@ -272,14 +272,15 @@ const createOrgToken = async (req, res) => {
 };
 // for create , removd and update aciton 
 const createOrRemoveAction = async (req, res) => {
+
     const { bridgeId } = req.params;
     const { type } = req.query;
     const { actionJson, version_id } = req.body;
     let { actionId } = req.body;
-    await createOrRemoveActionValidationSchema.validateAsync({ bridgeId, type, actionJson, version_id, actionId });
-
     if (type !== "remove" && !actionId) // add for create and update the action 
         actionId = generateIdentifier(12);
+    await createOrRemoveActionValidationSchema.validateAsync({ bridgeId, type, actionJson, version_id, actionId });
+
 
     try {
         const response = type === 'add'
