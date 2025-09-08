@@ -11,6 +11,7 @@ export function selectTable(range) {
 }
 
 export function buildWhereClause(params, values, factor, range, start_date=null, end_date=null) {
+
     const conditions = [];
 
     if (params.org_id !== null && params.org_id !== undefined) {
