@@ -10,11 +10,12 @@ const embedLogin = async (req, res) => {
       const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
       const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
       const config = folder?.config || {};
+      const apikey_object_id = folder?.apikey_object_id
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
         token: await createProxyToken(embedDetails),
-        config
+        config:{...config, apikey_object_id}
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
 }
