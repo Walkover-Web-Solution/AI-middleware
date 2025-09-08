@@ -47,17 +47,19 @@ const updateEmbed = async (req, res) => {
         return res.status(404).json({ message: 'Folder not found' });
     }
 
-    // Find bridge object using apikey_object_id and delete from cache
-    const bridgeObject = await configurationModel.findOne({ folder_id : folder_id });
-    if (bridgeObject) {
-        // Delete cache using object id
-        await deleteInCache(bridgeObject._id.toString());
-        
-        // Delete cache for all version_ids in a single batch operation
-        // Access versions from _doc since direct access returns undefined
-        const versionIds = bridgeObject._doc?.versions;
-        if (versionIds?.length > 0) {
-            await deleteInCache(versionIds);
+    // Find all bridge objects using folder_id and delete from cache
+    const bridgeObjects = await configurationModel.find({ folder_id : folder_id });
+    if (bridgeObjects?.length > 0) {
+        for (const bridgeObject of bridgeObjects) {
+            // Delete cache using object id
+            await deleteInCache(bridgeObject._id.toString());
+            
+            // Delete cache for all version_ids for this object
+            // Access versions from _doc since direct access returns undefined
+            const versionIds = bridgeObject._doc?.versions;
+            if (versionIds?.length > 0) {
+                await deleteInCache(versionIds);
+            }
         }
     }
 
