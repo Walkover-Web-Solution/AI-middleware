@@ -172,6 +172,36 @@ async function callGeminiApi(apiKey) {
   }
 }
 
+async function callAiMlApi(apiKey) {
+  try {
+    const response = await fetch('https://backend.ai.ml/openai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: 'Hello!'
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 
 export {
   callOpenAIModelsApi,
@@ -179,5 +209,6 @@ export {
   callGroqApi,
   callOpenRouterApi,
   callMistralApi,
-  callGeminiApi
+  callGeminiApi,
+  callAiMlApi
 }
