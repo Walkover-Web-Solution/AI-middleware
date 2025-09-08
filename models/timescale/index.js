@@ -23,6 +23,7 @@ const sequelize = new Sequelize(process.env.TIMESCALE_SERVICE_URL, {
             rejectUnauthorized: false
         }
     },
+    logging: true
 });
 
 const dbservice = async () => {

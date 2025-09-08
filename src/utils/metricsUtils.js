@@ -10,17 +10,8 @@ export function selectTable(range) {
     }
 }
 
-export function selectBucket(range) {
-    if (range === 1) {
-        return "time_bucket('15 minutes', created_at) AS created_at";
-    } else if(range === 2 || range === 3 || range === 4 || range === 5){
-        return "time_bucket('1 hour', created_at) AS created_at";
-    } else {
-        return "created_at::date AS created_at";
-    }
-}
+export function buildWhereClause(params, values, factor, range, start_date=null, end_date=null) {
 
-export function buildWhereClause(params, values, factor, range) {
     const conditions = [];
 
     if (params.org_id !== null && params.org_id !== undefined) {
@@ -72,10 +63,12 @@ export function buildWhereClause(params, values, factor, range) {
             query += ` AND created_at >= NOW() - INTERVAL '14 days'`;
         }else if(range == 9){
             query += ` AND created_at >= NOW() - INTERVAL '30 days'`;
+        }else if(range == 10){
+            query += ` AND created_at BETWEEN '${start_date}' AND '${end_date}'`;
         }
     }
     if (factor) {
-        query += ` GROUP BY ${factor}`;
+        query += ` GROUP BY ${factor}, created_at, cost_sum, total_token_count, success_count`;
     }
     return query;
 }
