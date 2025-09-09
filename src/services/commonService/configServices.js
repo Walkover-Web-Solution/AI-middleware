@@ -411,9 +411,21 @@ const getAllSubThreadsController = async(req, res, next) => {
   const {bridge_id, error} = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req.profile.org.id
+  const version_id = req.query.version_id;
   const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
   if(isError){
     const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id);
+    const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
+      const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
+      return {
+        sub_thread_id,
+        display_name: thread ? thread.display_name : sub_thread_id
+      };
+    });
+    return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
+  }
+  if(version_id){
+    const sub_thread_ids = await conversationDbService.sortThreadsByLatestActivityVersion(threads, org_id, bridge_id, version_id);
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
       return {

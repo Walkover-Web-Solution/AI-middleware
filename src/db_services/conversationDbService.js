@@ -982,7 +982,39 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     return threads; // Return original threads if sorting fails
   }
 }
-  
+
+const sortThreadsByLatestActivityVersion = async(threads, org_id, bridge_id, version_id) => {
+    try {
+      const result = await models.pg.conversations.findAll({
+        attributes: [
+          'sub_thread_id',
+          [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('raw_data.created_at')), 'latest_error']
+        ],
+        include: [{
+          model: models.pg.raw_data,
+          as: 'raw_data',
+          required: true,
+          attributes: [],
+          where: {
+            version_id: {
+              [models.pg.Sequelize.Op.eq]: version_id
+            }
+          }
+        }],
+        where: {
+          org_id,
+          bridge_id
+        },
+        group: ['sub_thread_id'],
+        order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
+        raw: true
+      });
+      return result.map(item => item.sub_thread_id);
+    } catch (error) {
+      console.error('sortThreadsByLatestActivityVersion error =>', error);
+      return threads; // Return original threads if sorting fails
+    }
+  }  
 
 export default {
   findAllThreads,
@@ -1005,5 +1037,6 @@ export default {
   getAllDatafromPg,
   getSubThreadsByError,
   findAllThreadsUsingKeywordSearch,
-  sortThreadsByLatestActivity
+  sortThreadsByLatestActivity,
+  sortThreadsByLatestActivityVersion
 };
