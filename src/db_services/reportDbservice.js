@@ -19,57 +19,47 @@ async function get_data_from_pg(org_ids) {
   for (let org_id of org_ids) {
     org_id = org_id.toString();
 
-    // Prepare the SQL queries for each organization separately
+    // Updated SQL query for merged table schema
     const bridgeStatsQuery = `
-      WITH bridge_stats AS (
-        SELECT
-          c.bridge_id,
-          COUNT(c.id) AS hits,
-          SUM(rd.input_tokens + rd.output_tokens) AS total_tokens_used,
-          SUM(rd.expected_cost) AS total_cost
-        FROM
-          conversations c
-        JOIN
-          raw_data rd ON c.message_id = rd.message_id
-        WHERE
-          c.message_by = 'user' AND c.org_id = '${org_id}'
-          AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
-          AND c."createdAt" < date_trunc('month', current_date)
-        GROUP BY
-          c.bridge_id
-      )
       SELECT
-        bs.bridge_id AS "bridge_id",
-        bs.hits,
-        bs.total_tokens_used AS "Tokens Used",
-        bs.total_cost AS "Cost"
+        bridge_id,
+        COUNT(id) AS hits,
+        SUM(input_tokens + output_tokens) AS "Tokens Used",
+        SUM(expected_cost) AS "Cost"
       FROM
-        bridge_stats bs
+        conversations
+      WHERE
+        org_id = '${org_id}'
+        AND "createdAt" >= date_trunc('month', current_date) - interval '1 month'
+        AND "createdAt" < date_trunc('month', current_date)
+        AND user_message IS NOT NULL
+        AND user_message != ''
+      GROUP BY
+        bridge_id
       ORDER BY
-        bs.hits DESC
+        hits DESC
       LIMIT 3;
     `;
 
     const activeBridgesQuery = `
       SELECT
-        COUNT(DISTINCT c.bridge_id) AS active_bridges_count
+        COUNT(DISTINCT bridge_id) AS active_bridges_count
       FROM
-        conversations c
+        conversations
       WHERE
-        c.bridge_id IS NOT NULL
-        AND c.org_id = '${org_id}'
-        AND c."createdAt" >= date_trunc('month', current_date) - interval '1 month'
-        AND c."createdAt" < date_trunc('month', current_date);
+        bridge_id IS NOT NULL
+        AND org_id = '${org_id}'
+        AND "createdAt" >= date_trunc('month', current_date) - interval '1 month'
+        AND "createdAt" < date_trunc('month', current_date);
     `;
 
     // Use Promise.all to fetch all required data in parallel
     const [
       conversations,
-      rawData,
       bridgeStats,
       activeBridges
     ] = await Promise.all([
-      // Fetch conversations
+      // Fetch conversations from merged table
       models.pg.conversations.findAll({
         where: {
           org_id,
@@ -77,28 +67,18 @@ async function get_data_from_pg(org_ids) {
         },
         attributes: [
           'bridge_id',
-          'message_by',
-          'message',
+          'user_message',
+          'response',
+          'chatbot_response',
           'tools_call_data',
           'createdAt',
           'message_id',
-          'user_feedback'
-        ]
-      }),
-
-      // Fetch rawData
-      models.pg.raw_data.findAll({
-        where: {
-          org_id,
-          created_at: conversationDateFilter
-        },
-        attributes: [
+          'user_feedback',
           'service',
           'status',
           'input_tokens',
           'output_tokens',
           'expected_cost',
-          'message_id',
           'error'
         ]
       }),
@@ -124,14 +104,8 @@ async function get_data_from_pg(org_ids) {
     let totalSuccessCount = 0;
     const topBridges = [];
 
-    // totalHits is simply the length of rawData
-    totalHits = rawData.length;
-
-    // Build a map (message_id -> rawData row) for quick lookups
-    const rawDataMap = new Map();
-    for (const r of rawData) {
-      rawDataMap.set(r.message_id, r);
-    }
+    // totalHits is the number of conversations with user messages
+    totalHits = conversations.filter(c => c.user_message && c.user_message.trim() !== '').length;
 
     // Resolve activeBridges count
     const activeBridges_count = parseInt(activeBridges[0].active_bridges_count, 10) || 0;
@@ -145,13 +119,14 @@ async function get_data_from_pg(org_ids) {
 
     // Iterate through the conversations to accumulate usage data and feedback
     for (const conversation of conversations) {
-      const { bridge_id, message_id, user_feedback } = conversation;
+      const { bridge_id, message_id, user_feedback, input_tokens, output_tokens, expected_cost, error } = conversation;
 
-      // Pull tokens/cost from map
-      const correspondingRawData = rawDataMap.get(message_id);
-      if (correspondingRawData) {
-        totalTokensConsumed += correspondingRawData.input_tokens + correspondingRawData.output_tokens;
-        totalCost += correspondingRawData.expected_cost;
+      // Calculate tokens and cost from merged table
+      if (input_tokens && output_tokens) {
+        totalTokensConsumed += input_tokens + output_tokens;
+      }
+      if (expected_cost) {
+        totalCost += expected_cost;
       }
 
       // Tools call => track usage in topBridges
@@ -162,27 +137,23 @@ async function get_data_from_pg(org_ids) {
           topBridges.push(bridgeData);
         }
         bridgeData.Hits++;
-        if (correspondingRawData) {
-          bridgeData.TokensUsed += (correspondingRawData.input_tokens + correspondingRawData.output_tokens);
-          bridgeData.Cost += correspondingRawData.expected_cost;
+        if (input_tokens && output_tokens) {
+          bridgeData.TokensUsed += (input_tokens + output_tokens);
+        }
+        if (expected_cost) {
+          bridgeData.Cost += expected_cost;
         }
       }
 
-      // Parse user_feedback from conversation directly
-      if (user_feedback) {
-        const feedbackJson = JSON.parse(user_feedback);
-        if (feedbackJson.Dislikes) {
-          totalDislikes += feedbackJson.Dislikes;
-        }
-        if (feedbackJson.PositiveFeedback) {
-          totalPositiveFeedback += feedbackJson.PositiveFeedback;
-        }
+      // Handle user_feedback (assuming it's a numeric value: 1=positive, 2=negative)
+      if (user_feedback === 1) {
+        totalPositiveFeedback++;
+      } else if (user_feedback === 2) {
+        totalDislikes++;
       }
-    }
 
-    // Calculate the total errors vs. successes from the rawData
-    for (const r of rawData) {
-      if (r.error && r.error.trim() !== '') {
+      // Calculate errors vs successes
+      if (error && error.trim() !== '') {
         totalErrorCount++;
       } else {
         totalSuccessCount++;
@@ -239,45 +210,25 @@ async function get_data_for_daily_report(org_ids) {
   for (let org_id of org_ids) {
     org_id = org_id.toString();
     
-    // Fetch conversations and raw data for yesterday
-    const [conversations, rawData] = await Promise.all([
-      // Fetch conversations
-      models.pg.conversations.findAll({
-        where: {
-          org_id,
-          createdAt: dateFilter
-        },
-        attributes: [
-          'bridge_id',
-          'message_id'
-        ]
-      }),
-      
-      // Fetch rawData
-      models.pg.raw_data.findAll({
-        where: {
-          org_id,
-          created_at: dateFilter
-        },
-        attributes: [
-          'message_id',
-          'error'
-        ]
-      })
-    ]);
-    
-    // Create a map of message_id to raw_data for quick lookup
-    const rawDataMap = new Map();
-    for (const r of rawData) {
-      rawDataMap.set(r.message_id, r);
-    }
+    // Fetch conversations from merged table for yesterday
+    const conversations = await models.pg.conversations.findAll({
+      where: {
+        org_id,
+        createdAt: dateFilter
+      },
+      attributes: [
+        'bridge_id',
+        'message_id',
+        'error'
+      ]
+    });
     
     // Create a map to track error counts by bridge_id
     const bridgeErrorCounts = new Map();
     
     // Process each conversation to count errors by bridge
     for (const conversation of conversations) {
-      const { bridge_id, message_id } = conversation;
+      const { bridge_id, error } = conversation;
       
       if (!bridge_id) continue;
       
@@ -294,8 +245,7 @@ async function get_data_for_daily_report(org_ids) {
       bridgeData.totalCount++;
       
       // Check if there was an error for this message
-      const rawDataEntry = rawDataMap.get(message_id);
-      if (rawDataEntry && rawDataEntry.error && rawDataEntry.error.trim() !== '') {
+      if (error && error.trim() !== '') {
         bridgeData.errorCount++;
       }
     }
@@ -385,35 +335,19 @@ async function get_latency_report_data(org_ids, reportType) {
   for (let org_id of org_ids) {
     org_id = org_id.toString();
 
-    // Fetch conversations and raw data with latency information
-    const [conversations, rawData] = await Promise.all([
-      models.pg.conversations.findAll({
-        where: {
-          org_id,
-          createdAt: dateFilter
-        },
-        attributes: ['bridge_id', 'message_id']
-      }),
-      models.pg.raw_data.findAll({
-        where: {
-          org_id,
-          created_at: dateFilter
-        },
-        attributes: ['message_id', 'latency']
-      })
-    ]);
+    // Fetch conversations with latency information from merged table
+    const conversations = await models.pg.conversations.findAll({
+      where: {
+        org_id,
+        createdAt: dateFilter,
+        latency: { [Op.ne]: null }
+      },
+      attributes: ['bridge_id', 'message_id', 'latency']
+    });
 
     // Skip this org if no data is available
-    if (conversations.length === 0 || rawData.length === 0) {
+    if (conversations.length === 0) {
       continue;
-    }
-
-    // Create a map of message_id to raw_data for quick lookup
-    const rawDataMap = new Map();
-    for (const r of rawData) {
-      if (r.latency) {
-        rawDataMap.set(r.message_id, r.latency);
-      }
     }
 
     // Create a map to track latency sums and counts by bridge_id
@@ -421,21 +355,12 @@ async function get_latency_report_data(org_ids, reportType) {
 
     // Process each conversation to calculate average latency by bridge
     for (const conversation of conversations) {
-      const { bridge_id, message_id } = conversation;
+      const { bridge_id, latency } = conversation;
       
-      if (!bridge_id) continue;
+      if (!bridge_id || !latency) continue;
 
-      const latency = rawDataMap.get(message_id);
-      if (!latency) continue;
-
-      // Calculate function time logs total
-      let functionTimeTotal = 0;
-      if (latency.function_time_logs && Array.isArray(latency.function_time_logs)) {
-        functionTimeTotal = latency.function_time_logs.reduce((sum, log) => sum + (log.time_taken || 0), 0);
-      }
-
-      // Calculate actual latency (overall_time - model_execution_time - function_time_logs)
-      const actualLatency = latency.over_all_time - latency.model_execution_time - functionTimeTotal;
+      // Use latency directly from merged table (simplified - no complex calculations)
+      const actualLatency = parseFloat(latency);
 
       // Initialize or update bridge stats
       if (!bridgeLatencyStats.has(bridge_id)) {
@@ -512,26 +437,13 @@ async function get_latency_report_data(org_ids, reportType) {
  */
 async function get_message_data(message_id) {
   try {
-    // Use raw SQL query with INNER JOIN to get only conversations with matching raw_data
-    const query = `
-      SELECT 
-        c.*,
-        rd.*
-      FROM 
-        conversations c
-      INNER JOIN 
-        raw_data rd ON c.message_id = rd.message_id
-      WHERE 
-        c.message_id = :message_id
-      LIMIT 1
-    `;
-
-    const result = await models.pg.sequelize.query(query, {
-      replacements: { message_id },
-      type: models.pg.sequelize.QueryTypes.SELECT
+    // Query the merged conversations table directly
+    const result = await models.pg.conversations.findOne({
+      where: { message_id },
+      raw: true
     });
 
-    if (result.length === 0) {
+    if (!result) {
       return {
         message_id,
         conversation_data: null,
@@ -540,30 +452,37 @@ async function get_message_data(message_id) {
       };
     }
 
-    // Separate the joined data back into conversation and raw_data objects
-    const joinedData = result[0];
-    const conversationData = {};
-    const rawData = {};
+    // Split the merged data into conversation and raw_data objects for backward compatibility
+    const conversationData = {
+      id: result.id,
+      bridge_id: result.bridge_id,
+      user_message: result.user_message,
+      response: result.response,
+      chatbot_response: result.chatbot_response,
+      tools_call_data: result.tools_call_data,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      org_id: result.org_id,
+      user_feedback: result.user_feedback,
+      message_id: result.message_id
+    };
 
-    // Extract conversation fields (assuming they don't have conflicting names with raw_data)
-    const conversationFields = ['id', 'bridge_id', 'message_by', 'message', 'tools_call_data', 'createdAt', 'updatedAt', 'org_id', 'user_feedback'];
-    const rawDataFields = ['service', 'status', 'input_tokens', 'output_tokens', 'expected_cost', 'error', 'latency', 'created_at'];
-
-    conversationFields.forEach(field => {
-      if (joinedData.hasOwnProperty(field)) {
-        conversationData[field] = joinedData[field];
-      }
-    });
-
-    rawDataFields.forEach(field => {
-      if (joinedData.hasOwnProperty(field)) {
-        rawData[field] = joinedData[field];
-      }
-    });
-
-    // Add message_id to both objects
-    conversationData.message_id = message_id;
-    rawData.message_id = message_id;
+    const rawData = {
+      service: result.service,
+      status: result.status,
+      input_tokens: result.input_tokens,
+      output_tokens: result.output_tokens,
+      expected_cost: result.expected_cost,
+      error: result.error,
+      latency: result.latency,
+      created_at: result.created_at,
+      message_id: result.message_id,
+      authkey_name: result.authkey_name,
+      variables: result.variables,
+      finish_reason: result.finish_reason,
+      model_name: result.model_name,
+      type: result.type
+    };
 
     return {
       message_id,
