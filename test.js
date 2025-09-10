@@ -1,9 +1,9 @@
 import { MongoClient, ObjectId } from 'mongodb';
-const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
+const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test?retryWrites=true&w=majority');
 try {
     await client.connect();
-    const db = client.db("AI_Middleware");
-    const modelConfiguration = db.collection("modelconfiguration");
+    const db = client.db("AI_Middleware-test");
+    const modelConfiguration = db.collection("modelconfigurations");
     
     // Find all documents in modelconfiguration collection
     const cursor = modelConfiguration.find({});
