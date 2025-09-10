@@ -26,7 +26,7 @@ async function migrateCollection(collection, collectionName) {
 
 try {
     await client.connect();
-    const db = client.db("AI_Middleware");
+    const db = client.db("AI_Middleware-test");
     
     // Get both collections
     const configurations = db.collection("configurations");
