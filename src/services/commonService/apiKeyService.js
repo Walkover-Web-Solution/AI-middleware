@@ -123,6 +123,7 @@ async function updateApikey(req, res) {
               error: error.details
             });
         }
+        if(apikey){
         let check;
         switch (service) {
             case 'openai':
@@ -150,7 +151,8 @@ async function updateApikey(req, res) {
         if(!check.success){
             return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
         }
-       apikey = Helper.encrypt(apikey); 
+        apikey = Helper.encrypt(apikey); 
+    }
         const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
         let decryptedApiKey, maskedApiKey;
         if(apikey){
