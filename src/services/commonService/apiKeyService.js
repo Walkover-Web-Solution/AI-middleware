@@ -227,9 +227,73 @@ async function deleteApikey(req, res) {
     }
 }
 
+
+import { MongoClient, ObjectId } from 'mongodb';
+
+async function deleteApikeyMigration(req, res) {
+    const MONGO_URI = "mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority"; // MongoDB connection string here
+    const client = new MongoClient(MONGO_URI);
+
+    try {
+        await client.connect();
+        const db = client.db("AI_Middleware"); // Database name here
+
+        const configurations = db.collection("configurations");
+        const configuration_versions = db.collection("configuration_versions");
+        const apikeycredentials = db.collection("apikeycredentials");
+
+        // Iterate over apikeycredentials
+        const cursor = apikeycredentials.find({});
+        while (await cursor.hasNext()) {
+            const apikeyCred = await cursor.next();
+            const { version_ids = [] } = apikeyCred;
+
+            const validVersionIds = [];
+
+            for (const vid of version_ids) {
+                // Try to find the doc in configurations
+                let doc = await configurations.findOne({ _id: vid });
+                if (!doc) {
+                    // Try in configuration_versions
+                    doc = await configuration_versions.findOne({ _id: vid });
+                }
+
+                if (!doc) {
+                    console.log(`Dropping version_id ${vid} (no document found)`);
+                    continue; // remove if no document found
+                }
+
+                // Keep only if doc has apikey_object_id
+                if (doc.apikey_object_id && Object.keys(doc.apikey_object_id).length > 0) {
+                    validVersionIds.push(vid);
+                } else {
+                    console.log(`Dropping version_id ${vid} (no apikey_object_id in doc)`);
+                }
+            }
+
+            // Update the apikeycredentials doc
+            await apikeycredentials.updateOne(
+                { _id: apikeyCred._id },
+                { $set: { version_ids: validVersionIds } }
+            );
+        }
+
+        console.log("Migration completed successfully");
+    } catch (error) {
+        throw new Error("Migration failed: " + error.message);
+    } finally {
+        await client.close();
+        return res.status(200).json({
+            success: true,
+            message: "Migration completed successfully"
+        });
+    }
+}
+
 export default{
   saveApikey,
   getAllApikeys,
   deleteApikey,
-  updateApikey
+  updateApikey,
+  deleteApikeyMigration
 }

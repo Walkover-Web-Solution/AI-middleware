@@ -9,5 +9,6 @@ router.post('/', middleware, service.saveApikey);
 router.get('/', middleware, service.getAllApikeys);
 router.put('/:apikey_object_id',middleware, service.updateApikey);
 router.delete('/',middleware,service.deleteApikey);
+router.delete('/deleteApikey', middleware, service.deleteApikeyMigration);
 
 export default router;
