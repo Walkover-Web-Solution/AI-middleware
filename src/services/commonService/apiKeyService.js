@@ -231,7 +231,7 @@ async function deleteApikey(req, res) {
 import { MongoClient, ObjectId } from 'mongodb';
 
 async function deleteApikeyMigration(req, res) {
-    const MONGO_URI = "mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority"; // MongoDB connection string here
+    const MONGO_URI = process.env.MONGODB_CONNECTION_URI; // MongoDB connection string here
     const client = new MongoClient(MONGO_URI);
 
     try {
