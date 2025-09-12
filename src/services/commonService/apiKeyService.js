@@ -201,19 +201,21 @@ async function deleteApikey(req, res) {
 import { MongoClient, ObjectId } from 'mongodb';
 
 async function runMigration(req, res){
-    const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
+    const MONGO_URI = process.env.MONGODB_CONNECTION_URI;
+    const client = new MongoClient(MONGO_URI);
     try {
         await client.connect();
         const db = client.db("AI_Middleware");
         const apiKeyCredentials = db.collection("apikeycredentials");
-        const configuration_versions = db.collection("configuration_versions");
-        const cursor = configuration_versions.find({});
+        const collections = [{collection: db.collection("configuration_versions")}, {collection: db.collection("configurations")}]
 
-        while (await cursor.hasNext()) {
-            const configVersion = await cursor.next();
-            const config_version_id = configVersion._id.toString();
-            const apikeys = configVersion.apikey_object_id || {};
-            for (const [name, idstr] of Object.entries(apikeys)) {
+        for (const collection of collections) {
+            const cursor = collection.collection.find({});
+            while (await cursor.hasNext()) {
+                const configVersion = await cursor.next();
+                const config_version_id = configVersion._id.toString();
+                const apikeys = configVersion.apikey_object_id || {};
+                for (const [name, idstr] of Object.entries(apikeys)) {
                 if (!idstr) continue;
                 let queryId = null;
                 if (idstr instanceof ObjectId) {
@@ -244,6 +246,7 @@ async function runMigration(req, res){
                     console.log(
                         `Added ${config_version_id} to version_id of apikeycredentials._id=${api_key_Doc._id} (via ${name})`
                     );
+                }
                 }
             }
         }
