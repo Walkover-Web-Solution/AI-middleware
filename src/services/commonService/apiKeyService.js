@@ -124,8 +124,35 @@ async function updateApikey(req, res) {
             });
         }
         if(apikey){
-            apikey = Helper.encrypt(apikey); 
+        let check;
+        switch (service) {
+            case 'openai':
+                check = await callOpenAIModelsApi(apikey)
+                break;
+            case 'anthropic':
+                check = await callAnthropicApi(apikey)
+                break;
+            case 'groq':
+                check = await callGroqApi(apikey)
+                break;
+            case 'open_router':
+                check = await callOpenRouterApi(apikey)
+                break;
+            case 'mistral':
+                check = await callMistralApi(apikey)
+                break;
+            case 'gemini':
+                check = await callGeminiApi(apikey)
+                break;
+            case 'ai_ml':
+                check = await callAiMlApi(apikey)
+                break;
         }
+        if(!check.success){
+            return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
+        }
+        apikey = Helper.encrypt(apikey); 
+    }
         const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
         let decryptedApiKey, maskedApiKey;
         if(apikey){
