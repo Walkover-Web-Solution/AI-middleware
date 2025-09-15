@@ -1,7 +1,8 @@
 import { MongoClient } from 'mongodb';
 
 async function migrateStarterQuestion() {
-    const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test');
+    const mongoUrl = process.env.MONGODB_CONNECTION_URI;
+    const client = new MongoClient(mongoUrl);
 
     try {
         await client.connect();
