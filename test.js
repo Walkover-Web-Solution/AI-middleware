@@ -1,5 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
-const client = new MongoClient('mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority');
+const mongoUrl = process.env.MONGODB_CONNECTION_URI;
+const client = new MongoClient(mongoUrl);
 
 async function migrateCollection(collection, collectionName) {
     console.log(`Starting migration for ${collectionName} collection...`);
