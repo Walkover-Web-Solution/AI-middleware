@@ -265,7 +265,7 @@ const getBridges = async bridge_id => {
   try {
     const bridges = await configurationModel.findOne({
       _id: bridge_id
-    });
+    }).lean();
     return {
       success: true,
       bridges: bridges
