@@ -93,7 +93,9 @@ const embedUser = async (req, res) => {
         ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
         token: await createProxyToken(embedDetails),
       };
-      return res.status(200).json({ data: response, message: 'logged in successfully' });
+    res.locals = { data: response, success: true };
+    req.statusCode = 200;
+    return next();
   };
             
 const removeUsersFromOrg = async (req, res) => {
@@ -112,7 +114,9 @@ const removeUsersFromOrg = async (req, res) => {
       },
     );
 
-    return res.status(200).json({data : response.data.data.message, message : "User removed successfully"});
+    res.locals = { data: response.data.data.message, success: true };
+    req.statusCode = 200;
+    return next();
   } catch (error) {
     console.error('Error in Removing Users: ', error.message);
     throw error; // Re-throw the error for the caller to handle
