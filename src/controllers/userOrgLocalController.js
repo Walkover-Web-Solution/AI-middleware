@@ -92,14 +92,41 @@ const embedUser = async (req, res) => {
         ...(req?.Embed || {}),
         ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
         token: await createProxyToken(embedDetails),
-    };
-    return res.status(200).json({ data: response, message: 'logged in successfully' });
-};
+      };
+    res.locals = { data: response, success: true };
+    req.statusCode = 200;
+    return next();
+  };
+            
+const removeUsersFromOrg = async (req, res) => {
+  try {
+    const userId = req.body.user_id;
+    const companyId = req.profile.org.id;
+    const featureId = `${process.env.PROXY_USER_REFERENCE_ID}`;
+    const response = await axios.post(
+      `${process.env.PROXY_BASE_URL}/clientUsers/${userId}/remove?feature_id=${featureId}&company_id=${companyId}`,
+      null,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authkey: process.env.PROXY_ADMIN_TOKEN,
+        },
+      },
+    );
+
+    res.locals = { data: response.data.data.message, success: true };
+    req.statusCode = 200;
+    return next();
+  } catch (error) {
+    console.error('Error in Removing Users: ', error.message);
+    throw error; // Re-throw the error for the caller to handle
+  }
+}
 
 export {
     userOrgLocalToken,
     switchUserOrgLocal,
     updateUserDetails,
-    embedUser
-
+    embedUser,
+    removeUsersFromOrg
 }
