@@ -35,15 +35,12 @@ class FlowController {
       const apiCallsCollection = db.collection('apicalls');
       
       // Get query parameters or use defaults
-      const { limit = 100, skip = 0 } = req.query;
       
       // Find API calls with folder_id and user_id
       const apiCalls = await apiCallsCollection.find({
         folder_id: { $exists: true, $ne: null },
         user_id: { $exists: true, $ne: null }
       })
-      .skip(Number(skip))
-      .limit(Number(limit))
       .toArray();
       
       console.log(`Found ${apiCalls.length} API calls with folder_id and user_id`);
