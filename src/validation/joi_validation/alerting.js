@@ -5,7 +5,7 @@ const createAlertSchema = Joi.object({
     webhookConfiguration : Joi.object().required(),
     name : Joi.string().required(),
     bridges : Joi.array().items(Joi.string()).required(),
-    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')).required(),
+    alertType : Joi.array().items(Joi.string().valid('thumbsdown','Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')).required(),
     limit : Joi.number()
 })
 

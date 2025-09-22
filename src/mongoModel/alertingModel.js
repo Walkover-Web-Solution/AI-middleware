@@ -22,7 +22,7 @@ const alertSchema = new mongoose.Schema({
   },
   alertType: {
     type: [String],
-    enum: ['Error', 'Variable', 'metrix_limit_reached', 'retry_mechanism', 'knowledge_base'],
+    enum: ['Error', 'Variable', 'metrix_limit_reached', 'retry_mechanism', 'knowledge_base', 'thumbsdown'],
     default: [],
     required: true,
   },
