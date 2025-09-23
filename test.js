@@ -64,22 +64,22 @@ async function deleteCacheEntries(ids) {
     }
 
     try {
-        const response = await fetch('https://dev-api.gtwy.ai/utils/redis/', {
+        const response = await fetch('https://api.gtwy.ai/utils/redis', {
             method: 'DELETE',
             headers: {
                 'accept': 'application/json, text/plain, */*',
                 'accept-language': 'en-US,en;q=0.9',
                 'content-type': 'application/json',
-                'origin': 'https://dev-ai.viasocket.com',
+                'origin': 'https://app.gtwy.ai',
                 'priority': 'u=1, i',
-                'proxy_auth_token': 'bzlqM2xmYmovaUhHR2w2eTJBR0c1S1ZObEFSeCs4aStUTjVYQUFVQnRxaCtTakd5SWw5bWhpbHg1SlJHN3VIVWpWeFNKVmpNV1FqZWFla1NnSXd4alFSWWVtUU5Uc0pMZVozZVBEdk5acjlZL3IyTGZ5R1NyOHdYSU94a013SnpLQlIyMFFUTTNxMmE1TGh5N1BucGdzVnR1bG1ZQ202c2NvajBERFVHdTM4PQ==',
-                'referer': 'https://dev-ai.viasocket.com/',
+                'proxy_auth_token': 'LzkwdmQyZEZuY3hGNUZvczUydWVuR1ppRlRSQm4vemplWHlsTnhLdHVucGlRWlFwc0JYalVramxsbGhUMk1nb3JHeFhHQXdMVGxrVEQyWmhwZWhQTnYrWklQREpjVUR6cnhIdWt2SjlHa2pwdDh0UkZLV0dERWhHSC84YXMxSnlkZHduWG1IM0tRSWVTV0NCL1VxY1dHeWo0WmhTWEpycy9DQ0kwV3NKckFvPQ==',
+                'referer': 'https://app.gtwy.ai/',
                 'sec-ch-ua': '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"macOS"',
                 'sec-fetch-dest': 'empty',
                 'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'cross-site',
+                'sec-fetch-site': 'same-site',
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
             },
             body: JSON.stringify({
