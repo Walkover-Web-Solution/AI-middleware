@@ -18,7 +18,7 @@ const updateAlertSchema = Joi.object({
     webhookConfiguration : Joi.object().optional(),
     bridges : Joi.array().items(Joi.string()).optional(),
     name : Joi.string().optional(),
-    alertType : Joi.array().items(Joi.string().valid('Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')).optional(),
+    alertType : Joi.array().items(Joi.string().valid('thumbsdown','Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')).optional(),
 })
 
 const deleteAlertSchema = Joi.object({
