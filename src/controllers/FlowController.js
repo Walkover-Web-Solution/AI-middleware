@@ -71,11 +71,7 @@ class FlowController {
           
           // Call the flow copy API
           const response = await axios.post(
-            `${apiBaseUrl}/${function_name}`, 
-            {
-                "title": "",
-                "meta": ""
-            },
+            `${apiBaseUrl}/${function_name}`, {},
             {
               headers: {
                 'Authorization': `${viasocketToken}`
