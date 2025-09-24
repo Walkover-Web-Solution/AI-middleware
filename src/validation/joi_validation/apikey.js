@@ -7,7 +7,7 @@ const saveApikeySchema = Joi.object({
     comment: Joi.string().allow('').optional(),
     folder_id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
     user_id: Joi.number().optional(),
-    apikey_quota: Joi.object().optional()
+    apikey_quota: Joi.object().keys({limit: Joi.number().required(),used: Joi.number().required()}).optional()
 })
 
 const updateApikeySchema = Joi.object({
@@ -18,7 +18,7 @@ const updateApikeySchema = Joi.object({
     comment: Joi.string().allow('').optional(),
     folder_id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
     user_id: Joi.number().optional(),
-    apikey_quota: Joi.object().optional()
+    apikey_quota: Joi.object().keys({limit: Joi.number().required(),used: Joi.number().required()}).optional()
 })
 
 const deleteApikeySchema = Joi.object({
