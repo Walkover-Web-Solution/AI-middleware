@@ -58,7 +58,7 @@ async function callGroqApi(apiKey) {
     };
 
     const body = JSON.stringify({
-      model: "openai/gpt-oss-20b",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "user", content: "hii" }
       ]
