@@ -9,6 +9,8 @@ import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 import { getallOrgs } from "../../utils/proxyUtils.js";
+import { send_error_to_webhook } from "../send_error_webhook.js"
+
 const getThreads = async (req, res,next) => {
   try {
     let page = parseInt(req.query.pageNo) || null;
@@ -294,6 +296,12 @@ const updateMessageStatus = async (req, res, next) => {
   try {
     const status = req.params.status;
     const message_id = req.body.message_id;
+    const bridge_id = req.body.bridge_id;
+    const  org_id  = req.profile.org_id;
+    let error_message = "User reacted thumbs down on response"
+    if (status === "2"){
+      sendError(bridge_id, org_id, error_message,"thumbsdown");
+    }
     const result = await conversationDbService.updateStatus({ status, message_id })
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
@@ -303,6 +311,11 @@ const updateMessageStatus = async (req, res, next) => {
     throw error;
   }
 }
+
+const sendError = async (bridge_id, org_id, error_message, error_type) => {
+    send_error_to_webhook(bridge_id, org_id, error_message, error_type);
+}
+
 const userFeedbackCount = async (req, res, next) =>{
   const bridge_id = req.params.bridge_id;
   const {startDate, endDate, user_feedback} = req.query;
