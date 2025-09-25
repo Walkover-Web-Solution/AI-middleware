@@ -63,7 +63,7 @@ const saveApikey = async(req,res) => {
         result.api.apikey = maskedApiKey
 
         if(result.success){
-            let cache_key = `apikey_quota_${name}_${org_id}`
+            let cache_key = `apikey_quota_${result.api.id}`
             await storeInCache(cache_key, apikey_quota)
             return res.status(200).json(result);
         }
@@ -142,11 +142,12 @@ async function updateApikey(req, res) {
         }
         if (result.success) {
             await deleteInCache(result?.updatedData?.version_ids)
-            
-            let cache_key = `apikey_quota_${apikey_object_id}`
-            await deleteInCache(cache_key)
-            await storeInCache(cache_key, apikey_quota)
-
+            if(apikey_quota){
+                let cache_key = `apikey_quota_${apikey_object_id}`
+                let quota = await findInCache(cache_key)
+                await deleteInCache(cache_key)
+                await storeInCache(cache_key, apikey_quota)
+            }
             return res.status(200).json({
                 success: true,
                 message: "Apikey updated successfully",
@@ -182,6 +183,8 @@ async function deleteApikey(req, res) {
             });
         }
         const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
+        let cache_key = `apikey_quota_${apikey_object_id}`
+        await deleteInCache(cache_key)
         let version_ids = apikeys_data?.version_ids || []
         const service = apikeys_data?.service
         await apikeySaveService.getVersionsUsingId(version_ids, service)

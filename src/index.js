@@ -37,6 +37,7 @@ import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
 import { DocumentLoader } from './services/document-loader/index.js';
 import('./services/cacheService.js')
+import dailyQuotaUpdate from './cron/dailyQuotaUpdate.js';
 app.use(cors({
   origin: '*',
   maxAge: 86400,
@@ -110,6 +111,7 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
+dailyQuotaUpdate(); // cron to update daily quota limit for bridges and apikeys in db
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);

@@ -115,6 +115,10 @@ const configuration = new mongoose.Schema({
   apikey_object_id: {
     type: Object
   },
+  bridge_quota: {
+    type: Object,
+    default: {}
+  },
   meta: {
     type: Object,
     default: {}
