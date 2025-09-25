@@ -98,7 +98,7 @@ const embedUser = async (req, res) => {
     return next();
   };
             
-const removeUsersFromOrg = async (req, res) => {
+const removeUsersFromOrg = async (req, res, next) => {
   try {
     const userId = req.body.user_id;
     const companyId = req.profile.org.id;
