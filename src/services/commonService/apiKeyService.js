@@ -3,6 +3,7 @@ import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache, storeInCache, findInCache, verifyTTL} from "../../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi } from "../utils/aiServices.js"
+import quotaPrefix from "../../configs/constants.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -63,7 +64,7 @@ const saveApikey = async(req,res) => {
         result.api.apikey = maskedApiKey
 
         if(result.success){
-            let cache_key = `apikey_quota_${result.api.id}`
+            let cache_key = `${quotaPrefix.apikey_quota}_${result.api.id}`
             await storeInCache(cache_key, apikey_quota)
             return res.status(200).json(result);
         }
@@ -143,8 +144,7 @@ async function updateApikey(req, res) {
         if (result.success) {
             await deleteInCache(result?.updatedData?.version_ids)
             if(apikey_quota){
-                let cache_key = `apikey_quota_${apikey_object_id}`
-                let quota = await findInCache(cache_key)
+                let cache_key = `${quotaPrefix.apikey_quota}_${apikey_object_id}`
                 await deleteInCache(cache_key)
                 await storeInCache(cache_key, apikey_quota)
             }
@@ -183,7 +183,7 @@ async function deleteApikey(req, res) {
             });
         }
         const apikeys_data = await  apikeySaveService.getApiKeyData(apikey_object_id)
-        let cache_key = `apikey_quota_${apikey_object_id}`
+        let cache_key = `${quotaPrefix.apikey_quota}_${apikey_object_id}`
         await deleteInCache(cache_key)
         let version_ids = apikeys_data?.version_ids || []
         const service = apikeys_data?.service

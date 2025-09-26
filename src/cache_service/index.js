@@ -9,8 +9,39 @@ async function storeInCache(identifier, data, ttl = DEFAULT_REDIS_TTL) {
 }
 
 async function findInCache(identifier) {
-  if (client.isReady) return await client.get(REDIS_PREFIX + identifier);
-  return false;
+  if (!client.isReady) return false;
+  const value = await client.get(REDIS_PREFIX + identifier);
+  if (value) return value;
+
+  try {
+    if (typeof identifier !== 'string') {
+      throw new Error('Identifier must be a string');
+    }
+    
+    let keys = await client.keys(REDIS_PREFIX + identifier + '*');
+    
+    if (!keys || keys.length === 0) return null;
+    
+    keys = keys.map((key) => key.replace(REDIS_PREFIX, ''));
+    const result = {};
+    
+    // Get values one by one
+    for (const key of keys) {
+      if (key && typeof key === 'string') {
+        try {
+          const value = await findInCache(key);
+          result[key] = value;
+        } catch (err) {
+          console.error(`Error getting value for key ${key}:`, err);
+        }
+      }
+    }
+    
+    return Object.keys(result).length > 0 ? result : null;
+  } catch (error) {
+    console.error('Error searching cache by prefix:', error);
+    return false;
+  }
 }
 
 async function deleteInCache(identifiers) {

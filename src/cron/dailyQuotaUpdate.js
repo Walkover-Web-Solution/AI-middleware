@@ -1,61 +1,21 @@
-import client from '../services/cacheService.js'; // your Redis client
 import mongoose from 'mongoose';
 import cron from 'node-cron';
-import config from "../../config/config.js";
 import configurationModel from '../mongoModel/configuration.js'
 import ApikeyCredential from '../mongoModel/apiModel.js'
+import { findInCache } from '../cache_service/index.js';
+import quotaPrefix from '../configs/constants.js';
 const Bridge = configurationModel;
 const ApiKey = ApikeyCredential;
 
-/**
- * Fetch Redis quota data for the two prefixes
- */
-
-async function findInCacheByPrefixArray(prefix){
-  const REDIS_PREFIX = 'AIMIDDLEWARE_';
-  if (!client.isReady) return false;
-  
-  try {
-    if (typeof prefix !== 'string') {
-      throw new Error('Prefix must be a string');
-    }
-    
-    const keys = await client.keys(REDIS_PREFIX + prefix + '*');
-    
-    if (!keys || keys.length === 0) return null;
-    
-    const result = {};
-    
-    // Get values one by one
-    for (const key of keys) {
-      if (key && typeof key === 'string') {
-        try {
-          const value = await client.get(key);
-          const cleanKey = key.replace(REDIS_PREFIX, '');
-          result[cleanKey] = value;
-        } catch (err) {
-          console.error(`Error getting value for key ${key}:`, err);
-        }
-      }
-    }
-    
-    return Object.keys(result).length > 0 ? result : null;
-  } catch (error) {
-    console.error('Error searching cache by prefix:', error);
-    return false;
-  }
-}
-
 const getQuotaData = async () => {
-  const REDIS_PREFIX = 'AIMIDDLEWARE_';
-  const prefixes = ['bridge_quota', 'apikey_quota'];
+  const prefixes = [quotaPrefix.bridge_quota, quotaPrefix.apikey_quota];
   const result = {};
 
   try {
     for (const prefix of prefixes) {
       const prefixData = {};
       
-      const reply = await findInCacheByPrefixArray(prefix);
+      const reply = await findInCache(prefix);
       
       if (reply && typeof reply === 'object') {
         Object.entries(reply).forEach(([key, value]) => {
@@ -92,8 +52,7 @@ const updateQuotaInDB = async () => {
     if (!mongoose.Types.ObjectId.isValid(id)) continue;
     await Bridge.updateOne(
       { _id: id },
-      { $set: { bridge_quota: quotaData.bridge_quota[key] } },
-      { upsert: true } // create if doesn't exist
+      { $set: { bridge_quota: quotaData.bridge_quota[key] } }
     );
   }
 
@@ -103,8 +62,7 @@ const updateQuotaInDB = async () => {
     if (!mongoose.Types.ObjectId.isValid(id)) continue;
     await ApiKey.updateOne(
       { _id: id },
-      { $set: { apikey_quota: quotaData.apikey_quota[key] } },
-      { upsert: true } // create if doesn't exist
+      { $set: { apikey_quota: quotaData.apikey_quota[key] } }
     );
   }
 
@@ -115,24 +73,15 @@ const updateQuotaInDB = async () => {
 const startDailyQuotaCron = async () => {
     // Schedule the cron job to run every day at midnight (00:00)
     cron.schedule('0 0 * * *', async () => {
-        console.log('Running daily Redis -> MongoDB quota update...');
+      console.log('Running daily Redis -> MongoDB quota update...');
 
-        try {
-            // Connect to MongoDB if not already connected
-            if (mongoose.connection.readyState !== 1) {
-                await mongoose.connect(config.mongo.uri, {
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true,
-                });
-                console.log('MongoDB connected');
-            }
-
-            // Update the quotas
-            await updateQuotaInDB();
-        } catch (error) {
-            console.error('Error in daily quota update cron:', error);
-        }
-    });
+      try {
+        // Update the quotas
+        await updateQuotaInDB();
+      } catch (error) {
+        console.error('Error in daily quota update cron:', error);
+      }
+  });
 } 
 
 
