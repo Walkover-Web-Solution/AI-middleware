@@ -103,6 +103,21 @@ const removeUsersFromOrg = async (req, res, next) => {
     const userId = req.body.user_id;
     const companyId = req.profile.org.id;
     const featureId = `${process.env.PROXY_USER_REFERENCE_ID}`;
+    const user_detail = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
+        params: {
+            company_id: companyId,
+            pageNo: 1,
+            itemsPerPage : 1
+        },
+        headers: {
+            authkey: process.env.PROXY_ADMIN_TOKEN
+        }
+    });
+    const ownerId = user_detail.data.data.data[0].id;
+    if (userId === ownerId) {
+        throw new Error('You cannot remove yourself');
+    }
+
     const response = await axios.post(
       `${process.env.PROXY_BASE_URL}/clientUsers/${userId}/remove?feature_id=${featureId}&company_id=${companyId}`,
       null,
