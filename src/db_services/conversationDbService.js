@@ -173,7 +173,7 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
   };
 }
 // Find All conversation db Service
-async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback = null, error = false) {
+async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback = null, error = false, version_id = null) {
   // Build the base WHERE clause
   let whereClause = {
     'conversations.bridge_id': bridge_id,
@@ -190,6 +190,10 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     whereClause['conversations.updatedAt'] = {
       [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
     };
+  }
+
+  if (version_id) {
+    whereClause['conversations.version_id'] = version_id;
   }
 
   // Create the raw SQL query
@@ -226,6 +230,10 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     query += `AND raw_data.error != '' `;
   }
 
+  if (version_id) {
+    query += `AND conversations.version_id = :version_id `;
+  }
+
   // Add GROUP BY, ORDER BY, LIMIT, and OFFSET
   query += `
     GROUP BY 
@@ -247,6 +255,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     startTimestamp: startTimestamp ? new Date(startTimestamp) : undefined,
     endTimestamp: endTimestamp ? new Date(endTimestamp) : undefined,
     user_feedback: user_feedback || undefined,
+    version_id: version_id || undefined,
   };
 
   // Execute the raw SQL query using Sequelize
@@ -279,10 +288,11 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
   return Array.from(uniqueThreads.values());
 }
 
-async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search) {
+async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search, version_id) {
   const whereClause = {
     bridge_id,
     org_id,
+    version_id
   };
 
   // Handle the keyword search filter
@@ -300,6 +310,9 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
           Sequelize.where(Sequelize.cast(Sequelize.col('sub_thread_id'), 'text'), {
             [Sequelize.Op.like]: `%${keyword_search}%`,
           }),
+          Sequelize.where(Sequelize.cast(Sequelize.col('version_id'), 'text'), {
+            [Sequelize.Op.like]: `%${keyword_search}%`,
+          }),
         ],
       },
     ];
@@ -314,13 +327,14 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     'message',
     'message_id',
     'sub_thread_id',
+    'version_id',
   ];
 
   // Execute the query
   const threads = await models.pg.conversations.findAll({
     attributes,
     where: whereClause,
-    group: ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id'],
+    group: ['thread_id', 'bridge_id', 'message', 'message_id', 'sub_thread_id', 'version_id'],
     order: [
       [Sequelize.col('updatedAt'), 'DESC'],
       ['thread_id', 'ASC'],
@@ -891,11 +905,30 @@ async function getAllDatafromPg(hours = 48) {
   }
 }
 
-async function getSubThreadsByError(org_id, thread_id, bridge_id) {
+async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError) {
   try {
+    let rawDataWhereClause = {};
+    let conversationsWhereClause = {
+      org_id,
+      thread_id,
+      bridge_id
+    };
+    
+    // Apply version_id filter to the conversations table
+    if (version_id) {
+      conversationsWhereClause.version_id = version_id;
+    }
+    
+    if(isError) {
+      rawDataWhereClause.error = {
+        [models.pg.Sequelize.Op.ne]: ''
+      };
+    }
+    
     const result = await models.pg.conversations.findAll({
       attributes: [
         'sub_thread_id',
+        'version_id',
         [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('raw_data.created_at')), 'latest_error']
       ],
       include: [{
@@ -903,18 +936,10 @@ async function getSubThreadsByError(org_id, thread_id, bridge_id) {
         as: 'raw_data',
         required: true,
         attributes: [],
-        where: {
-          error: {
-            [models.pg.Sequelize.Op.ne]: ''
-          }
-        }
+        where: rawDataWhereClause
       }],
-      where: {
-        org_id,
-        thread_id,
-        bridge_id
-      },
-      group: ['sub_thread_id'],
+      where: conversationsWhereClause,
+      group: ['sub_thread_id', 'version_id'],
       order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
       raw: true
     });
