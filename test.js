@@ -40,19 +40,19 @@ try {
                 continue;
             }
             
-            // Prepare connected_agent_details object
-            const connectedAgentDetails = {
+            // Prepare agent_details object
+            const agentDetails = {
                 agent_variables: agentData.agent_variables || { fields: {}, required_params: [] },
                 description: agentData.description || "agent data"
             };
             
-            // Add connected_agent_details to the target configuration document
+            // Add agent_details to the target configuration document
             await configurations.updateOne(
                 { _id: queryId },
-                { $set: { connected_agent_details: connectedAgentDetails } }
+                { $set: { agent_details: agentDetails } }
             );
             
-            console.log(`Added connected_agent_details to configuration ${bridgeId} for agent ${agentName}`);
+            console.log(`Added agent_details to configuration ${bridgeId} for agent ${agentName}`);
             
             // Remove agent_variables and description from connected_agents
             const updatedAgentData = { ...agentData };
