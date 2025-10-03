@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
-import { getOrganizationById } from "../services/proxyService.js";
+import { getOrganizationById, validateCauthKey } from "../services/proxyService.js";
 import { encryptString } from "../services/utils/utilityService.js";
 import { createOrGetUser } from "../utils/proxyUtils.js";
 dotenv.config();
@@ -33,6 +33,45 @@ const makeDataIfProxyTokenGiven = async (req) => {
   };
 };
 
+const makeDataIfPauthKeyGiven = async (req) => {
+  const pauthkey = req.headers.pauthkey || req.headers.pauthtoken;
+  if (!pauthkey) {
+    throw new Error("Invalid pauthkey");
+  }
+
+  const response = await validateCauthKey(pauthkey);
+  const company = response?.data?.company;
+  const authkey = response?.data?.authkey;
+
+  if (!company?.id) {
+    throw new Error("Invalid pauthkey response");
+  }
+
+  return {
+    ip: "9.255.0.55",
+    user: {
+      id: authkey?.id || null,
+      name: authkey?.name || "",
+      meta: {
+        throttle_limit: authkey?.throttle_limit,
+        temporary_throttle_limit: authkey?.temporary_throttle_limit,
+        temporary_throttle_time: authkey?.temporary_throttle_time,
+      },
+    },
+    org: {
+      id: company.id,
+      name: company.name,
+    },
+    extraDetails: {
+      tokenType: null,
+      message: response?.data?.message,
+      proxy_auth_type: "pauthkey",
+    },
+    authkey,
+    proxyResponse: response?.data,
+  };
+};
+
 const middleware = async (req, res, next) => {
   try {
     if (req.get('Authorization')) {
@@ -41,6 +80,9 @@ const middleware = async (req, res, next) => {
         return res.status(401).json({ message: 'invalid token' });
       }
       req.profile = jwt.verify(token, process.env.SecretKey);
+    }
+    else if (req.headers.pauthkey || req.headers.pauthtoken) {
+      req.profile = await makeDataIfPauthKeyGiven(req);
     }
     else if (req.headers['proxy_auth_token']) {
       req.profile = await makeDataIfProxyTokenGiven(req);
@@ -89,6 +131,17 @@ const combine_middleware = async (req, res, next) => {
         } catch (e) {
           console.error("Chatbot token verification failed", e);
         }
+      }
+    }
+
+    if (req.headers.pauthkey) {
+      try {
+        req.profile = await makeDataIfPauthKeyGiven(req);
+        req.profile.org.id = req.profile.org.id.toString();
+        req.body.org_id = req.profile.org.id;
+        return next();
+      } catch (e) {
+        console.error("Pauthkey verification failed", e);
       }
     }
 
