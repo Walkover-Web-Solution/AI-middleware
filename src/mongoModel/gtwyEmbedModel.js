@@ -23,6 +23,10 @@ const FolderSchema = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now
+  },
+  apikey_object_id: {
+    type: Object,
+    default: {}
   }
 });
 
