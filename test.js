@@ -9,9 +9,9 @@ const client = new MongoClient(uri);
 // This map defines the FIRST choice for a fallback model.
 const fallbackModelMap = {
     openai: 'gpt-4o',
-    gemini: 'gemini-1.5-flash',
-    anthropic: 'claude-3-haiku-20240307',
-    groq: 'llama3-8b-8192',
+    google: 'gemini-1.5-pro',
+    anthropic: 'claude-3-5-sonnet-20240620',
+    groq: 'llama-3.1-405b-reasoning',
     mistral: 'mistral-small-latest',
     open_router: 'openai/gpt-4o',
     ai_ml: 'gpt-4o'
@@ -19,12 +19,12 @@ const fallbackModelMap = {
 
 // This map defines the SECOND choice if the first choice is the same as the primary model.
 const secondChoiceFallbackMap = {
-    openai: 'gpt-4-turbo', // If primary is gpt-4o, use gpt-4-turbo
-    gemini: 'gemini-1.5-pro', // If primary is flash, use pro
-    anthropic: 'claude-3-sonnet-20240229', // If primary is haiku, use sonnet
-    groq: 'gemma-7b-it', // If primary is llama3, use gemma
-    mistral: 'mistral-medium-latest', // If primary is small, use medium
-    open_router: 'anthropic/claude-3-haiku',
+    openai: 'gpt-4-turbo',
+    google: 'gemini-1.5-Flash',
+    anthropic: 'claude-3-opus-20240229',
+    groq: 'llama-3.1-70b-versatile',
+    mistral: 'mistral-medium-latest',
+    open_router: 'openai/gpt-4-turbo',
     ai_ml: 'gpt-4-turbo'
 };
 
