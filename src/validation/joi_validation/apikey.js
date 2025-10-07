@@ -6,7 +6,8 @@ const saveApikeySchema = Joi.object({
     service: Joi.string().valid('openai', 'gemini', 'anthropic', 'groq', 'open_router', 'mistral', 'ai_ml').required(),
     comment: Joi.string().allow('').optional(),
     folder_id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-    user_id: Joi.number().optional()
+    user_id: Joi.number().optional(),
+    apikey_quota: Joi.object().keys({limit: Joi.number().required(),used: Joi.number().required()}).optional()
 })
 
 const updateApikeySchema = Joi.object({
@@ -16,7 +17,8 @@ const updateApikeySchema = Joi.object({
     service : Joi.string().valid('openai', 'gemini', 'anthropic', 'groq', 'open_router', 'mistral', 'ai_ml').optional(),
     comment: Joi.string().allow('').optional(),
     folder_id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-    user_id: Joi.number().optional()
+    user_id: Joi.number().optional(),
+    apikey_quota: Joi.object().keys({limit: Joi.number().required(),used: Joi.number().required()}).optional()
 })
 
 const deleteApikeySchema = Joi.object({

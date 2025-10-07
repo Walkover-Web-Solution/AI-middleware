@@ -37,6 +37,8 @@ import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
 import { DocumentLoader } from './services/document-loader/index.js';
 import('./services/cacheService.js')
+import dailyQuotaUpdate from './cron/dailyQuotaUpdate.js';
+import startMonthlyQuotaResetCron from './cron/monthlyQuotaReset.js';
 app.use(cors({
   origin: '*',
   maxAge: 86400,
@@ -110,6 +112,8 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
+dailyQuotaUpdate(); // cron to update daily quota limit for bridges and apikeys in db
+startMonthlyQuotaResetCron(); // cron to reset monthly quota usage in Redis
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);
