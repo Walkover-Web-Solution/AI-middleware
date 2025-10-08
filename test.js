@@ -10,7 +10,7 @@ const client = new MongoClient(uri);
 const fallbackModelMap = {
     openai: 'gpt-5',
     google: 'gemini-2.5-flash',
-    anthropic: 'claude-opus-4-1-20250805',
+    anthropic: 'claude-sonnet-4-20250514',
     groq: 'llama-3.3-70b-versatile',
     mistral: 'mistral-medium-latest',
     open_router: 'openai/gpt-4o',
@@ -24,7 +24,7 @@ const secondChoiceFallbackMap = {
     anthropic: 'claude-3-7-sonnet-latest',
     groq: 'llama-3.1-8b-instant',
     mistral: 'magistral-medium-latest',
-    open_router: 'openai/gpt-4-turbo',
+    open_router: 'deepseek/deepseek-r1-0528-qwen3-8b:free',
     ai_ml: 'gpt-oss-120b'
 };
 
@@ -32,7 +32,7 @@ const secondChoiceFallbackMap = {
 async function runMigration() {
     try {
         await client.connect();
-        const db = client.db("AI_Middleware");
+        const db = client.db("AI_Middleware-test");
         console.log("Successfully connected to the database.");
 
         const collectionsToMigrate = ["configurations", "configuration_versions"];
