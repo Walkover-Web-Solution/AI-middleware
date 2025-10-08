@@ -6,12 +6,7 @@ async function getHistoryByOrchestratorId(req, res, next) {
     const { page = 1, pageSize = 10 } = req.query;
     const { org_id } = req.body;
 
-    //console.log(`Fetching history for org_id: ${org_id}, orchestrator_id: ${orchestrator_id}`);
-
     const result = await orchestratorDbService.getOrchestratorHistory(
-
-        
-
         org_id,
         orchestrator_id, 
         parseInt(page, 10),
