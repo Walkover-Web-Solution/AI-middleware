@@ -35,7 +35,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    messages: {
+    user: {
       type: DataTypes.JSON,
       allowNull: false
     },
