@@ -18,6 +18,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      sub_thread_id: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       model_name: {
         type: Sequelize.JSON,
         allowNull: false,
@@ -28,6 +32,11 @@ module.exports = {
         allowNull: false
       },
       messages: {
+        type: Sequelize.JSON,
+        allowNull: false,
+        comment: '{"bridge_id": [messages]}'
+      },
+      response: {
         type: Sequelize.JSON,
         allowNull: false,
         comment: '{"bridge_id": [messages]}'
