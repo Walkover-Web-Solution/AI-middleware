@@ -31,7 +31,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      messages: {
+      user: {
         type: Sequelize.JSON,
         allowNull: false,
         comment: '{"bridge_id": [messages]}'
