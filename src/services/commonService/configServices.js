@@ -65,7 +65,7 @@ const getMessageHistory = async (req, res, next) => {
     const { org_id } = req.body;
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
-    const { startTime, endTime } = req.query;
+    const { startTime, endTime, version_id } = req.query;
     let {user_feedback, error} = req.query;
     error = error?.toLowerCase() === 'true' ? true : false;
     let startTimestamp, endTimestamp;
@@ -74,7 +74,7 @@ const getMessageHistory = async (req, res, next) => {
       endTimestamp = convertToTimestamp(endTime);
     }
 
-    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error);
+    const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search, version_id }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error, version_id);
     res.locals = threads;
     req.statusCode = threads?.success ? 200 : 400;
     return next();
@@ -421,12 +421,12 @@ const getThreadMessages = async(req,res,next)=>{
 
 const getAllSubThreadsController = async(req, res, next) => {
   const {thread_id}= req.params;
-  const {bridge_id, error} = req.query;
+  const {bridge_id, error, version_id} = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req.profile.org.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
-  if(isError){
-    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id);
+  if(isError || version_id){
+    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
       return {
