@@ -291,10 +291,12 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
 async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search, version_id) {
   const whereClause = {
     bridge_id,
-    org_id,
-    version_id
+    org_id
   };
-
+  if(version_id)
+  {
+    whereClause.version_id = version_id;
+  }
   // Handle the keyword search filter
   if (keyword_search) {
     whereClause[Sequelize.Op.and] = [
