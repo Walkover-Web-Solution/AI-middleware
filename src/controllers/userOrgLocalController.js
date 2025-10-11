@@ -57,9 +57,9 @@ const updateUserDetails = async (req, res) => {
 
         // Cache based on type
         if (isCompanyUpdate) {
-            await storeInCache(`company_${company_id}`, data?.data?.company);
+            await storeInCache(company_id, data?.data?.company);
         } else {
-            await storeInCache(`user_${user_id}`, data?.data?.user);
+            await storeInCache(user_id, data?.data?.user);
         }
 
         res.status(200).json({
