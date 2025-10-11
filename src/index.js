@@ -35,6 +35,7 @@ import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
+import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
 import('./services/cacheService.js')
 app.use(cors({
@@ -98,6 +99,7 @@ app.use('/report',reportRoute);
 app.use('/modelConfiguration',ModelsConfigRoutes);
 app.use('/Template',templateRoute);
 app.use('/flow',flowRoutes)
+app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
 
 //Metrics

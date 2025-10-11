@@ -10,8 +10,7 @@ export function selectTable(range) {
     }
 }
 
-export function buildWhereClause(params, values, factor, range, start_date=null, end_date=null) {
-
+export function buildWhereClause(params, values, factor, range,flag = true, start_date=null, end_date=null) {
     const conditions = [];
 
     if (params.org_id !== null && params.org_id !== undefined) {
@@ -44,7 +43,7 @@ export function buildWhereClause(params, values, factor, range, start_date=null,
     }
 
     let query = 'WHERE ' + conditions.join(' AND ');
-    if (range) {
+    if (range && flag) {
         if(range == 1){
             query += ` AND created_at >= NOW() - INTERVAL '1 hour'`;
         }else if(range == 2){
@@ -66,6 +65,9 @@ export function buildWhereClause(params, values, factor, range, start_date=null,
         }else if(range == 10){
             query += ` AND created_at BETWEEN '${start_date}' AND '${end_date}'`;
         }
+    }
+    if(!flag){
+        query += ` AND created_at >= NOW() - INTERVAL '2 days'`;
     }
     if (factor) {
         query += ` GROUP BY ${factor}, created_at, cost_sum, total_token_count, success_count`;

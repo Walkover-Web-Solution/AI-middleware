@@ -3,31 +3,23 @@ import versionModel from "../mongoModel/bridge_version.js"
 import configurationModel from "../mongoModel/configuration.js";
 
 const saveApi = async (data) => {
-    try {
-        const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
-        const version_ids = []
-        const result = await new ApikeyCredential({
-            org_id,
-            apikey,
-            service,
-            name,
-            comment,
-            folder_id,
-            user_id,
-            version_ids
-        }).save();
+    const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
+    const version_ids = []
+    const result = await new ApikeyCredential({
+        org_id,
+        apikey,
+        service,
+        name,
+        comment,
+        folder_id,
+        user_id,
+        version_ids
+    }).save();
 
-        return {
-            success: true,
-            api: result
-        };
-    } catch (error) {
-        console.error("Error saving API: ", error);
-        return {
-            success: false,
-            error: error.message
-        };
-    }
+    return {
+        success: true,
+        api: result
+    };
 };
 
 const getName = async (name, org_id)=>{
