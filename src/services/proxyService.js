@@ -6,7 +6,7 @@ import { objectToQueryParams } from './utils/utilityService.js';
 export async function getUserOrgMapping(userId, orgId) {
     try {
       if (!userId || !orgId) throw new Error('Sorry, Either the fields are missing or you are not authorized!');
-      const cache_key = `userOrgMapping_${userId}_${orgId}`;
+      const cache_key = `userOrgMapping-${userId}-${orgId}`;
       const data = await findInCache(cache_key);
       if (data) return JSON.parse(data);
       const response = await axios.get(
