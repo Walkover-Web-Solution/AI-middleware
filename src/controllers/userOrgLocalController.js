@@ -115,7 +115,7 @@ const removeUsersFromOrg = async (req, res, next) => {
     });
     const ownerId = user_detail.data.data.data[0].id;
     if (userId === ownerId) {
-        throw new Error('You cannot remove yourself');
+        throw new Error('You cannot remove the owner of the organization');
     }
 
     const response = await axios.post(
