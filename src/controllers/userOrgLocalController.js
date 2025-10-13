@@ -72,7 +72,7 @@ const updateUserDetails = async (req, res) => {
         res.status(404).json({ message: "Something went wrong" });
     }
 };
-const embedUser = async (req, res) => {
+const embedUser = async (req, res, next) => {
     const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
     //   const projectSettings = await projects_db_service.findFields(project_id, 'settings');
     const embedDetails = !req.isGtwyUser ?
