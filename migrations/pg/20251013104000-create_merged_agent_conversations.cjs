@@ -61,10 +61,6 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true
       },
-      response_id: {
-        type: Sequelize.UUID,
-        allowNull: true
-      },
       version_id: {
         type: Sequelize.STRING,
         allowNull: true
