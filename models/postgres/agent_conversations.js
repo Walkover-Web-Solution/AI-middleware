@@ -2,7 +2,7 @@
 
 import { Model } from "sequelize";
 export default ((sequelize, DataTypes) => {
-  class conversation extends Model {
+  class agent_conversations extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -10,18 +10,18 @@ export default ((sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      // raw_data table has been merged into conversations, so no association needed
+      // raw_data table has been merged into agent_conversations, so no association needed
     }
   }
-  conversation.init({
+  agent_conversations.init({
     org_id: DataTypes.STRING,
     thread_id: DataTypes.STRING,
     model_name: DataTypes.STRING,
     bridge_id: DataTypes.STRING,
+    // New merged columns from migration
     user_message: DataTypes.TEXT,
     response: DataTypes.TEXT,
     chatbot_response: DataTypes.TEXT,
-    response_id: DataTypes.UUID,
     revised_response: DataTypes.TEXT,
     error: DataTypes.TEXT,
     status: DataTypes.BOOLEAN,
@@ -35,6 +35,7 @@ export default ((sequelize, DataTypes) => {
     variables: DataTypes.JSON,
     finish_reason: DataTypes.STRING,
     firstAttemptError: DataTypes.TEXT,
+    // Existing columns
     function: DataTypes.JSON,
     tools_call_data: DataTypes.JSON,
     image_urls: DataTypes.JSON,
@@ -44,7 +45,7 @@ export default ((sequelize, DataTypes) => {
     fallback_model: DataTypes.STRING,
     type: {
       type: DataTypes.ENUM('chat', 'completion', 'embedding'),
-      allowNull: true
+      allowNull: true // Changed to allow null since it's now merged
     },
     message_id : DataTypes.UUIDV4,
     user_feedback: DataTypes.INTEGER,
@@ -54,8 +55,8 @@ export default ((sequelize, DataTypes) => {
     external_reference: DataTypes.STRING,
   }, {
     sequelize,
-    modelName: 'conversations',
-    tableName: 'conversations'
+    modelName: 'agent_conversations',
+    tableName: 'agent_conversations'
   });
-  return conversation;
+  return agent_conversations;
 });
