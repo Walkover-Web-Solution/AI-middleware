@@ -161,6 +161,7 @@ async function deleteApikey(req, res) {
     try {
         const body = req.body;
         const apikey_object_id = body.apikey_object_id;
+        const org_id = req.profile.org.id;
         try{
             await deleteApikeySchema.validateAsync({
                 apikey_object_id
@@ -179,7 +180,7 @@ async function deleteApikey(req, res) {
         if(version_ids?.length > 0) {
             version_ids = version_ids.map(id => 'AIMIDDLEWARE_' + id.toString());
         }
-        const result = await apikeySaveService.deleteApi(apikey_object_id);
+        const result = await apikeySaveService.deleteApi(apikey_object_id, org_id);
         if (result.success) {
         await deleteInCache(result?.updatedData?.version_ids)
         return res.status(200).json({
