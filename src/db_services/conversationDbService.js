@@ -184,7 +184,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
 async function deleteLastThread(org_id, thread_id, bridge_id) {
   // Since message_by column no longer exists, we need to identify tool_calls messages differently
   // This might need to be updated based on how tool_calls are now stored in the new structure
-  const recordsTodelete = await models.pg.conversations.findOne({
+  const recordsTodelete = await models.pg.agent_conversations.findOne({
     where: {
       org_id,
       thread_id,
@@ -208,69 +208,69 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
 async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback = null, error = false, version_id = null) {
   // Build the base WHERE clause
   let whereClause = {
-    'conversations.bridge_id': bridge_id,
-    'conversations.org_id': org_id,
+    'agent_conversations.bridge_id': bridge_id,
+    'agent_conversations.org_id': org_id,
   };
 
   // If user_feedback is provided and is not 'all', include it in the WHERE clause
   if (user_feedback && user_feedback !== "all") {
-    whereClause['conversations.user_feedback'] = user_feedback;
+    whereClause['agent_conversations.user_feedback'] = user_feedback;
   }
 
   // If there is a date range, add it to the WHERE clause
   if (startTimestamp && endTimestamp) {
-    whereClause['conversations.updatedAt'] = {
+    whereClause['agent_conversations.updatedAt'] = {
       [Sequelize.Op.between]: [new Date(startTimestamp), new Date(endTimestamp)],
     };
   }
 
   if (version_id) {
-    whereClause['conversations.version_id'] = version_id;
+    whereClause['agent_conversations.version_id'] = version_id;
   }
 
   // Create the raw SQL query
   let query = `
     SELECT 
-      conversations."thread_id", 
-      MIN(conversations.id) AS "id", 
-      conversations."bridge_id", 
-      MAX(conversations."updatedAt") AS "updatedAt" 
+      agent_conversations."thread_id", 
+      MIN(agent_conversations.id) AS "id", 
+      agent_conversations."bridge_id", 
+      MAX(agent_conversations."updatedAt") AS "updatedAt" 
     FROM 
-      conversations 
+      agent_conversations 
     WHERE 
-      conversations."bridge_id" = :bridge_id 
-      AND conversations."org_id" = :org_id 
+      agent_conversations."bridge_id" = :bridge_id 
+      AND agent_conversations."org_id" = :org_id 
   `;
 
   // Dynamically adding filters to the WHERE clause
   if (startTimestamp && endTimestamp) {
-    query += `AND conversations."updatedAt" BETWEEN :startTimestamp AND :endTimestamp `;
+    query += `AND agent_conversations."updatedAt" BETWEEN :startTimestamp AND :endTimestamp `;
   }
 
   if (keyword_search) {
-    query += `AND (conversations.user_message LIKE :keyword_search OR conversations.response LIKE :keyword_search OR conversations.chatbot_response LIKE :keyword_search OR conversations.error LIKE :keyword_search OR conversations.thread_id LIKE :keyword_search) `;
+    query += `AND (agent_conversations.user_message LIKE :keyword_search OR agent_conversations.response LIKE :keyword_search OR agent_conversations.chatbot_response LIKE :keyword_search OR agent_conversations.error LIKE :keyword_search OR agent_conversations.thread_id LIKE :keyword_search) `;
   }
 
   if (user_feedback && user_feedback !== "all") {
-    query += `AND conversations."user_feedback" = :user_feedback `;
+    query += `AND agent_conversations."user_feedback" = :user_feedback `;
   }
 
   if (error){
-    query += `AND conversations.error != '' `;
+    query += `AND agent_conversations.error != '' `;
   }
 
   if (version_id) {
-    query += `AND conversations.version_id = :version_id `;
+    query += `AND agent_conversations.version_id = :version_id `;
   }
 
   // Add GROUP BY, ORDER BY, LIMIT, and OFFSET
   query += `
     GROUP BY 
-      conversations."thread_id", 
-      conversations."bridge_id" 
+      agent_conversations."thread_id", 
+      agent_conversations."bridge_id" 
     ORDER BY 
-      MAX(conversations."updatedAt") DESC, 
-      conversations."thread_id" ASC 
+      MAX(agent_conversations."updatedAt") DESC, 
+      agent_conversations."thread_id" ASC 
     LIMIT :limit OFFSET :offset;
   `;
 
@@ -544,7 +544,7 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
     };
   }
 
-  let conversations = await models.pg.conversations.findAll({
+  let conversations = await models.pg.agent_conversations.findAll({
     attributes: [
       [Sequelize.literal(`
         CASE 
@@ -602,7 +602,7 @@ async function system_prompt_data(org_id, bridge_id)
 async function updateMessage({ org_id, bridge_id, message, id }) {
   try {
 
-    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+    const [affectedCount, affectedRows] = await models.pg.agent_conversations.update(
       { revised_response : message },
       {
         where: {
@@ -642,7 +642,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
 async function updateStatus({ status, message_id }) {
   try {
 
-    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+    const [affectedCount, affectedRows] = await models.pg.agent_conversations.update(
       { user_feedback : status },
       {
         where: {
@@ -678,7 +678,7 @@ async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback
   } else {
     whereClause.user_feedback = user_feedback;
   }
-  const feedbackRecords = await models.pg.conversations.findAll({
+  const feedbackRecords = await models.pg.agent_conversations.findAll({
     attributes: ["user_feedback"],
     where: whereClause,
     returning: true, 
@@ -720,7 +720,7 @@ const addThreadId = async (message_id, thread_id, type) => {
     ];
   }
   
-  return await models.pg.conversations.update(
+  return await models.pg.agent_conversations.update(
     { external_reference: thread_id },
     {
       where: whereClause,
@@ -782,7 +782,7 @@ const getSubThreads = async (org_id,thread_id, bridge_id) =>{
 async function sortThreadsByHits(threads) {
   const subThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
 
-  const latestEntries = await models.pg.conversations.findAll({
+  const latestEntries = await models.pg.agent_conversations.findAll({
     attributes: [
       'sub_thread_id',
       [models.pg.sequelize.fn('MAX', models.pg.sequelize.col('createdAt')), 'latestCreatedAt']
@@ -863,7 +863,7 @@ async function getAllDatafromPg(hours = 48) {
     const windowStart = new Date(Date.now() - hours * 60 * 60 * 1000);
 
     // fetch active bridges within the window
-    const activeBridgeRecords = await models.pg.conversations.findAll({
+    const activeBridgeRecords = await models.pg.agent_conversations.findAll({
       attributes: ['bridge_id', 'org_id'],
       where: { createdAt: { [Sequelize.Op.gte]: windowStart } },
       group: ['bridge_id', 'org_id'],
@@ -871,7 +871,7 @@ async function getAllDatafromPg(hours = 48) {
     });
 
     // fetch positive/negative feedback counts within the window
-    const BridgePositiveNegativeCount = await models.pg.conversations.findAll({
+    const BridgePositiveNegativeCount = await models.pg.agent_conversations.findAll({
       attributes: [
         'bridge_id',
         'org_id',
@@ -891,7 +891,7 @@ async function getAllDatafromPg(hours = 48) {
     }));
 
     // fetch all messages in the window for hit counts
-    const recentMessages = await models.pg.conversations.findAll({
+    const recentMessages = await models.pg.agent_conversations.findAll({
       attributes: [
         'bridge_id', 
         'createdAt',
@@ -946,7 +946,7 @@ async function getAllDatafromPg(hours = 48) {
     }
 
     // overall average response time in window
-    const averageResponseTimeArr = await models.pg.conversations.findAll({
+    const averageResponseTimeArr = await models.pg.agent_conversations.findAll({
       attributes: [
         [Sequelize.literal(
           `AVG((latency->>'over_all_time')::float - (latency->>'model_execution_time')::float)`
@@ -961,7 +961,7 @@ async function getAllDatafromPg(hours = 48) {
     const averageResponseTime = parseFloat(averageResponseTimeArr[0]?.average_response_time) || 0;
 
     // per-bridge average response time in window
-    const convoRecords = await models.pg.conversations.findAll({
+    const convoRecords = await models.pg.agent_conversations.findAll({
       attributes: ['message_id', 'bridge_id', 'latency'],
       where: {
         createdAt: { [Sequelize.Op.gte]: windowStart },
@@ -1058,7 +1058,7 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     }));
 
     // Query PostgreSQL to get latest conversation activity for each thread
-    const conversationActivity = await models.pg.conversations.findAll({
+    const conversationActivity = await models.pg.agent_conversations.findAll({
       attributes: [
         'thread_id',
         'sub_thread_id',
