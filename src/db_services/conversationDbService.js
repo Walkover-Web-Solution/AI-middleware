@@ -123,8 +123,6 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         END as role,
         agent_conversations."createdAt",
         agent_conversations.id as "Id",
-        agent_conversations.function,
-        agent_conversations.is_reset,
         agent_conversations.chatbot_response as chatbot_message,
         agent_conversations.revised_response as updated_message,
         agent_conversations.tools_call_data,
@@ -143,9 +141,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
         agent_conversations.authkey_name,
         agent_conversations.latency,
         agent_conversations.service,
-        agent_conversations.input_tokens,
-        agent_conversations.output_tokens,
-        agent_conversations.expected_cost,
+        agent_conversations.tokens,
         agent_conversations.variables,
         agent_conversations.finish_reason,
         agent_conversations.model_name,
@@ -564,7 +560,6 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
       `), 'role'],
       'createdAt',
       'id',
-      'function',
       ['revised_response', 'updated_message'],
       'error'
     ],
@@ -600,24 +595,24 @@ async function system_prompt_data(org_id, bridge_id)
   return system_prompt;
 }
 async function updateMessage({ org_id, bridge_id, message, id }) {
-  try {
+try {
 
-    const [affectedCount, affectedRows] = await models.pg.agent_conversations.update(
-      { revised_response : message },
-      {
-        where: {
-          org_id,
-          bridge_id,
-          id
-        },
-        returning: true,
-      }
-    );
-
-    if (affectedCount === 0) {
-      return { success: false, message: 'No matching record found to update.' };
+  const [affectedCount, affectedRows] = await models.pg.agent_conversations.update(
+    { revised_response : message },
+    {
+      where: {
+        org_id,
+        bridge_id,
+        id
+      },
+      returning: true,
     }
-    const result = affectedRows.map(row => ({
+  );
+
+  if (affectedCount === 0) {
+    return { success: false, message: 'No matching record found to update.' };
+  }
+  const result = affectedRows.map(row => ({
       id: row.id,
       org_id: row.org_id,
       thread_id: row.thread_id,
@@ -625,7 +620,6 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       bridge_id: row.bridge_id,
       content: row.user_message || row.response || row.chatbot_response || '', 
       role: row.user_message ? 'user' : 'assistant',
-      function: row.function,
       updated_message: row.revised_response,
       type: row.type,
       createdAt: row.createdAt,
@@ -760,7 +754,6 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       `), 'role'],
       'createdAt',
       'id',
-      'is_reset',
       'tools_call_data',
       'image_urls'
     ],

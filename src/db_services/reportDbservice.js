@@ -25,8 +25,8 @@ async function get_data_from_pg(org_ids) {
         SELECT
           ac.bridge_id,
           COUNT(ac.id) AS hits,
-          SUM(ac.input_tokens + ac.output_tokens) AS total_tokens_used,
-          SUM(ac.expected_cost) AS total_cost
+          SUM((ac.tokens->>'input_tokens')::float + (ac.tokens->>'output_tokens')::float) AS total_tokens_used,
+          SUM((ac.tokens->>'expected_cost')::float) AS total_cost
         FROM
           agent_conversations ac
         WHERE
@@ -83,9 +83,7 @@ async function get_data_from_pg(org_ids) {
           'user_feedback',
           'service',
           'status',
-          'input_tokens',
-          'output_tokens',
-          'expected_cost',
+          'tokens',
           'error'
         ]
       }),
@@ -128,14 +126,17 @@ async function get_data_from_pg(org_ids) {
 
     // Iterate through the agent_conversations to accumulate usage data and feedback
     for (const conversation of agentConversations) {
-      const { bridge_id, message_id, user_feedback, input_tokens, output_tokens, expected_cost, error } = conversation;
+      const { bridge_id, message_id, user_feedback, error } = conversation;
 
       // Calculate tokens and cost directly from merged data
-      if (input_tokens && output_tokens) {
-        totalTokensConsumed += input_tokens + output_tokens;
-      }
-      if (expected_cost) {
-        totalCost += expected_cost;
+      if (conversation.tokens) {
+        const tokens = conversation.tokens;
+        if (tokens.input_tokens && tokens.output_tokens) {
+          totalTokensConsumed += tokens.input_tokens + tokens.output_tokens;
+        }
+        if (tokens.expected_cost) {
+          totalCost += tokens.expected_cost;
+        }
       }
 
       // Tools call => track usage in topBridges
@@ -146,11 +147,14 @@ async function get_data_from_pg(org_ids) {
           topBridges.push(bridgeData);
         }
         bridgeData.Hits++;
-        if (input_tokens && output_tokens) {
-          bridgeData.TokensUsed += (input_tokens + output_tokens);
-        }
-        if (expected_cost) {
-          bridgeData.Cost += expected_cost;
+        if (conversation.tokens) {
+          const tokens = conversation.tokens;
+          if (tokens.input_tokens && tokens.output_tokens) {
+            bridgeData.TokensUsed += (tokens.input_tokens + tokens.output_tokens);
+          }
+          if (tokens.expected_cost) {
+            bridgeData.Cost += tokens.expected_cost;
+          }
         }
       }
 
@@ -474,8 +478,8 @@ async function get_message_data(message_id) {
     const rawData = {};
 
     // Extract conversation fields
-    const conversationFields = ['id', 'bridge_id', 'user_message', 'response', 'chatbot_response', 'revised_response', 'tools_call_data', 'createdAt', 'updatedAt', 'org_id', 'user_feedback', 'thread_id', 'sub_thread_id', 'external_reference', 'is_reset', 'version_id', 'function', 'image_urls', 'urls', 'AiConfig', 'annotations', 'fallback_model', 'type'];
-    const rawDataFields = ['service', 'status', 'input_tokens', 'output_tokens', 'expected_cost', 'error', 'latency', 'created_at', 'authkey_name', 'variables', 'finish_reason', 'firstAttemptError', 'model_name'];
+    const conversationFields = ['id', 'bridge_id', 'user_message', 'response', 'chatbot_response', 'revised_response', 'tools_call_data', 'createdAt', 'updatedAt', 'org_id', 'user_feedback', 'thread_id', 'sub_thread_id', 'external_reference', 'version_id', 'image_urls', 'urls', 'AiConfig', 'annotations', 'fallback_model', 'type'];
+    const rawDataFields = ['service', 'status', 'tokens', 'error', 'latency', 'created_at', 'authkey_name', 'variables', 'finish_reason', 'firstAttemptError', 'model_name'];
 
     conversationFields.forEach(field => {
       if (result.hasOwnProperty(field)) {
