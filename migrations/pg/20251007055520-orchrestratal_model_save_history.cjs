@@ -80,6 +80,10 @@ module.exports = {
         type: Sequelize.JSON,
         allowNull: true,
         comment: '{"bridge_id": ai_config_json}'
+      },
+      firstAttemptError: {
+        type: Sequelize.STRING,
+        allowNull: true
       }
     });
   },
