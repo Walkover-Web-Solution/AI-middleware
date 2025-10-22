@@ -125,39 +125,26 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
 
 async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
     try {
-        // Get all embeds that have apikey_object_id field
-        const allEmbeds = await FolderModel.find({ apikey_object_id: { $exists: true, $ne: {} }, org_id: org_id });
-        let cleanedCount = 0;
-        
-        for (const embed of allEmbeds) {
-            const updateFields = {};
-            let hasMatch = false;
-            
-            // Check all fields in apikey_object_id and mark for removal if they match
-            if (embed.apikey_object_id && typeof embed.apikey_object_id === 'object') {
-                Object.keys(embed.apikey_object_id).forEach(key => {
-                    if (embed.apikey_object_id[key] === apikey_object_id) {
-                        updateFields[`apikey_object_id.${key}`] = 1;
-                        hasMatch = true;
-                    }
-                });
-            }
-
-            // Update the embed to remove the matching API key references
-            if (hasMatch && Object.keys(updateFields).length > 0) {
-                await FolderModel.updateOne(
-                    { _id: embed._id },
-                    { $unset: updateFields }
-                );
-                cleanedCount++;
-                console.log(`Removed API key ${apikey_object_id} from embed: ${embed.name || embed._id}`);
-            }
+        const apiKeyData = await getApiKeyData(apikey_object_id);
+        if (!apiKeyData || !apiKeyData.service) {
+            return { success: false, error: 'API key data or service not found' };
         }
+
+        const service = apiKeyData.service;
+        const query = {
+            org_id: org_id,
+            [`apikey_object_id.${service}`]: apikey_object_id
+        };
+
+        const updateResult = await FolderModel.updateMany(
+            query,
+            { $unset: { [`apikey_object_id.${service}`]: "" } }
+        );
 
         return {
             success: true,
-            cleanedCount: cleanedCount,
-            message: `Cleaned up API key reference from ${cleanedCount} embed(s)`
+            cleanedCount: updateResult.modifiedCount,
+            message: `Cleaned up API key reference from ${updateResult.modifiedCount} embed(s)`
         };
     } catch (error) {
         console.error(`Error cleaning up embeds: ${error}`);
@@ -171,13 +158,7 @@ async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
 async function deleteApi(apikey_object_id, org_id) {
     try {
         const cleanupResult = await cleanupApiKeyFromEmbeds(apikey_object_id, org_id);
-        if (cleanupResult.success) {
-            console.log(cleanupResult.message);
-        } else {
-            console.warn(`Embed cleanup failed: ${cleanupResult.error}`);
-        }
-
-        // Then delete the API key
+       
         const result = await ApikeyCredential.deleteOne({ _id: apikey_object_id});
         if (result.deletedCount > 0) {
             return { success: true };
