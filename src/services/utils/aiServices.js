@@ -87,7 +87,7 @@ async function callOpenRouterApi(apiKey) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3-0324:free',
+        model: 'meta-llama/llama-3.2-3b-instruct:free',
         messages: [
           {
             role: 'user',
