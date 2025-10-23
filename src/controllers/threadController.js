@@ -60,7 +60,8 @@ async function createSubThreadWithAi(req, res, next) {
         display_name: display_name || name || sub_thread_id,
         thread_id,
         org_id: org_id.toString(),
-        sub_thread_id
+        sub_thread_id,
+        createdAt: new Date()
     });
     res.locals = {
         thread,
