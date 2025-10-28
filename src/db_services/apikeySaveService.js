@@ -1,6 +1,7 @@
 import ApikeyCredential from "../mongoModel/apiModel.js";
 import versionModel from "../mongoModel/bridge_version.js"
 import configurationModel from "../mongoModel/configuration.js";
+import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 
 const saveApi = async (data) => {
     const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
@@ -122,8 +123,42 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
 }
 
 
-async function deleteApi(apikey_object_id) {
+async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
     try {
+        const apiKeyData = await getApiKeyData(apikey_object_id);
+        if (!apiKeyData || !apiKeyData.service) {
+            return { success: false, error: 'API key data or service not found' };
+        }
+
+        const service = apiKeyData.service;
+        const query = {
+            org_id: org_id,
+            [`apikey_object_id.${service}`]: apikey_object_id
+        };
+
+        const updateResult = await FolderModel.updateMany(
+            query,
+            { $unset: { [`apikey_object_id.${service}`]: "" } }
+        );
+
+        return {
+            success: true,
+            cleanedCount: updateResult.modifiedCount,
+            message: `Cleaned up API key reference from ${updateResult.modifiedCount} embed(s)`
+        };
+    } catch (error) {
+        console.error(`Error cleaning up embeds: ${error}`);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+async function deleteApi(apikey_object_id, org_id) {
+    try {
+        const cleanupResult = await cleanupApiKeyFromEmbeds(apikey_object_id, org_id);
+       
         const result = await ApikeyCredential.deleteOne({ _id: apikey_object_id});
         if (result.deletedCount > 0) {
             return { success: true };
@@ -251,5 +286,6 @@ export default {
     updateApikey,
     deleteApi,
     getApiKeyData,
-    getVersionsUsingId
+    getVersionsUsingId,
+    cleanupApiKeyFromEmbeds
 }
