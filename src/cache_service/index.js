@@ -13,20 +13,6 @@ async function findInCache(identifier) {
   return false;
 }
 
-// Scan for keys matching a pattern (identifier form, no prefix needed)
-
-async function scanCacheKeys(pattern) {
-  if (!client.isReady) return [];
-  if (!pattern || typeof pattern !== 'string') return [];
-
-  const match = REDIS_PREFIX + pattern;
-  const keys = [];
-  for await (const key of client.scanIterator({ MATCH: match })) {
-    keys.push(key.slice(REDIS_PREFIX.length));
-  }
-  return keys;
-}
-
 async function deleteInCache(identifiers) {
   if (!client.isReady) {
     return false;
@@ -67,6 +53,5 @@ export {
     deleteInCache,
   storeInCache,
   findInCache,
-  scanCacheKeys,
   verifyTTL
 };
