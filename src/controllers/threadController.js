@@ -45,6 +45,7 @@ async function createSubThreadWithAi(req, res, next) {
         responseSender.sendResponse({
             rtlLayer: true,
             data: { display_name: display_name, threadId: thread_id, subThreadId: subThreadId, created_at: new Date() },
+
             reqBody: {
                 "rtlOptions": {
                     "channel": channelId,
