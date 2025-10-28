@@ -118,10 +118,6 @@ const configuration = new mongoose.Schema({
   meta: {
     type: Object,
     default: {}
-  },
-  last_used: {
-    type: Date,
-    default: null
   }
 });
 
