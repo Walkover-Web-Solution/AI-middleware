@@ -6,7 +6,8 @@ const threadSchema = new Schema({
     thread_id: { type: String, required: true },
     sub_thread_id: { type: String, required: true },
     display_name: { type: String, required: true },
-    org_id: { type: String, required: true }
+    org_id: { type: String, required: true },
+    created_at: { type: Date, default: Date.now }
 });
 
 // Create the model

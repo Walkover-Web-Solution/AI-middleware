@@ -44,7 +44,7 @@ async function createSubThreadWithAi(req, res, next) {
         const channelId = `${botId}${thread_id.trim() ? thread_id.trim() : user_id}${sub_thread_id.trim() ? sub_thread_id.trim() : user_id}`.replace(" ", "_");
         responseSender.sendResponse({
             rtlLayer: true,
-            data: { display_name: display_name, threadId: thread_id, subThreadId: subThreadId },
+            data: { display_name: display_name, threadId: thread_id, subThreadId: subThreadId, created_at: new Date()},
             reqBody: {
                 "rtlOptions": {
                     "channel": channelId,
@@ -60,7 +60,8 @@ async function createSubThreadWithAi(req, res, next) {
         display_name: display_name || name || sub_thread_id,
         thread_id,
         org_id: org_id.toString(),
-        sub_thread_id
+        sub_thread_id,
+        created_at: new Date()
     });
     res.locals = {
         thread,
