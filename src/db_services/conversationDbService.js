@@ -726,8 +726,12 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
 
       while (hasMoreData) {
         const response = await getUsers(org_id, pageNo, pageSize = 50)
-        allUserData = [...allUserData, ...response['data']];
-        hasMoreData = response?.totalEntityCount > allUserData.length;
+        if (response && Array.isArray(response.data)) {
+          allUserData = [...allUserData, ...response.data];
+          hasMoreData = response?.totalEntityCount > allUserData.length;
+        } else {
+          hasMoreData = false;
+        }
         pageNo++;
       }
       await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
