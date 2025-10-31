@@ -146,7 +146,7 @@ export async function validateCauthKey(pauthkey) {
     const response = await axios.get('https://routes.msg91.com/api/validateCauthKey', {
       headers: {
         authkey: process.env.PROXY_ADMIN_TOKEN,
-        pauthkey,
+        cauthkey: pauthkey,
       },
     });
     return response?.data;
