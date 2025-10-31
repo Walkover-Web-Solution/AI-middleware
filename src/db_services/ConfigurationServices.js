@@ -117,15 +117,12 @@ const deleteBridge = async (bridge_id, org_id) => {
       );
     }
     const statusMessage = bridgeAlreadyDeleted 
-      ? `Bridge was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
-      : `Bridge and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
+      ? `Bridge ID: ${bridge_id} was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
+      : `Bridge ID: ${bridge_id} and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
 
     return {
-      success: true,
-      bridges: deletedBridge,
-      deletedVersionsCount: deletedVersions.modifiedCount,
-      alreadyDeleted: bridgeAlreadyDeleted,
-      message: statusMessage
+        success: true,
+        message: statusMessage
     };
   } catch (error) {
     console.error("error:", error);
