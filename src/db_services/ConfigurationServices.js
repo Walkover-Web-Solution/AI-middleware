@@ -58,16 +58,145 @@ const getBridgesWithSelectedData = async bridge_id => {
 
 const deleteBridge = async (bridge_id, org_id) => {
   try {
-    const bridges = await configurationModel.findOneAndDelete({
+    // First, find the bridge to get its data including versions
+    const bridge = await configurationModel.findOne({
       _id: bridge_id,
       org_id: org_id
+      // Remove deletedAt filter to allow re-processing of already soft-deleted bridges
     });
+    if (!bridge) {
+      return {
+        success: false,
+        error: "Bridge not found"
+      };
+    }
+
+    const currentDate = new Date();
+    let bridgeAlreadyDeleted = false;
+
+    // Check if bridge is already soft deleted
+    if (bridge.deletedAt) {
+      bridgeAlreadyDeleted = true;
+      console.log("Bridge already soft deleted at:", bridge.deletedAt);
+    }
+
+    // Soft delete the main bridge by setting deletedAt (or update the deletedAt timestamp)
+    const deletedBridge = await configurationModel.findOneAndUpdate(
+      {
+        _id: bridge_id,
+        org_id: org_id
+      },
+      {
+        $set: {
+          deletedAt: currentDate
+        }
+      },
+      { new: true }
+    );
+    // Find and soft delete all versions associated with this bridge using versions array
+    let deletedVersions = { modifiedCount: 0 };
+    
+    // Use deletedBridge.versions as it contains the most up-to-date data
+    const versionsToDelete = deletedBridge.versions || bridge.versions;
+    
+    if (versionsToDelete && versionsToDelete.length > 0) {
+      
+      // Convert string IDs to ObjectIds if needed
+      const versionIds = versionsToDelete.map(id => new ObjectId(id));
+      
+      deletedVersions = await versionModel.updateMany(
+        {
+          _id: { $in: versionIds }, // Use converted ObjectIds
+          deletedAt: null // Only update non-deleted versions
+        },
+        {
+          $set: {
+            deletedAt: currentDate
+          }
+        }
+      );
+    }
+    const statusMessage = bridgeAlreadyDeleted 
+      ? `Bridge was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
+      : `Bridge and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
+
     return {
       success: true,
-      bridges: bridges
+      bridges: deletedBridge,
+      deletedVersionsCount: deletedVersions.modifiedCount,
+      alreadyDeleted: bridgeAlreadyDeleted,
+      message: statusMessage
     };
   } catch (error) {
     console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
+
+const restoreBridge = async (bridge_id, org_id) => {
+  try {
+    // First, find the soft-deleted bridge
+    const bridge = await configurationModel.findOne({
+      _id: bridge_id,
+      org_id: org_id,
+      deletedAt: { $ne: null } // Only find soft-deleted bridges
+    });
+
+    if (!bridge) {
+      return {
+        success: false,
+        error: "Bridge not found or not deleted"
+      };
+    }
+
+    // Restore the main bridge by removing deletedAt
+    const restoredBridge = await configurationModel.findOneAndUpdate(
+      {
+        _id: bridge_id,
+        org_id: org_id
+      },
+      {
+        $unset: {
+          deletedAt: ""
+        }
+      },
+      { new: true }
+    );
+
+    // Restore all versions associated with this bridge using versions array
+    let restoredVersions = { modifiedCount: 0 };
+    
+    // Use bridge.versions to find versions to restore
+    const versionsToRestore = bridge.versions;
+    
+    if (versionsToRestore && versionsToRestore.length > 0) {
+      // Convert string IDs to ObjectIds if needed
+      const versionIds = versionsToRestore.map(id => new ObjectId(id));
+      
+      restoredVersions = await versionModel.updateMany(
+        {
+          _id: { $in: versionIds }, // Use version IDs from the versions array
+          deletedAt: { $ne: null } // Only restore soft-deleted versions
+        },
+        {
+          $unset: {
+            deletedAt: ""
+          }
+        }
+      );
+    }
+
+    return {
+      success: true,
+      bridge: restoredBridge,
+      restoredVersionsCount: restoredVersions.modifiedCount,
+      message: `Bridge and ${restoredVersions.modifiedCount} versions restored successfully.`
+    };
+  } catch (error) {
+    console.error("restore bridge error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -355,6 +484,7 @@ const findIdsByModelAndService = async (model, service, org_id) => {
 
 export default {
   deleteBridge,
+  restoreBridge,
   getApiCallById,
   getBridgesWithSelectedData,
   addResponseIdinBridge,

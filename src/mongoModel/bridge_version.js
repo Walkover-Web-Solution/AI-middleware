@@ -78,8 +78,13 @@ const version = new mongoose.Schema({
   },
   hello_id :{
     type: String
+  },
+  deletedAt: {
+    type: Date,
+    default: null
   }
 });
 
+version.index({ deletedAt: 1 }, { expireAfterSeconds: 2592000 }); // TTL index for 30 days (1 month)
 const versionModel = mongoose.model("configuration_versions", version);
 export default versionModel;

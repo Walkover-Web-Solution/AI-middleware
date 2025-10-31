@@ -107,14 +107,35 @@ const deleteBridges = async (req, res,next) => {
       bridge_id
     } = req.params;
     const {
-      org_id
+      org_id,
+      restore = false
     } = req.body;
-    const result = await configurationService.deleteBridge(bridge_id, org_id);
+    
+    let result;
+    
+    if (restore) {
+      // Restore the bridge
+      result = await configurationService.restoreBridge(bridge_id, org_id);
+      
+      // Log restore operation for audit purposes
+      if (result.success) {
+        console.log(`Bridge restore completed for bridge ${bridge_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
+      }
+    } else {
+      // Soft delete the bridge
+      result = await configurationService.deleteBridge(bridge_id, org_id);
+      
+      // Log soft delete operation for audit purposes
+      if (result.success) {
+        console.log(`Soft delete initiated for bridge ${bridge_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
+      }
+    }
+    
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("delete bridge error => ", error.message)
+    console.error(`${restore ? 'restore' : 'delete'} bridge error => `, error.message)
     throw error;
   }
 };
