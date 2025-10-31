@@ -118,6 +118,14 @@ const configuration = new mongoose.Schema({
   meta: {
     type: Object,
     default: {}
+  },
+  bridge_limit: {
+    type: Number,
+    default: 0
+  },
+  bridge_usage: {
+    type: Number,
+    default: 0
   }
 });
 
