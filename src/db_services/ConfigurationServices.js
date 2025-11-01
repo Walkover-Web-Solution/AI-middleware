@@ -60,7 +60,7 @@ const deleteBridge = async (bridge_id, org_id) => {
   try {
     // First, find the bridge to get its data including versions
     const bridge = await configurationModel.findOne({
-      _id: bridge_id,
+      _id: new ObjectId(bridge_id),
       org_id: org_id
       // Remove deletedAt filter to allow re-processing of already soft-deleted bridges
     });
