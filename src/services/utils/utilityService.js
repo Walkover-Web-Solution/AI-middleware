@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { nanoid, customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import axios from 'axios'
@@ -166,6 +167,19 @@ async function sendRequest(url, data, method, headers) {
   }
 }
 
+function generateAuthToken(user, org, extraDetails = {}) {
+
+    const token = jwt.sign({
+        user,
+        org,
+        extraDetails
+    }, process.env.SecretKey);
+    return token;
+
+}
+
+
+
 export {
   generateIdentifier,
   encrypt,
@@ -175,5 +189,6 @@ export {
   objectToQueryParams, 
   sendAlert, 
   convertAIConversation,
-  sendResponse
+  sendResponse,
+  generateAuthToken
 };
