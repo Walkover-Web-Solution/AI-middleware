@@ -134,11 +134,27 @@ export async function getUsers(org_id, page = 1, pageSize = 10) {
         authkey: process.env.PROXY_ADMIN_TOKEN
       }
     });
-    const data = response?.data?.data;
-    return data;
+    return response?.data;
   } catch (error) {
     console.error('Error fetching user updates:', error.message);
     return [];
   }
 }
 
+export async function validateCauthKey(pauthkey) {
+  try {
+    const response = await axios.get('https://routes.msg91.com/api/validateCauthKey', {
+      headers: {
+        authkey: process.env.PROXY_ADMIN_TOKEN,
+        cauthkey: pauthkey,
+      },
+    });
+    return response?.data;
+  } catch (error) {
+    const err = new Error(error?.response?.data?.message || 'Failed to validate cAuth key');
+    err.statusCode = error?.response?.status;
+    err.data = error?.response?.data;
+    console.error('Error validating cAuth key:', error.message);
+    throw err;
+  }
+}

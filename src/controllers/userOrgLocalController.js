@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import axios from "axios";
 import { storeInCache } from "../cache_service/index.js";
 import { createProxyToken } from "../services/proxyService.js";
+import { userOrgLocalTokenSchema, switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
 
 function generateAuthToken(user, org) {
 
@@ -14,14 +15,14 @@ function generateAuthToken(user, org) {
 }
 
 const userOrgLocalToken = async (req, res) => {
-    if (process.env.ENVIROMENT !== 'local') res.status(404).send()
+    await userOrgLocalTokenSchema.validateAsync(req.body);
     const { userId, orgId, orgName, userName } = req.body;
     const token = generateAuthToken({ id: userId, name: userName || '' }, { id: orgId, name: orgName || '' })
     res.status(200).json({ token });
 }
 
 const switchUserOrgLocal = async (req, res) => {
-    if (process.env.ENVIROMENT !== 'local') res.status(404).send()
+    await switchUserOrgLocalSchema.validateAsync(req.body);
     const { orgId, orgName } = req.body;
     const { user } = req.profile
     const token = generateAuthToken(user, { id: orgId, name: orgName || '' })
