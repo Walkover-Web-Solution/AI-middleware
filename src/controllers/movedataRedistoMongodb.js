@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 import { findInCache, scanCacheKeys, deleteInCache } from '../cache_service/index.js';
+<<<<<<< Updated upstream
 import { radis_pattern } from '../configs/constant.js';
+=======
+import { redis_keys } from '../configs/constant.js';
+>>>>>>> Stashed changes
 
 async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping = {}) {
   // Get the model from mongoose models
@@ -17,8 +21,11 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
   // Get all keys matching the pattern - scanCacheKeys already limits to 10,000 keys
   const keys = await scanCacheKeys(redisKeyPattern + '*');
   
+<<<<<<< Updated upstream
   console.log(`Found ${keys.length} keys to process in this run`);
   
+=======
+>>>>>>> Stashed changes
   // Process in batches for better MongoDB performance
   const batchSize = 50;
   for (let i = 0; i < keys.length; i += batchSize) {
@@ -32,7 +39,12 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
       try {
         // Extract ID from the key
         const keyParts = key.split(/[_:]/); 
+<<<<<<< Updated upstream
         const id = keyParts[keyParts.length - 1];
+=======
+        const id = keyParts[keyParts.length - 2];
+        const version_id=keyParts[keyParts.length - 1];
+>>>>>>> Stashed changes
         
         if (!id || !mongoose.isValidObjectId(id)) {
           skipped += 1;
@@ -82,9 +94,17 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
         
         // Collect additional bridge-related keys for batch deletion
         if(redisKeyPattern === 'bridgeusedcost_'){
+<<<<<<< Updated upstream
           const cache_key = `${radis_pattern.bridge_data_with_tools_}${id}`;
           const cache_key2 = `${radis_pattern.get_bridge_data_}${id}`;
           keysToDelete.push(cache_key, cache_key2);
+=======
+          const cache_key = `${redis_keys.bridge_data_with_tools_}${version_id}`;
+          const cache_key1 = `${redis_keys.bridge_data_with_tools_}${id}`;
+          const cache_key2 = `${redis_keys.get_bridge_data_}${version_id}`;
+          const cache_key3 = `${redis_keys.get_bridge_data_}${id}`;
+          keysToDelete.push(cache_key,cache_key1,cache_key2,cache_key3);
+>>>>>>> Stashed changes
         }
 
       } catch (err) {

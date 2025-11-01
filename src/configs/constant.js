@@ -6,7 +6,11 @@ const collectionNames = {
 };
 
 
+<<<<<<< Updated upstream
 const radis_pattern = {
+=======
+const redis_keys = {
+>>>>>>> Stashed changes
   bridgeusedcost_ : 'bridgeusedcost_',
   folderusedcost_ : 'folderusedcost_',
   apikeyusedcost_ : 'apikeyusedcost_',
@@ -16,5 +20,9 @@ const radis_pattern = {
 
 export {
   collectionNames,
+<<<<<<< Updated upstream
   radis_pattern
+=======
+  redis_keys
+>>>>>>> Stashed changes
 };
