@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { findInCache, scanCacheKeys, deleteInCache } from '../cache_service/index.js';
-import { radis_pattern } from '../configs/constant.js';
+import { redis_keys } from '../configs/constant.js';
 
 async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping = {}) {
   // Get the model from mongoose models
@@ -32,7 +32,8 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
       try {
         // Extract ID from the key
         const keyParts = key.split(/[_:]/); 
-        const id = keyParts[keyParts.length - 1];
+        const id = keyParts[keyParts.length - 2];
+        const version_id=keyParts[keyParts.length - 1];
         
         if (!id || !mongoose.isValidObjectId(id)) {
           skipped += 1;
@@ -82,9 +83,11 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
         
         // Collect additional bridge-related keys for batch deletion
         if(redisKeyPattern === 'bridgeusedcost_'){
-          const cache_key = `${radis_pattern.bridge_data_with_tools_}${id}`;
-          const cache_key2 = `${radis_pattern.get_bridge_data_}${id}`;
-          keysToDelete.push(cache_key, cache_key2);
+          const cache_key = `${redis_keys.bridge_data_with_tools_}${version_id}`;
+          const cache_key1 = `${redis_keys.bridge_data_with_tools_}${id}`;
+          const cache_key2 = `${redis_keys.get_bridge_data_}${version_id}`;
+          const cache_key3 = `${redis_keys.get_bridge_data_}${id}`;
+          keysToDelete.push(cache_key,cache_key1,cache_key2,cache_key3);
         }
 
       } catch (err) {

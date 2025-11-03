@@ -6,7 +6,7 @@ const collectionNames = {
 };
 
 
-const radis_pattern = {
+const redis_keys = {
   bridgeusedcost_ : 'bridgeusedcost_',
   folderusedcost_ : 'folderusedcost_',
   apikeyusedcost_ : 'apikeyusedcost_',
@@ -16,5 +16,5 @@ const radis_pattern = {
 
 export {
   collectionNames,
-  radis_pattern
+  redis_keys
 };
