@@ -38,6 +38,7 @@ import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
 import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
+import pocRoutes from './routes/poc_routes.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -103,6 +104,7 @@ app.use('/Template',templateRoute);
 app.use('/flow',flowRoutes)
 app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
+app.use('/poc', pocRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
