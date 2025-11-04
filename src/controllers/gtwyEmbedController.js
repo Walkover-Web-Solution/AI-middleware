@@ -3,18 +3,36 @@ import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import configurationModel from "../mongoModel/configuration.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier } from "../services/utils/utilityService.js";
+import { generateIdentifier, generateAuthToken } from "../services/utils/utilityService.js";
 
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
-      const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+    const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+      const Tokendata = {
+        "user":{
+          id: req.Embed.user_id,
+          name: embeduser_name,
+          email: embeduser_email,
+          
+        },
+        "org":{
+          id: req.Embed.org_id,
+          name: req.Embed.org_name,
+          
+        },
+        "extraDetails":{  
+          type: 'embed',
+          folder_id: req.Embed.folder_id,
+        }
+      }
       const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
       const config = folder?.config || {};
       const apikey_object_id = folder?.apikey_object_id
+      await createProxyToken(embedDetails);
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
-        token: await createProxyToken(embedDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, Tokendata.extraDetails),
         config:{...config, apikey_object_id}
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
