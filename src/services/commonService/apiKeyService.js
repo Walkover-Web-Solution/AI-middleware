@@ -2,7 +2,7 @@ import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache} from "../../cache_service/index.js"
-import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi } from "../utils/aiServices.js"
+import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../utils/aiServices.js"
 
 const saveApikey = async(req,res) => {
     try {
@@ -50,6 +50,9 @@ const saveApikey = async(req,res) => {
                 break;
             case 'ai_ml':
                 check = await callAiMlApi(apikey)
+                break;
+            case 'grok':
+                check = await callGrokApi(apikey)
                 break;
         }
         if(!check.success){
