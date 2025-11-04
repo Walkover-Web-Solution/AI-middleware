@@ -2,11 +2,11 @@ import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {deleteInCache} from "../../cache_service/index.js"
-import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi } from "../utils/aiServices.js"
+import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../utils/aiServices.js"
 
 const saveApikey = async(req,res) => {
     try {
-        const {service, name, comment} = req.body;
+        const {service, name, comment,apikey_limit=0,} = req.body;
         const org_id = req.profile?.org?.id;
         const folder_id = req.profile?.extraDetails?.folder_id;
         const user_id = req.profile.user.id
@@ -18,7 +18,8 @@ const saveApikey = async(req,res) => {
                 name,
                 comment,
                 folder_id,
-                user_id
+                user_id,
+                apikey_limit
             });
         }
         catch (error) {
@@ -50,12 +51,15 @@ const saveApikey = async(req,res) => {
             case 'ai_ml':
                 check = await callAiMlApi(apikey)
                 break;
+            case 'grok':
+                check = await callGrokApi(apikey)
+                break;
         }
         if(!check.success){
             return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
         }
         apikey = await Helper.encrypt(apikey)
-        const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment, folder_id, user_id});
+        const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment, folder_id, user_id, apikey_limit});
         
         const decryptedApiKey = await Helper.decrypt(apikey)
         const maskedApiKey = await Helper.maskApiKey(decryptedApiKey)
@@ -104,18 +108,21 @@ const getAllApikeys = async(req, res) => {
 async function updateApikey(req, res) {
     try {
         let apikey = req.body.apikey;
-        const { name, comment, service, folder_id, user_id } = req.body;
+        const { name, comment, service, folder_id, user_id,apikey_limit=0,apikey_usage=0} = req.body;
         const { apikey_object_id } = req.params;
         try{
-            await updateApikeySchema.validateAsync({
+             const payload = {
                 apikey,
                 name,
                 comment,
                 service,
                 apikey_object_id,
                 folder_id,
-                user_id
-            });
+                user_id,
+                apikey_limit,
+                ...(typeof apikey_usage !== 'undefined' && { apikey_usage }),
+                        };
+            await updateApikeySchema.validateAsync(payload);
         }
         catch (error) {
             return res.status(422).json({
@@ -126,7 +133,7 @@ async function updateApikey(req, res) {
         if(apikey){
             apikey = Helper.encrypt(apikey); 
         }
-        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment);
+        const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment,apikey_limit,apikey_usage);
         let decryptedApiKey, maskedApiKey;
         if(apikey){
             decryptedApiKey = await Helper.decrypt(apikey)

@@ -126,6 +126,14 @@ const configuration = new mongoose.Schema({
   deletedAt: {
     type: Date,
     default: null
+  },
+  bridge_limit: {
+    type: Number,
+    default: 0
+  },
+  bridge_usage: {
+    type: Number,
+    default: 0
   }
 });
 

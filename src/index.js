@@ -21,6 +21,7 @@ import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
+import initializeDailyUpdateCron from './cron/initializeDailyUpdateCron.js';
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
@@ -37,6 +38,8 @@ import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
 import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
+import pocRoutes from './routes/poc_routes.js'
+
 import('./services/cacheService.js')
 app.use(cors({
   origin: '*',
@@ -101,6 +104,7 @@ app.use('/Template',templateRoute);
 app.use('/flow',flowRoutes)
 app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
+app.use('/poc', pocRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
@@ -112,6 +116,7 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
+initializeDailyUpdateCron()
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);

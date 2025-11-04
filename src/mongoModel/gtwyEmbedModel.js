@@ -31,7 +31,15 @@ const FolderSchema = new mongoose.Schema({
   apikey_object_id: {
     type: Object,
     default: {}
-  }
+  },
+  folder_limit: {
+    type: Number,
+    default: 0
+  },
+  folder_usage: {
+    type: Number,
+    default: 0
+ }
 });
 
 const FolderModel = mongoose.model('Folder', FolderSchema);
