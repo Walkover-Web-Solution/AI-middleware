@@ -172,7 +172,7 @@ function generateAuthToken(user, org, extraDetails = {}) {
     const token = jwt.sign({
         user,
         org,
-        extraDetails
+        ...extraDetails
     }, process.env.SecretKey);
     return token;
 

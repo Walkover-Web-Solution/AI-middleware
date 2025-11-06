@@ -1,15 +1,14 @@
 import axios from "axios";
 import { storeInCache } from "../cache_service/index.js";
 import { createProxyToken } from "../services/proxyService.js";
-import { userOrgLocalTokenSchema, switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
+import { switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
 import { generateAuthToken } from "../services/utils/utilityService.js";
 
 
 
 const userOrgLocalToken = async (req, res) => {
-    await userOrgLocalTokenSchema.validateAsync(req.profile);
-    const { user,org } = req.profile;
-    const token = generateAuthToken(user, org)
+    const { user,org,...extra } = req.profile;
+    const token = generateAuthToken(user, org, extra)
     res.status(200).json({ token });
 }
 
