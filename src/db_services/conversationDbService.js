@@ -618,12 +618,11 @@ async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback
   } else {
     whereClause.user_feedback = user_feedback;
   }
-  const feedbackRecords = await models.pg.conversations.findAll({
-    attributes: ["user_feedback"],
-    where: whereClause,
-    returning: true, 
+  // Use count() instead of findAll() for better performance
+  const count = await models.pg.conversations.count({
+    where: whereClause
   });
-  return { success: true, result: feedbackRecords.length };
+  return { success: true, result: count };
 }
 
 

@@ -25,10 +25,15 @@ const embedLogin = async (req, res) => {
           folder_id: req.Embed.folder_id,
         }
       }
-      const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
+      
+      // Run DB query and token creation in parallel since they don't depend on each other
+      const [folder] = await Promise.all([
+        FolderModel.findOne({ _id: req.Embed.folder_id }),
+        createProxyToken(embedDetails)
+      ]);
+      
       const config = folder?.config || {};
       const apikey_object_id = folder?.apikey_object_id
-      await createProxyToken(embedDetails);
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
