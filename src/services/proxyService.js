@@ -141,6 +141,38 @@ export async function getUsers(org_id, page = 1, pageSize = 10) {
   }
 }
 
+export async function getUserDetails(userId) {
+  try {
+    const response = await axios.get(
+      `${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getDetails`,
+      {
+        params: {
+          user_id: userId,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Authkey: process.env.PROXY_ADMIN_TOKEN,
+        },
+        timeout: 5000
+      }
+    );
+    
+    const userDetails = response?.data?.data?.data?.[0];
+    if (userDetails) {
+      return {
+        name: userDetails.name || 'N/A',
+        email: userDetails.email || 'N/A',
+        phone: userDetails.mobile || 'not available',
+        created_at: userDetails.created_at || new Date().toISOString(),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error fetching user details for ${userId}:`, error.message);
+    return null;
+  }
+}
+
 export async function validateCauthKey(pauthkey) {
   try {
     const response = await axios.get('https://routes.msg91.com/api/validateCauthKey', {

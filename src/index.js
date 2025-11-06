@@ -21,6 +21,7 @@ import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
+import initializeFifteenMinuteUpdateCron from './cron/initializeFifteenMinuteUpdateCron.js';
 import initializeDailyUpdateCron from './cron/initializeDailyUpdateCron.js';
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
@@ -116,7 +117,8 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
-initializeDailyUpdateCron()
+initializeFifteenMinuteUpdateCron();
+initializeDailyUpdateCron();
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);
