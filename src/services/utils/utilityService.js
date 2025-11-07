@@ -167,15 +167,22 @@ async function sendRequest(url, data, method, headers) {
   }
 }
 
-function generateAuthToken(user, org, extraDetails = {}) {
+function generateAuthToken(user, org, extraDetails = {}, options = {}) {
+  const { expiresInSeconds } = options;
+  const { exp, iat, ...safeExtraDetails } = extraDetails || {};
+  const signOptions = expiresInSeconds
+    ? { expiresIn: Math.max(1, expiresInSeconds) }
+    : { expiresIn: '48h' };
 
-    const token = jwt.sign({
-        user,
-        org,
-        ...extraDetails
-    }, process.env.SecretKey);
-    return token;
-
+  return jwt.sign(
+    {
+      user,
+      org,
+      ...safeExtraDetails
+    },
+    process.env.SecretKey,
+    signOptions
+  );
 }
 
 
