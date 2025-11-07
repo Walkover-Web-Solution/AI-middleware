@@ -163,7 +163,6 @@ async function sendRequest(url, data, method, headers) {
       return response.json();
   } catch (error) {
       throw new Error(`Unexpected error: ${url}, ${error.toString()}`);
-      return { error: 'Unexpected error', details: error.toString() };
   }
 }
 

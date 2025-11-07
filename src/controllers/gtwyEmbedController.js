@@ -32,7 +32,7 @@ const embedLogin = async (req, res) => {
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
-        token: generateAuthToken(Tokendata.user, Tokendata.org, Tokendata.extraDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
         config:{...config, apikey_object_id}
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });

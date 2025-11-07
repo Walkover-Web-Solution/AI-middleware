@@ -109,7 +109,7 @@ const embedUser = async (req, res, next) => {
       const response = {
         ...(req?.Embed || {}),
         ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
-        token: generateAuthToken(Tokendata.user, Tokendata.org, Tokendata.extraDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
       };
     res.locals = { data: response, success: true };
     req.statusCode = 200;
