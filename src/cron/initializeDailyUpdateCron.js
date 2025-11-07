@@ -1,24 +1,21 @@
 import cron from 'node-cron';
-import moveDataRedisToMongodb from '../controllers/movedataRedistoMongodb.js';
-import { collectionNames, redis_keys } from '../configs/constant.js';
 
+import bridgeAnalysisController from '../controllers/bridgeAnalysisController.js';
 const initializeDailyUpdateCron = () => {
-  cron.schedule('*/15 * * * *', async () => {  // Every 15 minutes instead of every minute
+  console.log('Initializing Daily Update Cron - will run daily at 7:00 AM IST...');
+  
+  cron.schedule('0 7 * * *', async () => {  // Every day at 7:00 AM IST
+// cron.schedule('* * * * *', async () => {  // For testing - every minute 
     try {
-      console.log('Running initializeDailyUpdateCron...');  
-      await moveDataRedisToMongodb(redis_keys.bridgeusedcost_, collectionNames.configuration, {
-        bridge_usage: { type: 'number' }
-      });
-      await moveDataRedisToMongodb(redis_keys.folderusedcost_, collectionNames.Folder, {
-        folder_usage: { type: 'number' }
-      });
-      await moveDataRedisToMongodb(redis_keys.apikeyusedcost_, collectionNames.ApikeyCredentials, {
-        apikey_usage: { type: 'number' }
-      });
+      console.log(`[${new Date().toISOString()}] Running initializeDailyUpdateCron...`);  
+     await bridgeAnalysisController();
+      console.log(`[${new Date().toISOString()}] Daily Update Cron completed successfully`);
       
     } catch (error) {
       console.error('Error running initializeDailyUpdateCron:', error);
     }
+  }, {
+    timezone: "Asia/Kolkata"
   });
 };
 
