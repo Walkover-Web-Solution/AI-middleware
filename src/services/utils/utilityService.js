@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { nanoid, customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import axios from 'axios'
@@ -162,9 +163,28 @@ async function sendRequest(url, data, method, headers) {
       return response.json();
   } catch (error) {
       throw new Error(`Unexpected error: ${url}, ${error.toString()}`);
-      return { error: 'Unexpected error', details: error.toString() };
   }
 }
+
+function generateAuthToken(user, org, extraDetails = {}, options = {}) {
+  const { expiresInSeconds } = options;
+  const { exp, iat, ...safeExtraDetails } = extraDetails || {};
+  const signOptions = expiresInSeconds
+    ? { expiresIn: Math.max(1, expiresInSeconds) }
+    : { expiresIn: '48h' };
+
+  return jwt.sign(
+    {
+      user,
+      org,
+      ...safeExtraDetails
+    },
+    process.env.SecretKey,
+    signOptions
+  );
+}
+
+
 
 export {
   generateIdentifier,
@@ -175,5 +195,6 @@ export {
   objectToQueryParams, 
   sendAlert, 
   convertAIConversation,
-  sendResponse
+  sendResponse,
+  generateAuthToken
 };

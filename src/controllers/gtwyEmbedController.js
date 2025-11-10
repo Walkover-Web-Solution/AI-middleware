@@ -3,18 +3,36 @@ import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import configurationModel from "../mongoModel/configuration.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier } from "../services/utils/utilityService.js";
+import { generateIdentifier, generateAuthToken } from "../services/utils/utilityService.js";
 
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
-      const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+    const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+      const Tokendata = {
+        "user":{
+          id: req.Embed.user_id,
+          name: embeduser_name,
+          email: embeduser_email,
+          
+        },
+        "org":{
+          id: req.Embed.org_id,
+          name: req.Embed.org_name,
+          
+        },
+        "extraDetails":{  
+          type: 'embed',
+          folder_id: req.Embed.folder_id,
+        }
+      }
       const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
       const config = folder?.config || {};
       const apikey_object_id = folder?.apikey_object_id
+      await createProxyToken(embedDetails);
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
-        token: await createProxyToken(embedDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
         config:{...config, apikey_object_id}
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
@@ -26,7 +44,8 @@ const createEmbed = async (req, res) => {
     const org_id =  req.profile.org.id
     const apikey_object_id = req.body.apikey_object_id;
     const type = "embed"
-    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id });
+    const folder_limit = req.body.folder_limit;
+    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id,folder_limit});
     res.status(200).json({ data:{...folder.toObject(), folder_id: folder._id} });
 }
 
@@ -41,6 +60,8 @@ const updateEmbed = async (req, res) => {
     const config = req.body.config;
     const org_id = req.profile.org.id;
     const apikey_object_id = req.body.apikey_object_id;
+    const folder_limit = req.body.folder_limit;
+    const folder_usage = req.body.folder_usage
     
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
     if (!folder) {
@@ -65,6 +86,12 @@ const updateEmbed = async (req, res) => {
 
     folder.config = config;
     folder.apikey_object_id = apikey_object_id;
+    if(folder_limit){
+      folder.folder_limit=folder_limit
+    }
+    if(folder_usage){
+      folder.folder_usage=folder_usage
+    }
     await folder.save();
     
     res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });

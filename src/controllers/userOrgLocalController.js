@@ -1,31 +1,32 @@
-import jwt from "jsonwebtoken";
 import axios from "axios";
 import { storeInCache } from "../cache_service/index.js";
 import { createProxyToken } from "../services/proxyService.js";
-import { userOrgLocalTokenSchema, switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
+import { switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
+import { generateAuthToken } from "../services/utils/utilityService.js";
 
-function generateAuthToken(user, org) {
 
-    const token = jwt.sign({
-        user,
-        org
-    }, process.env.SecretKey);
-    return token;
-
-}
 
 const userOrgLocalToken = async (req, res) => {
-    await userOrgLocalTokenSchema.validateAsync(req.body);
-    const { userId, orgId, orgName, userName } = req.body;
-    const token = generateAuthToken({ id: userId, name: userName || '' }, { id: orgId, name: orgName || '' })
+    const { user, org, exp, iat, ...extra } = req.profile;
+    const token = generateAuthToken(user, org, extra);
     res.status(200).json({ token });
 }
 
 const switchUserOrgLocal = async (req, res) => {
-    await switchUserOrgLocalSchema.validateAsync(req.body);
-    const { orgId, orgName } = req.body;
-    const { user } = req.profile
-    const token = generateAuthToken(user, { id: orgId, name: orgName || '' })
+  const { orgId, orgName } = req.body;
+  await switchUserOrgLocalSchema.validateAsync({ orgId, orgName });
+    const { user, org, exp, iat, ...extra } = req.profile;
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const remainingLifetime = Number.isFinite(exp) ? Math.max(exp - nowInSeconds, 0) : null;
+    const expiresInOptions = Number.isFinite(remainingLifetime)
+      ? { expiresInSeconds: Math.max(remainingLifetime, 1) }
+      : {};
+    const token = generateAuthToken(
+      user,
+      { id: orgId, name: orgName || '' },
+      extra,
+      expiresInOptions
+    );
     res.status(200).json({ token });
 }
 
@@ -75,8 +76,23 @@ const updateUserDetails = async (req, res) => {
 };
 const embedUser = async (req, res, next) => {
     const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
-    //   const projectSettings = await projects_db_service.findFields(project_id, 'settings');
-    const embedDetails = !req.isGtwyUser ?
+    const Tokendata = {
+        "user":{
+          id: req.Embed.user_id,
+          name: embeduser_name,
+          email: embeduser_email,
+          
+        },
+        "org":{
+          id: req.Embed.org_id,
+          name: req.Embed.org_name,
+          
+        },
+        "extraDetails":{  
+          type: 'embed'
+        }
+      }
+      const embedDetails = !req.isGtwyUser ?
         {
             user_id: req.Embed.user_id,
             company_id: req?.Embed?.org_id,
@@ -89,10 +105,11 @@ const embedUser = async (req, res, next) => {
             company_name: req.company_name,
             user_id: req.user_id
         };
-    const response = {
+     await createProxyToken(embedDetails);
+      const response = {
         ...(req?.Embed || {}),
         ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
-        token: await createProxyToken(embedDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
       };
     res.locals = { data: response, success: true };
     req.statusCode = 200;

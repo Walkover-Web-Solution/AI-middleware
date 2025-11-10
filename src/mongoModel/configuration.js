@@ -95,6 +95,10 @@ const configuration = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ResponseType'
   },
+  versions: {
+    type: [String],
+    default: []
+  },
   defaultQuestions: {
     type: Array
   },
@@ -118,9 +122,22 @@ const configuration = new mongoose.Schema({
   meta: {
     type: Object,
     default: {}
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  bridge_limit: {
+    type: Number,
+    default: 0
+  },
+  bridge_usage: {
+    type: Number,
+    default: 0
   }
 });
 
 configuration.index({ org_id: 1, slugName: 1 }, { unique: true });
+configuration.index({ deletedAt: 1 }, { expireAfterSeconds: 2592000 }); // TTL index for 30 days (1 month)
 const configurationModel = mongoose.model("configuration", configuration);
 export default configurationModel;
