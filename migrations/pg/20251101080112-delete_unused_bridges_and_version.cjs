@@ -37,8 +37,17 @@ module.exports = {
       const versionModel = (await import('../../src/mongoModel/bridge_version.js')).default;
       
       // Step 4: Get all MongoDB documents (including status field for bridges, parent_id and status for versions)
-      const allBridges = await configurationModel.find({}, { _id: 1, status: 1 }).lean();
-      const allVersions = await versionModel.find({}, { _id: 1, parent_id: 1, status: 1 }).lean();
+      // Only get bridges with status 1
+      const allBridges = await configurationModel.find({ status: 1 }, { _id: 1, status: 1 }).lean();
+      
+      // Get parent bridge IDs with status 1
+      const parentBridgeIdsWithStatus1 = allBridges.map(bridge => bridge._id);
+      
+      // Only get versions whose parent bridge has status 1
+      const allVersions = await versionModel.find(
+        { parent_id: { $in: parentBridgeIdsWithStatus1 } },
+        { _id: 1, parent_id: 1, status: 1 }
+      ).lean();
       
       console.log(`Found ${allBridges.length} bridges and ${allVersions.length} versions in MongoDB`);
       
