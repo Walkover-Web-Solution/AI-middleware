@@ -39,6 +39,7 @@ import flowRoutes from './routes/flow_routes.js'
 import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
 import pocRoutes from './routes/poc_routes.js'
+import agentLookupRoutes from './routes/agentLookupRoutes.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -105,6 +106,7 @@ app.use('/flow',flowRoutes)
 app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
 app.use('/poc', pocRoutes)
+app.use('/data', agentLookupRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
