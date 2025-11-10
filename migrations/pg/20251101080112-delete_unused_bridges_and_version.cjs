@@ -55,7 +55,6 @@ module.exports = {
       const bridgesToDelete = [];
       const versionsToDelete = [];
       const bridgesToUnarchive = [];
-      const versionsToUnarchive = [];
       const bridgeIdsToDelete = new Set(); // Track bridge IDs being deleted
       
       // Check bridges - only delete if status is 0 and not used in conversations
@@ -81,17 +80,17 @@ module.exports = {
       // Check versions - only delete if:
       // 1. The version_id is not used in conversations, AND
       // 2. The parent bridge (parent_id) is being deleted (has status 0 and is unused)
-      // Also unarchive versions that have history but are archived (status !== 0)
+      // If version has history, unarchive its parent bridge (not the version itself)
       for (const version of allVersions) {
         const versionId = version._id.toString();
         const parentBridgeId = version.parent_id ? version.parent_id.toString() : null;
         const hasHistory = usedVersionIds.has(versionId);
-        const hasStatusNotZero = version.status !== 0;
         
-        if (hasHistory && hasStatusNotZero) {
-          // Has history but is archived - unarchive it
-          versionsToUnarchive.push(version._id);
-          console.log(`Will unarchive version ${versionId} (has history but status is ${version.status})`);
+        if (hasHistory && parentBridgeId) {
+          // Version has history - unarchive its parent bridge instead of the version
+          // Add parent bridge ID to bridgesToUnarchive (convert string to ObjectId)
+          bridgesToUnarchive.push(new mongoose.Types.ObjectId(parentBridgeId));
+          console.log(`Will unarchive parent bridge ${parentBridgeId} (version ${versionId} has history)`);
         } else if (!hasHistory) {
           // Check if parent bridge is being deleted
           const parentBridgeBeingDeleted = parentBridgeId && bridgeIdsToDelete.has(parentBridgeId);
@@ -109,11 +108,11 @@ module.exports = {
       }
       
       console.log(`Identified ${bridgesToDelete.length} bridges and ${versionsToDelete.length} versions for deletion`);
-      console.log(`Identified ${bridgesToUnarchive.length} bridges and ${versionsToUnarchive.length} versions for unarchiving`);
+      console.log(`Identified ${bridgesToUnarchive.length} bridges for unarchiving (based on bridge and version history)`);
       
-      // Step 6: Unarchive bridges and versions that have history but are archived
+      // Step 6: Unarchive bridges that have history but are archived
+      // bridgesToUnarchive contains both bridges with history and parent bridges of versions with history
       let unarchivedBridges = 0;
-      let unarchivedVersions = 0;
       
       if (bridgesToUnarchive.length > 0) {
         const bridgeUnarchiveResult = await configurationModel.updateMany(
@@ -122,15 +121,6 @@ module.exports = {
         );
         unarchivedBridges = bridgeUnarchiveResult.modifiedCount;
         console.log(`Unarchived ${unarchivedBridges} bridges (set status to 0)`);
-      }
-      
-      if (versionsToUnarchive.length > 0) {
-        const versionUnarchiveResult = await versionModel.updateMany(
-          { _id: { $in: versionsToUnarchive } },
-          { $set: { status: 0 } }
-        );
-        unarchivedVersions = versionUnarchiveResult.modifiedCount;
-        console.log(`Unarchived ${unarchivedVersions} versions (set status to 0)`);
       }
       
       // Step 7: Delete unused documents
@@ -157,7 +147,7 @@ module.exports = {
       
       console.log('Migration completed successfully!');
       console.log(`Summary: Deleted ${deletedBridges} bridges and ${deletedVersions} versions`);
-      console.log(`Summary: Unarchived ${unarchivedBridges} bridges and ${unarchivedVersions} versions`);
+      console.log(`Summary: Unarchived ${unarchivedBridges} bridges (based on bridge and version history)`);
       
     } catch (error) {
       await transaction.rollback();
