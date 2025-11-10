@@ -35,6 +35,8 @@ module.exports = {
       // Step 3: Import Mongoose models
       const configurationModel = (await import('../../src/mongoModel/configuration.js')).default;
       const versionModel = (await import('../../src/mongoModel/bridge_version.js')).default;
+      const apikeyModel = (await import('../../src/mongoModel/apiModel.js')).default;
+      const apiCallModel = (await import('../../src/mongoModel/apiCall.js')).default;
       
       // Step 4: Get all MongoDB documents (including status field for bridges, parent_id and status for versions)
       // Only get bridges with status 1
@@ -126,6 +128,10 @@ module.exports = {
       // Step 7: Delete unused documents
       let deletedBridges = 0;
       let deletedVersions = 0;
+      let updatedApikeys = 0;
+      let deletedApikeys = 0;
+      let updatedApiCalls = 0;
+      let deletedApiCalls = 0;
       
       if (bridgesToDelete.length > 0) {
         const bridgeDeleteResult = await configurationModel.deleteMany({
@@ -143,11 +149,124 @@ module.exports = {
         console.log(`Deleted ${deletedVersions} unused versions`);
       }
       
+      // Step 8: Update ApikeyCredentials to remove deleted version IDs
+      // If an apikey's version_ids array becomes empty after removal, delete the apikey
+      if (versionsToDelete.length > 0) {
+        // Create a set of deleted version IDs as strings for easy lookup
+        const deletedVersionIdsSet = new Set(
+          versionsToDelete.map(id => id.toString())
+        );
+        
+        // Find all apikey documents that contain any of the deleted version IDs
+        const apikeysToUpdate = await apikeyModel.find({
+          version_ids: { $in: Array.from(deletedVersionIdsSet) }
+        }).lean();
+        
+        console.log(`Found ${apikeysToUpdate.length} apikey documents that contain deleted version IDs`);
+        
+        for (const apikey of apikeysToUpdate) {
+          // Filter out deleted version IDs from the version_ids array
+          const updatedVersionIds = apikey.version_ids.filter(
+            versionId => !deletedVersionIdsSet.has(versionId.toString())
+          );
+          
+          if (updatedVersionIds.length === 0) {
+            // If no version IDs remain, delete the apikey document
+            await apikeyModel.deleteOne({ _id: apikey._id });
+            deletedApikeys++;
+            console.log(`Deleted apikey ${apikey._id} (no version IDs remaining)`);
+          } else if (updatedVersionIds.length !== apikey.version_ids.length) {
+            // Update the apikey document with the filtered version_ids array
+            await apikeyModel.updateOne(
+              { _id: apikey._id },
+              { $set: { version_ids: updatedVersionIds } }
+            );
+            updatedApikeys++;
+            console.log(`Updated apikey ${apikey._id} (removed ${apikey.version_ids.length - updatedVersionIds.length} deleted version IDs)`);
+          }
+        }
+        
+        console.log(`Updated ${updatedApikeys} apikey documents and deleted ${deletedApikeys} empty apikey documents`);
+      }
+      
+      // Step 9: Update apicalls to remove deleted bridge and version IDs
+      // If both bridge_ids and version_ids arrays become empty, delete the apicall
+      if (bridgesToDelete.length > 0 || versionsToDelete.length > 0) {
+        // Create sets of deleted IDs as strings for easy lookup
+        const deletedBridgeIdsSet = new Set(
+          bridgesToDelete.map(id => id.toString())
+        );
+        const deletedVersionIdsSet = new Set(
+          versionsToDelete.map(id => id.toString())
+        );
+        
+        // Find all apicall documents that contain any of the deleted bridge or version IDs
+        // bridge_ids might be stored as ObjectIds, so include both ObjectIds and strings in the query
+        const deletedBridgeObjectIds = bridgesToDelete; // Already ObjectIds
+        const deletedBridgeIdsArray = Array.from(deletedBridgeIdsSet); // Strings
+        const deletedVersionIdsArray = Array.from(deletedVersionIdsSet); // Strings
+        
+        const apiCallsToUpdate = await apiCallModel.find({
+          $or: [
+            { bridge_ids: { $in: [...deletedBridgeObjectIds, ...deletedBridgeIdsArray] } },
+            { version_ids: { $in: deletedVersionIdsArray } }
+          ]
+        }).lean();
+        
+        console.log(`Found ${apiCallsToUpdate.length} apicall documents that contain deleted bridge or version IDs`);
+        
+        for (const apiCall of apiCallsToUpdate) {
+          // Filter out deleted bridge IDs from bridge_ids array
+          // Handle both ObjectId and string formats
+          const updatedBridgeIds = (apiCall.bridge_ids || []).filter(bridgeId => {
+            const bridgeIdStr = bridgeId?.toString ? bridgeId.toString() : String(bridgeId);
+            return !deletedBridgeIdsSet.has(bridgeIdStr);
+          });
+          
+          // Filter out deleted version IDs from version_ids array
+          // Handle both ObjectId and string formats
+          const updatedVersionIds = (apiCall.version_ids || []).filter(versionId => {
+            const versionIdStr = versionId?.toString ? versionId.toString() : String(versionId);
+            return !deletedVersionIdsSet.has(versionIdStr);
+          });
+          
+          // Check if both arrays are empty
+          if (updatedBridgeIds.length === 0 && updatedVersionIds.length === 0) {
+            // If both arrays are empty, delete the apicall document
+            await apiCallModel.deleteOne({ _id: apiCall._id });
+            deletedApiCalls++;
+            console.log(`Deleted apicall ${apiCall._id} (no bridge_ids or version_ids remaining)`);
+          } else if (
+            updatedBridgeIds.length !== (apiCall.bridge_ids || []).length ||
+            updatedVersionIds.length !== (apiCall.version_ids || []).length
+          ) {
+            // Update the apicall document with the filtered arrays
+            await apiCallModel.updateOne(
+              { _id: apiCall._id },
+              { 
+                $set: { 
+                  bridge_ids: updatedBridgeIds,
+                  version_ids: updatedVersionIds
+                } 
+              }
+            );
+            updatedApiCalls++;
+            const removedBridges = (apiCall.bridge_ids || []).length - updatedBridgeIds.length;
+            const removedVersions = (apiCall.version_ids || []).length - updatedVersionIds.length;
+            console.log(`Updated apicall ${apiCall._id} (removed ${removedBridges} bridge IDs and ${removedVersions} version IDs)`);
+          }
+        }
+        
+        console.log(`Updated ${updatedApiCalls} apicall documents and deleted ${deletedApiCalls} empty apicall documents`);
+      }
+      
       await transaction.commit();
       
       console.log('Migration completed successfully!');
       console.log(`Summary: Deleted ${deletedBridges} bridges and ${deletedVersions} versions`);
       console.log(`Summary: Unarchived ${unarchivedBridges} bridges (based on bridge and version history)`);
+      console.log(`Summary: Updated ${updatedApikeys} apikey documents and deleted ${deletedApikeys} empty apikey documents`);
+      console.log(`Summary: Updated ${updatedApiCalls} apicall documents and deleted ${deletedApiCalls} empty apicall documents`);
       
     } catch (error) {
       await transaction.rollback();
