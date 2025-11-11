@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { findInCache, scanCacheKeys, deleteInCache } from '../cache_service/index.js';
-import { redis_keys } from '../configs/constant.js';
-
+import { cost_types } from '../configs/constant.js';
+import { cleanupCache } from '../services/utils/redisUtility.js';
 async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping = {}) {
   // Get the model from mongoose models
   const Model = mongoose.models[modelName];
@@ -13,6 +13,7 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
   let updated = 0;
   let skipped = 0;
   const errors = [];
+  const keysToDelete = []; // Move to local scope
 
   // Get all keys matching the pattern - scanCacheKeys already limits to 10,000 keys
   const keys = await scanCacheKeys(redisKeyPattern + '*');
@@ -24,7 +25,6 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
   for (let i = 0; i < keys.length; i += batchSize) {
     const batch = keys.slice(i, i + batchSize);
     const bulkOps = [];
-    const keysToDelete = [];
     
     for (const key of batch) {
       scanned += 1;
@@ -32,8 +32,7 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
       try {
         // Extract ID from the key
         const keyParts = key.split(/[_:]/); 
-        const id = keyParts[keyParts.length - 2];
-        const version_id=keyParts[keyParts.length - 1];
+        const id = keyParts[keyParts.length - 1];
         
         if (!id || !mongoose.isValidObjectId(id)) {
           skipped += 1;
@@ -47,30 +46,36 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
         }
 
         const parsedValue = JSON.parse(redisValue);
-        const updateData = {};
+        let updateData = {};
+        let processedValue = parsedValue;
+
+        if(parsedValue.usage_value){
+          let type = redisKeyPattern === 'bridgeusedcost_' ? cost_types.bridge : redisKeyPattern === 'folderusedcost_' ? cost_types.folder : cost_types.apikey;
+          await cleanupCache(type, id);
+        }
         
         for (const [dbField, config] of Object.entries(fieldMapping)) {
           switch (config.type) {
             case 'date':
-              updateData[dbField] = new Date(parsedValue);
+              updateData[dbField] = new Date(processedValue);
               break;
             case 'number':
-              updateData[dbField] = Number(parsedValue);
+              updateData[dbField] = Number(processedValue);
               break;
             case 'string':
-              updateData[dbField] = String(parsedValue);
+              updateData[dbField] = String(processedValue);
               break;
             case 'boolean':
-              updateData[dbField] = Boolean(parsedValue);
+              updateData[dbField] = Boolean(processedValue);
               break;
             case 'object':
-              updateData[dbField] = parsedValue;
+              updateData[dbField] = processedValue;
               break;
             default:
-              updateData[dbField] = parsedValue;
+              updateData[dbField] = processedValue;
           }
         }
-        
+
         // Add to bulk operations
         bulkOps.push({
           updateOne: {
@@ -80,15 +85,6 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
         });
         
         keysToDelete.push(key);
-        
-        // Collect additional bridge-related keys for batch deletion
-        if(redisKeyPattern === 'bridgeusedcost_'){
-          const cache_key = `${redis_keys.bridge_data_with_tools_}${version_id}`;
-          const cache_key1 = `${redis_keys.bridge_data_with_tools_}${id}`;
-          const cache_key2 = `${redis_keys.get_bridge_data_}${version_id}`;
-          const cache_key3 = `${redis_keys.get_bridge_data_}${id}`;
-          keysToDelete.push(cache_key,cache_key1,cache_key2,cache_key3);
-        }
 
       } catch (err) {
         errors.push({ key, message: err.message });
@@ -100,11 +96,6 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
       try {
         const bulkResult = await Model.bulkWrite(bulkOps, { ordered: false });
         updated += bulkResult.modifiedCount;
-        
-        // Delete successfully processed keys from Redis
-        if (keysToDelete.length > 0) {
-          await deleteInCache(keysToDelete);
-        }
         
       } catch (bulkErr) {
         console.error('Bulk operation error:', bulkErr.message);
@@ -118,12 +109,24 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
     }
   }
 
+  // Delete successfully processed keys from Redis after all batches
+  if (keysToDelete.length > 0) {
+    try {
+      await deleteInCache(keysToDelete);
+      console.log(`Deleted ${keysToDelete.length} cache keys`);
+    } catch (deleteErr) {
+      console.error('Cache deletion error:', deleteErr.message);
+      errors.push({ operation: 'cache_deletion', message: deleteErr.message });
+    }
+  }
+
   const result = {
     success: errors.length === 0,
     scanned,
     updated,
     skipped,
-    errors
+    errors,
+    cacheKeysDeleted: keysToDelete.length
   };
 
   return result;

@@ -75,7 +75,7 @@ const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
     }
 }
 
-async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null,apikey_limit=0,apikey_usage=0) {
+async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null,apikey_limit=0,apikey_usage=-1) {
     try {
         const updateFields = {};
 
@@ -94,8 +94,8 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         if(apikey_limit){
             updateFields.apikey_limit = apikey_limit;
         }
-        if(apikey_usage){
-            updateFields.apikey_usage = apikey_usage;
+        if(apikey_usage==0){
+            updateFields.apikey_usage = 0;
         }
 
         let apikeyCredentialResult;
