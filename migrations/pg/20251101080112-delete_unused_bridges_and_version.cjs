@@ -39,19 +39,100 @@ module.exports = {
       const apiCallModel = (await import('../../src/mongoModel/apiCall.js')).default;
       
       // Step 4: Get all MongoDB documents (including status field for bridges, parent_id and status for versions)
-      // Only get bridges with status 1
-      const allBridges = await configurationModel.find({ status: 1 }, { _id: 1, status: 1 }).lean();
+      // Only get bridges with status 1 - include connected_agents data
+      const allBridges = await configurationModel.find({ status: 1 }, { _id: 1, status: 1, connected_agents: 1 }).lean();
       
       // Get parent bridge IDs with status 1
       const parentBridgeIdsWithStatus1 = allBridges.map(bridge => bridge._id);
       
-      // Only get versions whose parent bridge has status 1
+      // Only get versions whose parent bridge has status 1 - include connected_agents data
       const allVersions = await versionModel.find(
         { parent_id: { $in: parentBridgeIdsWithStatus1 } },
-        { _id: 1, parent_id: 1, status: 1 }
+        { _id: 1, parent_id: 1, status: 1, connected_agents: 1 }
       ).lean();
       
       console.log(`Found ${allBridges.length} bridges and ${allVersions.length} versions in MongoDB`);
+      
+      // Step 4.5: Build connected agents dependency map and find all connected bridge IDs recursively
+      const bridgeMap = new Map();
+      const versionMap = new Map();
+      
+      // Create maps for quick lookup
+      allBridges.forEach(bridge => {
+        bridgeMap.set(bridge._id.toString(), bridge);
+      });
+      
+      allVersions.forEach(version => {
+        versionMap.set(version._id.toString(), version);
+      });
+      
+      // Recursive function to find all connected agents (handles nested dependencies)
+      function findAllConnectedAgents(bridgeId, visited = new Set()) {
+        if (visited.has(bridgeId)) {
+          return new Set(); // Avoid infinite loops
+        }
+        visited.add(bridgeId);
+        
+        const connectedAgentIds = new Set();
+        
+        // Check bridge connected_agents
+        const bridge = bridgeMap.get(bridgeId);
+        if (bridge && bridge.connected_agents) {
+          Object.values(bridge.connected_agents).forEach(agent => {
+            if (agent && agent.bridge_id) {
+              const connectedBridgeId = agent.bridge_id.toString();
+              connectedAgentIds.add(connectedBridgeId);
+              
+              // Recursively find connected agents of this connected agent
+              const nestedConnected = findAllConnectedAgents(connectedBridgeId, new Set(visited));
+              nestedConnected.forEach(id => connectedAgentIds.add(id));
+            }
+          });
+        }
+        
+        // Check versions connected_agents for this bridge
+        const bridgeVersions = allVersions.filter(v => v.parent_id && v.parent_id.toString() === bridgeId);
+        bridgeVersions.forEach(version => {
+          if (version.connected_agents) {
+            Object.values(version.connected_agents).forEach(agent => {
+              if (agent && agent.bridge_id) {
+                const connectedBridgeId = agent.bridge_id.toString();
+                connectedAgentIds.add(connectedBridgeId);
+                
+                // Recursively find connected agents of this connected agent
+                const nestedConnected = findAllConnectedAgents(connectedBridgeId, new Set(visited));
+                nestedConnected.forEach(id => connectedAgentIds.add(id));
+              }
+            });
+          }
+        });
+        
+        return connectedAgentIds;
+      }
+      
+      // Find all bridges that have history (used in conversations or versions)
+      const bridgesWithHistory = new Set([...usedBridgeIds]);
+      
+      // Add bridges whose versions have history
+      usedVersionIds.forEach(versionId => {
+        const version = versionMap.get(versionId);
+        if (version && version.parent_id) {
+          bridgesWithHistory.add(version.parent_id.toString());
+        }
+      });
+      
+      // Find all connected agents for bridges with history (recursive)
+      const protectedBridgeIds = new Set(bridgesWithHistory);
+      
+      bridgesWithHistory.forEach(bridgeId => {
+        const connectedAgents = findAllConnectedAgents(bridgeId);
+        connectedAgents.forEach(connectedId => {
+          protectedBridgeIds.add(connectedId);
+        });
+      });
+      
+      console.log(`Found ${bridgesWithHistory.size} bridges with direct history`);
+      console.log(`Found ${protectedBridgeIds.size} total protected bridges (including connected agents)`);
       
       // Step 5: Identify unused bridges and versions, and unarchive archived ones with history
       const bridgesToDelete = [];
@@ -59,41 +140,38 @@ module.exports = {
       const bridgesToUnarchive = [];
       const bridgeIdsToDelete = new Set(); // Track bridge IDs being deleted
       
-      // Check bridges - only delete if status is 0 and not used in conversations
-      // Also unarchive bridges that have history but are archived (status !== 0)
+      // Check bridges - only delete if status is 0 and not protected (no history or connected agent dependencies)
+      // Also unarchive bridges that are protected but archived (status !== 0)
       for (const bridge of allBridges) {
         const bridgeId = bridge._id.toString();
         const hasStatusZero = bridge.status === 0;
-        const hasHistory = usedBridgeIds.has(bridgeId);
+        const isProtected = protectedBridgeIds.has(bridgeId);
         
-        if (!hasHistory && hasStatusZero) {
-          // Unused and archived - safe to delete
+        if (!isProtected && hasStatusZero) {
+          // Not protected and archived - safe to delete
           bridgesToDelete.push(bridge._id);
           bridgeIdsToDelete.add(bridgeId);
-        } else if (hasHistory && !hasStatusZero) {
-          // Has history but is archived - unarchive it
+        } else if (isProtected && !hasStatusZero) {
+          // Protected but is archived - unarchive it
           bridgesToUnarchive.push(bridge._id);
-          console.log(`Will unarchive bridge ${bridgeId} (has history but status is ${bridge.status})`);
-        } else if (!hasHistory && !hasStatusZero) {
+          console.log(`Will unarchive bridge ${bridgeId} (protected by history or connected agents but status is ${bridge.status})`);
+        } else if (!isProtected && !hasStatusZero) {
           console.log(`Skipping bridge ${bridgeId} because status is ${bridge.status} (not 0)`);
+        } else if (isProtected && hasStatusZero) {
+          console.log(`Skipping bridge ${bridgeId} because it's protected by history or connected agents`);
         }
       }
       
       // Check versions - only delete if:
       // 1. The version_id is not used in conversations, AND
-      // 2. The parent bridge (parent_id) is being deleted (has status 0 and is unused)
-      // If version has history, unarchive its parent bridge (not the version itself)
+      // 2. The parent bridge (parent_id) is being deleted (not protected by history or connected agents)
+      // Note: Parent bridge protection is already handled in the bridge checking logic above
       for (const version of allVersions) {
         const versionId = version._id.toString();
         const parentBridgeId = version.parent_id ? version.parent_id.toString() : null;
         const hasHistory = usedVersionIds.has(versionId);
         
-        if (hasHistory && parentBridgeId) {
-          // Version has history - unarchive its parent bridge instead of the version
-          // Add parent bridge ID to bridgesToUnarchive (convert string to ObjectId)
-          bridgesToUnarchive.push(new mongoose.Types.ObjectId(parentBridgeId));
-          console.log(`Will unarchive parent bridge ${parentBridgeId} (version ${versionId} has history)`);
-        } else if (!hasHistory) {
+        if (!hasHistory) {
           // Check if parent bridge is being deleted
           const parentBridgeBeingDeleted = parentBridgeId && bridgeIdsToDelete.has(parentBridgeId);
           
@@ -104,13 +182,15 @@ module.exports = {
             // No parent bridge reference, safe to delete
             versionsToDelete.push(version._id);
           } else {
-            console.log(`Skipping version ${versionId} because parent bridge ${parentBridgeId} is not being deleted (either in use or status != 0)`);
+            console.log(`Skipping version ${versionId} because parent bridge ${parentBridgeId} is not being deleted (protected or status != 0)`);
           }
+        } else {
+          console.log(`Skipping version ${versionId} because it has history in conversations`);
         }
       }
       
       console.log(`Identified ${bridgesToDelete.length} bridges and ${versionsToDelete.length} versions for deletion`);
-      console.log(`Identified ${bridgesToUnarchive.length} bridges for unarchiving (based on bridge and version history)`);
+      console.log(`Identified ${bridgesToUnarchive.length} bridges for unarchiving (based on history and connected agent dependencies)`);
       
       // Step 6: Unarchive bridges that have history but are archived
       // bridgesToUnarchive contains both bridges with history and parent bridges of versions with history
@@ -264,7 +344,7 @@ module.exports = {
       
       console.log('Migration completed successfully!');
       console.log(`Summary: Deleted ${deletedBridges} bridges and ${deletedVersions} versions`);
-      console.log(`Summary: Unarchived ${unarchivedBridges} bridges (based on bridge and version history)`);
+      console.log(`Summary: Unarchived ${unarchivedBridges} bridges (based on history and connected agent dependencies)`);
       console.log(`Summary: Updated ${updatedApikeys} apikey documents and deleted ${deletedApikeys} empty apikey documents`);
       console.log(`Summary: Updated ${updatedApiCalls} apicall documents and deleted ${deletedApiCalls} empty apicall documents`);
       
