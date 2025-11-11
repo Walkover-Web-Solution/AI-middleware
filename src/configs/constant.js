@@ -14,7 +14,13 @@ const redis_keys = {
   get_bridge_data_ : 'get_bridge_data_'
 };
 
+const cost_types = {
+  bridge: 'bridge',
+  folder: 'folder',
+  apikey: 'apikey'
+}
 export {
   collectionNames,
-  redis_keys
+  redis_keys,
+  cost_types
 };

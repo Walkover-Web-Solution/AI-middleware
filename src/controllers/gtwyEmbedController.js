@@ -1,10 +1,11 @@
 import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import configurationModel from "../mongoModel/configuration.js";
-import { deleteInCache } from "../cache_service/index.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier, generateAuthToken } from "../services/utils/utilityService.js";
-
+import { generateIdentifier,generateAuthToken } from "../services/utils/utilityService.js";
+import { cleanupCache } from "../services/utils/redisUtility.js";
+import { deleteInCache } from "../cache_service/index.js";
+import { cost_types } from "../configs/constant.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
     const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
@@ -89,11 +90,11 @@ const updateEmbed = async (req, res) => {
     if(folder_limit){
       folder.folder_limit=folder_limit
     }
-    if(folder_usage){
-      folder.folder_usage=folder_usage
+    if(folder_usage==0){
+      folder.folder_usage=0
     }
     await folder.save();
-    
+    await cleanupCache(cost_types.folder, folder_id);
     res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });
 }
 
