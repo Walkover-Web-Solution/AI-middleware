@@ -134,6 +134,10 @@ const configuration = new mongoose.Schema({
   bridge_usage: {
     type: Number,
     default: 0
+  },
+  last_used: {
+    type: Date,
+    default: null
   }
 });
 

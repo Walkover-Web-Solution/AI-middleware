@@ -88,16 +88,42 @@ const getAllApikeys = async(req, res) => {
         const isEmbedUser = req.IsEmbedUser
         const result = await apikeySaveService.getAllApiKeyService(org_id, folder_id, user_id, isEmbedUser);
         if (result.success) {
-            for (let apiKeyObj of result.result) {
-                const decryptedApiKey = await Helper.decrypt(apiKeyObj.apikey);
-                const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
-                apiKeyObj.apikey = maskedApiKey;
-                const cachedVal = await findInCache(`${redis_keys.apikeyusedcost_}${apiKeyObj._id}`);
-                const usageFromCache = JSON.parse(cachedVal);
-                if(usageFromCache){
-                    apiKeyObj.apikey_usage = usageFromCache.usage_value;
-                }
-            }
+            // Process all API keys in parallel for better performance
+            const processedResults = await Promise.all(
+                result.result.map(async (apiKeyObj) => {
+                    // Convert Mongoose document to plain object
+                    const plainObj = apiKeyObj.toObject ? apiKeyObj.toObject() : apiKeyObj;
+                    
+                    // Decrypt and mask the API key
+                    const decryptedApiKey = await Helper.decrypt(plainObj.apikey);
+                    const maskedApiKey = await Helper.maskApiKey(decryptedApiKey);
+                    
+                    // Get last used data from cache (runs in parallel)
+                    const lastUsedData = await findInCache(`${redis_keys.apikeylastused_}${plainObj._id}`);
+                     const cachedVal = await findInCache(`${redis_keys.apikeyusedcost_}${apiKeyObj._id}`);
+                    
+                    // Create the final object with all properties
+                    const processedObj = {
+                        ...plainObj,
+                        apikey: maskedApiKey
+                    };
+                    
+                    // Only add last_used if cache data exists
+                    if (lastUsedData) {
+                        processedObj.last_used = JSON.parse(lastUsedData);
+                    }
+                    
+                    if(cachedVal){
+                        let usagecost= JSON.parse(cachedVal);
+                        processedObj.apikey_usage = usagecost?.usage_value;
+                    }
+                    
+                    return processedObj;
+                })
+            );
+            
+            // Update the result with processed data
+            result.result = processedResults;
             return res.status(200).json(result);
         } 
         else {
