@@ -45,34 +45,34 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
           continue;
         }
 
-        const parsedValue = JSON.parse(redisValue);
+        let parsedValue = JSON.parse(redisValue);
         let updateData = {};
-        let processedValue = parsedValue;
 
         if(parsedValue.usage_value){
           let type = redisKeyPattern === 'bridgeusedcost_' ? cost_types.bridge : redisKeyPattern === 'folderusedcost_' ? cost_types.folder : cost_types.apikey;
+          parsedValue = Number(parsedValue.usage_value);
           await cleanupCache(type, id);
         }
         
         for (const [dbField, config] of Object.entries(fieldMapping)) {
           switch (config.type) {
             case 'date':
-              updateData[dbField] = new Date(processedValue);
+              updateData[dbField] = new Date(parsedValue);
               break;
             case 'number':
-              updateData[dbField] = Number(processedValue);
+              updateData[dbField] = Number(parsedValue);
               break;
             case 'string':
-              updateData[dbField] = String(processedValue);
+              updateData[dbField] = String(parsedValue);
               break;
             case 'boolean':
-              updateData[dbField] = Boolean(processedValue);
+              updateData[dbField] = Boolean(parsedValue);
               break;
             case 'object':
-              updateData[dbField] = processedValue;
+              updateData[dbField] = parsedValue;
               break;
             default:
-              updateData[dbField] = processedValue;
+              updateData[dbField] = parsedValue;
           }
         }
 
