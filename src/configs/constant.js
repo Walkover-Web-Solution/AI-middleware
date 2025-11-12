@@ -11,7 +11,9 @@ const redis_keys = {
   folderusedcost_ : 'folderusedcost_',
   apikeyusedcost_ : 'apikeyusedcost_',
   bridge_data_with_tools_ : 'bridge_data_with_tools_',
-  get_bridge_data_ : 'get_bridge_data_'
+  get_bridge_data_ : 'get_bridge_data_',
+  apikeylastused_: 'apikeylastused_',
+  bridgelastused_: 'bridgelastused_'
 };
 
 const cost_types = {
