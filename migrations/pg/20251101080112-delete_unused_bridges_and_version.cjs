@@ -39,11 +39,14 @@ module.exports = {
       const apiCallModel = (await import('../../src/mongoModel/apiCall.js')).default;
       
       // Step 4: Get all MongoDB documents (including status field for bridges, parent_id and status for versions)
-      // Only get bridges with status 1 - include connected_agents data
-      const allBridges = await configurationModel.find({ status: 1 }, { _id: 1, status: 1, connected_agents: 1 }).lean();
+      // Get bridges with status 1 for building connected agents dependency map
+      const activeBridges = await configurationModel.find({ status: 1 }, { _id: 1, status: 1, connected_agents: 1 }).lean();
+      
+      // Get ALL bridges for deletion logic (we need to check archived ones with status 0)
+      const allBridges = await configurationModel.find({}, { _id: 1, status: 1, connected_agents: 1 }).lean();
       
       // Get parent bridge IDs with status 1
-      const parentBridgeIdsWithStatus1 = allBridges.map(bridge => bridge._id);
+      const parentBridgeIdsWithStatus1 = activeBridges.map(bridge => bridge._id);
       
       // Only get versions whose parent bridge has status 1 - include connected_agents data
       const allVersions = await versionModel.find(
@@ -51,14 +54,14 @@ module.exports = {
         { _id: 1, parent_id: 1, status: 1, connected_agents: 1 }
       ).lean();
       
-      console.log(`Found ${allBridges.length} bridges and ${allVersions.length} versions in MongoDB`);
+      console.log(`Found ${allBridges.length} total bridges (${activeBridges.length} active) and ${allVersions.length} versions in MongoDB`);
       
       // Step 4.5: Build connected agents dependency map and find all connected bridge IDs recursively
       const bridgeMap = new Map();
       const versionMap = new Map();
       
-      // Create maps for quick lookup
-      allBridges.forEach(bridge => {
+      // Create maps for quick lookup (use activeBridges for dependency mapping)
+      activeBridges.forEach(bridge => {
         bridgeMap.set(bridge._id.toString(), bridge);
       });
       
