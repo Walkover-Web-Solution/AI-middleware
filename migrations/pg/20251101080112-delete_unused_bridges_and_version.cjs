@@ -209,7 +209,6 @@ module.exports = {
       let deletedBridges = 0;
       let deletedVersions = 0;
       let updatedApikeys = 0;
-      let deletedApikeys = 0;
       let updatedApiCalls = 0;
       let deletedApiCalls = 0;
       
@@ -250,12 +249,7 @@ module.exports = {
             versionId => !deletedVersionIdsSet.has(versionId.toString())
           );
           
-          if (updatedVersionIds.length === 0) {
-            // If no version IDs remain, delete the apikey document
-            await apikeyModel.deleteOne({ _id: apikey._id });
-            deletedApikeys++;
-            console.log(`Deleted apikey ${apikey._id} (no version IDs remaining)`);
-          } else if (updatedVersionIds.length !== apikey.version_ids.length) {
+          if (updatedVersionIds.length !== apikey.version_ids.length) {
             // Update the apikey document with the filtered version_ids array
             await apikeyModel.updateOne(
               { _id: apikey._id },
@@ -266,7 +260,7 @@ module.exports = {
           }
         }
         
-        console.log(`Updated ${updatedApikeys} apikey documents and deleted ${deletedApikeys} empty apikey documents`);
+        console.log(`Updated ${updatedApikeys} apikey documents (removed deleted version IDs)`);
       }
       
       // Step 9: Update apicalls to remove deleted bridge and version IDs
@@ -345,7 +339,7 @@ module.exports = {
       console.log('Migration completed successfully!');
       console.log(`Summary: Deleted ${deletedBridges} bridges and ${deletedVersions} versions`);
       console.log(`Summary: Unarchived ${unarchivedBridges} bridges (based on history and connected agent dependencies)`);
-      console.log(`Summary: Updated ${updatedApikeys} apikey documents and deleted ${deletedApikeys} empty apikey documents`);
+      console.log(`Summary: Updated ${updatedApikeys} apikey documents (removed deleted version IDs)`);
       console.log(`Summary: Updated ${updatedApiCalls} apicall documents and deleted ${deletedApiCalls} empty apicall documents`);
       
     } catch (error) {
