@@ -3,7 +3,7 @@ import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
 import {findInCache} from "../../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../utils/aiServices.js"
-import { redis_keys } from "../../configs/constant.js";
+import { redis_keys,cost_types } from "../../configs/constant.js";
 import { cleanupCache } from "../utils/redisUtility.js";
 
 const saveApikey = async(req,res) => {
@@ -30,36 +30,11 @@ const saveApikey = async(req,res) => {
               error: error.details
             });
         }
-        let check;
-        switch (service) {
-            case 'openai':
-                check = await callOpenAIModelsApi(apikey)
-                break;
-            case 'anthropic':
-                check = await callAnthropicApi(apikey)
-                break;
-            case 'groq':
-                check = await callGroqApi(apikey)
-                break;
-            case 'open_router':
-                check = await callOpenRouterApi(apikey)
-                break;
-            case 'mistral':
-                check = await callMistralApi(apikey)
-                break;
-            case 'gemini':
-                check = await callGeminiApi(apikey)
-                break;
-            case 'ai_ml':
-                check = await callAiMlApi(apikey)
-                break;
-            case 'grok':
-                check = await callGrokApi(apikey)
-                break;
-        }
-        if(!check.success){
-            return res.status(400).json({ success: false, error: "invalid apikey or apikey is expired" });
-        }
+       const check = await checkApiKey(apikey, service)
+            if(!check.success){
+                return res.status(400).json({ success: false, error: check.error });
+            }
+
         apikey = await Helper.encrypt(apikey)
         const result = await apikeySaveService.saveApi({org_id, apikey, service, name, comment, folder_id, user_id, apikey_limit});
         
@@ -164,6 +139,10 @@ async function updateApikey(req, res) {
             });
         }
         if(apikey){
+            const check = await checkApiKey(apikey, service)
+            if(!check.success){
+                return res.status(400).json({ success: false, error: check.error });
+            }
             apikey = Helper.encrypt(apikey); 
         }
         const result = await apikeySaveService.updateApikey(apikey_object_id, apikey, name, service, comment,apikey_limit,apikey_usage);
@@ -233,6 +212,45 @@ async function deleteApikey(req, res) {
             success: false,
             error: error.message
         });
+    }
+}
+
+async function checkApiKey(apikey, service) {
+    try{
+        let check;
+    switch (service) {
+        case 'openai':
+            check = await callOpenAIModelsApi(apikey)
+            break;
+        case 'anthropic':
+            check = await callAnthropicApi(apikey)
+            break;
+        case 'groq':
+            check = await callGroqApi(apikey)
+            break;
+        case 'open_router':
+            check = await callOpenRouterApi(apikey)
+            break;
+        case 'mistral':
+            check = await callMistralApi(apikey)
+            break;
+        case 'gemini':
+            check = await callGeminiApi(apikey)
+            break;
+        case 'ai_ml':
+            check = await callAiMlApi(apikey)
+            break;
+        case 'grok':
+            check = await callGrokApi(apikey)
+            break;
+    }
+    if(!check.success){
+        return { success: false, error: "invalid apikey or apikey is expired" };
+    }
+    return { success: true, data: check.data };
+    }
+    catch(error){
+        return { success: false, error: "invalid apikey or apikey is expired" };
     }
 }
 
