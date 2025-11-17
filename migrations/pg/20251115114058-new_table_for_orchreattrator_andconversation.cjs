@@ -26,6 +26,10 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true
       },
+      prompt: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
       error: {
         type: Sequelize.TEXT,
         allowNull: true

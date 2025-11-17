@@ -37,6 +37,10 @@ export default ((sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    prompt: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     error: {
       type: DataTypes.TEXT,
       allowNull: true
