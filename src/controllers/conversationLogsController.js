@@ -1,4 +1,4 @@
-import { getConversationLogs, getRecentThreads } from "../db_services/conversationLogsDbService.js";
+import { getConversationLogs, getRecentThreads, searchConversationLogs } from "../db_services/conversationLogsDbService.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
@@ -148,4 +148,108 @@ const getRecentThreadsController = async (req, res, next) => {
   }
 };
 
-export { getConversationLogsController, getRecentThreadsController };
+/**
+ * POST /search/:bridge_id
+ * Search conversation logs with flexible filters
+ */
+const searchConversationLogsController = async (req, res, next) => {
+  try {
+    const org_id = req.body.org_id; // From middleware
+    const { bridge_id } = req.params; // Get bridge_id from URL params
+    const { message_id, keywords, thread_id, sub_thread_id, time_range } = req.body;
+    
+    // Validate required parameter
+    if (!bridge_id) {
+      res.locals = {
+        message: "bridge_id is required parameter",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
+    }
+    
+    // Build filters object from request body
+    const filters = {};
+    
+    if (message_id) {
+      filters.message_id = message_id;
+    }
+    
+    if (keywords) {
+      filters.keywords = keywords;
+    }
+    
+    if (thread_id) {
+      filters.thread_id = thread_id;
+    }
+    
+    if (sub_thread_id) {
+      filters.sub_thread_id = sub_thread_id;
+    }
+    
+    if (time_range) {
+      filters.time_range = time_range;
+    }
+    
+    // Validate that at least one filter is provided
+    if (Object.keys(filters).length === 0) {
+      res.locals = {
+        message: "At least one search parameter is required (message_id, keywords, thread_id, sub_thread_id, or time_range)",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
+    }
+    
+    // Validate time_range format if provided
+    if (time_range) {
+      if (time_range.start && isNaN(Date.parse(time_range.start))) {
+        res.locals = {
+          message: "Invalid start date format in time_range",
+          success: false
+        };
+        req.statusCode = 400;
+        return next();
+      }
+      
+      if (time_range.end && isNaN(Date.parse(time_range.end))) {
+        res.locals = {
+          message: "Invalid end date format in time_range",
+          success: false
+        };
+        req.statusCode = 400;
+        return next();
+      }
+    }
+    
+    // Search conversation logs
+    const result = await searchConversationLogs(org_id, bridge_id, filters);
+    
+    if (result.success) {
+      res.locals = {
+        data: result.data,
+        success: true
+      };
+      req.statusCode = 200;
+      return next();
+    } else {
+      res.locals = {
+        message: result.message,
+        success: false
+      };
+      req.statusCode = 500;
+      return next();
+    }
+    
+  } catch (error) {
+    console.error("Error in searchConversationLogsController:", error);
+    res.locals = {
+      message: "Internal server error",
+      success: false
+    };
+    req.statusCode = 500;
+    return next();
+  }
+};
+
+export { getConversationLogsController, getRecentThreadsController, searchConversationLogsController };
