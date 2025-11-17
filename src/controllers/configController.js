@@ -6,7 +6,7 @@ let router = express.Router();
 router.get('/threads/:thread_id/:bridge_id', middleware, common.getThreads);
 router.post('/threads/:thread_id/:bridge_id', middleware, common.createEntry);
 router.get('/userfeedbackcount/:bridge_id',middleware,common.userFeedbackCount);
-router.get('/history/:bridge_id', middleware, common.getMessageHistory);
+router.get('/history/:bridge_id', middleware, common.getMessageHistory); // 1 
 router.get('/history/sub-thread/:thread_id', middleware, common.getAllSubThreadsController);
 router.delete('/deletebridges/:bridge_id', middleware, common.deleteBridges);
 router.get('/gethistory/:thread_id/:bridge_id', combinedAuthWithChatBotAndPublicChatbot, common.getThreads); //Public API for getting history for particular thread
