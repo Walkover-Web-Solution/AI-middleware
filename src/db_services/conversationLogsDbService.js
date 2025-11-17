@@ -118,10 +118,7 @@ async function getRecentThreads(org_id, bridge_id, page = 1, limit = 30) {
  * @param {string} org_id - Organization ID
  * @param {string} bridge_id - Bridge ID (required)
  * @param {Object} filters - Search filters
- * @param {string} filters.message_id - Message ID (optional)
- * @param {string} filters.keywords - Keywords to search in messages (optional)
- * @param {string} filters.thread_id - Thread ID (optional)
- * @param {string} filters.sub_thread_id - Sub Thread ID (optional)
+ * @param {string} filters.keyword - Keyword to search across recommended columns (required)
  * @param {Object} filters.time_range - Time range filter (optional)
  * @param {string} filters.time_range.start - Start date (optional)
  * @param {string} filters.time_range.end - End date (optional)
@@ -134,19 +131,6 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
       org_id: org_id,
       bridge_id: bridge_id
     };
-
-    // Add optional filters
-    if (filters.message_id) {
-      whereConditions.message_id = filters.message_id;
-    }
-
-    if (filters.thread_id) {
-      whereConditions.thread_id = filters.thread_id;
-    }
-
-    if (filters.sub_thread_id) {
-      whereConditions.sub_thread_id = filters.sub_thread_id;
-    }
 
     // Add time range filter
     if (filters.time_range) {
@@ -162,28 +146,43 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
       }
     }
 
-    // Add keyword search in messages
-    if (filters.keywords) {
+    // Add keyword search across recommended columns
+    if (filters.keyword) {
       const keywordConditions = {
         [Sequelize.Op.or]: [
           {
+            message_id: {
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
+          },
+          {
+            thread_id: {
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
+          },
+          {
+            sub_thread_id: {
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
+          },
+          {
             llm_message: {
-              [Sequelize.Op.iLike]: `%${filters.keywords}%`
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
             }
           },
           {
             user: {
-              [Sequelize.Op.iLike]: `%${filters.keywords}%`
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
             }
           },
           {
             chatbot_message: {
-              [Sequelize.Op.iLike]: `%${filters.keywords}%`
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
             }
           },
           {
-            updated_chatbot_message: {
-              [Sequelize.Op.iLike]: `%${filters.keywords}%`
+            updated_llm_message: {
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
             }
           }
         ]
@@ -223,7 +222,7 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
       }
 
       // Add message to sub_thread
-      const message = log.user || log.llm_message || log.chatbot_message || log.updated_chatbot_message || "";
+      const message = log.user || log.llm_message || log.chatbot_message || log.updated_llm_message || "";
       if (message) {
         groupedData[threadId].sub_thread[subThreadId].messages.push({
           message: message,

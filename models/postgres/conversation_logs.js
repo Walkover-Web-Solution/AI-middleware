@@ -33,7 +33,7 @@ export default ((sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    updated_chatbot_message: {
+    updated_llm_message: {
       type: DataTypes.TEXT,
       allowNull: true
     },
@@ -43,67 +43,53 @@ export default ((sequelize, DataTypes) => {
     },
     user_feedback: {
       type: DataTypes.INTEGER,
-      allowNull: true,
       defaultValue: 0
     },
     tools_call_data: {
       type: DataTypes.JSONB,
-      allowNull: true,
       defaultValue: []
     },
     message_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     sub_thread_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     thread_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     version_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     bridge_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     image_urls: {
       type: DataTypes.JSONB,
-      allowNull: true,
       defaultValue: []
     },
     urls: {
       type: DataTypes.JSONB,
-      allowNull: true,
       defaultValue: []
     },
     AiConfig: {
-      type: DataTypes.JSONB,
-      allowNull: true
+      type: DataTypes.JSONB
     },
     fallback_model: {
       type: DataTypes.JSONB,
       allowNull: true
     },
     org_id: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     service: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     model: {
-      type: DataTypes.STRING,
-      allowNull: true
+      type: DataTypes.STRING
     },
     status: {
       type: DataTypes.BOOLEAN,
-      allowNull: true,
       defaultValue: false
     },
     tokens: {
@@ -127,6 +113,10 @@ export default ((sequelize, DataTypes) => {
       allowNull: true
     },
     parent_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    child_id: {
       type: DataTypes.STRING,
       allowNull: true
     }

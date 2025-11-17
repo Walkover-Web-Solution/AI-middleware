@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true
       },
-      updated_chatbot_message: {
+      updated_llm_message: {
         type: Sequelize.TEXT,
         allowNull: true
       },
@@ -32,67 +32,53 @@ module.exports = {
       },
       user_feedback: {
         type: Sequelize.INTEGER,
-        allowNull: true,
         defaultValue: 0
       },
       tools_call_data: {
         type: Sequelize.JSONB,
-        allowNull: true,
         defaultValue: []
       },
       message_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       sub_thread_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       thread_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       version_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       bridge_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       image_urls: {
         type: Sequelize.JSONB,
-        allowNull: true,
         defaultValue: []
       },
       urls: {
         type: Sequelize.JSONB,
-        allowNull: true,
         defaultValue: []
       },
       AiConfig: {
         type: Sequelize.JSONB,
-        allowNull: true
       },
       fallback_model: {
         type: Sequelize.JSONB,
         allowNull: true
       },
       org_id: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       service: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       model: {
-        type: Sequelize.STRING,
-        allowNull: true
+        type: Sequelize.STRING
       },
       status: {
         type: Sequelize.BOOLEAN,
-        allowNull: true,
         defaultValue: false
       },
       tokens: {
@@ -119,6 +105,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
+      child_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -130,14 +120,6 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
-
-    // Add indexes for commonly queried fields
-    await queryInterface.addIndex('conversation_logs', ['message_id']);
-    await queryInterface.addIndex('conversation_logs', ['thread_id']);
-    await queryInterface.addIndex('conversation_logs', ['sub_thread_id']);
-    await queryInterface.addIndex('conversation_logs', ['org_id']);
-    await queryInterface.addIndex('conversation_logs', ['parent_id']);
-    await queryInterface.addIndex('conversation_logs', ['created_at']);
   },
 
   async down (queryInterface, Sequelize) {
