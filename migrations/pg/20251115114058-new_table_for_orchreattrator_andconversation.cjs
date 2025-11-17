@@ -56,6 +56,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
+      bridge_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       image_urls: {
         type: Sequelize.JSONB,
         allowNull: true,
