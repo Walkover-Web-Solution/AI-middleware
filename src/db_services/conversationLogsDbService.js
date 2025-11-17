@@ -216,7 +216,6 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
       if (!groupedData[threadId].sub_thread[subThreadId]) {
         groupedData[threadId].sub_thread[subThreadId] = {
           sub_thread_id: subThreadId,
-          display_name: "Creating a brief summary.", // Default display name
           messages: []
         };
       }
