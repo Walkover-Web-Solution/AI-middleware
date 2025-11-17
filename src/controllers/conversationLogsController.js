@@ -1,10 +1,10 @@
-import { getConversationLogs } from "../db_services/conversationLogsDbService.js";
+import { getConversationLogs, getRecentThreads } from "../db_services/conversationLogsDbService.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
  * Get conversation logs with pagination
  */
-const getConversationLogsController = async (req, res) => {
+const getConversationLogsController = async (req, res, next) => {
   try {
     const { bridge_id, thread_id, sub_thread_id } = req.params;
     const { page = 1, limit = 30 } = req.query;
@@ -12,10 +12,12 @@ const getConversationLogsController = async (req, res) => {
     
     // Validate required parameters
     if (!bridge_id || !thread_id || !sub_thread_id) {
-      return res.status(400).json({
-        success: false,
-        message: "bridge_id, thread_id, and sub_thread_id are required parameters"
-      });
+      res.locals = {
+        message: "bridge_id, thread_id, and sub_thread_id are required parameters",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
     }
     
     // Validate pagination parameters
@@ -23,17 +25,21 @@ const getConversationLogsController = async (req, res) => {
     const limitNum = parseInt(limit);
     
     if (isNaN(pageNum) || pageNum < 1) {
-      return res.status(400).json({
-        success: false,
-        message: "Page must be a positive integer"
-      });
+      res.locals = {
+        message: "Page must be a positive integer",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
     }
     
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Limit must be a positive integer between 1 and 100"
-      });
+      res.locals = {
+        message: "Limit must be a positive integer between 1 and 100",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
     }
     
     // Get conversation logs
@@ -47,19 +53,99 @@ const getConversationLogsController = async (req, res) => {
     );
     
     if (result.success) {
-      return res.status(200).json(result);
+      res.locals = {
+        data: result.data,
+        success: true
+      };
+      req.statusCode = 200;
+      return next();
     } else {
-      return res.status(500).json(result);
+      res.locals = {
+        message: result.message,
+        success: false
+      };
+      req.statusCode = 500;
+      return next();
     }
     
   } catch (error) {
     console.error("Error in getConversationLogsController:", error);
-    return res.status(500).json({
-      success: false,
+    res.locals = {
       message: "Internal server error",
-      error: error.message
-    });
+      success: false
+    };
+    req.statusCode = 500;
+    return next();
   }
 };
 
-export { getConversationLogsController };
+/**
+ * GET /threads/:bridge_id
+ * Get recent threads by bridge_id with pagination
+ */
+const getRecentThreadsController = async (req, res, next) => {
+  try {
+    const { bridge_id } = req.params;
+    const { page = 1, limit = 30 } = req.query;
+    const org_id = req.body.org_id; // From middleware
+    
+    // Validate required parameters
+    if (!bridge_id) {
+      res.locals = {
+        message: "bridge_id is required parameter",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
+    }
+    
+    // Validate pagination parameters
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    
+    if (isNaN(pageNum) || pageNum < 1) {
+      res.locals = {
+        message: "Page must be a positive integer",
+        success: false
+      };
+      req.statusCode = 400;
+      return next();
+    }
+    
+    // Get recent threads
+    const result = await getRecentThreads(
+      org_id,
+      bridge_id,
+      pageNum,
+      limitNum
+    );
+    
+    if (result.success) {
+      res.locals = {
+        data: result.data,
+        total_user_feedback_count: result.total_user_feedback_count,
+        success: true
+      };
+      req.statusCode = 200;
+      return next();
+    } else {
+      res.locals = {
+        message: result.message,
+        success: false
+      };
+      req.statusCode = 500;
+      return next();
+    }
+    
+  } catch (error) {
+    console.error("Error in getRecentThreadsController:", error);
+    res.locals = {
+      message: "Internal server error",
+      success: false
+    };
+    req.statusCode = 500;
+    return next();
+  }
+};
+
+export { getConversationLogsController, getRecentThreadsController };
