@@ -79,7 +79,8 @@ const getConversationLogsController = async (req, res, next) => {
 const getRecentThreadsController = async (req, res, next) => {
   try {
     const org_id = req.body.org_id; // From middleware
-    
+    const user_feedback = req.query.user_feedback || 'all';
+    const error = req.query.error || 'false';
     // Validate URL params
     const validatedParams = await getRecentThreadsParamsSchema.validateAsync(req.params);
     const { bridge_id } = validatedParams;
@@ -93,6 +94,8 @@ const getRecentThreadsController = async (req, res, next) => {
     const result = await getRecentThreads(
       org_id,
       bridge_id,
+      user_feedback,
+      error,
       pageNum,
       limitNum
     );
