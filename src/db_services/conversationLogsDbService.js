@@ -53,7 +53,7 @@ async function getConversationLogs(org_id, bridge_id, thread_id, sub_thread_id, 
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function getRecentThreads(org_id, bridge_id, user_feedback, error, query, page = 1, limit = 30) {
+async function getRecentThreads(org_id, bridge_id, user_feedback, error, page = 1, limit = 30) {
   try {
     const offset = (page - 1) * limit;
     
