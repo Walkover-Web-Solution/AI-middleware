@@ -19,6 +19,14 @@ const getConversationLogsParamsSchema = Joi.object({
   sub_thread_id: Joi.string().required().messages({
     'string.empty': 'sub_thread_id is required',
     'any.required': 'sub_thread_id is required'
+  }),
+  user_feedback: Joi.string().optional().default('all').messages({
+    'string.empty': 'user_feedback is required',
+    'any.required': 'user_feedback is required'
+  }),
+  error: Joi.string().optional().default('false').messages({
+    'string.empty': 'error is required',
+    'any.required': 'error is required'
   })
 });
 
@@ -36,6 +44,14 @@ const paginationQuerySchema = Joi.object({
     'number.integer': 'Limit must be an integer',
     'number.min': 'Limit must be at least 1',
     'number.max': 'Limit must be at most 100'
+  }),
+  user_feedback: Joi.string().optional().default('all').messages({
+    'string.empty': 'user_feedback is required',
+    'any.required': 'user_feedback is required'
+  }),
+  error: Joi.string().optional().default('false').messages({
+    'string.empty': 'error is required',
+    'any.required': 'error is required'
   })
 });
 
@@ -58,6 +74,10 @@ const searchConversationLogsParamsSchema = Joi.object({
   bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
     'string.pattern.base': 'bridge_id must be a valid MongoDB ObjectId',
     'any.required': 'bridge_id is required'
+  }),
+  org_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional().messages({
+    'string.pattern.base': 'org_id must be a valid MongoDB ObjectId',
+    'any.required': 'org_id is required'
   })
 });
 
@@ -70,13 +90,17 @@ const searchConversationLogsBodySchema = Joi.object({
     'string.empty': 'keyword is required',
     'any.required': 'keyword is required'
   }),
-  time_range: Joi.object({
+  time_range: Joi.object().keys({
     start: Joi.string().isoDate().optional().messages({
       'string.isoDate': 'time_range.start must be a valid ISO date string'
-    }),
+    }).optional(),
     end: Joi.string().isoDate().optional().messages({
       'string.isoDate': 'time_range.end must be a valid ISO date string'
-    })
+    }).optional()
+  }).optional(),
+  org_id: Joi.string().optional().messages({
+    'string.pattern.base': 'org_id must be a valid MongoDB ObjectId',
+    'any.required': 'org_id is required'
   }).optional()
 });
 

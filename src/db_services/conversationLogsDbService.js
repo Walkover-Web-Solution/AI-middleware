@@ -53,7 +53,7 @@ async function getConversationLogs(org_id, bridge_id, thread_id, sub_thread_id, 
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function getRecentThreads(org_id, bridge_id, page = 1, limit = 30) {
+async function getRecentThreads(org_id, bridge_id, user_feedback, error, query, page = 1, limit = 30) {
   try {
     const offset = (page - 1) * limit;
     
@@ -62,6 +62,14 @@ async function getRecentThreads(org_id, bridge_id, page = 1, limit = 30) {
       org_id: org_id,
       bridge_id: bridge_id
     };
+
+    if (user_feedback !== 'all' || user_feedback !== 'undefined') {
+      whereConditions.user_feedback = user_feedback === "all" ?  0 : user_feedback;
+    }
+
+    if (error !== 'false') {
+      whereConditions.error = error;
+    }
 
     // Get recent threads with distinct thread_id, ordered by updated_at
     const threads = await models.pg.conversation_logs.findAll({
