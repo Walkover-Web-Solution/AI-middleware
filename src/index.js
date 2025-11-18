@@ -41,6 +41,7 @@ import { DocumentLoader } from './services/document-loader/index.js';
 import pocRoutes from './routes/poc_routes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
 import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
+import orchestratorConversationLogsRoutes from './routes/orchestratorConversationLogsRoutes.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -87,6 +88,7 @@ app.get('/rag-testing', async (req, res) => {
 })
 app.use('/api/v1/config', configurationController);
 app.use('/history', conversationLogsRoutes);
+app.use('/orchestrator-history', orchestratorConversationLogsRoutes);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
