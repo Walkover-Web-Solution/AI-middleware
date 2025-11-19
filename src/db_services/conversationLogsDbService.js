@@ -31,9 +31,12 @@ async function getConversationLogs(org_id, bridge_id, thread_id, sub_thread_id, 
       offset: offset
     });
     
+    // Reverse the conversation logs array
+    const reversedLogs = logs.reverse();
+    
     return {
       success: true,
-      data: logs
+      data: reversedLogs
     };
   } catch (error) {
     console.error("Error fetching conversation logs:", error);
