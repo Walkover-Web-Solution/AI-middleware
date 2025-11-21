@@ -741,9 +741,9 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
 
       while (hasMoreData) {
         const response = await getUsers(org_id, pageNo, pageSize = 50)
-        if (response && Array.isArray(response.data.data)) {
-          allUserData = [...allUserData, ...response.data.data];
-          hasMoreData = response?.data.totalEntityCount > allUserData.length;
+        if (response && Array.isArray(response.data)) {
+          allUserData = [...allUserData, ...response.data];
+          hasMoreData = response?.totalEntityCount > allUserData.length;
         } else {
           hasMoreData = false;
         }

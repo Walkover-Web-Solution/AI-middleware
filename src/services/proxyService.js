@@ -134,7 +134,7 @@ export async function getUsers(org_id, page = 1, pageSize = 10) {
         authkey: process.env.PROXY_ADMIN_TOKEN
       }
     });
-    return response?.data;
+    return response?.data?.data;
   } catch (error) {
     console.error('Error fetching user updates:', error.message);
     return [];
