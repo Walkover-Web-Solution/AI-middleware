@@ -202,6 +202,37 @@ async function callAiMlApi(apiKey) {
   }
 }
 
+async function callGrokApi(apiKey) {
+  try {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'grok-4',
+        messages: [
+          {
+            role: 'user',
+            content: 'Hello!'
+          }
+        ],
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 
 export {
   callOpenAIModelsApi,
@@ -210,5 +241,6 @@ export {
   callOpenRouterApi,
   callMistralApi,
   callGeminiApi,
-  callAiMlApi
+  callAiMlApi,
+  callGrokApi
 }

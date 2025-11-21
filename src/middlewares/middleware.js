@@ -226,4 +226,11 @@ const InternalAuth = async (req, res, next)=>{
 const ReturnAuth = async (req, res)=>{
   return res.status(400).json({ message: 'unauthorized user ', auth: req.get('Authorization')});
 }
-export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, ReturnAuth };
+
+
+const loginAuth = async (req, res, next)=>{
+ req.profile = await makeDataIfProxyTokenGiven(req);
+ 
+ return next()
+}
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, ReturnAuth,loginAuth };
