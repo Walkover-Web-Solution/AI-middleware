@@ -91,7 +91,7 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         if (comment) {
             updateFields.comment = comment;
         }
-        if(apikey_limit){
+        if(apikey_limit>=0){
             updateFields.apikey_limit = apikey_limit;
         }
         if(apikey_usage==0){
