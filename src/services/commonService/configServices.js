@@ -10,11 +10,12 @@ import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 import { getallOrgs } from "../../utils/proxyUtils.js";
 import { send_error_to_webhook } from "../send_error_webhook.js"
+import { getThreadHistoryFormatted } from "../../db_services/conversationLogsDbService.js";
 
 const getThreads = async (req, res,next) => {
   try {
-    let page = parseInt(req.query.pageNo) || null;
-    let pageSize = parseInt(req.query.limit) || null;
+    let page = parseInt(req.query.pageNo) || 1;
+    let pageSize = parseInt(req.query.limit) || 30;
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id=thread_id, version_id } = req.query
@@ -31,7 +32,7 @@ const getThreads = async (req, res,next) => {
       starterQuestion = !bridge?.IsstarterQuestionEnable ? []: bridge?.starterQuestion;
       org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot, error });
+    let threads =  await getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     threads = {
       ...threads,
       starterQuestion,
