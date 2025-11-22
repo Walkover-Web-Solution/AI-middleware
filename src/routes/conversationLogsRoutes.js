@@ -1,7 +1,6 @@
 import express from "express";
 import { middleware } from "../middlewares/middleware.js";
 import { getConversationLogsController, getRecentThreadsController, searchConversationLogsController } from "../controllers/conversationLogsController.js";
-import { combinedAuthWithChatBotAndPublicChatbot} from "../middlewares/interfaceMiddlewares.js";
 const router = express.Router();
 
 // Define routes
