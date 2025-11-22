@@ -4,6 +4,11 @@ import { queryPinecone } from '../db_services/pineconeDbservice.js';
 import rag_parent_data from '../db_services/rag_parent_data.js';
 import axios from 'axios';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import qdrantService from '../services/qdrantService.js';
+import { DocumentLoader } from '../services/document-loader/index.js';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { WebPDFLoader } from '@langchain/community/document_loaders/web/pdf';
+import mammoth from 'mammoth';
 
 export const openai = async (req, res, next) => {
     const body = {
@@ -139,4 +144,151 @@ export const uspinecone = async (req, res, next) => {
     res.locals = { text }
     req.statusCode = 200;
     return next();
+};
+
+/**
+ * Extract text content from PDF or DOCX file
+ * @param {Object} file - Multer file object
+ * @returns {Promise<string>} Extracted text content
+ */
+const extractTextFromFile = async (file) => {
+    // Validate file type
+    const allowedMimeTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+        throw new Error('Only PDF and DOCX files are supported.');
+    }
+
+    let textContent = '';
+
+    // Extract text from PDF or DOCX
+    if (file.mimetype === 'application/pdf') {
+        // Handle PDF
+        const pdfBlob = new Blob([file.buffer], { type: 'application/pdf' });
+        const loader = new WebPDFLoader(pdfBlob, {});
+        const docs = await loader.load();
+        textContent = docs.map((doc) => doc.pageContent).join('\n\n');
+    } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        // Handle DOCX
+        const result = await mammoth.extractRawText({ buffer: file.buffer });
+        textContent = result.value;
+    }
+
+    if (!textContent || textContent.trim().length === 0) {
+        throw new Error('Could not extract text from the file. Please ensure the file contains readable text.');
+    }
+
+    return textContent;
+};
+
+/**
+ * Save PDF or DOCX file to Qdrant DB
+ * Steps: Extract text -> Chunk -> Generate embeddings -> Save to Qdrant
+ */
+export const saveToQdrant = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            throw new Error('File is required. Please upload a PDF or DOCX file.');
+        }
+
+        const file = req.file;
+        const namespace = req.body.namespace || null; // Optional namespace
+        const chunkSize = parseInt(req.body.chunkSize) || 512;
+        const chunkOverlap = parseInt(req.body.chunkOverlap) || 50;
+
+        // Extract text from file
+        const textContent = await extractTextFromFile(file);
+
+        // Chunk the text
+        const textSplitter = new RecursiveCharacterTextSplitter({
+            chunkSize: chunkSize,
+            chunkOverlap: chunkOverlap,
+        });
+
+        const chunks = await textSplitter.splitDocuments([
+            { pageContent: textContent, metadata: {} }
+        ]);
+
+        const chunkTexts = chunks.map((chunk) => chunk.pageContent.trim()).filter((text) => text.length > 0);
+
+        if (chunkTexts.length === 0) {
+            throw new Error('No valid chunks created from the document.');
+        }
+
+        // Prepare metadata
+        const metadata = {
+            filename: file.originalname,
+            mimetype: file.mimetype,
+            file_size: file.size,
+            uploaded_at: new Date().toISOString(),
+        };
+
+        // Save to Qdrant (this will chunk, embed, and save)
+        const pointIds = await qdrantService.saveVectors(chunkTexts, namespace, metadata);
+
+        res.locals = {
+            success: true,
+            message: 'File processed and saved to Qdrant successfully',
+            data: {
+                filename: file.originalname,
+                chunks_created: chunkTexts.length,
+                point_ids: pointIds,
+                namespace: namespace || 'default',
+            },
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error saving file to Qdrant:', error);
+        throw error;
+    }
+};
+
+/**
+ * Query Qdrant DB for relevant data
+ * Takes a message and optional namespace, returns top K results
+ */
+export const queryQdrant = async (req, res, next) => {
+    try {
+        const { message, namespace, topK } = req.body;
+
+        if (!message || typeof message !== 'string' || message.trim().length === 0) {
+            throw new Error('Message is required and must be a non-empty string.');
+        }
+
+        const k = parseInt(topK) || 5;
+        const collectionName = namespace || null;
+
+        // Measure total API latency
+        const apiStart = process.hrtime.bigint();
+
+        // Query Qdrant
+        const queryResponse = await qdrantService.queryVectors(message.trim(), k, collectionName);
+
+        const apiEnd = process.hrtime.bigint();
+        const totalApiLatency = Number(apiEnd - apiStart) / 1_000_000; // Convert to milliseconds
+
+        // Console log total API latency
+        console.log(`[Qdrant Query API] Total API latency: ${totalApiLatency.toFixed(2)} ms`);
+
+        res.locals = {
+            success: true,
+            message: 'Query executed successfully',
+            data: {
+                query: message,
+                namespace: collectionName || 'default',
+                top_k: k,
+                results_count: queryResponse.results.length,
+                results: queryResponse.results,
+                latency: {
+                    ...queryResponse.latency,
+                    total_api_ms: parseFloat(totalApiLatency.toFixed(2)),
+                },
+            },
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error querying Qdrant:', error);
+        throw error;
+    }
 };
