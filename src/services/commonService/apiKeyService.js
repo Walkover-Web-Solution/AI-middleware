@@ -1,7 +1,7 @@
 import apikeySaveService from "../../db_services/apikeySaveService.js";
 import Helper from "../utils/helper.js";
 import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../../validation/joi_validation/apikey.js";
-import {findInCache} from "../../cache_service/index.js"
+import {findInCache,deleteInCache} from "../../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../utils/aiServices.js"
 import { redis_keys,cost_types } from "../../configs/constant.js";
 import { cleanupCache } from "../utils/redisUtility.js";
@@ -155,6 +155,9 @@ async function updateApikey(req, res) {
         if (result.success) {
             // Clean up cache using the universal Redis utility for cost
             await cleanupCache(cost_types.apikey,apikey_object_id);
+            if(apikey_usage==0){
+                await deleteInCache(`${redis_keys.apikeyusedcost_}${apikey_object_id}`)
+            }
             return res.status(200).json({
                 success: true,
                 message: "Apikey updated successfully",
@@ -197,6 +200,9 @@ async function deleteApikey(req, res) {
         const result = await apikeySaveService.deleteApi(apikey_object_id, org_id);
         if (result.success) {
         await cleanupCache(cost_types.apikey,apikey_object_id);
+        if(apikey_usage==0){
+            await deleteInCache(`${redis_keys.apikeyusedcost_}${apikey_object_id}`)
+        }
         return res.status(200).json({
         success: true,
         message: 'Apikey deleted successfully'
