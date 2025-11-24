@@ -261,4 +261,108 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
   }
 }
 
-export { getConversationLogs, getRecentThreads, searchConversationLogs };
+/**
+ * Get thread history with formatted user/assistant messages
+ * @param {string} org_id - Organization ID
+ * @param {string} thread_id - Thread ID
+ * @param {string} bridge_id - Bridge ID
+ * @param {string} sub_thread_id - Sub Thread ID (optional, defaults to thread_id)
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 30)
+ * @returns {Object} - Success status, formatted data with pagination
+ */
+async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
+  try {
+    const offset = (page - 1) * limit;
+    
+    // Build where conditions
+    const whereConditions = {
+      org_id: org_id,
+      thread_id: thread_id,
+      bridge_id: bridge_id,
+      sub_thread_id: sub_thread_id ? sub_thread_id : thread_id
+    };
+
+    // Get total count
+    const totalCount = await models.pg.conversation_logs.count({
+      where: whereConditions
+    });
+
+    // Get paginated data
+    const logs = await models.pg.conversation_logs.findAll({
+      where: whereConditions,
+      order: [['created_at', 'DESC']],
+      limit: limit,
+      offset: offset
+    });
+
+    // Reverse to get chronological order
+    const reversedLogs = logs.reverse();
+
+    // Format data: split each entry into user and assistant messages
+    const formattedData = [];
+    
+    reversedLogs.forEach(log => {
+      // Create user message entry
+      if (log.user) {
+        formattedData.push({
+          Id: log.id,
+          content: log.user,
+          role: "user",
+          createdAt: log.created_at,
+          chatbot_message: null,
+          tools_call_data: null,
+          user_feedback: null,
+          sub_thread_id: log.sub_thread_id,
+          image_urls: null,
+          urls: log.urls || null,
+          message_id: log.message_id,
+          fallback_model: "",
+          error: "",
+          firstAttemptError: ""
+        });
+      }
+
+      // Create assistant message entry
+      const assistantContent = log.updated_llm_message || log.llm_message || log.chatbot_message || "";
+      if (assistantContent) {
+        formattedData.push({
+          Id: log.id + "_llm",
+          content: assistantContent,
+          role: "assistant",
+          createdAt: log.created_at,
+          chatbot_message: log.chatbot_message || "",
+          tools_call_data: log.tools_call_data || null,
+          user_feedback: log.user_feedback || null,
+          sub_thread_id: log.sub_thread_id,
+          image_urls: log.image_urls || null,
+          urls: null,
+          message_id: log.message_id + "_llm",
+          fallback_model: typeof log.fallback_model === 'object' ? JSON.stringify(log.fallback_model) : (log.fallback_model || ""),
+          error: log.error || "",
+          firstAttemptError: log.firstAttemptError || ""
+        });
+      }
+    });
+
+    // Calculate pagination
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      success: true,
+      data: formattedData,
+      totalPages: totalPages,
+      totalEnteries: totalCount,
+      starterQuestion: []
+    };
+  } catch (error) {
+    console.error("Error fetching thread history:", error);
+    return {
+      success: false,
+      message: "Failed to fetch thread history",
+      error: error.message
+    };
+  }
+}
+
+export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted };
