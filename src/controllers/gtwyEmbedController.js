@@ -4,8 +4,8 @@ import configurationModel from "../mongoModel/configuration.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
 import { generateIdentifier,generateAuthToken } from "../services/utils/utilityService.js";
 import { cleanupCache } from "../services/utils/redisUtility.js";
-import { deleteInCache } from "../cache_service/index.js";
-import { cost_types } from "../configs/constant.js";
+import { deleteInCache, findInCache } from "../cache_service/index.js";
+import { cost_types, redis_keys } from "../configs/constant.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
     const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
@@ -53,7 +53,24 @@ const createEmbed = async (req, res) => {
 const getAllEmbed = async (req, res) => {
     const org_id =  req.profile.org.id
     const data = await FolderModel.find({org_id})
-    res.status(200).json({ data: data.map(folder => ({...folder.toObject(), folder_id: folder._id})) });
+
+    const foldersWithUsage = await Promise.all(data.map(async (folder) => {
+        const folderObject = folder.toObject();
+        const folderId = folder._id.toString();
+
+        let folder_usage = folderObject.folder_usage;
+        const cacheKey = `${redis_keys.folderusedcost_}${folderId}`;
+        const cachedValue = await findInCache(cacheKey);
+
+        if (cachedValue) {
+            const parsed = JSON.parse(cachedValue);
+            folder_usage = parsed.usage_value;
+        }
+
+        return { ...folderObject, folder_id: folder._id, folder_usage };
+    }));
+
+    res.status(200).json({ data: foldersWithUsage });
 }
 
 const updateEmbed = async (req, res) => {
@@ -87,7 +104,7 @@ const updateEmbed = async (req, res) => {
 
     folder.config = config;
     folder.apikey_object_id = apikey_object_id;
-    if(folder_limit){
+    if(folder_limit>=0){
       folder.folder_limit=folder_limit
     }
     if(folder_usage==0){
@@ -95,6 +112,9 @@ const updateEmbed = async (req, res) => {
     }
     await folder.save();
     await cleanupCache(cost_types.folder, folder_id);
+    if(folder_usage==0){
+      await deleteInCache(`${redis_keys.folderusedcost_}${folder_id}`)
+    }
     res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });
 }
 
