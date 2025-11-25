@@ -45,9 +45,15 @@ module.exports = {
             c.function,
             c.updated_message,
             c.message_id,
+            c,tools_call_data
             c.user_feedback,
             c.type,
             c.external_reference,
+            c.chatbot_message,
+            c."AiConfig",
+            c.fallback_model,
+            c.image_urls,
+            c.urls,
             c."createdAt",
             c."updatedAt"
            FROM conversations c
@@ -75,6 +81,8 @@ module.exports = {
             rd.expected_cost,
             rd.message_id,
             rd.created_at,
+            rd."firstAttemptError",
+            rd.finish_reason,
             rd.variables
            FROM raw_data rd
            WHERE rd.message_id = ANY($messageIds::uuid[])`,
@@ -152,6 +160,18 @@ module.exports = {
               if (!newRecord.created_at) newRecord.created_at = conv.createdAt;
               if (!newRecord.updated_at) newRecord.updated_at = conv.updatedAt;
               
+              if (!newRecord.AiConfig && conv.message_by === 'user') newRecord.AiConfig = conv.AiConfig;
+              if (!newRecord.fallback_model && conv.message_by === 'assistant') newRecord.fallback_model = conv.fallback_model;
+              if (!newRecord.image_urls && conv.message_by === 'assistant') newRecord.image_urls = conv.image_urls;
+              if (!newRecord.urls && conv.message_by === 'user') newRecord.urls = conv.urls;
+              if (!newRecord.chatbot_message && conv.message_by === 'assistant') newRecord.chatbot_message = conv.chatbot_message;
+              if (!newRecord.prompt && conv.message_by === 'user') {
+                  newRecord['prompt'] = 
+                    newRecord['AiConfig']?.messages?.[0]?.role === 'developer' ? newRecord['AiConfig']?.messages?.[0]?.content :
+                    newRecord['AiConfig']?.input?.[0]?.role === 'developer' ? newRecord['AiConfig']?.input?.[0]?.content :
+                    newRecord['AiConfig']?.system
+                }
+
               // Set user_feedback if available
               if (conv.user_feedback) {
                 newRecord.user_feedback = conv.user_feedback;
@@ -163,15 +183,9 @@ module.exports = {
               } else if (conv.message_by === 'assistant') {
                 newRecord.llm_message = conv.message;
                 newRecord.updated_llm_message = conv.updated_message;
-              } else if (conv.message_by === 'tool' || conv.message_by === 'tools_call') {
+              } else if (conv.message_by === 'tools_call') {
                 // Handle tool calls
-                if (conv.function) {
-                  if (Array.isArray(conv.function)) {
-                    newRecord.tools_call_data.push(...conv.function);
-                  } else {
-                    newRecord.tools_call_data.push(conv.function);
-                  }
-                }
+                newRecord.tools_call_data = conv.tools_call_data;
               }
             }
             
@@ -187,6 +201,8 @@ module.exports = {
               newRecord.status = rawData.status;
               newRecord.error = rawData.error;
               newRecord.variables = rawData.variables;
+              newRecord.firstAttemptError = rawData.firstAttemptError;
+              newRecord.finish_reason = rawData.finish_reason;
               
               // Create tokens JSON object
               newRecord.tokens = {
