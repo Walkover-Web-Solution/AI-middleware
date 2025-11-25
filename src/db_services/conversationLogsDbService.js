@@ -317,9 +317,7 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
           image_urls: null,
           urls: log.urls || null,
           message_id: log.message_id,
-          fallback_model: "",
-          error: "",
-          firstAttemptError: ""
+          error: log.error || ""
         });
       }
 
@@ -339,8 +337,7 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
           urls: null,
           message_id: log.message_id + "_llm",
           fallback_model: typeof log.fallback_model === 'object' ? JSON.stringify(log.fallback_model) : (log.fallback_model || ""),
-          error: log.error || "",
-          firstAttemptError: log.firstAttemptError || ""
+          error: ""
         });
       }
     });
