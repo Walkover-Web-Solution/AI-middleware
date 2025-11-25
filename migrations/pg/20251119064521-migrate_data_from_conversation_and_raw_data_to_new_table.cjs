@@ -130,8 +130,8 @@ module.exports = {
               thread_id: null,
               version_id: null,
               bridge_id: null,
-              image_urls: [],
-              urls: [],
+              llm_urls: [],
+              user_urls: [],
               AiConfig: null,
               fallback_model: null,
               org_id: null,
@@ -162,8 +162,22 @@ module.exports = {
               
               if (!newRecord.AiConfig && conv.message_by === 'user') newRecord.AiConfig = conv.AiConfig;
               if (!newRecord.fallback_model && conv.message_by === 'assistant') newRecord.fallback_model = conv.fallback_model;
-              if (!newRecord.image_urls && conv.message_by === 'assistant') newRecord.image_urls = conv.image_urls;
-              if (!newRecord.urls && conv.message_by === 'user') newRecord.urls = conv.urls;
+              if (!newRecord.image_urls && conv.message_by === 'assistant') {
+                const imageItems = (conv.image_urls || []).map(url => ({ url, type: 'image' }));
+                const fileItems  = (conv.urls  || []).map(url => ({ url, type: 'pdf' }));
+
+                const userUrls = [...imageItems, ...fileItems];
+                newRecord.llm_urls = userUrls;
+              }
+
+              if (!newRecord.image_urls && conv.message_by === 'user') {
+                const imageItems = (conv.image_urls || []).map(url => ({ url, type: 'image' }));
+                const fileItems  = (conv.urls  || []).map(url => ({ url, type: 'pdf' }));
+
+                const userUrls = [...imageItems, ...fileItems];
+                newRecord.user_urls = userUrls;
+              }
+
               if (!newRecord.chatbot_message && conv.message_by === 'assistant') newRecord.chatbot_message = conv.chatbot_message;
               if (!newRecord.prompt && conv.message_by === 'user') {
                   newRecord['prompt'] = 
@@ -257,8 +271,8 @@ module.exports = {
           const serializedRecords = recordsToInsert.map(record => ({
             ...record,
             tools_call_data: JSON.stringify(record.tools_call_data || []),
-            image_urls: JSON.stringify(record.image_urls || []),
-            urls: JSON.stringify(record.urls || []),
+            user_urls: JSON.stringify(record.user_urls || []),
+            llm_urls: JSON.stringify(record.llm_urls || []),
             AiConfig: record.AiConfig ? JSON.stringify(record.AiConfig) : null,
             fallback_model: record.fallback_model ? JSON.stringify(record.fallback_model) : null,
             tokens: record.tokens ? JSON.stringify(record.tokens) : null,

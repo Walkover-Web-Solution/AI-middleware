@@ -57,11 +57,11 @@ module.exports = {
       bridge_id: {
         type: Sequelize.STRING
       },
-      image_urls: {
+      user_urls: {
         type: Sequelize.JSONB,
         defaultValue: []
       },
-      urls: {
+      llm_urls: {
         type: Sequelize.JSONB,
         defaultValue: []
       },

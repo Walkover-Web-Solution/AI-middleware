@@ -68,11 +68,11 @@ export default ((sequelize, DataTypes) => {
     bridge_id: {
       type: DataTypes.STRING
     },
-    image_urls: {
+    user_urls: {
       type: DataTypes.JSONB,
       defaultValue: []
     },
-    urls: {
+    llm_urls: {
       type: DataTypes.JSONB,
       defaultValue: []
     },
