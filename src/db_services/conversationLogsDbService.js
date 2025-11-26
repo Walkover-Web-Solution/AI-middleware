@@ -314,8 +314,8 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
           tools_call_data: null,
           user_feedback: null,
           sub_thread_id: log.sub_thread_id,
-          image_urls: null,
-          urls: log.urls || null,
+          image_urls: [] || null,
+          urls: log.user_urls || null,
           message_id: log.message_id,
           error: log.error || ""
         });
@@ -333,7 +333,7 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
           tools_call_data: log.tools_call_data || null,
           user_feedback: log.user_feedback || null,
           sub_thread_id: log.sub_thread_id,
-          image_urls: log.image_urls || null,
+          image_urls: log.llm_urls || null,
           urls: null,
           message_id: log.message_id + "_llm",
           fallback_model: typeof log.fallback_model === 'object' ? JSON.stringify(log.fallback_model) : (log.fallback_model || ""),
