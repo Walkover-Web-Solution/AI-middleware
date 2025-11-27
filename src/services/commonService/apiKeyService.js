@@ -116,7 +116,7 @@ const getAllApikeys = async(req, res) => {
 async function updateApikey(req, res) {
     try {
         let apikey = req.body.apikey;
-        const { name, comment, service, folder_id, user_id,apikey_limit=0,apikey_usage=0} = req.body;
+        const { name, comment, service, folder_id, user_id,apikey_limit=0,apikey_usage=-1} = req.body;
         const { apikey_object_id } = req.params;
         try{
              const payload = {
@@ -200,9 +200,6 @@ async function deleteApikey(req, res) {
         const result = await apikeySaveService.deleteApi(apikey_object_id, org_id);
         if (result.success) {
         await cleanupCache(cost_types.apikey,apikey_object_id);
-        if(apikey_usage==0){
-            await deleteInCache(`${redis_keys.apikeyusedcost_}${apikey_object_id}`)
-        }
         return res.status(200).json({
         success: true,
         message: 'Apikey deleted successfully'
