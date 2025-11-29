@@ -253,6 +253,7 @@ async function checkApiKey(apikey, service) {
     return { success: true, data: check.data };
     }
     catch(error){
+        console.error('Error validating API key', error);
         return { success: false, error: "invalid apikey or apikey is expired" };
     }
 }

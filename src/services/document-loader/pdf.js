@@ -1,9 +1,8 @@
-import fs from "fs/promises";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import axios from "axios";
 
 export class PDFLoader {
-    async getContent(url, options) {
+    async getContent(url) {
         // Fetch the PDF from the URL
         const response = await axios.get(url, { responseType: "arraybuffer" });
 

@@ -123,9 +123,9 @@ export const vectorSearch = async (query, agentId) => {
   return vectorIds;
 };
 
-export const getVectorIdsFromSearchText = async (searchText, namespace) => {
+export const getVectorIdsFromSearchText = async (searchText, namespace = "default") => {
   const queryEmbedding = await embeddings.embedQuery(searchText);
-  return pineconeIndex.namespace("default").query({ topK: 5, includeMetadata: true, vector: queryEmbedding });
+  return pineconeIndex.namespace(namespace).query({ topK: 5, includeMetadata: true, vector: queryEmbedding });
 };
 
 // export const getCrawledDataFromSite = async (url) => {

@@ -114,7 +114,7 @@ function convertAIConversation(conversation){
   }
 }
 
-async function sendResponse(response_format, data, success = false, variables = {}) {
+async function sendResponse(response_format, data, variables = {}) {
   const data_to_send = {
       'response': data
   };
@@ -168,7 +168,9 @@ async function sendRequest(url, data, method, headers) {
 
 function generateAuthToken(user, org, extraDetails = {}, options = {}) {
   const { expiresInSeconds } = options;
-  const { exp, iat, ...safeExtraDetails } = extraDetails || {};
+  const safeExtraDetails = { ...(extraDetails || {}) };
+  delete safeExtraDetails.exp;
+  delete safeExtraDetails.iat;
   const signOptions = expiresInSeconds
     ? { expiresIn: Math.max(1, expiresInSeconds) }
     : { expiresIn: '48h' };

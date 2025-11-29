@@ -1,5 +1,5 @@
 
-import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
@@ -18,13 +18,10 @@ const getThreads = async (req, res,next) => {
     let pageSize = parseInt(req.query.limit) || 30;
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id=thread_id, version_id } = req.query
+    const { sub_thread_id = thread_id } = req.query;
     let { org_id } = req.body;
     let starterQuestion = []
-    let bridge = {}
-    let {user_feedback, error} = req.query
-    error = error?.toLowerCase() === 'true' ? true : false;
-    const isChatbot = req.isChatbot || false;
+    let bridge = {};
 
     if (bridge_slugName) {
       bridge =req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName): await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
@@ -103,14 +100,9 @@ const getSystemPromptHistory = async (req, res, next) => {
 
 
 const deleteBridges = async (req, res,next) => {
+  const { bridge_id } = req.params;
+  const { org_id, restore = false } = req.body;
   try {
-    const {
-      bridge_id
-    } = req.params;
-    const {
-      org_id,
-      restore = false
-    } = req.body;
     
     let result;
     

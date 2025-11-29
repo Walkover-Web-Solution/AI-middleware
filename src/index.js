@@ -7,8 +7,6 @@ import './atatus.js'
 import './consumers/index.js';
 import configurationController from "./controllers/configController.js";
 import apiKeyrouter from "./routes/apikeyRouter.js";
-import helloRoutes from './routes/helloRoutes.js';
-import threadRoutes from './routes/threadRoutes.js'
 import metricsRoutes from "./routes/metrics_routes.js"
 const app = express();
 configDotenv();
@@ -26,20 +24,12 @@ import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import configurePostmanCollection from './routes/configurePostmanCollection.js';
-import InternalRoutes from './routes/InternalRoutes.js';
 import alerting from './routes/alerting_routes.js';
 import showCaseRoutes from './routes/showCase_routes.js'
 import testcaseRoutes from './routes/testcase_routes.js'
-import templateRoute from './routes/template_route.js'
-import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
-import flowRoutes from './routes/flow_routes.js'
-import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
-import pocRoutes from './routes/poc_routes.js'
-import agentLookupRoutes from './routes/agentLookupRoutes.js'
 import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
 
 import('./services/cacheService.js')
@@ -91,24 +81,14 @@ app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);
-app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
-app.use('/hello', helloRoutes);
-app.use('/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
-app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
 app.use('/showcase',showCaseRoutes);
 app.use('/testcases',testcaseRoutes);
-app.use('/report',reportRoute);
 app.use('/modelConfiguration',ModelsConfigRoutes);
-app.use('/Template',templateRoute);
-app.use('/flow',flowRoutes)
-app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
-app.use('/poc', pocRoutes)
-app.use('/data', agentLookupRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
@@ -164,7 +144,7 @@ process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
   shutdown('uncaughtException', `Uncaught exception: ${error.message}`);
 });
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
   shutdown('unhandledRejection', `Unhandled rejection: ${reason}`);
 });

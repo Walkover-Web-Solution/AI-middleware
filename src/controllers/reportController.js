@@ -1,4 +1,4 @@
-import {get_data_from_pg, get_data_for_daily_report, get_latency_report_data, get_message_data} from '../db_services/reportDbservice.js';
+import {get_data_for_daily_report, get_latency_report_data, get_message_data} from '../db_services/reportDbservice.js';
 import { getallOrgs } from '../utils/proxyUtils.js';
 
 

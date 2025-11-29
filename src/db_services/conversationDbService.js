@@ -730,7 +730,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
           userData = null;
         }
       } catch (error) {
-        // If JSON parsing fails, treat as no cached data
+        console.error('Failed to parse cached user data', error);
         userData = null;
       }
     }

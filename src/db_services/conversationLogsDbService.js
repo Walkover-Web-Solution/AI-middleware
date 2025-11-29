@@ -213,8 +213,6 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
     logs.forEach(log => {
       const threadId = log.thread_id;
       const subThreadId = log.sub_thread_id;
-      const bridgeId = log.bridge_id;
-
       // Initialize thread if not exists
       if (!groupedData[threadId]) {
         groupedData[threadId] = {
@@ -314,7 +312,7 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
           tools_call_data: null,
           user_feedback: null,
           sub_thread_id: log.sub_thread_id,
-          image_urls: [] || null,
+          image_urls: [],
           urls: log.user_urls || null,
           message_id: log.message_id,
           error: log.error || ""
