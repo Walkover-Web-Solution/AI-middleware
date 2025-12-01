@@ -21,6 +21,7 @@ import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
+import initializeDailyUpdateCron from './cron/initializeDailyUpdateCron.js';
 import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
@@ -37,7 +38,9 @@ import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import flowRoutes from './routes/flow_routes.js'
 import orchestratorRouter from './routes/orchestrator_routes.js';
 import { DocumentLoader } from './services/document-loader/index.js';
+import pocRoutes from './routes/poc_routes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
+import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -83,6 +86,7 @@ app.get('/rag-testing', async (req, res) => {
   }
 })
 app.use('/api/v1/config', configurationController);
+app.use('/history', conversationLogsRoutes);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
@@ -103,6 +107,7 @@ app.use('/Template',templateRoute);
 app.use('/flow',flowRoutes)
 app.use('/orchestrator', orchestratorRouter);
 app.use('/auth', AuthRouter)
+app.use('/poc', pocRoutes)
 app.use('/data', agentLookupRoutes)
 
 //Metrics
@@ -115,6 +120,7 @@ app.use(errorHandlerMiddleware);
 
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
+initializeDailyUpdateCron()
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);

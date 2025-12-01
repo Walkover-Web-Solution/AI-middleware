@@ -10,11 +10,12 @@ import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 import { getallOrgs } from "../../utils/proxyUtils.js";
 import { send_error_to_webhook } from "../send_error_webhook.js"
+import { getThreadHistoryFormatted } from "../../db_services/conversationLogsDbService.js";
 
 const getThreads = async (req, res,next) => {
   try {
-    let page = parseInt(req.query.pageNo) || null;
-    let pageSize = parseInt(req.query.limit) || null;
+    let page = parseInt(req.query.pageNo) || 1;
+    let pageSize = parseInt(req.query.limit) || 30;
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
     const { sub_thread_id=thread_id, version_id } = req.query
@@ -31,7 +32,7 @@ const getThreads = async (req, res,next) => {
       starterQuestion = !bridge?.IsstarterQuestionEnable ? []: bridge?.starterQuestion;
       org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
     }
-    let threads =  await getThreadHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize,user_feedback, version_id, isChatbot, error });
+    let threads =  await getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     threads = {
       ...threads,
       starterQuestion,
@@ -107,14 +108,35 @@ const deleteBridges = async (req, res,next) => {
       bridge_id
     } = req.params;
     const {
-      org_id
+      org_id,
+      restore = false
     } = req.body;
-    const result = await configurationService.deleteBridge(bridge_id, org_id);
+    
+    let result;
+    
+    if (restore) {
+      // Restore the bridge
+      result = await configurationService.restoreBridge(bridge_id, org_id);
+      
+      // Log restore operation for audit purposes
+      if (result.success) {
+        console.log(`Bridge restore completed for bridge ${bridge_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
+      }
+    } else {
+      // Soft delete the bridge
+      result = await configurationService.deleteBridge(bridge_id, org_id);
+      
+      // Log soft delete operation for audit purposes
+      if (result.success) {
+        console.log(`Soft delete initiated for bridge ${bridge_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
+      }
+    }
+    
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
   } catch (error) {
-    console.error("delete bridge error => ", error.message)
+    console.error(`${restore ? 'restore' : 'delete'} bridge error => `, error.message)
     throw error;
   }
 };

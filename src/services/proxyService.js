@@ -143,10 +143,11 @@ export async function getUsers(org_id, page = 1, pageSize = 10) {
 
 export async function validateCauthKey(pauthkey) {
   try {
-    const response = await axios.get('https://routes.msg91.com/api/validateCauthKey', {
+    const response = await axios.post('https://routes.msg91.com/api/validateCauthKey', {
+    "cAuthKey": pauthkey
+},{
       headers: {
         authkey: process.env.PROXY_ADMIN_TOKEN,
-        cauthkey: pauthkey,
       },
     });
     return response?.data;

@@ -4,7 +4,7 @@ import configurationModel from "../mongoModel/configuration.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 
 const saveApi = async (data) => {
-    const { org_id, apikey, service, name, comment, folder_id, user_id } = data;
+    const { org_id, apikey, service, name, comment, folder_id, user_id,apikey_limit=0 } = data;
     const version_ids = []
     const result = await new ApikeyCredential({
         org_id,
@@ -14,7 +14,8 @@ const saveApi = async (data) => {
         comment,
         folder_id,
         user_id,
-        version_ids
+        version_ids,
+        apikey_limit
     }).save();
 
     return {
@@ -74,7 +75,7 @@ const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
     }
 }
 
-async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null) {
+async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null,apikey_limit=0,apikey_usage=-1) {
     try {
         const updateFields = {};
 
@@ -89,6 +90,12 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
         }
         if (comment) {
             updateFields.comment = comment;
+        }
+        if(apikey_limit>=0){
+            updateFields.apikey_limit = apikey_limit;
+        }
+        if(apikey_usage==0){
+            updateFields.apikey_usage = 0;
         }
 
         let apikeyCredentialResult;

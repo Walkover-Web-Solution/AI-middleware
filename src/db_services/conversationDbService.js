@@ -720,7 +720,22 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     const offset = (page - 1) * pageSize;
     let pageNo = 1;
     let userData = await findInCache(`user_data_${org_id}`);
-    userData = !userData?.length ? await (async () => {
+    
+    // Parse cached data if it exists, otherwise fetch fresh data
+    if (userData) {
+      try {
+        userData = JSON.parse(userData);
+        // If parsed data is not an array or is empty, fetch fresh data
+        if (!Array.isArray(userData) || userData.length === 0) {
+          userData = null;
+        }
+      } catch (error) {
+        // If JSON parsing fails, treat as no cached data
+        userData = null;
+      }
+    }
+    
+    if (!userData) {
       let allUserData = [];
       let hasMoreData = true;
 
@@ -735,8 +750,8 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
         pageNo++;
       }
       await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
-      return allUserData;
-    })() : JSON.parse(userData);
+      userData = allUserData;
+    }
 
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {

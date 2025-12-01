@@ -80,21 +80,12 @@ async function callGroqApi(apiKey) {
 
 async function callOpenRouterApi(apiKey) {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.2-3b-instruct:free',
-        messages: [
-          {
-            role: 'user',
-            content: 'hii'
-          }
-        ]
-      })
     });
 
     if (!response.ok) {
@@ -202,6 +193,26 @@ async function callAiMlApi(apiKey) {
   }
 }
 
+async function callGrokApi(apiKey) {
+  try {
+    const response = await fetch('https://api.x.ai/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 
 export {
   callOpenAIModelsApi,
@@ -210,5 +221,6 @@ export {
   callOpenRouterApi,
   callMistralApi,
   callGeminiApi,
-  callAiMlApi
+  callAiMlApi,
+  callGrokApi
 }

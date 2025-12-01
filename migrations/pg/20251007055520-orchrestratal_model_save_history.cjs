@@ -71,10 +71,15 @@ module.exports = {
         allowNull: true,
         comment: '{"bridge_id": variables_json}'
       },
-      image_urls: {
-        type: Sequelize.ARRAY(Sequelize.JSON),
+      user_urls: {
+        type: Sequelize.JSON,
         allowNull: true,
-        comment: '{"bridge_id": [image_urls]}'
+        comment: '{"bridge_id": user_urls}'
+      },
+      llm_urls: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        comment: '{"bridge_id": llm_urls}'
       },
       ai_config: {
         type: Sequelize.JSON,

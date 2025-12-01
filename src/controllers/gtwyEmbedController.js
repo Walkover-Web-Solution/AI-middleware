@@ -1,20 +1,39 @@
 import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import configurationModel from "../mongoModel/configuration.js";
-import { deleteInCache } from "../cache_service/index.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier } from "../services/utils/utilityService.js";
-
+import { generateIdentifier,generateAuthToken } from "../services/utils/utilityService.js";
+import { cleanupCache } from "../services/utils/redisUtility.js";
+import { deleteInCache, findInCache } from "../cache_service/index.js";
+import { cost_types, redis_keys } from "../configs/constant.js";
 const embedLogin = async (req, res) => {
     const { name: embeduser_name, email: embeduser_email } = req.Embed;
-      const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+    const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
+      const Tokendata = {
+        "user":{
+          id: req.Embed.user_id,
+          name: embeduser_name,
+          email: embeduser_email,
+          
+        },
+        "org":{
+          id: req.Embed.org_id,
+          name: req.Embed.org_name,
+          
+        },
+        "extraDetails":{  
+          type: 'embed',
+          folder_id: req.Embed.folder_id,
+        }
+      }
       const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
       const config = folder?.config || {};
       const apikey_object_id = folder?.apikey_object_id
+      await createProxyToken(embedDetails);
       const response = {
         ...req?.Embed,
         user_id: req.Embed.user_id,
-        token: await createProxyToken(embedDetails),
+        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
         config:{...config, apikey_object_id}
       };
       return res.status(200).json({ data: response, message: 'logged in successfully' });
@@ -26,14 +45,32 @@ const createEmbed = async (req, res) => {
     const org_id =  req.profile.org.id
     const apikey_object_id = req.body.apikey_object_id;
     const type = "embed"
-    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id });
+    const folder_limit = req.body.folder_limit;
+    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id,folder_limit});
     res.status(200).json({ data:{...folder.toObject(), folder_id: folder._id} });
 }
 
 const getAllEmbed = async (req, res) => {
     const org_id =  req.profile.org.id
     const data = await FolderModel.find({org_id})
-    res.status(200).json({ data: data.map(folder => ({...folder.toObject(), folder_id: folder._id})) });
+
+    const foldersWithUsage = await Promise.all(data.map(async (folder) => {
+        const folderObject = folder.toObject();
+        const folderId = folder._id.toString();
+
+        let folder_usage = folderObject.folder_usage;
+        const cacheKey = `${redis_keys.folderusedcost_}${folderId}`;
+        const cachedValue = await findInCache(cacheKey);
+
+        if (cachedValue) {
+            const parsed = JSON.parse(cachedValue);
+            folder_usage = parsed.usage_value;
+        }
+
+        return { ...folderObject, folder_id: folder._id, folder_usage };
+    }));
+
+    res.status(200).json({ data: foldersWithUsage });
 }
 
 const updateEmbed = async (req, res) => {
@@ -41,6 +78,8 @@ const updateEmbed = async (req, res) => {
     const config = req.body.config;
     const org_id = req.profile.org.id;
     const apikey_object_id = req.body.apikey_object_id;
+    const folder_limit = req.body.folder_limit;
+    const folder_usage = req.body.folder_usage
     
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
     if (!folder) {
@@ -65,8 +104,17 @@ const updateEmbed = async (req, res) => {
 
     folder.config = config;
     folder.apikey_object_id = apikey_object_id;
+    if(folder_limit>=0){
+      folder.folder_limit=folder_limit
+    }
+    if(folder_usage==0){
+      folder.folder_usage=0
+    }
     await folder.save();
-    
+    await cleanupCache(cost_types.folder, folder_id);
+    if(folder_usage==0){
+      await deleteInCache(`${redis_keys.folderusedcost_}${folder_id}`)
+    }
     res.status(200).json({ data: {...folder.toObject(), folder_id: folder._id} });
 }
 

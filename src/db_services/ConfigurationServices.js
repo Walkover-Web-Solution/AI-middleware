@@ -58,16 +58,226 @@ const getBridgesWithSelectedData = async bridge_id => {
 
 const deleteBridge = async (bridge_id, org_id) => {
   try {
-    const bridges = await configurationModel.findOneAndDelete({
-      _id: bridge_id,
+    // First, find the bridge to get its data including versions
+    const bridge = await configurationModel.findOne({
+      _id: new ObjectId(bridge_id),
       org_id: org_id
+      // Remove deletedAt filter to allow re-processing of already soft-deleted bridges
     });
+    if (!bridge) {
+      return {
+        success: false,
+        error: "Bridge not found"
+      };
+    }
+
+    // Use aggregation pipeline to find connected bridges from both versions and configurations
+    const [connectedFromVersions, connectedFromConfigurations] = await Promise.all([
+      // Check versions for connected_agents
+      versionModel.aggregate([
+        {
+          $match: {
+            org_id: org_id,
+            connected_agents: { $exists: true, $ne: null }
+          }
+        },
+        {
+          $addFields: {
+            hasConnection: {
+              $anyElementTrue: {
+                $map: {
+                  input: { $objectToArray: "$connected_agents" },
+                  as: "agent",
+                  in: { $eq: ["$$agent.v.bridge_id", bridge_id] }
+                }
+              }
+            },
+            bridgeId: { $ifNull: ["$parent_id", "$_id"] }
+          }
+        },
+        {
+          $match: { hasConnection: true }
+        },
+        {
+          $group: { _id: "$bridgeId" }
+        }
+      ]),
+      
+      // Check configurations (bridges) for connected_agents
+      configurationModel.aggregate([
+        {
+          $match: {
+            org_id: org_id,
+            connected_agents: { $exists: true, $ne: null }
+          }
+        },
+        {
+          $addFields: {
+            hasConnection: {
+              $anyElementTrue: {
+                $map: {
+                  input: { $objectToArray: "$connected_agents" },
+                  as: "agent",
+                  in: { $eq: ["$$agent.v.bridge_id", bridge_id] }
+                }
+              }
+            }
+          }
+        },
+        {
+          $match: { hasConnection: true }
+        },
+        {
+          $group: { _id: "$_id" }
+        }
+      ])
+    ]);
+
+    // Combine and get unique bridge IDs
+    const allConnectedBridgeIds = [
+      ...connectedFromVersions.map(item => item._id),
+      ...connectedFromConfigurations.map(item => item._id)
+    ];
+    
+    const uniqueBridgeIds = [...new Set(allConnectedBridgeIds.map(id => id.toString()))];
+
+    if (uniqueBridgeIds.length > 0) {
+      // Get bridge names for all connected bridges
+      const connectedBridges = await configurationModel.find({
+        _id: { $in: uniqueBridgeIds.map(id => new ObjectId(id)) },
+        org_id: org_id
+      }).select({ _id: 1, name: 1 }).lean();
+
+      const bridgeNames = connectedBridges.map(bridge => bridge.name || `Bridge ${bridge._id}`);
+      
+      return {
+        success: false,
+        error: `Cannot delete bridge. It is connected to the following ${bridgeNames.length === 1 ? 'bridge' : 'bridges'}: ${bridgeNames.join(', ')}`
+      };
+    }
+
+    const currentDate = new Date();
+    let bridgeAlreadyDeleted = false;
+
+    // Check if bridge is already soft deleted
+    if (bridge.deletedAt) {
+      bridgeAlreadyDeleted = true;
+    }
+
+    // Soft delete the main bridge by setting deletedAt (or update the deletedAt timestamp)
+    const deletedBridge = await configurationModel.findOneAndUpdate(
+      {
+        _id: bridge_id,
+        org_id: org_id
+      },
+      {
+        $set: {
+          deletedAt: currentDate
+        }
+      },
+      { new: true }
+    );
+    // Find and soft delete all versions associated with this bridge using versions array
+    let deletedVersions = { modifiedCount: 0 };
+    
+    // Use deletedBridge.versions as it contains the most up-to-date data
+    const versionsToDelete = deletedBridge.versions || bridge.versions;
+    
+    if (versionsToDelete && versionsToDelete.length > 0) {
+      
+      // Convert string IDs to ObjectIds if needed
+      const versionIds = versionsToDelete.map(id => new ObjectId(id));
+      
+      deletedVersions = await versionModel.updateMany(
+        {
+          _id: { $in: versionIds }, // Use converted ObjectIds
+          deletedAt: null // Only update non-deleted versions
+        },
+        {
+          $set: {
+            deletedAt: currentDate
+          }
+        }
+      );
+    }
+    const statusMessage = bridgeAlreadyDeleted 
+      ? `Bridge ID: ${bridge_id} was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
+      : `Bridge ID: ${bridge_id} and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
+
     return {
-      success: true,
-      bridges: bridges
+        success: true,
+        message: statusMessage
     };
   } catch (error) {
     console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!"
+    };
+  }
+};
+
+const restoreBridge = async (bridge_id, org_id) => {
+  try {
+    // First, find the soft-deleted bridge
+    const bridge = await configurationModel.findOne({
+      _id: bridge_id,
+      org_id: org_id,
+      deletedAt: { $ne: null } // Only find soft-deleted bridges
+    });
+
+    if (!bridge) {
+      return {
+        success: false,
+        error: "Bridge not found or not deleted"
+      };
+    }
+
+    // Restore the main bridge by removing deletedAt
+    const restoredBridge = await configurationModel.findOneAndUpdate(
+      {
+        _id: bridge_id,
+        org_id: org_id
+      },
+      {
+        $unset: {
+          deletedAt: ""
+        }
+      },
+      { new: true }
+    );
+
+    // Restore all versions associated with this bridge using versions array
+    let restoredVersions = { modifiedCount: 0 };
+    
+    // Use bridge.versions to find versions to restore
+    const versionsToRestore = bridge.versions;
+    
+    if (versionsToRestore && versionsToRestore.length > 0) {
+      // Convert string IDs to ObjectIds if needed
+      const versionIds = versionsToRestore.map(id => new ObjectId(id));
+      
+      restoredVersions = await versionModel.updateMany(
+        {
+          _id: { $in: versionIds }, // Use version IDs from the versions array
+          deletedAt: { $ne: null } // Only restore soft-deleted versions
+        },
+        {
+          $unset: {
+            deletedAt: ""
+          }
+        }
+      );
+    }
+
+    return {
+      success: true,
+      bridge: restoredBridge,
+      restoredVersionsCount: restoredVersions.modifiedCount,
+      message: `Bridge and ${restoredVersions.modifiedCount} versions restored successfully.`
+    };
+  } catch (error) {
+    console.error("restore bridge error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -355,6 +565,7 @@ const findIdsByModelAndService = async (model, service, org_id) => {
 
 export default {
   deleteBridge,
+  restoreBridge,
   getApiCallById,
   getBridgesWithSelectedData,
   addResponseIdinBridge,
