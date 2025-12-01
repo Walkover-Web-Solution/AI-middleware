@@ -4,10 +4,10 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
-    
+
     try {
       console.log('Starting data migration from conversations and raw_data to conversation_logs...');
-      
+
       // Step 1: Get all unique message_ids from conversations table
       const [messageIds] = await queryInterface.sequelize.query(
         `SELECT DISTINCT message_id, MIN("createdAt") as created_at
@@ -17,20 +17,20 @@ module.exports = {
          ORDER BY MIN("createdAt")`,
         { transaction }
       );
-      
+
       console.log(`Found ${messageIds.length} unique message_ids to process`);
-      
+
       let migratedCount = 0;
       let errorCount = 0;
       const batchSize = 100;
-      
+
       // Process in batches for better performance
       for (let i = 0; i < messageIds.length; i += batchSize) {
         const batch = messageIds.slice(i, i + batchSize);
         const messageIdsBatch = batch.map(row => row.message_id);
-        
-        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(messageIds.length/batchSize)} (${messageIdsBatch.length} message_ids)...`);
-        
+
+        console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(messageIds.length / batchSize)} (${messageIdsBatch.length} message_ids)...`);
+
         // Step 2: For each message_id, get all related conversation entries
         const [conversationEntries] = await queryInterface.sequelize.query(
           `SELECT 
@@ -59,12 +59,12 @@ module.exports = {
            FROM conversations c
            WHERE c.message_id = ANY($messageIds::uuid[])
            ORDER BY c.message_id, c."createdAt"`,
-          { 
+          {
             bind: { messageIds: messageIdsBatch },
-            transaction 
+            transaction
           }
         );
-        
+
         // Step 3: Get raw_data for these message_ids
         const [rawDataEntries] = await queryInterface.sequelize.query(
           `SELECT 
@@ -86,12 +86,12 @@ module.exports = {
             rd.variables
            FROM raw_data rd
            WHERE rd.message_id = ANY($messageIds::uuid[])`,
-          { 
+          {
             bind: { messageIds: messageIdsBatch },
-            transaction 
+            transaction
           }
         );
-        
+
         // Create a map of raw_data by message_id for quick lookup
         const rawDataMap = new Map();
         rawDataEntries.forEach(rd => {
@@ -100,7 +100,7 @@ module.exports = {
           }
           rawDataMap.get(rd.message_id).push(rd);
         });
-        
+
         // Step 4: Group conversation entries by message_id
         const conversationsByMessageId = new Map();
         conversationEntries.forEach(entry => {
@@ -109,10 +109,10 @@ module.exports = {
           }
           conversationsByMessageId.get(entry.message_id).push(entry);
         });
-        
+
         // Step 5: Transform and prepare data for insertion
         const recordsToInsert = [];
-        
+
         for (const [messageId, conversations] of conversationsByMessageId) {
           try {
             // Initialize the new record
@@ -148,7 +148,7 @@ module.exports = {
               created_at: null,
               updated_at: null
             };
-            
+
             // Process each conversation entry for this message_id
             for (const conv of conversations) {
               // Set common fields (from any conversation entry, they should be same)
@@ -159,12 +159,12 @@ module.exports = {
               if (!newRecord.version_id) newRecord.version_id = conv.version_id;
               if (!newRecord.created_at) newRecord.created_at = conv.createdAt;
               if (!newRecord.updated_at) newRecord.updated_at = conv.updatedAt;
-              
+
               if (!newRecord.AiConfig && conv.message_by === 'user') newRecord.AiConfig = conv.AiConfig;
               if (!newRecord.fallback_model && conv.message_by === 'assistant') newRecord.fallback_model = conv.fallback_model;
               if (!newRecord.image_urls && conv.message_by === 'assistant') {
                 const imageItems = (conv.image_urls || []).map(url => ({ url, type: 'image' }));
-                const fileItems  = (conv.urls  || []).map(url => ({ url, type: 'pdf' }));
+                const fileItems = (conv.urls || []).map(url => ({ url, type: 'pdf' }));
 
                 const userUrls = [...imageItems, ...fileItems];
                 newRecord.llm_urls = userUrls;
@@ -172,7 +172,7 @@ module.exports = {
 
               if (!newRecord.image_urls && conv.message_by === 'user') {
                 const imageItems = (conv.image_urls || []).map(url => ({ url, type: 'image' }));
-                const fileItems  = (conv.urls  || []).map(url => ({ url, type: 'pdf' }));
+                const fileItems = (conv.urls || []).map(url => ({ url, type: 'pdf' }));
 
                 const userUrls = [...imageItems, ...fileItems];
                 newRecord.user_urls = userUrls;
@@ -180,17 +180,17 @@ module.exports = {
 
               if (!newRecord.chatbot_message && conv.message_by === 'assistant') newRecord.chatbot_message = conv.chatbot_message;
               if (!newRecord.prompt && conv.message_by === 'user') {
-                  newRecord['prompt'] = 
-                    newRecord['AiConfig']?.messages?.[0]?.role === 'developer' ? newRecord['AiConfig']?.messages?.[0]?.content :
+                newRecord['prompt'] =
+                  newRecord['AiConfig']?.messages?.[0]?.role === 'developer' ? newRecord['AiConfig']?.messages?.[0]?.content :
                     newRecord['AiConfig']?.input?.[0]?.role === 'developer' ? newRecord['AiConfig']?.input?.[0]?.content :
-                    newRecord['AiConfig']?.system
-                }
+                      newRecord['AiConfig']?.system
+              }
 
               // Set user_feedback if available
               if (conv.user_feedback) {
                 newRecord.user_feedback = conv.user_feedback;
               }
-              
+
               // Map message based on message_by (role)
               if (conv.message_by === 'user') {
                 newRecord.user = conv.message;
@@ -202,13 +202,13 @@ module.exports = {
                 newRecord.tools_call_data = conv.tools_call_data;
               }
             }
-            
+
             // Get raw_data for this message_id
             const rawDataList = rawDataMap.get(messageId);
             if (rawDataList && rawDataList.length > 0) {
               // Use the first raw_data entry (or aggregate if needed)
               const rawData = rawDataList[0];
-              
+
               // Map raw_data fields
               newRecord.service = rawData.service;
               newRecord.model = rawData.model;
@@ -217,58 +217,61 @@ module.exports = {
               newRecord.variables = rawData.variables;
               newRecord.firstAttemptError = rawData.firstAttemptError;
               newRecord.finish_reason = rawData.finish_reason;
-              
+
               // Create tokens JSON object
               newRecord.tokens = {
                 input_tokens: rawData.input_tokens || 0,
                 output_tokens: rawData.output_tokens || 0,
                 expected_cost: rawData.expected_cost || 0
               };
-              
+
               // Create latency JSON object
               if (rawData.latency) {
                 newRecord.latency = {
                   total: rawData.latency
                 };
               }
-              
+
               // If multiple raw_data entries exist, aggregate tokens
               if (rawDataList.length > 1) {
                 let totalInputTokens = 0;
                 let totalOutputTokens = 0;
                 let totalExpectedCost = 0;
                 let totalLatency = 0;
-                
+
                 rawDataList.forEach(rd => {
                   totalInputTokens += rd.input_tokens || 0;
                   totalOutputTokens += rd.output_tokens || 0;
                   totalExpectedCost += rd.expected_cost || 0;
                   totalLatency += rd.latency || 0;
                 });
-                
+
                 newRecord.tokens = {
                   input_tokens: totalInputTokens,
                   output_tokens: totalOutputTokens,
                   expected_cost: totalExpectedCost
                 };
-                
+
                 newRecord.latency = {
                   total: totalLatency
                 };
               }
             }
-            
+
             recordsToInsert.push(newRecord);
           } catch (err) {
             console.error(`Error processing message_id ${messageId}:`, err.message);
             errorCount++;
           }
         }
-        
+
         // Step 6: Bulk insert records
         if (recordsToInsert.length > 0) {
+          // Sanitize records to remove null bytes which Postgres doesn't support
+          const sanitizedRecordsList = recordsToInsert.map(record => sanitizeForPg(record));
+
           // Properly serialize JSONB fields for bulk insert
-          const serializedRecords = recordsToInsert.map(record => ({
+          const serializedRecords = sanitizedRecordsList.map(record => ({
             ...record,
             tools_call_data: JSON.stringify(record.tools_call_data || []),
             user_urls: JSON.stringify(record.user_urls || []),
@@ -279,19 +282,19 @@ module.exports = {
             variables: record.variables ? JSON.stringify(record.variables) : null,
             latency: record.latency ? JSON.stringify(record.latency) : null
           }));
-          
+
           await queryInterface.bulkInsert('conversation_logs', serializedRecords, { transaction });
           migratedCount += recordsToInsert.length;
           console.log(`Migrated ${recordsToInsert.length} records in this batch (Total: ${migratedCount}/${messageIds.length})`);
         }
       }
-      
+
       await transaction.commit();
-      
+
       console.log('Data migration completed successfully!');
       console.log(`Summary: Migrated ${migratedCount} conversation logs`);
       console.log(`Errors: ${errorCount}`);
-      
+
     } catch (error) {
       await transaction.rollback();
       console.error('Data migration failed:', error);
@@ -301,16 +304,16 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
-    
+
     try {
       console.log('Rolling back data migration...');
-      
+
       // Delete all records from conversation_logs that were migrated
       await queryInterface.bulkDelete('conversation_logs', {}, { transaction });
-      
+
       await transaction.commit();
       console.log('Rollback completed successfully!');
-      
+
     } catch (error) {
       await transaction.rollback();
       console.error('Rollback failed:', error);
@@ -318,4 +321,30 @@ module.exports = {
     }
   }
 };
+
+function sanitizeForPg(obj) {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  if (typeof obj === 'string') {
+    // Remove null bytes
+    return obj.replace(/\u0000/g, '');
+  }
+  if (obj instanceof Date) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeForPg);
+  }
+  if (typeof obj === 'object') {
+    const newObj = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newObj[key] = sanitizeForPg(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}
 
