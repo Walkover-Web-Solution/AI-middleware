@@ -45,7 +45,7 @@ module.exports = {
             c.function,
             c.updated_message,
             c.message_id,
-            c.tools_call_data
+            c.tools_call_data,
             c.user_feedback,
             c.type,
             c.external_reference,
