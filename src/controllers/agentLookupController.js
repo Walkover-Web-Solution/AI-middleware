@@ -31,7 +31,6 @@ export const getAgentsByModel = async (req, res, next) => {
       ...configs.map(c => ({ kind: 'config', data: c })),
     ];
 
-    const orgIdsUsed = Array.from(new Set(items.map(it => String(it.data.org_id))));
     const parentIds = Array.from(new Set(
       versions
         .filter(v => !configByOrg.has(String(v.org_id)) && v?.parent_id)

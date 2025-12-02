@@ -4,7 +4,7 @@ import { Model } from "sequelize";
 
 export default (sequelize, DataTypes) => {
   class orchestrator_history extends Model {
-    static associate(models) {
+    static associate() {
       // we can define associations here, avi to kuch nhi h.
     }
   }

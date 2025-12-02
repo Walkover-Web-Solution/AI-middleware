@@ -1,5 +1,5 @@
 import { generateIdentifier } from "../services/utils/utilityService.js";
-import { getOrganizationById, updateOrganizationData, createProxyToken, validateCauthKey } from "../services/proxyService.js";
+import { getOrganizationById, updateOrganizationData, createProxyToken } from "../services/proxyService.js";
 import auth_service from "../db_services/auth_service.js";
 import jwt from 'jsonwebtoken';
 
@@ -74,47 +74,6 @@ const verify_auth_token_controller = async (req, res) => {
 
 
 
-const refresh_token_controller = async (req, res, next) => {
-    const { refresh_token } = req.body;
-
-    if (!refresh_token) {
-        throw new Error('Refresh token is required');
-    }
-
-    const decoded = jwt.verify(refresh_token, process.env.SecretKey);
-    
-    const accessToken = await createProxyToken({
-        company_id: decoded.company_id,
-        user_id: decoded.user_id
-    });
-
-    res.locals = {
-        success: true,
-        message: 'Access token refreshed successfully',
-        access_token: accessToken
-    }
-    req.statusCode = 200;
-    return next();
-};
-
-const validate_cauth_key_controller = async (req, res, next) => {
-    const pauthkey = req.body?.pauthkey || req.header('pauthkey');
-
-    if (!pauthkey) {
-        throw new Error('pauthkey is required');
-    }
-
-    const result = await validateCauthKey(pauthkey);
-
-    res.locals = {
-        success: true,
-        message: 'cAuth key validated successfully',
-        result
-    };
-    req.statusCode = 200;
-    return next();
-};
-
 const get_client_info_controller = async (req, res, next) => {
     const { client_id } = req.query;
 
@@ -137,8 +96,6 @@ export {
     CreateAuthToken,
     save_auth_token_in_db_controller,
     verify_auth_token_controller,
-    refresh_token_controller,
-    validate_cauth_key_controller,
     get_client_info_controller,
     get_auth_token_in_db_controller
 }

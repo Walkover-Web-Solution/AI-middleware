@@ -1,5 +1,6 @@
 import { get_webhook_data } from '../db_services/webhook_alert_dbservice.js'
-import {sendResponse} from './utils/utilityService.js'
+import { sendResponse } from './utils/utilityService.js'
+import logger from '../logger.js';
 
 async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
   try {

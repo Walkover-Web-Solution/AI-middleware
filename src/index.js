@@ -26,19 +26,13 @@ import AuthRouter from "./routes/AuthRoute.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import configurePostmanCollection from './routes/configurePostmanCollection.js';
 import InternalRoutes from './routes/InternalRoutes.js';
 import alerting from './routes/alerting_routes.js';
-import showCaseRoutes from './routes/showCase_routes.js'
+
 import testcaseRoutes from './routes/testcase_routes.js'
-import templateRoute from './routes/template_route.js'
 import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
-import flowRoutes from './routes/flow_routes.js'
-import orchestratorRouter from './routes/orchestrator_routes.js';
-import { DocumentLoader } from './services/document-loader/index.js';
-import pocRoutes from './routes/poc_routes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
 import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
 
@@ -62,36 +56,12 @@ try {
 app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
-app.get('/rag-testing-async', async (req, res) => {
-    res.send('Done');
-    setTimeout(async () => {
-      try {
-        const loader = new DocumentLoader();
-        const content = await loader.getContent(req.query.url || 'https://viasocket.com');
-        console.log(content);
-      } catch (error) {
-        console.error('Error in async operation:', error);
-      }
-    }, 10000)
-})
-
-app.get('/rag-testing', async (req, res) => {
-  try {
-    const loader = new DocumentLoader();
-    const content = await loader.getContent(req.query.url || 'https://viasocket.com');
-    res.send(content);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  }
-})
 app.use('/api/v1/config', configurationController);
 app.use('/history', conversationLogsRoutes);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);
-app.use('/config',configurePostmanCollection)
 app.use('/alerting', alerting)
 app.use('/hello', helloRoutes);
 app.use('/thread', threadRoutes);
@@ -99,15 +69,11 @@ app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
-app.use('/showcase',showCaseRoutes);
-app.use('/testcases',testcaseRoutes);
-app.use('/report',reportRoute);
-app.use('/modelConfiguration',ModelsConfigRoutes);
-app.use('/Template',templateRoute);
-app.use('/flow',flowRoutes)
-app.use('/orchestrator', orchestratorRouter);
+
+app.use('/testcases', testcaseRoutes);
+app.use('/report', reportRoute);
+app.use('/modelConfiguration', ModelsConfigRoutes);
 app.use('/auth', AuthRouter)
-app.use('/poc', pocRoutes)
 app.use('/data', agentLookupRoutes)
 
 //Metrics
@@ -164,7 +130,7 @@ process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
   shutdown('uncaughtException', `Uncaught exception: ${error.message}`);
 });
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
   shutdown('unhandledRejection', `Unhandled rejection: ${reason}`);
 });

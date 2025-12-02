@@ -106,46 +106,6 @@ const update = async (botId, chatBotData) => {
     };
   }
 };
-const deleteById = async botId => {
-  try {
-    const deletedChatBot = await ChatBotModel.findByIdAndDelete(botId);
-    if (!deletedChatBot) {
-      return {
-        success: false,
-        error: "Chatbot not found"
-      };
-    }
-    return {
-      success: true,
-      message: "Chatbot deleted successfully"
-    };
-  } catch (error) {
-    console.log("Error in deleting chatbot:", error);
-    return {
-      success: false,
-      error: "Failed to delete chatbot"
-    };
-  }
-};
-const updateDetailsInDb = async (identifier, dataToSend) => {
-  try {
-    const updatedChatBot = await ChatBotModel.findByIdAndUpdate(identifier, {
-      $set: dataToSend
-    }, {
-      new: true
-    });
-    return {
-      success: true,
-      chatBot: updatedChatBot
-    };
-  } catch (error) {
-    console.log("Error in updating chatbot details:", error);
-    return {
-      success: false,
-      error: "Failed to update chatbot details"
-    };
-  }
-};
 const updateAction = async (chatBotId, componentId, gridId, actionId, actionsArr, frontendActions, frontendActionId) => {
   try {
     let response = null;
@@ -258,8 +218,6 @@ export default {
   getAll,
   getOne,
   update,
-  deleteById,
-  updateDetailsInDb,
   updateAction,
   updateResponseTypes,
   addBridgeInChatBot,

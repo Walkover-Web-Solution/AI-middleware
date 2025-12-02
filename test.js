@@ -23,7 +23,7 @@ try {
             : null;
             if (!api_key_Doc) continue;
             // Ensure version_id exists
-            if (!Array.isArray(api_key_Doc.version_id)) l{
+            if (!Array.isArray(api_key_Doc.version_id)) {
                 await apiKeyCredentials.updateOne(
                     { _id: api_key_Doc._id },
                     { $set: { version_id: [] } }

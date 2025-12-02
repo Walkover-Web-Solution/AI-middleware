@@ -6,7 +6,7 @@ export class GoogleDocLoader  {
         'document' : 'txt',
         'spreadsheets' : 'csv'
     }
-    async getContent(url, options) {
+    async getContent(url) {
         const docId = url?.match(/\/d\/(.*?)\//)?.[1];
         const docType = url?.match(/https:\/\/docs\.google\.com\/([^/]+)\//)?.[1]
         const docFormat = getFileFormatByUrl(url);
