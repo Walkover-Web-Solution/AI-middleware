@@ -35,6 +35,7 @@ import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
 import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
+import templateRoute from './routes/template_route.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -75,6 +76,7 @@ app.use('/report', reportRoute);
 app.use('/modelConfiguration', ModelsConfigRoutes);
 app.use('/auth', AuthRouter)
 app.use('/data', agentLookupRoutes)
+app.use(['/Template','/template'], templateRoute)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
