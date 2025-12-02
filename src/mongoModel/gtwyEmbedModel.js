@@ -28,10 +28,6 @@ const FolderSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  apikey_object_id: {
-    type: Object,
-    default: {}
-  },
   folder_limit: {
     type: Number,
     default: 0

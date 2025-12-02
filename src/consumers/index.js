@@ -56,7 +56,6 @@ console.log(CONSUMER_ENABLED, process.env.DB_NAME, "CONSUMER  ADSF ")
 if (CONSUMER_ENABLED) {
   (() => {
     CONSUMERS.forEach((consumer) => {
-      /* eslint-disable no-new */
       new Consumer(consumer);
     });
   })();

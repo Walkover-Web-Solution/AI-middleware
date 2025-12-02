@@ -87,20 +87,6 @@ const updateChatBot = async (req, res) => {
     const result = await ChatbotDbService.update(botId, title);
     return res.status(result.success ? 200 : 400).json(result);
 };
-const deleteChatBot = async (req, res) => {
-    const { botId } = req.params;
-    if (!botId) throw new Error('botId is mandatory');
-    const result = await ChatbotDbService.deleteById(botId);
-    return res.status(result.success ? 200 : 404).json(result);
-};
-const updateDetails = async (req, res) => {
-    const identifier = req.params?.botId;
-    const dataToSend = {
-        ...req.body
-    };
-    const result = await ChatbotDbService.updateDetailsInDb(identifier, dataToSend);
-    return res.status(result.success ? 200 : 404).json(result);
-};
 const updateChatBotAction = async (req, res) => {
     const identifier = req.params?.botId;
     const {
@@ -179,14 +165,6 @@ const createAllDefaultResponseInOrg = async (req, res) => {
     const orgId = req.params?.orgId;
     if (!orgId) throw new Error('orgId is required')
     const result = await responsetypeService.create(orgId);
-    return res.status(result.success ? 200 : 404).json(result);
-};
-
-const updateAllDefaultResponseInOrg = async (req, res) => {
-    // const orgId = req.params?.orgId;
-    const orgId = req.body?.org_id;
-    const { responseJson } = req.body;
-    const result = await responsetypeService.update(orgId, responseJson);
     return res.status(result.success ? 200 : 404).json(result);
 };
 
@@ -299,11 +277,8 @@ export {
     getAllChatBots,
     getOneChatBot,
     updateChatBot,
-    deleteChatBot,
-    updateDetails,
     updateChatBotAction,
     createAllDefaultResponseInOrg,
-    updateAllDefaultResponseInOrg,
     getAllDefaultResponseInOrg,
     addorRemoveBridgeInChatBot,
     addorRemoveResponseIdInBridge,

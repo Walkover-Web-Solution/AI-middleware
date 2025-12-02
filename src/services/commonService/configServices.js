@@ -1,5 +1,5 @@
 
-import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
@@ -8,7 +8,6 @@ import conversationDbService from "../../db_services/conversationDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
-import { getallOrgs } from "../../utils/proxyUtils.js";
 import { send_error_to_webhook } from "../send_error_webhook.js"
 import { getThreadHistoryFormatted } from "../../db_services/conversationLogsDbService.js";
 
@@ -18,13 +17,10 @@ const getThreads = async (req, res,next) => {
     let pageSize = parseInt(req.query.limit) || 30;
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id=thread_id, version_id } = req.query
+    const { sub_thread_id = thread_id } = req.query;
     let { org_id } = req.body;
-    let starterQuestion = []
-    let bridge = {}
-    let {user_feedback, error} = req.query
-    error = error?.toLowerCase() === 'true' ? true : false;
-    const isChatbot = req.isChatbot || false;
+    let starterQuestion = [];
+    let bridge = {};
 
     if (bridge_slugName) {
       bridge =req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName): await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
@@ -44,21 +40,6 @@ const getThreads = async (req, res,next) => {
     console.error("common error=>", error)
     throw error;
   }
-};
-const getMessageByMessageId = async (req, res, next) => {
-  let { bridge_id, message_id } = req.params;
-  const { thread_id, bridge_slugName } = req.params;
-  let { org_id } = req.body;
-
-  if (bridge_slugName) {
-    bridge_id = req.chatBot?.ispublic ? (await configurationService.getBridgeByUrlSlugname(bridge_slugName))?._id: (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
-    bridge_id = bridge_id?.toString();
-    org_id = req.chatBot?.ispublic ? bridge_id?.org_id : org_id;
-  }
-  const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
-  res.locals = {success:true,thread};
-  req.statusCode = 200;
-  return next();
 };
 const getMessageHistory = async (req, res, next) => {
   try {
@@ -103,14 +84,9 @@ const getSystemPromptHistory = async (req, res, next) => {
 
 
 const deleteBridges = async (req, res,next) => {
+  const { bridge_id } = req.params;
+  const { org_id, restore = false } = req.body;
   try {
-    const {
-      bridge_id
-    } = req.params;
-    const {
-      org_id,
-      restore = false
-    } = req.body;
     
     let result;
     
@@ -476,106 +452,8 @@ const getAllUserUpdates = async(req, res, next) => {
 }
 
 
-const getAllData = async (req, res, next) => {
-  // fetch raw metrics and org list
-  const hours = parseInt(req.query.hours, 10) || 48;
-
-  const raw = await conversationDbService.getAllDatafromPg(hours);
-  const orgResp = await getallOrgs();
-
-  // normalize org list array from various response shapes
-  let orgList = [];
-  if (Array.isArray(orgResp?.data?.data)) {
-    orgList = orgResp.data.data;
-  }
-
-  // build a lookup map from org_id → org name
-  const orgMap = new Map(orgList.map(o => [String(o.id), o.name]));
-
-  // prepare grouped result
-  const result = {
-    averageResponseTime: raw.averageResponseTime,
-    orgs: {}
-  };
-
-  // helper to ensure org bucket exists
-  const ensureOrg = orgId => {
-    const key = String(orgId);
-    if (!result.orgs[key]) {
-      result.orgs[key] = {
-        org_name: orgMap.get(key) || null,
-        bridges: {}
-      };
-    }
-    return result.orgs[key];
-  };
-
-  // group active bridges
-  if (Array.isArray(raw.activeBridges)) {
-    raw.activeBridges.forEach(({ bridge_id, org_id }) => {
-      const orgEntry = ensureOrg(org_id);
-      if (!orgEntry.bridges[bridge_id]) orgEntry.bridges[bridge_id] = {};
-      orgEntry.bridges[bridge_id].active = true;
-    });
-  }
-
-  // group hits per bridge
-  if (raw.hitsPerBridge && typeof raw.hitsPerBridge === "object") {
-    Object.entries(raw.hitsPerBridge).forEach(([bridgeId, val]) => {
-      const { org_id, hits } = val;
-      const orgEntry = ensureOrg(org_id);
-      if (!orgEntry.bridges[bridgeId]) orgEntry.bridges[bridgeId] = {};
-      orgEntry.bridges[bridgeId].hits = hits;
-    });
-  }
-
-  // group average response time per bridge
-  if (raw.averageResponseTimePerBridge && typeof raw.averageResponseTimePerBridge === "object") {
-    Object.entries(raw.averageResponseTimePerBridge).forEach(([bridgeId, val]) => {
-      const { org_id, average_response_time } = val;
-      const orgEntry = ensureOrg(org_id);
-      if (!orgEntry.bridges[bridgeId]) orgEntry.bridges[bridgeId] = {};
-      orgEntry.bridges[bridgeId].average_response_time = average_response_time;
-    });
-  }
-
-  // group positive/negative counts
-  if (Array.isArray(raw.BridgePositiveNegativeCount)) {
-    raw.BridgePositiveNegativeCount.forEach(({ bridge_id, org_id, positive_count, negative_count }) => {
-      const orgEntry = ensureOrg(org_id);
-      if (!orgEntry.bridges[bridge_id]) orgEntry.bridges[bridge_id] = {};
-      orgEntry.bridges[bridge_id].positive_count = positive_count;
-      orgEntry.bridges[bridge_id].negative_count = negative_count;
-    });
-  }
-
-  // fetch and attach each bridge's name
-  for (const [orgKey, orgEntry] of Object.entries(result.orgs)) {
-    await Promise.all(
-      Object.keys(orgEntry.bridges).map(async bridgeId => {
-        const bridgeName = await configurationService.getBridgeNameById(bridgeId, orgKey);
-        orgEntry.bridges[bridgeId].bridge_name = bridgeName;
-      })
-    );
-  }
-
-  // respond with organized data: orgs → bridge_ids → metrics (including bridge_name)
-  res.locals = {
-    data: {
-      averageResponseTime: result.averageResponseTime,
-      orgs: result.orgs
-    },
-    success: true
-  };
-  req.statusCode = 200;
-  return next();
-};
-
-
-
 export default {
   getThreads,
-  getMessageByMessageId,
   getMessageHistory,
   bridgeArchive,
   deleteBridges,
@@ -588,6 +466,5 @@ export default {
   userFeedbackCount,
   getThreadMessages,
   getAllSubThreadsController,
-  getAllUserUpdates,
-  getAllData
+  getAllUserUpdates
 } 

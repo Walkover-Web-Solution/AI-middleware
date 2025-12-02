@@ -164,7 +164,7 @@ async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
 
 async function deleteApi(apikey_object_id, org_id) {
     try {
-        const cleanupResult = await cleanupApiKeyFromEmbeds(apikey_object_id, org_id);
+        await cleanupApiKeyFromEmbeds(apikey_object_id, org_id);
        
         const result = await ApikeyCredential.deleteOne({ _id: apikey_object_id});
         if (result.deletedCount > 0) {
