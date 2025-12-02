@@ -1,43 +1,11 @@
 import ConfigurationServices from "../db_services/ConfigurationServices.js";
 import FolderModel from "../mongoModel/gtwyEmbedModel.js";
 import configurationModel from "../mongoModel/configuration.js";
-import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier,generateAuthToken } from "../services/utils/utilityService.js";
+import { getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
+import { generateIdentifier } from "../services/utils/utilityService.js";
 import { cleanupCache } from "../services/utils/redisUtility.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
-const embedLogin = async (req, res) => {
-    const { name: embeduser_name, email: embeduser_email } = req.Embed;
-    const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
-      const Tokendata = {
-        "user":{
-          id: req.Embed.user_id,
-          name: embeduser_name,
-          email: embeduser_email,
-          
-        },
-        "org":{
-          id: req.Embed.org_id,
-          name: req.Embed.org_name,
-          
-        },
-        "extraDetails":{  
-          type: 'embed',
-          folder_id: req.Embed.folder_id,
-        }
-      }
-      const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
-      const config = folder?.config || {};
-      const apikey_object_id = folder?.apikey_object_id
-      await createProxyToken(embedDetails);
-      const response = {
-        ...req?.Embed,
-        user_id: req.Embed.user_id,
-        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
-        config:{...config, apikey_object_id}
-      };
-      return res.status(200).json({ data: response, message: 'logged in successfully' });
-}
 
 const createEmbed = async (req, res) => {
     const name = req.body.name;
@@ -153,4 +121,5 @@ const getEmbedDataByUserId = async (req, res, next) => {
   req.statusCode = 200;
   return next();
 };
-export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };
+
+export { createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };

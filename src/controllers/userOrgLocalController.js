@@ -1,6 +1,5 @@
 import axios from "axios";
 import { storeInCache } from "../cache_service/index.js";
-import { createProxyToken } from "../services/proxyService.js";
 import { switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
 import { generateAuthToken } from "../services/utils/utilityService.js";
 
@@ -74,47 +73,6 @@ const updateUserDetails = async (req, res) => {
         res.status(404).json({ message: "Something went wrong" });
     }
 };
-const embedUser = async (req, res, next) => {
-    const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
-    const Tokendata = {
-        "user":{
-          id: req.Embed.user_id,
-          name: embeduser_name,
-          email: embeduser_email,
-          
-        },
-        "org":{
-          id: req.Embed.org_id,
-          name: req.Embed.org_name,
-          
-        },
-        "extraDetails":{  
-          type: 'embed'
-        }
-      }
-      const embedDetails = !req.isGtwyUser ?
-        {
-            user_id: req.Embed.user_id,
-            company_id: req?.Embed?.org_id,
-            company_name: req.Embed.org_name,
-            tokenType: 'embed',
-            embeduser_name, embeduser_email
-        }
-        : {
-            company_id: req.company_id,
-            company_name: req.company_name,
-            user_id: req.user_id
-        };
-     await createProxyToken(embedDetails);
-      const response = {
-        ...(req?.Embed || {}),
-        ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
-        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
-      };
-    res.locals = { data: response, success: true };
-    req.statusCode = 200;
-    return next();
-  };
             
 const removeUsersFromOrg = async (req, res, next) => {
   try {
@@ -160,6 +118,5 @@ export {
     userOrgLocalToken,
     switchUserOrgLocal,
     updateUserDetails,
-    embedUser,
     removeUsersFromOrg
 }
