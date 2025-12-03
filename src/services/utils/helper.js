@@ -32,16 +32,113 @@ class Helper {
   static maskApiKey = (key) => {
     if (!key) return '';
     if (key.length > 6)
-        return key.slice(0, 3) + '*'.repeat(9) + key.slice(-3);
+      return key.slice(0, 3) + '*'.repeat(9) + key.slice(-3);
     return key;
   }
-  
+
   static parseJson = (jsonString) => {
     try {
-      return{success: true, json: JSON.parse(jsonString)};
+      return { success: true, json: JSON.parse(jsonString) };
     } catch (error) {
-      return {success: false, error: error.message};
+      return { success: false, error: error.message };
     }
   };
+
+  static findVariablesInString(text) {
+    const regex = /{{(.*?)}}/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      matches.push(match[1]);
+    }
+    return matches;
+  }
+
+  static async responseMiddlewareForBridge(service, response, isUpdate = false) {
+    // Simplified response middleware
+    return response;
+  }
+
+  static traverseBody(body, path = [], paths = [], fields = {}, required_params = []) {
+    if (!body) {
+      return { paths, fields, required_params };
+    }
+
+    for (const key in body) {
+      const value = body[key];
+      const currentPath = [...path, key];
+
+      if (path.length === 0) {
+        if (!fields[key]) {
+          fields[key] = {
+            description: "",
+            type: "object",
+            enum: [],
+            required_params: [],
+            parameter: {}
+          };
+        }
+      }
+
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        if (path.length > 0) {
+          let parentObj = fields[path[0]];
+          for (let i = 1; i < path.length; i++) {
+            parentObj = parentObj.parameter[path[i]];
+          }
+
+          if (!parentObj.required_params.includes(key)) {
+            parentObj.required_params.push(key);
+          }
+
+          if (!parentObj.parameter[key]) {
+            parentObj.parameter[key] = {
+              description: "",
+              type: "object",
+              enum: [],
+              required_params: [],
+              parameter: {}
+            };
+          }
+        }
+        Helper.traverseBody(value, currentPath, paths, fields, required_params);
+      } else if (value === "your_value_here") {
+        paths.push(currentPath.join("."));
+        if (!required_params.includes(key)) {
+          required_params.push(key);
+        }
+
+        if (path.length > 0) {
+          let parentObj = fields[path[0]];
+          for (let i = 1; i < path.length; i++) {
+            parentObj = parentObj.parameter[path[i]];
+          }
+
+          if (!parentObj.required_params.includes(key)) {
+            parentObj.required_params.push(key);
+          }
+
+          parentObj.parameter[key] = {
+            description: "",
+            type: "string",
+            enum: [],
+            required_params: [],
+            parameter: {}
+          };
+        } else {
+          fields[key] = {
+            description: "",
+            type: "string",
+            enum: [],
+            required_params: [],
+            parameter: {}
+          };
+        }
+      }
+    }
+
+    return { paths, fields, required_params };
+  }
+
 }
 export default Helper;

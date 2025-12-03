@@ -158,7 +158,7 @@ const combine_middleware = async (req, res, next) => {
 
     return res.status(401).json({ message: 'unauthorized user' });
   } catch (e) {
-    console.error("middleware error =>",e);
+    console.error("middleware error =>", e);
     return res.status(401).json({ message: 'unauthorized user' });
   }
 };
@@ -178,7 +178,7 @@ const EmbeddecodeToken = async (req, res, next) => {
         const checkToken = jwt.verify(token, orgToken);
         if (checkToken) {
           if (checkToken.user_id) checkToken.user_id = encryptString(checkToken.user_id);
-          const {proxyResponse, name, email} = await createOrGetUser(checkToken, decodedToken, orgTokenFromDb)
+          const { proxyResponse, name, email } = await createOrGetUser(checkToken, decodedToken, orgTokenFromDb)
           req.Embed = {
             ...checkToken,
             name,
@@ -188,13 +188,13 @@ const EmbeddecodeToken = async (req, res, next) => {
             org_id: proxyResponse.data.company.id,
           };
           req.profile = {
-            user:{
+            user: {
               id: proxyResponse.data.user.id,
               name: ""
             },
-            org:{
-              id:proxyResponse.data.company.id,
-              name:orgTokenFromDb?.name
+            org: {
+              id: proxyResponse.data.company.id,
+              name: orgTokenFromDb?.name
             }
           }
           req.IsEmbedUser = true
@@ -204,30 +204,30 @@ const EmbeddecodeToken = async (req, res, next) => {
       }
       else if (orgToken) {
         const checkToken = jwt.verify(token, orgToken);
-        if(checkToken){
-        req.isGtwyUser = true;
-        req.company_id = decodedToken?.org_id
-        req.company_name = orgTokenFromDb?.name
-        req.email = orgTokenFromDb?.email;
-        req.user_id = orgTokenFromDb?.created_by;
-        return next();
+        if (checkToken) {
+          req.isGtwyUser = true;
+          req.company_id = decodedToken?.org_id
+          req.company_name = orgTokenFromDb?.name
+          req.email = orgTokenFromDb?.email;
+          req.user_id = orgTokenFromDb?.created_by;
+          return next();
+        }
       }
-    }
-    return res.status(404).json({ message: 'unauthorized user' });
+      return res.status(404).json({ message: 'unauthorized user' });
     }
     return res.status(401).json({ message: 'unauthorized user ' });
   } catch (err) {
     return res.status(401).json({ message: 'unauthorized user ', err });
   }
 };
-const InternalAuth = async (req, res, next)=>{
+const InternalAuth = async (req, res, next) => {
   return next()
 }
 
 
-const loginAuth = async (req, res, next)=>{
- req.profile = await makeDataIfProxyTokenGiven(req);
- 
- return next()
+const loginAuth = async (req, res, next) => {
+  req.profile = await makeDataIfProxyTokenGiven(req);
+
+  return next()
 }
 export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, loginAuth };

@@ -31,7 +31,7 @@ async function getHistory(bridge_id, timestamp) {
 async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
-  
+
   // Build the WHERE clause for the SQL query
   let whereConditions = [
     `conversations.org_id = '${org_id}'`,
@@ -39,11 +39,11 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     `bridge_id = '${bridge_id}'`,
     `sub_thread_id = '${sub_thread_id}'`
   ];
-  
+
   if (version_id !== undefined && version_id) {
     whereConditions.push(`version_id = '${version_id}'`);
   }
-  
+
   if (user_feedback === "all" || !user_feedback) {
     whereConditions.push(`(user_feedback IS NULL OR user_feedback IN (0, 1, 2))`);
   } else {
@@ -54,9 +54,9 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   if (error) {
     whereConditions.push(`raw_data.error != ''`);
   }
-  
+
   const whereClause = whereConditions.join(' AND ');
-  
+
   let countResult = [{ total: 0 }];
   // Only execute count query if not chatbot
   if (!isChatbot) {
@@ -72,7 +72,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
     `;
     countResult = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
   }
-  
+
   // Main query with JOIN to raw_data
   let query;
   if (isChatbot) {
@@ -132,23 +132,23 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   if (limit !== null) {
     query += ` LIMIT ${limit}`;
   }
-  
+
   if (offset !== null) {
     query += ` OFFSET ${offset}`;
   }
-  
+
   // Execute main query
   const conversationsResult = await models.pg.sequelize.query(query, { type: models.pg.sequelize.QueryTypes.SELECT });
-  
+
   // Get total entries from count query
   const totalEntries = parseInt(countResult?.[0]?.total || 0);
-  
+
   // Sort the results in ascending order (since we queried in DESC but need to reverse)
   const conversations = conversationsResult.reverse();
-  
+
   // Calculate pagination info only if not chatbot
   const totalPages = isChatbot ? 1 : (limit ? Math.ceil(totalEntries / limit) : 1);
-  
+
   return { conversations, totalPages, totalEntries: isChatbot ? conversations.length : totalEntries };
 }
 
@@ -226,7 +226,7 @@ async function findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, 
     query += `AND conversations."user_feedback" = :user_feedback `;
   }
 
-  if (error){
+  if (error) {
     query += `AND raw_data.error != '' `;
   }
 
@@ -293,8 +293,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     bridge_id,
     org_id
   };
-  if(version_id)
-  {
+  if (version_id) {
     whereClause.version_id = version_id;
   }
   // Handle the keyword search filter
@@ -346,7 +345,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
   // Get display names for unique sub_thread_ids
   const uniqueSubThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
   const displayNamesMap = new Map();
-  
+
   await Promise.all(
     uniqueSubThreadIds.map(async (subThreadId) => {
       const displayName = await getDisplayName(subThreadId);
@@ -358,23 +357,23 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
   const getMatchedField = (thread, keyword_search) => {
     if (thread.message && thread.message.includes(keyword_search)) {
       // Check if message contains sub_thread_id, prioritize sub_thread_id match
-      const isMessageContainsSubThreadId = thread.sub_thread_id && 
+      const isMessageContainsSubThreadId = thread.sub_thread_id &&
         thread.message.includes(thread.sub_thread_id.toString());
       return isMessageContainsSubThreadId ? 'sub_thread_id' : 'message';
     }
-    
+
     if (thread.message_id && thread.message_id.toString().includes(keyword_search)) {
       return 'message_id';
     }
-    
+
     if (thread.thread_id && thread.thread_id.toString().includes(keyword_search)) {
       return 'thread_id';
     }
-    
+
     if (thread.sub_thread_id && thread.sub_thread_id.toString().includes(keyword_search)) {
       return 'sub_thread_id';
     }
-    
+
     return 'thread_id';
   };
 
@@ -391,7 +390,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
     }
 
     const existingSubThread = response.sub_thread.find(st => st.sub_thread_id === thread.sub_thread_id);
-    
+
     if (existingSubThread) {
       existingSubThread.messages.push(createMessageObj(thread));
     } else {
@@ -448,7 +447,7 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
         uniqueThreads.set(thread.thread_id, response);
       } else if (uniqueThreads.has(thread.thread_id)) {
         const existingThread = uniqueThreads.get(thread.thread_id);
-        
+
         if (matchedField === 'message' || matchedField === 'message_id') {
           handleMessageMatch(existingThread, thread, displayNamesMap);
         } else if (matchedField === 'sub_thread_id') {
@@ -465,17 +464,20 @@ async function findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_searc
 
 async function storeSystemPrompt(promptText, orgId, bridgeId) {
   try {
-    await models.pg.system_prompt_versionings.create({
+    const result = await models.pg.system_prompt_versionings.create({
       system_prompt: promptText,
       org_id: orgId,
       bridge_id: bridgeId,
       created_at: new Date(),
       updated_at: new Date()
     });
+    return result;
   } catch (error) {
     console.error('Error storing system prompt:', error);
+    return null;
   }
 }
+
 
 async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedback_array) {
   let whereClause = {
@@ -523,8 +525,7 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
   return conversations;
 }
 
-async function system_prompt_data(org_id, bridge_id)
-{
+async function system_prompt_data(org_id, bridge_id) {
   const system_prompt = await models.pg.system_prompt_versionings.findOne({
     where: {
       org_id,
@@ -543,7 +544,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
   try {
 
     const [affectedCount, affectedRows] = await models.pg.conversations.update(
-      { updated_message : message },
+      { updated_message: message },
       {
         where: {
           org_id,
@@ -563,7 +564,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       thread_id: row.thread_id,
       model_name: row.model_name,
       bridge_id: row.bridge_id,
-      content: row.message, 
+      content: row.message,
       role: row.message_by,
       function: row.function,
       updated_message: row.updated_message,
@@ -583,7 +584,7 @@ async function updateStatus({ status, message_id }) {
   try {
 
     const [affectedCount, affectedRows] = await models.pg.conversations.update(
-      { user_feedback : status },
+      { user_feedback: status },
       {
         where: {
           message_id
@@ -603,25 +604,24 @@ async function updateStatus({ status, message_id }) {
 }
 
 async function userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback }) {
-  const  whereClause = {
+  const whereClause = {
     bridge_id,
     user_feedback
   }
-  if(startDate && endDate && startDate !== 'null' && endDate !== 'null')
-  {
-    whereClause.createdAt =  {
-      [Sequelize.Op.between]: [startDate, endDate], 
+  if (startDate && endDate && startDate !== 'null' && endDate !== 'null') {
+    whereClause.createdAt = {
+      [Sequelize.Op.between]: [startDate, endDate],
     }
   }
   if (user_feedback === "all" || !user_feedback) {
-    whereClause.user_feedback = { [Sequelize.Op.or]: [1,2] };
+    whereClause.user_feedback = { [Sequelize.Op.or]: [1, 2] };
   } else {
     whereClause.user_feedback = user_feedback;
   }
   const feedbackRecords = await models.pg.conversations.findAll({
     attributes: ["user_feedback"],
     where: whereClause,
-    returning: true, 
+    returning: true,
   });
   return { success: true, result: feedbackRecords.length };
 }
@@ -631,13 +631,13 @@ async function create(payload) {
   return await models.pg.conversations.create(payload);
 }
 
-const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) =>  await models.pg.conversations.findOne({
+const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) => await models.pg.conversations.findOne({
   where: {
     org_id,
     bridge_id,
     thread_id,
     message_id,
-    message_by : 'assistant'
+    message_by: 'assistant'
   },
   raw: true,
   limit: 1
@@ -684,8 +684,8 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
 }
 
 
-const getSubThreads = async (org_id,thread_id, bridge_id) =>{
-    return await Thread.find({ org_id, thread_id, bridge_id });
+const getSubThreads = async (org_id, thread_id, bridge_id) => {
+  return await Thread.find({ org_id, thread_id, bridge_id });
 }
 
 async function sortThreadsByHits(threads) {
@@ -720,7 +720,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     const offset = (page - 1) * pageSize;
     let pageNo = 1;
     let userData = await findInCache(`user_data_${org_id}`);
-    
+
     // Parse cached data if it exists, otherwise fetch fresh data
     if (userData) {
       try {
@@ -734,7 +734,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
         userData = null;
       }
     }
-    
+
     if (!userData) {
       let allUserData = [];
       let hasMoreData = true;
@@ -793,18 +793,18 @@ async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, is
       thread_id,
       bridge_id
     };
-    
+
     // Apply version_id filter to the conversations table
     if (version_id) {
       conversationsWhereClause.version_id = version_id;
     }
-    
-    if(isError) {
+
+    if (isError) {
       rawDataWhereClause.error = {
         [models.pg.Sequelize.Op.ne]: ''
       };
     }
-    
+
     const result = await models.pg.conversations.findAll({
       attributes: [
         'sub_thread_id',
@@ -874,10 +874,10 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     const sortedThreads = threads.sort((a, b) => {
       const keyA = `${a.thread_id}_${a.sub_thread_id}`;
       const keyB = `${b.thread_id}_${b.sub_thread_id}`;
-      
+
       const activityA = activityMap.get(keyA) || new Date(0); // Default to epoch if not found
       const activityB = activityMap.get(keyB) || new Date(0);
-      
+
       return activityB - activityA; // DESC order
     });
 
@@ -887,7 +887,23 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     return threads; // Return original threads if sorting fails
   }
 }
-  
+
+
+
+async function addBulkUserEntries(entries) {
+  try {
+    if (!entries || entries.length === 0) return { success: true, message: "No entries to add" };
+
+    // Map entries to match the database schema if necessary
+    // Assuming user_bridge_config_history model exists in models.pg
+    const result = await models.pg.user_bridge_config_history.bulkCreate(entries);
+
+    return { success: true, result };
+  } catch (error) {
+    console.error("Error adding bulk user entries:", error);
+    return { success: false, message: "Error adding bulk user entries" };
+  }
+}
 
 export default {
   findAllThreads,
@@ -909,5 +925,7 @@ export default {
   sortThreadsByHits,
   getSubThreadsByError,
   findAllThreadsUsingKeywordSearch,
-  sortThreadsByLatestActivity
+  sortThreadsByLatestActivity,
+  addBulkUserEntries
 };
+
