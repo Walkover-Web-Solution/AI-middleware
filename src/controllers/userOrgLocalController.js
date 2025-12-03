@@ -7,7 +7,7 @@ import { generateAuthToken } from "../services/utils/utilityService.js";
 
 
 const userOrgLocalToken = async (req, res) => {
-    const { user, org, ...extra } = req.profile;
+    const { user, org, exp, iat, ...extra } = req.profile;
     const token = generateAuthToken(user, org, extra);
     res.status(200).json({ token });
 }
@@ -15,7 +15,7 @@ const userOrgLocalToken = async (req, res) => {
 const switchUserOrgLocal = async (req, res) => {
   const { orgId, orgName } = req.body;
   await switchUserOrgLocalSchema.validateAsync({ orgId, orgName });
-    const { user, exp, ...extra } = req.profile;
+    const { user, org, exp, iat, ...extra } = req.profile;
     const nowInSeconds = Math.floor(Date.now() / 1000);
     const remainingLifetime = Number.isFinite(exp) ? Math.max(exp - nowInSeconds, 0) : null;
     const expiresInOptions = Number.isFinite(remainingLifetime)
