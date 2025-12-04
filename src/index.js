@@ -5,7 +5,6 @@ import { configDotenv } from 'dotenv';
 import './atatus.js';
 import './consumers/index.js';
 import './services/cache.service.js';
-import configurationController from "./controllers/conversationConfig.controller.js";
 import configRoutes from './routes/config.routes.js';
 import apikeyRoutes from "./routes/apikey.routes.js";
 import helloRoutes from './routes/hello.routes.js';
@@ -13,7 +12,6 @@ import threadRoutes from './routes/thread.routes.js'
 import metricsRoutes from "./routes/metrics.routes.js"
 import mongoose from "mongoose";
 import config from "../config/config.js";
-// import metrisRoutes from "./routes/metrics.routes.js";
 import chatbot from "./routes/chatBot.routes.js";
 import RagRouter from "./routes/rag.routes.js";
 import userOrgLocalController from "./routes/userOrgLocal.routes.js";
@@ -40,7 +38,7 @@ import runAgentsRoutes from './routes/runAgents.routes.js'
 import bridgeRoutes from './routes/bridge.routes.js'
 import templateRoute from './routes/template.routes.js'
 import serviceRoutes from './routes/service.routes.js'
-
+import converstaionRoutes from './routes/conversation.routes.js'
 const app = express();
 configDotenv();
 const PORT = process.env.PORT || 7072;
@@ -65,7 +63,7 @@ try {
 app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
-app.use('/api/v1/config', configurationController);
+app.use('/api/v1/config', converstaionRoutes);
 app.use('/api/agent', configRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
