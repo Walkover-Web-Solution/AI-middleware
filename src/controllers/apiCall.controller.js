@@ -1,5 +1,7 @@
 import service from "../db_services/apiCall.service.js";
 import { validateRequiredParams } from "../services/utils/apiCall.utils.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import Helper from "../services/utils/helper.utils.js";
 
 const getAllApiCalls = async (req, res, next) => {
     const org_id = req.profile?.org?.id;
@@ -72,8 +74,155 @@ const deleteFunction = async (req, res, next) => {
     return next();
 };
 
+const createApi = async (req, res, next) => {
+    try {
+        const body = req.body;
+        const org_id = req.profile.org.id;
+        const folder_id = req.folder_id || null;
+        const user_id = req.profile.user.id;
+        const isEmbedUser = req.embed;
+        const function_name = body.id;
+        const payload = body.payload;
+        const status = body.status;
+        const endpoint_name = body.title;
+        const desc = body.desc;
+
+        if (!desc || !function_name || !status || !org_id) {
+            res.locals = { success: false, message: "Required details must not be empty!!" };
+            req.statusCode = 400;
+            return next();
+        }
+
+        if (status === "published" || status === "updated") {
+            const body_content = payload ? payload.body : null;
+            const traversed_body = Helper.traverseBody(body_content);
+            const fields = traversed_body.fields || {};
+            const api_data = await service.getApiData(org_id, function_name, folder_id, user_id, isEmbedUser);
+            const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], function_name, fields, endpoint_name);
+
+            if (result.success) {
+                const responseData = result.api_data;
+                responseData._id = responseData._id.toString();
+                if (responseData.bridge_ids) {
+                    responseData.bridge_ids = responseData.bridge_ids.map(bid => bid.toString());
+                }
+                res.locals = {
+                    message: "API saved successfully",
+                    success: true,
+                    activated: true,
+                    data: responseData
+                };
+                req.statusCode = 200;
+                return next();
+            } else {
+                res.locals = { success: false, message: "Something went wrong!" };
+                req.statusCode = 400;
+                return next();
+            }
+
+        } else if (status === "delete" || status === "paused") {
+            const result = await service.deleteFunctionFromApicallsDb(org_id, function_name);
+            if (result.success) {
+                res.locals = {
+                    message: "API deleted successfully",
+                    success: true,
+                    deleted: true,
+                    data: result
+                };
+                req.statusCode = 200;
+                return next();
+            } else {
+                res.locals = { success: false, message: result.message || "Something went wrong!" };
+                req.statusCode = 400;
+                return next();
+            }
+        }
+
+        res.locals = { success: false, message: "Something went wrong!" };
+        req.statusCode = 400;
+        return next();
+
+    } catch (e) {
+        console.error("Error in createApi:", e);
+        res.locals = { success: false, message: e.message };
+        req.statusCode = 400;
+        return next();
+    }
+};
+
+const updateApi = async (req, res, next) => {
+    try {
+        const { bridgeId } = req.params;
+        const body = req.body;
+        const version_id = body.version_id;
+        const org_id = req.profile.org.id;
+        const pre_tool_id = body.pre_tools;
+        const status = body.status;
+
+        if (!pre_tool_id || !bridgeId || !org_id) {
+            res.locals = { success: false, message: "Required details must not be empty!!" };
+            req.statusCode = 400;
+            return next();
+        }
+
+        const model_config = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+
+        if (!model_config.success) {
+            res.locals = { success: false, message: "bridge id is not found" };
+            req.statusCode = 400;
+            return next();
+        }
+
+        const data_to_update = {};
+        data_to_update['pre_tools'] = status === "1" ? [pre_tool_id] : [];
+
+        await ConfigurationServices.updateBridge(bridgeId, data_to_update, version_id);
+        const result = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+
+        await ConfigurationServices.updateBridgeIdsInApiCalls(pre_tool_id, version_id || bridgeId, parseInt(status));
+
+        if (result.success) {
+            const response = await Helper.responseMiddlewareForBridge(result.bridges.service, {
+                success: true,
+                message: "Bridge Updated successfully",
+                bridge: result.bridges
+            }, true);
+
+            res.locals = response;
+            req.statusCode = 200;
+            return next();
+        } else {
+            res.locals = result;
+            req.statusCode = 400;
+            return next();
+        }
+
+    } catch (e) {
+        console.error("Error in updateApi:", e);
+        res.locals = { success: false, message: e.message };
+        req.statusCode = 400;
+        return next();
+    }
+};
+
+const getAllInBuiltToolsController = async (req, res, next) => {
+    res.locals = {
+        success: true,
+        message: "Get all inbuilt tools successfully",
+        in_built_tools: [
+            { id: '1', name: 'Web Search', description: 'Allow models to search the web for the latest information before generating a response.', value: 'web_search' },
+            { id: '2', name: "image generation", description: "Allow models to generate images based on the user's input.", value: 'image_generation' }
+        ]
+    };
+    req.statusCode = 200;
+    return next();
+};
+
 export default {
     getAllApiCalls,
     updateApiCalls,
-    deleteFunction
+    deleteFunction,
+    createApi,
+    updateApi,
+    getAllInBuiltToolsController
 };

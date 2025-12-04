@@ -4,18 +4,30 @@ import bridgeVersionDbService from "../db_services/bridgeVersion.service.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { bridge_ids, new_agent_service, redis_keys } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
-import apiCallDbService from "../db_services/apiCall.service.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversation.service.js";
 const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
-import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
+import { 
+    createBridgeSchema, 
+    updateBridgeSchema, 
+    bridgeIdParamSchema, 
+    modelNameParamSchema, 
+    cloneAgentSchema 
+} from "../validation/joi_validation/agentConfig.js";
 
 const createBridgesController = async (req, res, next) => {
     try {
-        const bridges = req.body;
+        // Validate request body
+        const { error, value } = createBridgeSchema.validate(req.body);
+        if (error) {
+            res.locals = { success: false, message: error.details[0].message };
+            req.statusCode = 400;
+            return next();
+        }
+        const bridges = value;
         const purpose = bridges.purpose;
         const bridgeType = bridges.bridgeType || 'api';
         const org_id = req.profile.org.id;
@@ -32,7 +44,7 @@ const createBridgesController = async (req, res, next) => {
 
         if (bridges.templateId) {
             const template_id = bridges.templateId;
-            const template_data = await templateDbService.getTemplate(template_id);
+            const template_data = await ConfigurationServices.gettemplateById(template_id);
             if (!template_data) {
                 res.locals = { success: false, message: "Template not found" };
                 req.statusCode = 404;
@@ -149,8 +161,23 @@ const createBridgesController = async (req, res, next) => {
 
 const updateBridgeController = async (req, res, next) => {
     try {
-        const { bridgeId, version_id } = req.params;
-        const body = req.body;
+        // Validate params
+        const { error: paramsError, value: paramsValue } = bridgeIdParamSchema.validate(req.params);
+        if (paramsError) {
+            res.locals = { success: false, message: paramsError.details[0].message };
+            req.statusCode = 400;
+            return next();
+        }
+        const { bridgeId, version_id } = paramsValue;
+
+        // Validate request body
+        const { error: bodyError, value: bodyValue } = updateBridgeSchema.validate(req.body);
+        if (bodyError) {
+            res.locals = { success: false, message: bodyError.details[0].message };
+            req.statusCode = 400;
+            return next();
+        }
+        const body = bodyValue;
         const org_id = req.profile.org.id;
         const user_id = req.profile.user.id;
         const bridgeData = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
@@ -365,73 +392,16 @@ const updateBridgeController = async (req, res, next) => {
     }
 };
 
-const getAllServiceModelsController = async (req, res, next) => {
-    try {
-        const { service } = req.params;
-        const service_lower = service.toLowerCase();
-
-        if (!modelConfigDocument[service_lower]) {
-            res.locals = {};
-            req.statusCode = 200;
-            return next();
-        }
-
-        const result = { chat: {}, "fine-tune": {}, reasoning: {}, image: {}, embedding: {} };
-        const service_models = modelConfigDocument[service_lower];
-
-        for (const [model_name, config] of Object.entries(service_models)) {
-            if (config.status !== 1) continue;
-            const type = config.validationConfig?.type || 'chat';
-            if (result[type]) {
-                result[type][model_name] = config;
-            }
-        }
-
-        res.locals = result;
-        req.statusCode = 200;
-        return next();
-    } catch (e) {
-        res.locals = {};
-        req.statusCode = 200;
-        return next();
-    }
-};
-
-const getAllServiceController = async (req, res, next) => {
-    res.locals = {
-        success: true,
-        message: "Get all service successfully",
-        services: {
-            "openai": { "model": new_agent_service["openai"] },
-            "anthropic": { "model": new_agent_service["anthropic"] },
-            "groq": { "model": new_agent_service["groq"] },
-            "open_router": { "model": new_agent_service["open_router"] },
-            "mistral": { "model": new_agent_service["mistral"] },
-            "gemini": { "model": new_agent_service["gemini"] },
-            "ai_ml": { "model": new_agent_service["ai_ml"] },
-            "grok": { "model": new_agent_service["grok"] }
-        }
-    };
-    req.statusCode = 200;
-    return next();
-};
-
-const getAllInBuiltToolsController = async (req, res, next) => {
-    res.locals = {
-        success: true,
-        message: "Get all inbuilt tools successfully",
-        in_built_tools: [
-            { id: '1', name: 'Web Search', description: 'Allow models to search the web for the latest information before generating a response.', value: 'web_search' },
-            { id: '2', name: "image generation", description: "Allow models to generate images based on the user's input.", value: 'image_generation' }
-        ]
-    };
-    req.statusCode = 200;
-    return next();
-};
-
 const getBridgesAndVersionsByModelController = async (req, res, next) => {
     try {
-        const { modelName } = req.params;
+        // Validate params
+        const { error, value } = modelNameParamSchema.validate(req.params);
+        if (error) {
+            res.locals = { success: false, message: error.details[0].message };
+            req.statusCode = 400;
+            return next();
+        }
+        const { modelName } = value;
         const result = await ConfigurationServices.getBridgesAndVersionsByModel(modelName);
         res.locals = {
             success: true,
@@ -449,12 +419,14 @@ const getBridgesAndVersionsByModelController = async (req, res, next) => {
 
 const cloneAgentController = async (req, res, next) => {
     try {
-        const { bridge_id, to_shift_org_id } = req.body;
-        if (!bridge_id || !to_shift_org_id) {
-            res.locals = { success: false, message: "bridge_id and to_shift_org_id are required" };
+        // Validate request body
+        const { error, value } = cloneAgentSchema.validate(req.body);
+        if (error) {
+            res.locals = { success: false, message: error.details[0].message };
             req.statusCode = 400;
             return next();
         }
+        const { bridge_id, to_shift_org_id } = value;
         const result = await ConfigurationServices.cloneAgentToOrg(bridge_id, to_shift_org_id);
         res.locals = result;
         req.statusCode = result.success ? 200 : 400;
@@ -466,140 +438,16 @@ const cloneAgentController = async (req, res, next) => {
     }
 };
 
-const createApi = async (req, res, next) => {
-    try {
-        const body = req.body;
-        const org_id = req.profile.org.id;
-        const folder_id = req.folder_id || null;
-        const user_id = req.profile.user.id;
-        const isEmbedUser = req.embed;
-        const function_name = body.id;
-        const payload = body.payload;
-        const status = body.status;
-        const endpoint_name = body.title;
-        const desc = body.desc;
-
-        if (!desc || !function_name || !status || !org_id) {
-            res.locals = { success: false, message: "Required details must not be empty!!" };
-            req.statusCode = 400;
-            return next();
-        }
-
-        if (status === "published" || status === "updated") {
-            const body_content = payload ? payload.body : null;
-            const traversed_body = Helper.traverseBody(body_content);
-            const fields = traversed_body.fields || {};
-            const api_data = await apiCallDbService.getApiData(org_id, function_name, folder_id, user_id, isEmbedUser);
-            const result = await apiCallDbService.saveApi(desc, org_id, folder_id, user_id, api_data, [], function_name, fields, endpoint_name);
-
-            if (result.success) {
-                const responseData = result.api_data;
-                responseData._id = responseData._id.toString();
-                if (responseData.bridge_ids) {
-                    responseData.bridge_ids = responseData.bridge_ids.map(bid => bid.toString());
-                }
-                res.locals = {
-                    message: "API saved successfully",
-                    success: true,
-                    activated: true,
-                    data: responseData
-                };
-                req.statusCode = 200;
-                return next();
-            } else {
-                res.locals = { success: false, message: "Something went wrong!" };
-                req.statusCode = 400;
-                return next();
-            }
-
-        } else if (status === "delete" || status === "paused") {
-            const result = await apiCallDbService.deleteFunctionFromApicallsDb(org_id, function_name);
-            if (result.success) {
-                res.locals = {
-                    message: "API deleted successfully",
-                    success: true,
-                    deleted: true,
-                    data: result
-                };
-                req.statusCode = 200;
-                return next();
-            } else {
-                res.locals = { success: false, message: result.message || "Something went wrong!" };
-                req.statusCode = 400;
-                return next();
-            }
-        }
-
-        res.locals = { success: false, message: "Something went wrong!" };
-        req.statusCode = 400;
-        return next();
-
-    } catch (e) {
-        console.error("Error in createApi:", e);
-        res.locals = { success: false, message: e.message };
-        req.statusCode = 400;
-        return next();
-    }
-};
-
-const updateApi = async (req, res, next) => {
-    try {
-        const { bridgeId } = req.params;
-        const body = req.body;
-        const version_id = body.version_id;
-        const org_id = req.profile.org.id;
-        const pre_tool_id = body.pre_tools;
-        const status = body.status;
-
-        if (!pre_tool_id || !bridgeId || !org_id) {
-            res.locals = { success: false, message: "Required details must not be empty!!" };
-            req.statusCode = 400;
-            return next();
-        }
-
-        const model_config = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
-
-        if (!model_config.success) {
-            res.locals = { success: false, message: "bridge id is not found" };
-            req.statusCode = 400;
-            return next();
-        }
-
-        const data_to_update = {};
-        data_to_update['pre_tools'] = status === "1" ? [pre_tool_id] : [];
-
-        await ConfigurationServices.updateBridge(bridgeId, data_to_update, version_id);
-        const result = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
-
-        await ConfigurationServices.updateBridgeIdsInApiCalls(pre_tool_id, version_id || bridgeId, parseInt(status));
-
-        if (result.success) {
-            const response = await Helper.responseMiddlewareForBridge(result.bridges.service, {
-                success: true,
-                message: "Bridge Updated successfully",
-                bridge: result.bridges
-            }, true);
-
-            res.locals = response;
-            req.statusCode = 200;
-            return next();
-        } else {
-            res.locals = result;
-            req.statusCode = 400;
-            return next();
-        }
-
-    } catch (e) {
-        console.error("Error in updateApi:", e);
-        res.locals = { success: false, message: e.message };
-        req.statusCode = 400;
-        return next();
-    }
-};
-
 const getBridgeController = async (req, res, next) => {
     try {
-        const { bridgeId } = req.params;
+        // Validate params
+        const { error, value } = bridgeIdParamSchema.validate(req.params);
+        if (error) {
+            res.locals = { success: false, message: error.details[0].message };
+            req.statusCode = 400;
+            return next();
+        }
+        const { bridgeId } = value;
         const org_id = req.profile.org.id;
 
         const bridge = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id);
@@ -676,11 +524,6 @@ export {
     getBridgeController,
     getAllBridgesController,
     updateBridgeController,
-    getAllServiceModelsController,
-    getAllServiceController,
-    getAllInBuiltToolsController,
     getBridgesAndVersionsByModelController,
-    cloneAgentController,
-    createApi,
-    updateApi
+    cloneAgentController
 };

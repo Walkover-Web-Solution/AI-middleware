@@ -39,6 +39,7 @@ import prebuiltPromptRoutes from './routes/prebuiltPrompt.routes.js'
 import runAgentsRoutes from './routes/runAgents.routes.js'
 import bridgeRoutes from './routes/bridge.routes.js'
 import templateRoute from './routes/template.routes.js'
+import serviceRoutes from './routes/service.routes.js'
 
 const app = express();
 configDotenv();
@@ -65,9 +66,10 @@ app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
 app.use('/api/v1/config', configurationController);
-app.use('/api/v1/agentConfig', configRoutes);
+app.use('/api/agent', configRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
+app.use('/api/service', serviceRoutes);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);
