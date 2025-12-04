@@ -1,5 +1,5 @@
 import express from "express";
-import { CreateAuthToken, verify_auth_token_controller, save_auth_token_in_db_controller, get_auth_token_in_db_controller, get_client_info_controller } from "../controllers/AuthController.js";
+import { CreateAuthToken, verify_auth_token_controller, save_auth_token_in_db_controller, get_auth_token_in_db_controller, get_client_info_controller } from "../controllers/auth.controller.js";
 import {middleware} from "../middlewares/middleware.js";
 const routes = express.Router();
 

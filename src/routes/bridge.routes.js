@@ -1,5 +1,5 @@
 import express from "express";
-import bridgeController from "../controllers/bridgeController.js";
+import bridgeController from "../controllers/bridge.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 
 const router = express.Router();

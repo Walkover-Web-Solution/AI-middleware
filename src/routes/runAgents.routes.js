@@ -1,5 +1,5 @@
 import express from "express";
-import runAgentsController from "../controllers/runAgentsController.js";
+import runAgentsController from "../controllers/runAgents.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 import { agentsAuth } from "../middlewares/agentsMiddlewares.js";
 

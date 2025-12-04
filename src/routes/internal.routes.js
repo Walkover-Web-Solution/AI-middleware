@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrgAndBridgesByFunctionId } from '../controllers/InternalController.js';
+import { getOrgAndBridgesByFunctionId } from '../controllers/internal.controller.js';
 import { InternalAuth } from '../middlewares/middleware.js';
 
 const router = express.Router();

@@ -1,5 +1,5 @@
 import express from "express";
-import { getWeeklyreports, getMessageData } from "../controllers/reportController.js";
+import { getWeeklyreports, getMessageData } from "../controllers/report.controller.js";
 
 
 let router = express.Router();

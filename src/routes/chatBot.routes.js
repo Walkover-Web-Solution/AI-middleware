@@ -1,5 +1,5 @@
 import express from "express";
-import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrRemoveAction, createOrgToken, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateChatBot, updateChatBotConfig } from "../controllers/chatBotController.js";
+import { addorRemoveBridgeInChatBot, addorRemoveResponseIdInBridge, createAllDefaultResponseInOrg, createChatBot, createOrRemoveAction, createOrgToken, getAllChatBots, getAllDefaultResponseInOrg, getChatBotOfBridge, getOneChatBot, getViewOnlyChatBot, loginUser, updateChatBot, updateChatBotConfig } from "../controllers/chatBot.controller.js";
 import { chatBotAuth, combinedAuthWithChatBotTokenDecodeAndPublicChatbot } from "../middlewares/interfaceMiddlewares.js";
 import { middleware } from "../middlewares/middleware.js";
 import userOrgAccessCheck from "../middlewares/userOrgCheck.js";

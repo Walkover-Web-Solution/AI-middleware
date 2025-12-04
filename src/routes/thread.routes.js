@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createSubThreadWithAi, createThreadController, getAllThreadsController } from '../controllers/threadController.js';
+import { createSubThreadWithAi, createThreadController, getAllThreadsController } from '../controllers/thread.controller.js';
 import { combinedAuthWithChatBotAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
 
 const router = Router();

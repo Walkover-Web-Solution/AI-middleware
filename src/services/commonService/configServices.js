@@ -1,5 +1,5 @@
 
-import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";

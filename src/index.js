@@ -5,39 +5,40 @@ import { configDotenv } from 'dotenv';
 import './atatus.js';
 import './consumers/index.js';
 import './services/cacheService.js';
-import configurationController from "./controllers/conversationConfigRouter.js";
-import configRoutes from './routes/configRoutes.js';
+import configurationController from "./controllers/conversationConfig.controller.js";
+import configRoutes from './routes/config.routes.js';
 import apikeyRoutes from "./routes/apikey.routes.js";
-import helloRoutes from './routes/helloRoutes.js';
-import threadRoutes from './routes/threadRoutes.js'
-import metricsRoutes from "./routes/metrics_routes.js"
+import helloRoutes from './routes/hello.routes.js';
+import threadRoutes from './routes/thread.routes.js'
+import metricsRoutes from "./routes/metrics.routes.js"
 import mongoose from "mongoose";
 import config from "../config/config.js";
-import chatbot from "./routes/chatBot_routes.js";
-import RagRouter from "./routes/rag_routers.js";
-import userOrgLocalController from "./routes/userOrgLocal_route.js";
+// import metrisRoutes from "./routes/metrics.routes.js";
+import chatbot from "./routes/chatBot.routes.js";
+import RagRouter from "./routes/rag.routes.js";
+import userOrgLocalController from "./routes/userOrgLocal.routes.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
 import initializeDailyUpdateCron from './cron/initializeDailyUpdateCron.js';
-import AuthRouter from "./routes/AuthRoute.js";
+import AuthRouter from "./routes/auth.routes.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import InternalRoutes from './routes/InternalRoutes.js';
-import alerting from './routes/alerting_routes.js';
-import testcaseRoutes from './routes/testcase_routes.js'
-import reportRoute from './routes/report_route.js'
-import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
-import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
-import agentLookupRoutes from './routes/agentLookupRoutes.js'
+import InternalRoutes from './routes/internal.routes.js';
+import alerting from './routes/alerting.routes.js';
+import testcaseRoutes from './routes/testcase.routes.js'
+import reportRoute from './routes/report.routes.js'
+import ModelsConfigRoutes from './routes/modelConfig.routes.js'
+import gtwyEmbedRoutes from './routes/gtwyEmbed.routes.js'
+import agentLookupRoutes from './routes/agentLookup.routes.js'
 import historyRoutes from './routes/history.routes.js'
-import apiCallRoutes from './routes/apiCallRoutes.js'
-import bridgeVersionRoutes from './routes/bridgeVersionRoutes.js'
-import utilsRoutes from './routes/utilsRoutes.js'
-import prebuiltPromptRoutes from './routes/prebuiltPromptRoutes.js'
-import runAgentsRoutes from './routes/runAgentsRoutes.js'
-import bridgeRoutes from './routes/bridgeRoutes.js'
-import templateRoute from './routes/template_route.js'
+import apiCallRoutes from './routes/apiCall.routes.js'
+import bridgeVersionRoutes from './routes/bridgeVersion.routes.js'
+import utilsRoutes from './routes/utils.routes.js'
+import prebuiltPromptRoutes from './routes/prebuiltPrompt.routes.js'
+import runAgentsRoutes from './routes/runAgents.routes.js'
+import bridgeRoutes from './routes/bridge.routes.js'
+import templateRoute from './routes/template.routes.js'
 
 const app = express();
 configDotenv();

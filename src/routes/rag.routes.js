@@ -1,6 +1,6 @@
 import multer from 'multer';
 import express from "express";
-import { GetAllDocuments, create_vectors, delete_doc, updateDoc, getKnowledgeBaseToken, getEmebedToken } from "../controllers/RagController.js";
+import { GetAllDocuments, create_vectors, delete_doc, updateDoc, getKnowledgeBaseToken, getEmebedToken } from "../controllers/rag.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 import bucketService from "../services/BucketService.js";
 

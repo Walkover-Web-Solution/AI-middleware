@@ -1,6 +1,6 @@
 import express from "express";
 import { middleware } from "../middlewares/middleware.js";
-import { saveUserModelConfiguration, deleteUserModelConfiguration } from "../controllers/modelConfigController.js";
+import { saveUserModelConfiguration, deleteUserModelConfiguration } from "../controllers/modelConfig.controller.js";
 
 const router = express.Router();
 

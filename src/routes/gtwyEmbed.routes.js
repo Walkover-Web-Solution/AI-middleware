@@ -1,5 +1,5 @@
 import express from "express";
-import { createEmbed, embedLogin, genrateToken, getAllEmbed, getEmbedDataByUserId, updateEmbed } from "../controllers/gtwyEmbedController.js";
+import { createEmbed, embedLogin, genrateToken, getAllEmbed, getEmbedDataByUserId, updateEmbed } from "../controllers/gtwyEmbed.controller.js";
 import {middleware } from "../middlewares/middleware.js";
 import { GtwyEmbeddecodeToken } from "../middlewares/gtwyEmbedMiddleware.js";
 const routes = express.Router();

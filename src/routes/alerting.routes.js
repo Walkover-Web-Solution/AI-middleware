@@ -1,5 +1,5 @@
 import express from "express";
-import alertingContoller from "../controllers/alertingContoller.js";
+import alertingContoller from "../controllers/alerting.controller.js";
 import {middleware} from "../middlewares/middleware.js";
 // import middleware from "../middlewares/middleware.js";
 

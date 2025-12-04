@@ -1,5 +1,5 @@
 import express from "express";
-import { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, embedUser, removeUsersFromOrg } from "../controllers/userOrgLocalController.js";
+import { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, embedUser, removeUsersFromOrg } from "../controllers/userOrgLocal.controller.js";
 import {middleware,EmbeddecodeToken,loginAuth} from "../middlewares/middleware.js";
 const routes = express.Router();
 

@@ -1,6 +1,6 @@
 import express from "express";
 import { middleware } from "../middlewares/middleware.js";
-import controller from "../controllers/apiCallController.js";
+import controller from "../controllers/apiCall.controller.js";
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { middleware } from '../middlewares/middleware.js';
-import * as agentConfigController from '../controllers/agentConfigController.js';
+import * as agentConfigController from '../controllers/agentConfig.controller.js';
 
 const router = express.Router();
 

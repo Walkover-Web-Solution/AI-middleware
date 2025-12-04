@@ -1,5 +1,5 @@
 import express from "express";
-import { allTemplates } from "../controllers/templateController.js";
+import { allTemplates } from "../controllers/template.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 
 const router = express.Router();

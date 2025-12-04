@@ -1,5 +1,5 @@
 import express from 'express';
-import { subscribe } from '../controllers/helloController.js';
+import { subscribe } from '../controllers/hello.controller.js';
 import { combinedAuthWithChatBotAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
 
 const router = express.Router();

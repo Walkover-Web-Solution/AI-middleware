@@ -1,5 +1,5 @@
 import express from "express";
-import prebuiltPromptController from "../controllers/prebuiltPromptController.js";
+import prebuiltPromptController from "../controllers/prebuiltPrompt.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 
 const router = express.Router();

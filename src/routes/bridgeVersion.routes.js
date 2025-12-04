@@ -1,6 +1,6 @@
 import express from "express";
-import bridgeVersionController from "../controllers/bridgeVersionController.js";
-import { updateBridgeController } from "../controllers/agentConfigController.js";
+import bridgeVersionController from "../controllers/bridgeVersion.controller.js";
+import { updateBridgeController } from "../controllers/agentConfig.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 
 const router = express.Router();

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAgentsByModel } from '../controllers/agentLookupController.js';
+import { getAgentsByModel } from '../controllers/agentLookup.controller.js';
 
 const router = express.Router();
 
