@@ -1,4 +1,4 @@
-import { getConversationLogs, getRecentThreads, searchConversationLogs } from "../db_services/history.service.js";
+import { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters } from "../db_services/history.service.js";
 import {
   getConversationLogsParamsSchema,
   getRecentThreadsParamsSchema,
@@ -11,7 +11,7 @@ import {
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
  * Get conversation logs with pagination
  */
-const getConversationLogsController = async (req, res, next) => {
+const getConversationLogs = async (req, res, next) => {
   const org_id = req.body.org_id; // From middleware
 
   // Validate URL params
@@ -24,7 +24,7 @@ const getConversationLogsController = async (req, res, next) => {
   const limitNum = validatedQuery.limit || 30;
 
   // Get conversation logs
-  const result = await getConversationLogs(
+  const result = await findConversationLogsByIds(
     org_id,
     bridge_id,
     thread_id,
@@ -54,7 +54,7 @@ const getConversationLogsController = async (req, res, next) => {
  * GET /threads/:bridge_id
  * Get recent threads by bridge_id with pagination
  */
-const getRecentThreadsController = async (req, res, next) => {
+const getRecentThreads = async (req, res, next) => {
   const org_id = req.body.org_id; // From middleware
   const user_feedback = req.query.user_feedback || 'all';
   const error = req.query.error || 'false';
@@ -68,7 +68,7 @@ const getRecentThreadsController = async (req, res, next) => {
   const limitNum = validatedQuery.limit || 30;
 
   // Get recent threads
-  const result = await getRecentThreads(
+  const result = await findRecentThreadsByBridgeId(
     org_id,
     bridge_id,
     user_feedback,
@@ -99,7 +99,7 @@ const getRecentThreadsController = async (req, res, next) => {
  * POST /search/:bridge_id
  * Search conversation logs with flexible filters
  */
-const searchConversationLogsController = async (req, res, next) => {
+const searchConversationLogs = async (req, res, next) => {
   const org_id = req.body.org_id; // From middleware
 
   // Validate URL params
@@ -120,7 +120,7 @@ const searchConversationLogsController = async (req, res, next) => {
   }
 
   // Search conversation logs
-  const result = await searchConversationLogs(org_id, bridge_id, filters);
+  const result = await findConversationLogsByFilters(org_id, bridge_id, filters);
 
   if (result.success) {
     res.locals = {
@@ -139,5 +139,9 @@ const searchConversationLogsController = async (req, res, next) => {
   }
 };
 
-export { getConversationLogsController, getRecentThreadsController, searchConversationLogsController };
+export default {
+  getConversationLogs,
+  getRecentThreads,
+  searchConversationLogs
+};
 

@@ -11,7 +11,7 @@ import Sequelize from "sequelize";
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function getConversationLogs(org_id, bridge_id, thread_id, sub_thread_id, page = 1, limit = 30) {
+async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_thread_id, page = 1, limit = 30) {
   try {
     const offset = (page - 1) * limit;
     
@@ -56,7 +56,7 @@ async function getConversationLogs(org_id, bridge_id, thread_id, sub_thread_id, 
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function getRecentThreads(org_id, bridge_id, user_feedback, error, page = 1, limit = 30) {
+async function findRecentThreadsByBridgeId(org_id, bridge_id, user_feedback, error, page = 1, limit = 30) {
   try {
     const offset = (page - 1) * limit;
     
@@ -135,7 +135,7 @@ async function getRecentThreads(org_id, bridge_id, user_feedback, error, page = 
  * @param {string} filters.time_range.end - End date (optional)
  * @returns {Object} - Success status and nested data structure
  */
-async function searchConversationLogs(org_id, bridge_id, filters) {
+async function findConversationLogsByFilters(org_id, bridge_id, filters) {
   try {
     // Build where conditions
     const whereConditions = {
@@ -270,7 +270,7 @@ async function searchConversationLogs(org_id, bridge_id, filters) {
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status, formatted data with pagination
  */
-async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
+async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
   try {
     const offset = (page - 1) * limit;
     
@@ -361,5 +361,5 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
   }
 }
 
-export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted };
+export { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted };
 

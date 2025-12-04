@@ -9,7 +9,7 @@ import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.se
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 import { send_error_to_webhook } from "../sendErrorWebhook.service.js"
-import { getThreadHistoryFormatted } from "../../db_services/history.service.js";
+import { findThreadHistoryFormatted } from "../../db_services/history.service.js";
 
 const getThreads = async (req, res, next) => {
 
@@ -28,7 +28,7 @@ const getThreads = async (req, res, next) => {
     starterQuestion = !bridge?.IsstarterQuestionEnable ? [] : bridge?.starterQuestion;
     org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
   }
-  let threads = await getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
+  let threads = await findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
   threads = {
     ...threads,
     starterQuestion,

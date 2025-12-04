@@ -3,7 +3,7 @@ import versionModel from "../mongoModel/BridgeVersion.model.js"
 import configurationModel from "../mongoModel/Configuration.model.js";
 import FolderModel from "../mongoModel/GtwyEmbed.model.js";
 
-const saveApi = async (data) => {
+const saveApikeyRecord = async (data) => {
     const { org_id, apikey, service, name, comment, folder_id, user_id,apikey_limit=0 } = data;
     const version_ids = []
     const result = await new ApikeyCredential({
@@ -24,7 +24,7 @@ const saveApi = async (data) => {
     };
 };
 
-const getName = async (name, org_id)=>{
+const findApikeyByName = async (name, org_id)=>{
     try {
         const result = await ApikeyCredential.findOne({
         org_id: org_id,
@@ -45,7 +45,7 @@ const getName = async (name, org_id)=>{
     }
 
 }
-const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
+const findAllApikeys = async (org_id, folder_id, user_id, isEmbedUser) => {
     try {
         const query = { org_id: org_id }
 
@@ -75,7 +75,7 @@ const getAllApiKeyService = async (org_id, folder_id, user_id, isEmbedUser) => {
     }
 }
 
-async function updateApikey(apikey_object_id, apikey = null, name = null, service = null, comment = null,apikey_limit=0,apikey_usage=-1) {
+async function updateApikeyRecord(apikey_object_id, apikey = null, name = null, service = null, comment = null,apikey_limit=0,apikey_usage=-1) {
     try {
         const updateFields = {};
 
@@ -130,9 +130,9 @@ async function updateApikey(apikey_object_id, apikey = null, name = null, servic
 }
 
 
-async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
+async function removeApikeyFromEmbeds(apikey_object_id, org_id) {
     try {
-        const apiKeyData = await getApiKeyData(apikey_object_id);
+        const apiKeyData = await findApikeyById(apikey_object_id);
         if (!apiKeyData || !apiKeyData.service) {
             return { success: false, error: 'API key data or service not found' };
         }
@@ -162,9 +162,9 @@ async function cleanupApiKeyFromEmbeds(apikey_object_id, org_id) {
     }
 }
 
-async function deleteApi(apikey_object_id, org_id) {
+async function removeApikeyById(apikey_object_id, org_id) {
     try {
-        await cleanupApiKeyFromEmbeds(apikey_object_id, org_id);
+        await removeApikeyFromEmbeds(apikey_object_id, org_id);
        
         const result = await ApikeyCredential.deleteOne({ _id: apikey_object_id});
         if (result.deletedCount > 0) {
@@ -185,7 +185,7 @@ async function deleteApi(apikey_object_id, org_id) {
     }
 }
 
-async function getApiKeyData(apikey_object_id)
+async function findApikeyById(apikey_object_id)
 {
     try {
         const result = await ApikeyCredential.findOne({ _id: apikey_object_id });
@@ -200,7 +200,7 @@ async function getApiKeyData(apikey_object_id)
     }
 }
 
-async function getVersionsUsingId(versionIds, service) {
+async function findVersionsByIds(versionIds, service) {
     if (!versionIds?.length) {
         return {
             success: false,
@@ -287,13 +287,13 @@ async function processBulkUpdates(model, ids, service) {
 }
 
 export default {
-    saveApi,
-    getName,
-    getAllApiKeyService,
-    updateApikey,
-    deleteApi,
-    getApiKeyData,
-    getVersionsUsingId,
-    cleanupApiKeyFromEmbeds
+    saveApikeyRecord,
+    findApikeyByName,
+    findAllApikeys,
+    updateApikeyRecord,
+    removeApikeyById,
+    findApikeyById,
+    findVersionsByIds,
+    removeApikeyFromEmbeds
 }
 

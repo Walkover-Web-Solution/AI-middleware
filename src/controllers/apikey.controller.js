@@ -25,20 +25,11 @@ const saveApikey = async(req, res, next) => {
     });
 
     // Check API key validity
-    try {
-        await checkApiKey(apikey, service);
-    } catch (error) {
-        res.locals = {
-            success: false,
-            error: error.message
-        };
-        req.statusCode = error.statusCode || 400;
-        return next();
-    }
+    await checkApikey(apikey, service);
 
     // Encrypt API key
     apikey = await Helper.encrypt(apikey);
-    const result = await apikeyService.saveApi({org_id, apikey, service, name, comment, folder_id, user_id, apikey_limit});
+    const result = await apikeyService.saveApikeyRecord({org_id, apikey, service, name, comment, folder_id, user_id, apikey_limit});
     
     // Mask API key for response
     const decryptedApiKey = await Helper.decrypt(apikey);
@@ -65,7 +56,7 @@ const getAllApikeys = async(req, res, next) => {
     const user_id = req.profile.user.id;
     const isEmbedUser = req.IsEmbedUser;
     
-    const result = await apikeyService.getAllApiKeyService(org_id, folder_id, user_id, isEmbedUser);
+    const result = await apikeyService.findAllApikeys(org_id, folder_id, user_id, isEmbedUser);
     
     if (result.success) {
         // Process all API keys in parallel for better performance
@@ -138,20 +129,11 @@ const updateApikey = async(req, res, next) => {
     
     // Check API key validity if provided
     if(apikey){
-        try {
-            await checkApiKey(apikey, service);
-        } catch (error) {
-            res.locals = {
-                success: false,
-                error: error.message
-            };
-            req.statusCode = error.statusCode || 400;
-            return next();
-        }
+        await checkApikey(apikey, service);
         apikey = await Helper.encrypt(apikey); 
     }
     
-    const result = await apikeyService.updateApikey(apikey_object_id, apikey, name, service, comment, apikey_limit, apikey_usage);
+    const result = await apikeyService.updateApikeyRecord(apikey_object_id, apikey, name, service, comment, apikey_limit, apikey_usage);
     
     // Mask API key for response if updated
     let decryptedApiKey, maskedApiKey;
@@ -194,11 +176,11 @@ const deleteApikey = async(req, res, next) => {
         apikey_object_id
     });
     
-    const apikeys_data = await apikeyService.getApiKeyData(apikey_object_id);
+    const apikeys_data = await apikeyService.findApikeyById(apikey_object_id);
     let version_ids = apikeys_data?.version_ids || [];
     const service = apikeys_data?.service;
-    await apikeyService.getVersionsUsingId(version_ids, service);
-    const result = await apikeyService.deleteApi(apikey_object_id, org_id);
+    await apikeyService.findVersionsByIds(version_ids, service);
+    const result = await apikeyService.removeApikeyById(apikey_object_id, org_id);
     
     if (result.success) {
         await cleanupCache(cost_types.apikey, apikey_object_id);
@@ -218,7 +200,7 @@ const deleteApikey = async(req, res, next) => {
     }
 }
 
-const checkApiKey = async(apikey, service) => {
+const checkApikey = async(apikey, service) => {
     let check;
     switch (service) {
         case 'openai':
