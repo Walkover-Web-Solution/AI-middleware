@@ -2,10 +2,10 @@ import {
     getWidgetInfo,
     getSocketJwt,
     getChannelList
-} from '../utils/helloUtils.js';
-import ConfigurationServices from '../db_services/ConfigurationServices.js';
+} from '../utils/hello.utils.js';
+import ConfigurationServices from '../db_services/configuration.service.js';
 import { subscribeSchema } from '../validation/joi_validation/bridge.js';
-import modelConfigService from '../db_services/modelConfigDbService.js'
+import modelConfigService from '../db_services/modelConfig.service.js'
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {
     // Validate request body

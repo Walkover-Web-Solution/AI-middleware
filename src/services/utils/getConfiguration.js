@@ -1,5 +1,5 @@
-import configurationService from "../../db_services/ConfigurationServices.js";
-import helper from "../../services/utils/helper.js";
+import configurationService from "../../db_services/configuration.service.js";
+import helper from "../../services/utils/helper.utils.js";
 import token from "../../services/commonService/generateToken.js";
 import ModelsConfig from "../../configs/modelConfiguration.js";
 const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {

@@ -2,7 +2,7 @@ import multer from 'multer';
 import express from "express";
 import { GetAllDocuments, create_vectors, delete_doc, updateDoc, getKnowledgeBaseToken, getEmebedToken } from "../controllers/rag.controller.js";
 import { middleware } from "../middlewares/middleware.js";
-import bucketService from "../services/BucketService.js";
+import bucketService from "../services/bucket.service.js";
 
 // Initialize multer for memory storage
 const storage = multer.memoryStorage();

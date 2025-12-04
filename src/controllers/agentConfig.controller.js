@@ -1,16 +1,16 @@
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
-import folderDbService from "../db_services/folderDbService.js";
-import bridgeVersionDbService from "../db_services/bridgeVersionDbService.js";
-import { callAiMiddleware } from "../services/utils/aiCallUtils.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import folderDbService from "../db_services/folder.service.js";
+import bridgeVersionDbService from "../db_services/bridgeVersion.service.js";
+import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { bridge_ids, new_agent_service, redis_keys } from "../configs/constant.js";
-import Helper from "../services/utils/helper.js";
-import apiCallDbService from "../db_services/apiCallDbService.js";
+import Helper from "../services/utils/helper.utils.js";
+import apiCallDbService from "../db_services/apiCall.service.js";
 import { ObjectId } from "mongodb";
-import conversationDbService from "../db_services/conversationDbService.js";
+import conversationDbService from "../db_services/conversation.service.js";
 const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
-import { purgeRelatedBridgeCaches } from "../services/utils/redisUtility.js";
-import { validateJsonSchemaConfiguration } from "../services/utils/commonUtils.js";
+import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
+import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 
 const createBridgesController = async (req, res, next) => {

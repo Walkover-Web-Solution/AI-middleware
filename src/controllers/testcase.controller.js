@@ -1,4 +1,4 @@
-import testcaseSevice from "../db_services/testcaseDbservice.js"
+import testcaseSevice from "../db_services/testcase.service.js"
 
 async function createTestcase(req, res, next) {
     const body = req.body;

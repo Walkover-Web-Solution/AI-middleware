@@ -1,14 +1,14 @@
 
 import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
-import configurationService from "../../db_services/ConfigurationServices.js";
+import configurationService from "../../db_services/configuration.service.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp } from "../../services/utils/getConfiguration.js";
-import conversationDbService from "../../db_services/conversationDbService.js";
-import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
+import conversationDbService from "../../db_services/conversation.service.js";
+import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.service.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
-import { send_error_to_webhook } from "../send_error_webhook.js"
+import { send_error_to_webhook } from "../sendErrorWebhook.service.js"
 import { getThreadHistoryFormatted } from "../../db_services/history.service.js";
 
 const getThreads = async (req, res, next) => {

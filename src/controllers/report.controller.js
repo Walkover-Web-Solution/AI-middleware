@@ -1,5 +1,5 @@
-import { get_latency_report_data, get_message_data } from '../db_services/reportDbservice.js';
-import { getallOrgs } from '../utils/proxyUtils.js';
+import { get_latency_report_data, get_message_data } from '../db_services/report.service.js';
+import { getallOrgs } from '../utils/proxy.utils.js';
 
 
 

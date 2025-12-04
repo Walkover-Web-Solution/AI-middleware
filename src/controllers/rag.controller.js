@@ -1,9 +1,9 @@
-import rag_parent_data from '../db_services/rag_parent_data.js';
-import queue from '../services/queue.js';
-import { genrateToken } from '../utils/ragUtils.js';
-import { sendRagUpdates } from '../services/alertingService.js';
-import { generateIdentifier } from '../services/utils/utilityService.js';
-import { getOrganizationById, updateOrganizationData } from '../services/proxyService.js';
+import rag_parent_data from '../db_services/ragParentData.service.js';
+import queue from '../services/queue.service.js';
+import { genrateToken } from '../utils/rag.utils.js';
+import { sendRagUpdates } from '../services/alerting.service.js';
+import { generateIdentifier } from '../services/utils/utility.service.js';
+import { getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import token from "../services/commonService/generateToken.js";
 
 

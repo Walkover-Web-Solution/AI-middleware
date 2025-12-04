@@ -1,6 +1,6 @@
-import { generateIdentifier } from "../services/utils/utilityService.js";
-import { getOrganizationById, updateOrganizationData, createProxyToken } from "../services/proxyService.js";
-import auth_service from "../db_services/auth_service.js";
+import { generateIdentifier } from "../services/utils/utility.service.js";
+import { getOrganizationById, updateOrganizationData, createProxyToken } from "../services/proxy.service.js";
+import auth_service from "../db_services/auth.service.js";
 import jwt from 'jsonwebtoken';
 
 const CreateAuthToken = async (req, res, next) => {

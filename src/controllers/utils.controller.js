@@ -1,5 +1,5 @@
 import { deleteInCache, findInCache, scanCacheKeys } from "../cache_service/index.js";
-import gptMemoryService from "../services/utils/gptMemoryService.js";
+import gptMemoryService from "../services/utils/gptMemory.service.js";
 
 const clearRedisCache = async (req, res, next) => {
     try {

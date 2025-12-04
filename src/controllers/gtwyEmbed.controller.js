@@ -1,9 +1,9 @@
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
-import FolderModel from "../mongoModel/gtwyEmbedModel.js";
-import configurationModel from "../mongoModel/configuration.js";
-import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxyService.js";
-import { generateIdentifier, generateAuthToken } from "../services/utils/utilityService.js";
-import { cleanupCache } from "../services/utils/redisUtility.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import FolderModel from "../mongoModel/GtwyEmbed.model.js";
+import configurationModel from "../mongoModel/Configuration.model.js";
+import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxy.service.js";
+import { generateIdentifier, generateAuthToken } from "../services/utils/utility.service.js";
+import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
 const embedLogin = async (req, res, next) => {

@@ -1,5 +1,5 @@
-import metrics_sevice from "../db_services/metrics_services.js";
-import { buildWhereClause, selectTable } from "../utils/metricsUtils.js"
+import metrics_sevice from "../db_services/metrics.service.js";
+import { buildWhereClause, selectTable } from "../utils/metrics.utils.js"
 
 
 const metrics_data = async (req, res, next) => {

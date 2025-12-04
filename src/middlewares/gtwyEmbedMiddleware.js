@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { getOrganizationById } from '../services/proxyService.js';
-import { encryptString } from '../services/utils/utilityService.js';
-import { createOrGetUser } from '../utils/proxyUtils.js';
+import { getOrganizationById } from '../services/proxy.service.js';
+import { encryptString } from '../services/utils/utility.service.js';
+import { createOrGetUser } from '../utils/proxy.utils.js';
 
 const GtwyEmbeddecodeToken = async (req, res, next) => {
     const token = req?.get('Authorization');

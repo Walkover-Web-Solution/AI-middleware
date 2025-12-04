@@ -1,9 +1,9 @@
 // controllers/threadController.js
-import { createThread, getThreads } from '../services/threadService.js';
-import { ResponseSender } from '../services/utils/customRes.js';
-import { generateIdentifier } from '../services/utils/utilityService.js';
-import configurationService from '../db_services/ConfigurationServices.js';
-import conversationDbService from '../db_services/conversationDbService.js';
+import { createThread, getThreads } from '../services/thread.service.js';
+import { ResponseSender } from '../services/utils/customResponse.utils.js';
+import { generateIdentifier } from '../services/utils/utility.service.js';
+import configurationService from '../db_services/configuration.service.js';
+import conversationDbService from '../db_services/conversation.service.js';
 const responseSender = new ResponseSender();
 
 // Create a new thread

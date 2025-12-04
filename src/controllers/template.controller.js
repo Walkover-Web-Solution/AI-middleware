@@ -1,4 +1,4 @@
-import templateService from "../db_services/templateDbservice.js";
+import templateService from "../db_services/template.service.js";
 
 async function allTemplates(req, res, next) {
   const result = await templateService.getAll();

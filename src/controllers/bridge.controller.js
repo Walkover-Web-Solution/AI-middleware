@@ -1,8 +1,8 @@
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
-import { callAiMiddleware } from "../services/utils/aiCallUtils.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { bridge_ids } from "../configs/constant.js";
-import prebuiltPromptDbService from "../db_services/prebuiltPromptDbService.js";
-import testcaseDbservice from "../db_services/testcaseDbservice.js";
+import prebuiltPromptDbService from "../db_services/prebuiltPrompt.service.js";
+import testcaseDbservice from "../db_services/testcase.service.js";
 
 const optimizePromptController = async (req, res, next) => {
     try {

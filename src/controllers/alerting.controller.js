@@ -1,4 +1,4 @@
-import alertingDbservices from "../db_services/alertingDbservice.js";
+import alertingDbservices from "../db_services/alerting.service.js";
 import validateFunctions from "../validation/joi_validation/alerting.js"
 
 async function createAlert(req, res, next) {

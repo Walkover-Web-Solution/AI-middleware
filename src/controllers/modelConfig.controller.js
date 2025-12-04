@@ -1,7 +1,7 @@
 import { UserModelConfigSchema } from "../validation/joi_validation/modelConfigValidation.js";
-import modelConfigDbService from "../db_services/modelConfigDbService.js"
-const { validateModel } = await import('../services/utils/model_validation.js');
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
+import modelConfigDbService from "../db_services/modelConfig.service.js"
+const { validateModel } = await import('../services/utils/modelValidation.utils.js');
+import ConfigurationServices from "../db_services/configuration.service.js";
 
 async function saveUserModelConfiguration(req,res, next) {
 

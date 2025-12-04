@@ -1,10 +1,10 @@
-import bridgeVersionDbService from "../db_services/bridgeVersionDbService.js";
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
-import folderDbService from "../db_services/folderDbService.js";
+import bridgeVersionDbService from "../db_services/bridgeVersion.service.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import folderDbService from "../db_services/folder.service.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
-import { callAiMiddleware } from "../services/utils/aiCallUtils.js";
+import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { bridge_ids } from "../configs/constant.js";
-import { getServiceByModel } from "../services/utils/commonUtils.js";
+import { getServiceByModel } from "../services/utils/common.utils.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';

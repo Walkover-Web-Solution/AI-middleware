@@ -1,8 +1,8 @@
 import axios from "axios";
 import { storeInCache } from "../cache_service/index.js";
-import { createProxyToken } from "../services/proxyService.js";
+import { createProxyToken } from "../services/proxy.service.js";
 import { switchUserOrgLocalSchema } from "../validation/joi_validation/userOrgLocal.js";
-import { generateAuthToken } from "../services/utils/utilityService.js";
+import { generateAuthToken } from "../services/utils/utility.service.js";
 
 
 

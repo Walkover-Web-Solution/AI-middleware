@@ -1,5 +1,5 @@
-import prebuiltPromptDbService from "../db_services/prebuiltPromptDbService.js";
-import { getAiMiddlewareAgentData } from "../services/utils/aiCallUtils.js";
+import prebuiltPromptDbService from "../db_services/prebuiltPrompt.service.js";
+import { getAiMiddlewareAgentData } from "../services/utils/aiCall.utils.js";
 import { bridge_ids, prebuilt_prompt_bridge_id } from "../configs/constant.js";
 
 const getPrebuiltPrompts = async (req, res, next) => {

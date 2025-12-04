@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-import ConfigurationServices from "../db_services/ConfigurationServices.js";
+import ConfigurationServices from "../db_services/configuration.service.js";
 
 const generateToken = (payload, secret) => {
     return jwt.sign(payload, secret);

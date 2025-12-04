@@ -1,7 +1,7 @@
-import ApikeyCredential from "../mongoModel/apiModel.js";
-import versionModel from "../mongoModel/bridge_version.js"
-import configurationModel from "../mongoModel/configuration.js";
-import FolderModel from "../mongoModel/gtwyEmbedModel.js";
+import ApikeyCredential from "../mongoModel/Api.model.js";
+import versionModel from "../mongoModel/BridgeVersion.model.js"
+import configurationModel from "../mongoModel/Configuration.model.js";
+import FolderModel from "../mongoModel/GtwyEmbed.model.js";
 
 const saveApi = async (data) => {
     const { org_id, apikey, service, name, comment, folder_id, user_id,apikey_limit=0 } = data;

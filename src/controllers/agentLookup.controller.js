@@ -1,6 +1,6 @@
-import configurationModel from "../mongoModel/configuration.js";
-import versionModel from "../mongoModel/bridge_version.js";
-import { getallOrgs } from "../utils/proxyUtils.js";
+import configurationModel from "../mongoModel/Configuration.model.js";
+import versionModel from "../mongoModel/BridgeVersion.model.js";
+import { getallOrgs } from "../utils/proxy.utils.js";
 
 // GET /agents/by-model?model=...
 // Returns combined data from configuration and version collections

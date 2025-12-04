@@ -1,5 +1,5 @@
-import service from "../db_services/apicallDbService.js";
-import { validateRequiredParams } from "../services/utils/apicallUtils.js";
+import service from "../db_services/apiCall.service.js";
+import { validateRequiredParams } from "../services/utils/apiCall.utils.js";
 
 const getAllApiCalls = async (req, res, next) => {
     const org_id = req.profile?.org?.id;

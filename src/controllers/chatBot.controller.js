@@ -1,12 +1,12 @@
-import ChatbotDbService from "../db_services/ChatBotDbService.js";
-import responsetypeService from "../db_services/responseTypeService.js";
-import configurationService from "../db_services/ConfigurationServices.js";
+import ChatbotDbService from "../db_services/chatBot.service.js";
+import responsetypeService from "../db_services/responseType.service.js";
+import configurationService from "../db_services/configuration.service.js";
 import { filterDataOfBridgeOnTheBaseOfUI } from "../services/utils/getConfiguration.js"
-import responseTypeService from "../db_services/responseTypeService.js";
-import { getToken } from "../services/utils/usersServices.js";
+import responseTypeService from "../db_services/responseType.service.js";
+import { getToken } from "../services/utils/users.service.js";
 import token from "../services/commonService/generateToken.js";
-import ChatBotDbService from "../db_services/ChatBotDbService.js";
-import { generateIdentifier } from "../services/utils/utilityService.js";
+import ChatBotDbService from "../db_services/chatBot.service.js";
+import { generateIdentifier } from "../services/utils/utility.service.js";
 import { addorRemoveBridgeInChatBotSchema, addorRemoveResponseIdInBridgeSchema, createChatBotSchema, getChatBotOfBridgeSchema, getViewOnlyChatBotSchema, updateChatBotConfigSchema, updateChatBotSchema, createOrRemoveActionValidationSchema } from "../validation/joi_validation/chatbot.js";
 
 const createChatBot = async (req, res, next) => {

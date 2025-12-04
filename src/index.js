@@ -4,7 +4,7 @@ import cors from "cors";
 import { configDotenv } from 'dotenv';
 import './atatus.js';
 import './consumers/index.js';
-import './services/cacheService.js';
+import './services/cache.service.js';
 import configurationController from "./controllers/conversationConfig.controller.js";
 import configRoutes from './routes/config.routes.js';
 import apikeyRoutes from "./routes/apikey.routes.js";

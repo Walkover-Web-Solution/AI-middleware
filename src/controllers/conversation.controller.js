@@ -1,4 +1,4 @@
-import conversationDbService from "../db_services/conversationDbService.js";
+import conversationDbService from "../db_services/conversation.service.js";
 
 const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error, version_id) => {
   try {

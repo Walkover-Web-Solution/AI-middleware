@@ -1,4 +1,4 @@
-import apiCallDbService from "../db_services/apiCallDbService.js";
+import apiCallDbService from "../db_services/apiCall.service.js";
 
 // import helloService from '../db_services/helloService.js';
 export const getOrgAndBridgesByFunctionId = async (req, res, next) => {
