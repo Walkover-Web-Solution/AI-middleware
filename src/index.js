@@ -42,7 +42,7 @@ import utilsRoutes from './routes/utilsRoutes.js'
 import prebuiltPromptRoutes from './routes/prebuiltPromptRoutes.js'
 import runAgentsRoutes from './routes/runAgentsRoutes.js'
 import bridgeRoutes from './routes/bridgeRoutes.js'
-
+import templateRoute from './routes/template_route.js'
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -78,7 +78,6 @@ app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
-
 app.use('/testcases', testcaseRoutes);
 app.use('/report', reportRoute);
 app.use('/modelConfiguration', ModelsConfigRoutes);
@@ -90,7 +89,7 @@ app.use('/utils', utilsRoutes)
 app.use('/prebuilt_prompt', prebuiltPromptRoutes)
 app.use('/runagents', runAgentsRoutes)
 app.use('/bridge', bridgeRoutes)
-
+app.use('/Template', templateRoute)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
