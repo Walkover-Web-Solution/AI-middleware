@@ -25,13 +25,14 @@ const saveApikey = async(req, res, next) => {
     });
 
     // Check API key validity
-    const check = await checkApiKey(apikey, service);
-    if(!check.success){
+    try {
+        await checkApiKey(apikey, service);
+    } catch (error) {
         res.locals = {
             success: false,
-            error: check.error
+            error: error.message
         };
-        req.statusCode = 400;
+        req.statusCode = error.statusCode || 400;
         return next();
     }
 
@@ -137,13 +138,14 @@ const updateApikey = async(req, res, next) => {
     
     // Check API key validity if provided
     if(apikey){
-        const check = await checkApiKey(apikey, service);
-        if(!check.success){
+        try {
+            await checkApiKey(apikey, service);
+        } catch (error) {
             res.locals = {
                 success: false,
-                error: check.error
+                error: error.message
             };
-            req.statusCode = 400;
+            req.statusCode = error.statusCode || 400;
             return next();
         }
         apikey = await Helper.encrypt(apikey); 
@@ -244,13 +246,17 @@ const checkApiKey = async(apikey, service) => {
             check = await callGrokApi(apikey);
             break;
         default:
-            return { success: false, error: "Invalid service provided" };
+            const error = new Error("Invalid service provided");
+            error.statusCode = 400;
+            throw error;
     }
     
     if(!check.success){
-        return { success: false, error: "invalid apikey or apikey is expired" };
+        const error = new Error("invalid apikey or apikey is expired");
+        error.statusCode = 400;
+        throw error;
     }
-    return { success: true, data: check.data };
+    return check.data;
 }
 
 export default{
