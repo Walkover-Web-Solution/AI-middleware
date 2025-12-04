@@ -2,21 +2,17 @@ import 'express-async-errors';
 import express from "express";
 import cors from "cors";
 import { configDotenv } from 'dotenv';
-import './atatus.js'
-// import multer from 'multer';
+import './atatus.js';
 import './consumers/index.js';
+import './services/cacheService.js';
 import configurationController from "./controllers/conversationConfigRouter.js";
 import configRoutes from './routes/configRoutes.js';
 import apikeyRoutes from "./routes/apikey.routes.js";
 import helloRoutes from './routes/helloRoutes.js';
 import threadRoutes from './routes/threadRoutes.js'
 import metricsRoutes from "./routes/metrics_routes.js"
-const app = express();
-configDotenv();
-const PORT = process.env.PORT || 7072;
 import mongoose from "mongoose";
 import config from "../config/config.js";
-// import metrisRoutes from "./routes/metrics_routes.js";
 import chatbot from "./routes/chatBot_routes.js";
 import RagRouter from "./routes/rag_routers.js";
 import userOrgLocalController from "./routes/userOrgLocal_route.js";
@@ -29,7 +25,6 @@ import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
 import InternalRoutes from './routes/InternalRoutes.js';
 import alerting from './routes/alerting_routes.js';
-
 import testcaseRoutes from './routes/testcase_routes.js'
 import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
@@ -44,7 +39,11 @@ import runAgentsRoutes from './routes/runAgentsRoutes.js'
 import bridgeRoutes from './routes/bridgeRoutes.js'
 import templateRoute from './routes/template_route.js'
 
-import('./services/cacheService.js')
+const app = express();
+configDotenv();
+const PORT = process.env.PORT || 7072;
+
+
 app.use(cors({
   origin: '*',
   maxAge: 86400,
