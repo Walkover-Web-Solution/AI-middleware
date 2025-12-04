@@ -1,5 +1,6 @@
 import { get_latency_report_data, get_message_data } from '../db_services/report.service.js';
 import { getallOrgs } from '../utils/proxy.utils.js';
+import { getHistoryByMessageId } from '../db_services/history.service.js';
 
 
 
@@ -32,21 +33,30 @@ async function getWeeklyreports(req, res, next) {
 
 
 async function getMessageData(req, res, next) {
-    const { message_id } = req.body;
-
-    if (!message_id) {
-        res.locals = {
-            error: 'message_id is required',
-            success: false
+    try {
+        const { message_id } = req.body;
+        
+        if (!message_id) {
+            res.locals = { 
+                error: 'message_id is required', 
+                success: false 
+            };
+            req.statusCode = 400;
+            return next();
+        }
+        
+        const data = await getHistoryByMessageId(message_id);
+        res.locals = { data, success: true };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        res.locals = { 
+            error: error.message, 
+            success: false 
         };
         req.statusCode = 400;
         return next();
     }
-
-    const data = await get_message_data(message_id);
-    res.locals = { data, success: true };
-    req.statusCode = 200;
-    return next();
 }
 
 export {

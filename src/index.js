@@ -27,7 +27,7 @@ import alerting from './routes/alerting.routes.js';
 import testcaseRoutes from './routes/testcase.routes.js'
 import reportRoute from './routes/report.routes.js'
 import ModelsConfigRoutes from './routes/modelConfig.routes.js'
-import gtwyEmbedRoutes from './routes/gtwyEmbed.routes.js'
+import EmbedRoutes from './routes/embed.routes.js'
 import agentLookupRoutes from './routes/agentLookup.routes.js'
 import historyRoutes from './routes/history.routes.js'
 import apiCallRoutes from './routes/apiCall.routes.js'
@@ -69,7 +69,7 @@ app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
 app.use('/api/service', serviceRoutes);
 app.use('/chatbot', chatbot);
-app.use('/gtwyEmbed', gtwyEmbedRoutes);
+app.use('/api/embed', EmbedRoutes);
 app.use('/user', userOrgLocalController);
 app.use('/alerting', alerting)
 app.use('/hello', helloRoutes);
