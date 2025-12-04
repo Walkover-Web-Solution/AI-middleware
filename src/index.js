@@ -41,6 +41,8 @@ import bridgeVersionRoutes from './routes/bridgeVersionRoutes.js'
 import utilsRoutes from './routes/utilsRoutes.js'
 import prebuiltPromptRoutes from './routes/prebuiltPromptRoutes.js'
 import runAgentsRoutes from './routes/runAgentsRoutes.js'
+import bridgeRoutes from './routes/bridgeRoutes.js'
+
 
 import('./services/cacheService.js')
 app.use(cors({
@@ -87,6 +89,8 @@ app.use('/bridge/versions', bridgeVersionRoutes)
 app.use('/utils', utilsRoutes)
 app.use('/prebuilt_prompt', prebuiltPromptRoutes)
 app.use('/runagents', runAgentsRoutes)
+app.use('/bridge', bridgeRoutes)
+
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);

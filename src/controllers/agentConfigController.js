@@ -455,8 +455,9 @@ const cloneAgentController = async (req, res, next) => {
             req.statusCode = 400;
             return next();
         }
-        res.locals = { success: true, message: "Agent cloned successfully (Mock)" };
-        req.statusCode = 200;
+        const result = await ConfigurationServices.cloneAgentToOrg(bridge_id, to_shift_org_id);
+        res.locals = result;
+        req.statusCode = result.success ? 200 : 400;
         return next();
     } catch (e) {
         res.locals = { success: false, message: e.message };

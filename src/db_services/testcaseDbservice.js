@@ -49,11 +49,71 @@ async function getMergedTestcasesAndHistoryByBridgeId(bridge_id) {
     return testcases;
 }
 
+async function parseAndSaveTestcases(testcasesData, bridge_id) {
+    const savedTestcaseIds = [];
+    try {
+        let testCases = testcasesData.test_cases || [];
+        if (!testCases || testCases.length === 0) {
+            return savedTestcaseIds;
+        }
+
+        // Convert dict with numbered keys to list if necessary
+        if (!Array.isArray(testCases) && typeof testCases === 'object') {
+            const keys = Object.keys(testCases).filter(k => !isNaN(k)).sort((a, b) => parseInt(a) - parseInt(b));
+            if (keys.length > 0) {
+                testCases = keys.map(k => testCases[k]);
+            }
+        }
+
+        if (!Array.isArray(testCases)) {
+            return savedTestcaseIds;
+        }
+
+        for (let i = 0; i < testCases.length; i++) {
+            const testCase = testCases[i];
+            try {
+                const userInput = testCase.UserInput;
+                let expectedOutput = testCase.ExpectedOutput;
+
+                if (!userInput || !expectedOutput) {
+                    console.warn(`Skipping test case ${i + 1}: missing UserInput or ExpectedOutput`);
+                    continue;
+                }
+
+                if (typeof expectedOutput === 'object') {
+                    expectedOutput = JSON.stringify(expectedOutput);
+                }
+
+                const testcaseData = {
+                    bridge_id: bridge_id,
+                    conversation: [{ role: "user", content: String(userInput) }],
+                    type: "response",
+                    expected: { response: String(expectedOutput) },
+                    matching_type: "contains"
+                };
+
+                const result = await saveTestCase(testcaseData);
+                savedTestcaseIds.push(result.id);
+                console.log(`Saved test case ${i + 1} with ID: ${result.id}`);
+
+            } catch (caseError) {
+                console.error(`Error processing test case ${i + 1}: ${caseError.message}`);
+                continue;
+            }
+        }
+    } catch (error) {
+        console.error(`Error processing test cases: ${error.message}`);
+        throw new Error(`Error processing test cases: ${error.message}`);
+    }
+    return savedTestcaseIds;
+}
+
 export default {
     getAllTestCases,
     saveTestCase,
     deleteTestCaseById,
     updateTestCaseById,
     getTestcaseById,
-    getMergedTestcasesAndHistoryByBridgeId
+    getMergedTestcasesAndHistoryByBridgeId,
+    parseAndSaveTestcases
 }

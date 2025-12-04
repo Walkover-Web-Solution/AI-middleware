@@ -1,8 +1,14 @@
 import bridgeVersionDbService from "../db_services/bridgeVersionDbService.js";
 import ConfigurationServices from "../db_services/ConfigurationServices.js";
+import folderDbService from "../db_services/folderDbService.js";
+import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
+import { callAiMiddleware } from "../services/utils/aiCallUtils.js";
+import { bridge_ids } from "../configs/constant.js";
+import { getServiceByModel } from "../services/utils/commonUtils.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -151,13 +157,85 @@ const discardVersion = async (req, res, next) => {
 };
 
 const suggestModel = async (req, res, next) => {
-    const { version_id } = req.params;
-    const org_id = req.profile.org.id;
-    const folder_id = req.profile.user.folder_id;
+    try {
+        const { version_id } = req.params;
+        const org_id = req.profile.org.id;
+        const folder_id = req.profile.user.folder_id;
 
-    res.locals = { success: true, message: "Suggest model not fully implemented yet", data: { available: { model: "gpt-3.5-turbo", service: "openai" } } };
-    req.statusCode = 200;
-    return next();
+        const versionDataResult = await bridgeVersionDbService.getVersionWithTools(version_id);
+        const versionData = versionDataResult?.bridges;
+
+        if (!versionData) {
+            throw new Error("Version not found");
+        }
+
+        let available_services = versionData.apikey_object_id ? Object.keys(versionData.apikey_object_id) : [];
+
+        if (folder_id) {
+            const folderData = await folderDbService.getFolderData(folder_id);
+            if (folderData && folderData.apikey_object_id) {
+                available_services = Object.keys(folderData.apikey_object_id);
+            }
+        }
+
+        if (!available_services || available_services.length === 0) {
+            throw new Error('Please select api key for proceeding further');
+        }
+
+        const available_models = [];
+        const unavailable_models = [];
+
+        for (const service in modelConfigDocument) {
+            if (available_services.includes(service)) {
+                for (const model in modelConfigDocument[service]) {
+                    if (modelFeatures[model]) {
+                        available_models.push({ [model]: modelFeatures[model] });
+                    }
+                }
+            } else {
+                for (const model in modelConfigDocument[service]) {
+                    if (modelFeatures[model]) {
+                        unavailable_models.push({ [model]: modelFeatures[model] });
+                    }
+                }
+            }
+        }
+
+        const prompt = versionData.configuration?.prompt;
+        const tool_calls = Object.values(versionData.apiCalls || {}).map(call => ({ [call.endpoint_name]: call.description }));
+
+        const message = JSON.stringify({ prompt: prompt, tool_calls: tool_calls });
+        const variables = {
+            available_models: JSON.stringify(available_models),
+            unavailable_models: JSON.stringify(unavailable_models)
+        };
+
+        const ai_response = await callAiMiddleware(message, { bridge_id: bridge_ids['suggest_model'], variables: variables });
+
+        const response = {
+            available: {
+                model: ai_response.best_model_from_available_models,
+                service: getServiceByModel(ai_response.best_model_from_available_models)
+            }
+        };
+
+        if (ai_response.best_model_from_unavailable_models) {
+            response.unavailable = {
+                model: ai_response.best_model_from_unavailable_models,
+                service: getServiceByModel(ai_response.best_model_from_unavailable_models)
+            };
+        }
+
+        res.locals = { success: true, message: "suggestion fetched successfully", data: response };
+        req.statusCode = 200;
+        return next();
+
+    } catch (e) {
+        console.error(`Error in suggest_model: ${e.message}`);
+        res.locals = { success: false, message: e.message, data: { model: null, error: e.message } };
+        req.statusCode = 400;
+        return next();
+    }
 };
 
 const getConnectedAgents = async (req, res, next) => {

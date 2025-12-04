@@ -39,6 +39,19 @@ const validateJsonSchemaConfiguration = (configuration) => {
     return { isValid: true, errorMessage: null };
 };
 
-export {
-    validateJsonSchemaConfiguration
+import { modelConfigDocument } from "./loadModelConfigs.js";
+
+const getServiceByModel = (model) => {
+    for (const service in modelConfigDocument) {
+        if (modelConfigDocument[service][model]) {
+            return service;
+        }
+    }
+    return null;
 };
+
+export {
+    validateJsonSchemaConfiguration,
+    getServiceByModel
+};
+
