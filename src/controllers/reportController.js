@@ -1,4 +1,5 @@
-import {get_data_from_pg, get_data_for_daily_report, get_latency_report_data, get_message_data} from '../db_services/reportDbservice.js';
+import { getHistoryByMessageId } from '../db_services/conversationLogsDbService.js';
+import {get_data_from_pg, get_data_for_daily_report, get_latency_report_data} from '../db_services/reportDbservice.js';
 import { getallOrgs } from '../utils/proxyUtils.js';
 
 
@@ -52,7 +53,7 @@ async function getMessageData(req, res, next) {
             return next();
         }
         
-        const data = await get_message_data(message_id);
+        const data = await getHistoryByMessageId(message_id);
         res.locals = { data, success: true };
         req.statusCode = 200;
         return next();

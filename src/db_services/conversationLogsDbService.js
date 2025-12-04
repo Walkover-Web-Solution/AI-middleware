@@ -362,4 +362,11 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
   }
 }
 
-export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted };
+const getHistoryByMessageId = async (message_id) => {
+  const result = await models.pg.conversation_logs.findOne({
+    where: { message_id },
+  });
+  return result;
+}
+
+export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted, getHistoryByMessageId };
