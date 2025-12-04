@@ -1,57 +1,76 @@
 import testcaseSevice from "../db_services/testcaseDbservice.js"
-import { convertAIConversation } from "../services/utils/utilityService.js";
 
-async function saveTestcases(req,res, next) {
-    const {bridge_id, type, conversation, expected, matching_type } = req.body;
-    convertAIConversation(conversation);
-    const data = {
-        bridge_id,
-        type,
-        conversation,
-        expected,
-        matching_type
+async function createTestcase(req, res, next) {
+    const body = req.body;
+    const requiredFields = ['bridge_id', 'conversation', 'type', 'expected', 'matching_type'];
+
+    for (const field of requiredFields) {
+        if (!body[field]) {
+            res.locals = { success: false, error: `Missing required field: ${field}` };
+            req.statusCode = 400;
+            return next();
+        }
     }
-    const result = await testcaseSevice.saveTestCase(data);
+    const result = await testcaseSevice.saveTestCase(body);
+
     res.locals = {
         success: true,
-        result
+        data: {
+            _id: result.id,
+            message: "Testcase created successfully"
+        }
     };
     req.statusCode = 200;
     return next();
 }
 
-async function updateTestcases(req, res, next) {
-    const { _id: id, bridge_id, type, conversation, expected } = req.body;
-    const data = { id };
+async function deleteTestcase(req, res, next) {
+    const testcase_id = req.params.testcase_id || req.body.id;
+    const result = await testcaseSevice.deleteTestCaseById(testcase_id);
 
-    if (bridge_id !== undefined) data.bridge_id = bridge_id;
-    if (type !== undefined) data.type = type;
-    if (conversation !== undefined) data.conversation = conversation;
-    if (expected !== undefined) data.expected = expected;
+    if (!result.success) {
+        res.locals = { success: false, error: "Testcase not found" };
+        req.statusCode = 404;
+        return next();
+    }
 
-    const result = await testcaseSevice.updateTestCaseById(id, data);
     res.locals = {
         success: true,
-        result
+        message: "Testcase deleted successfully"
     };
     req.statusCode = 200;
     return next();
 }
 
-async function deleteTestcases(req, res, next) {
-    
-    const { id } = req.body;
-    const result = await testcaseSevice.deleteTestCaseById(id);
+async function getAllTestcases(req, res, next) {
+    const bridge_id = req.params.bridge_id;
+
+    const mergedTestcases = await testcaseSevice.getMergedTestcasesAndHistoryByBridgeId(bridge_id);
+
+    for (const testcase of mergedTestcases) {
+        testcase.version_history = {};
+        if (testcase.history) {
+            for (const history of testcase.history) {
+                const version_id = history.version_id;
+                if (!testcase.version_history[version_id]) {
+                    testcase.version_history[version_id] = [];
+                }
+                testcase.version_history[version_id].push(history);
+            }
+            delete testcase.history;
+        }
+    }
+
     res.locals = {
-        result
+        success: true,
+        data: mergedTestcases
     };
     req.statusCode = 200;
     return next();
-
 }
 
-export {
-    saveTestcases,
-    updateTestcases,
-    deleteTestcases
-}
+export default {
+    createTestcase,
+    deleteTestcase,
+    getAllTestcases
+};

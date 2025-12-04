@@ -5,7 +5,8 @@ import { configDotenv } from 'dotenv';
 import './atatus.js'
 // import multer from 'multer';
 import './consumers/index.js';
-import configurationController from "./controllers/configController.js";
+import configurationController from "./controllers/conversationConfigRouter.js";
+import configRoutes from './routes/configRoutes.js';
 import apiKeyrouter from "./routes/apikeyRouter.js";
 import helloRoutes from './routes/helloRoutes.js';
 import threadRoutes from './routes/threadRoutes.js'
@@ -35,6 +36,12 @@ import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
 import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
+import apiCallRoutes from './routes/apiCallRoutes.js'
+import bridgeVersionRoutes from './routes/bridgeVersionRoutes.js'
+import utilsRoutes from './routes/utilsRoutes.js'
+import prebuiltPromptRoutes from './routes/prebuiltPromptRoutes.js'
+import runAgentsRoutes from './routes/runAgentsRoutes.js'
+import bridgeRoutes from './routes/bridgeRoutes.js'
 import templateRoute from './routes/template_route.js'
 
 import('./services/cacheService.js')
@@ -58,6 +65,7 @@ app.get('/healthcheck', async (req, res) => {
   res.status(200).send('OK running good...v1.1');
 });
 app.use('/api/v1/config', configurationController);
+app.use('/api/v1/agentConfig', configRoutes);
 app.use('/history', conversationLogsRoutes);
 app.use('/apikeys', apiKeyrouter);
 app.use('/chatbot', chatbot);
@@ -70,13 +78,18 @@ app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
-
 app.use('/testcases', testcaseRoutes);
 app.use('/report', reportRoute);
 app.use('/modelConfiguration', ModelsConfigRoutes);
 app.use('/auth', AuthRouter)
 app.use('/data', agentLookupRoutes)
-app.use(['/Template','/template'], templateRoute)
+app.use('/functions', apiCallRoutes)
+app.use('/bridge/versions', bridgeVersionRoutes)
+app.use('/utils', utilsRoutes)
+app.use('/prebuilt_prompt', prebuiltPromptRoutes)
+app.use('/runagents', runAgentsRoutes)
+app.use('/bridge', bridgeRoutes)
+app.use('/Template', templateRoute)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
@@ -86,9 +99,14 @@ app.use(notFoundMiddleware); // added at the last, so that it runs after all rou
 app.use(errorHandlerMiddleware);
 
 
+import { initModelConfiguration, backgroundListenForChanges } from './services/utils/loadModelConfigs.js';
+
 initializeMonthlyLatencyReport();
 initializeWeeklyLatencyReport();
 initializeDailyUpdateCron()
+
+initModelConfiguration();
+backgroundListenForChanges();
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port:${PORT}`);

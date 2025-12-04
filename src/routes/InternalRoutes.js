@@ -7,4 +7,4 @@ const router = express.Router();
 // Define the subscribe route
 router.post('/functions', InternalAuth, getOrgAndBridgesByFunctionId);
 
-export default router; 
+export default router;

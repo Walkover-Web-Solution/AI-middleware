@@ -62,7 +62,7 @@ async function createSubThreadWithAi(req, res, next) {
         thread_id,
         org_id: org_id.toString(),
         sub_thread_id,
-        created_at:Date.now()
+        created_at: Date.now()
     });
     res.locals = {
         thread,
@@ -81,10 +81,10 @@ async function getAllThreadsController(req, res, next) {
     const bridge_id = data?._id?.toString();
     const bridge_org_id = req?.chatBot?.ispublic ? data?.org_id : org_id
     const threads = await getThreads(bridge_org_id, thread_id, bridge_id);
-    
+
     // Sort threads by latest conversation activity from PostgreSQL
     const sortedThreads = await conversationDbService.sortThreadsByLatestActivity(threads, bridge_org_id, bridge_id);
-    
+
     res.locals = { threads: sortedThreads, success: true };
     req.statusCode = 200;
     return next();
@@ -92,33 +92,28 @@ async function getAllThreadsController(req, res, next) {
 
 
 async function createSubThreadNameAI({ user }) {
-    try {
-        const response = await fetch(
-            "https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion",
-            {
-                method: "POST",
-                headers: {
-                    "pauthkey": "1b13a7a038ce616635899a239771044c",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    user: `Generate thread Name for ${user}`,
-                    bridge_id: "6799c8413166c2fc4886669a",
-                    response_type: "text",
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(data.message || 'Unknown error');
+    const response = await fetch(
+        "https://proxy.viasocket.com/proxy/api/1258584/29gjrmh24/api/v2/model/chat/completion",
+        {
+            method: "POST",
+            headers: {
+                "pauthkey": "1b13a7a038ce616635899a239771044c",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                user: `Generate thread Name for ${user}`,
+                bridge_id: "6799c8413166c2fc4886669a",
+                response_type: "text",
+            })
         }
-        return data.response?.data?.content || "";
-    } catch (err) {
-        console.error("Error calling function=>", err);
-        return null;
+    );
+
+    const data = await response.json();
+
+    if (!data.success) {
+        throw new Error(data.message || 'Unknown error');
     }
+    return data.response?.data?.content || "";
 }
 
 

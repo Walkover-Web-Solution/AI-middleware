@@ -3,7 +3,7 @@ import { getallOrgs } from '../utils/proxyUtils.js';
 
 
 
-async function getMonthlyreports(req,res, next) {
+async function getMonthlyreports(req, res, next) {
     const orgResp = await getallOrgs();
     let orgIds = [];
     if (Array.isArray(orgResp?.data?.data)) {
@@ -15,7 +15,7 @@ async function getMonthlyreports(req,res, next) {
     return next();
 }
 
-async function getWeeklyreports(req,res, next) {
+async function getWeeklyreports(req, res, next) {
     const orgResp = await getallOrgs();
     let orgIds = [];
     if (Array.isArray(orgResp?.data?.data)) {
@@ -32,30 +32,21 @@ async function getWeeklyreports(req,res, next) {
 
 
 async function getMessageData(req, res, next) {
-    try {
-        const { message_id } = req.body;
-        
-        if (!message_id) {
-            res.locals = { 
-                error: 'message_id is required', 
-                success: false 
-            };
-            req.statusCode = 400;
-            return next();
-        }
-        
-        const data = await get_message_data(message_id);
-        res.locals = { data, success: true };
-        req.statusCode = 200;
-        return next();
-    } catch (error) {
-        res.locals = { 
-            error: error.message, 
-            success: false 
+    const { message_id } = req.body;
+
+    if (!message_id) {
+        res.locals = {
+            error: 'message_id is required',
+            success: false
         };
-        req.statusCode = 500;
+        req.statusCode = 400;
         return next();
     }
+
+    const data = await get_message_data(message_id);
+    res.locals = { data, success: true };
+    req.statusCode = 200;
+    return next();
 }
 
 export {
