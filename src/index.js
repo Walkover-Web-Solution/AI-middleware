@@ -7,7 +7,7 @@ import './atatus.js'
 import './consumers/index.js';
 import configurationController from "./controllers/conversationConfigRouter.js";
 import configRoutes from './routes/configRoutes.js';
-import apiKeyrouter from "./routes/apikeyRouter.js";
+import apikeyRoutes from "./routes/apikey.routes.js";
 import helloRoutes from './routes/helloRoutes.js';
 import threadRoutes from './routes/threadRoutes.js'
 import metricsRoutes from "./routes/metrics_routes.js"
@@ -35,7 +35,7 @@ import reportRoute from './routes/report_route.js'
 import ModelsConfigRoutes from './routes/modelConfigRoutes.js'
 import gtwyEmbedRoutes from './routes/gtwyEmbedRoutes.js'
 import agentLookupRoutes from './routes/agentLookupRoutes.js'
-import conversationLogsRoutes from './routes/conversationLogsRoutes.js'
+import historyRoutes from './routes/history.routes.js'
 import apiCallRoutes from './routes/apiCallRoutes.js'
 import bridgeVersionRoutes from './routes/bridgeVersionRoutes.js'
 import utilsRoutes from './routes/utilsRoutes.js'
@@ -66,8 +66,8 @@ app.get('/healthcheck', async (req, res) => {
 });
 app.use('/api/v1/config', configurationController);
 app.use('/api/v1/agentConfig', configRoutes);
-app.use('/history', conversationLogsRoutes);
-app.use('/apikeys', apiKeyrouter);
+app.use('/api/history', historyRoutes);
+app.use('/api/apikeys', apikeyRoutes);
 app.use('/chatbot', chatbot);
 app.use('/gtwyEmbed', gtwyEmbedRoutes);
 app.use('/user', userOrgLocalController);

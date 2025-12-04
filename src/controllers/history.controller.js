@@ -1,4 +1,4 @@
-import { getConversationLogs, getRecentThreads, searchConversationLogs } from "../db_services/conversationLogsDbService.js";
+import { getConversationLogs, getRecentThreads, searchConversationLogs } from "../db_services/history.service.js";
 import {
   getConversationLogsParamsSchema,
   getRecentThreadsParamsSchema,
@@ -140,3 +140,4 @@ const searchConversationLogsController = async (req, res, next) => {
 };
 
 export { getConversationLogsController, getRecentThreadsController, searchConversationLogsController };
+

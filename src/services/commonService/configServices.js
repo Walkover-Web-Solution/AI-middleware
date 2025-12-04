@@ -9,7 +9,7 @@ import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
 import { send_error_to_webhook } from "../send_error_webhook.js"
-import { getThreadHistoryFormatted } from "../../db_services/conversationLogsDbService.js";
+import { getThreadHistoryFormatted } from "../../db_services/history.service.js";
 
 const getThreads = async (req, res, next) => {
 

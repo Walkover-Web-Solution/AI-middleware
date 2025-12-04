@@ -24,7 +24,10 @@ const updateApikeySchema = Joi.object({
 })
 
 const deleteApikeySchema = Joi.object({
-    apikey_object_id: Joi.string().alphanum().required()
+    apikey_object_id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required().messages({
+        'string.pattern.base': 'apikey_object_id must be a valid MongoDB ObjectId',
+        'any.required': 'apikey_object_id is required'
+    })
 })
 
 

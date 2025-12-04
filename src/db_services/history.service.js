@@ -362,3 +362,4 @@ async function getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_threa
 }
 
 export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted };
+
