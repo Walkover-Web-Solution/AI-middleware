@@ -4,7 +4,7 @@ import bridgeVersionDbService from "../db_services/bridgeVersionDbService.js";
 import { callAiMiddleware } from "../services/utils/aiCallUtils.js";
 import { bridge_ids, new_agent_service, redis_keys } from "../configs/constant.js";
 import Helper from "../services/utils/helper.js";
-import apiCallDbService from "../db_services/apiCallDbService.js";
+import apiCallDbService from "../db_services/apicallDbService.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversationDbService.js";
 const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
