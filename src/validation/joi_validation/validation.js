@@ -10,10 +10,6 @@ const updateMessageSchema = Joi.object({
     org_id: Joi.number().required()
 });
 
-const BridgeStatusSchema = Joi.object({
-    bridge_id: Joi.objectId().required(),
-    status: Joi.number().valid(0, 1).required()
-});
 export {
-    updateMessageSchema, BridgeStatusSchema
+    updateMessageSchema
 }

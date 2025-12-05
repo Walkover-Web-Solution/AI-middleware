@@ -3,7 +3,6 @@ import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, ge
 import configurationService from "../../db_services/configuration.service.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
-import { convertToTimestamp } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversation.service.js";
 import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.service.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
@@ -37,71 +36,7 @@ const getThreads = async (req, res, next) => {
   req.statusCode = 200;
   return next();
 };
-const getMessageHistory = async (req, res, next) => {
-  const { bridge_id } = req.params;
-  const { org_id } = req.body;
-  const { pageNo = 1, limit = 10 } = req.query;
-  let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
-  const { startTime, endTime, version_id } = req.query;
-  let { user_feedback, error } = req.query;
-  error = error?.toLowerCase() === 'true' ? true : false;
-  let startTimestamp, endTimestamp;
-  if (startTime !== 'undefined' && endTime !== 'undefined') {
-    startTimestamp = convertToTimestamp(startTime);
-    endTimestamp = convertToTimestamp(endTime);
-  }
 
-  const threads = keyword_search ? await getAllThreadsUsingKeywordSearch({ bridge_id, org_id, keyword_search, version_id }) : await getAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error, version_id);
-  res.locals = threads;
-  req.statusCode = threads?.success ? 200 : 400;
-  return next();
-};
-const getSystemPromptHistory = async (req, res, next) => {
-  const {
-    bridge_id,
-    timestamp
-  } = req.params;
-  const result = await conversationDbService.getHistory(bridge_id, timestamp);
-  res.locals = result;
-  req.statusCode = result?.success ? 200 : 400;
-  return next();
-};
-
-
-
-const deleteBridges = async (req, res, next) => {
-  const { bridge_id } = req.params;
-  const { org_id, restore = false } = req.body;
-  try {
-
-    let result;
-
-    if (restore) {
-      // Restore the bridge
-      result = await configurationService.restoreBridge(bridge_id, org_id);
-
-      // Log restore operation for audit purposes
-      if (result.success) {
-        console.log(`Bridge restore completed for bridge ${bridge_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
-      }
-    } else {
-      // Soft delete the bridge
-      result = await configurationService.deleteBridge(bridge_id, org_id);
-
-      // Log soft delete operation for audit purposes
-      if (result.success) {
-        console.log(`Soft delete initiated for bridge ${bridge_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
-      }
-    }
-
-    res.locals = result;
-    req.statusCode = result?.success ? 200 : 400;
-    return next();
-  } catch (error) {
-    console.error(`${restore ? 'restore' : 'delete'} bridge error => `, error.message)
-    throw error;
-  }
-};
 
 const FineTuneData = async (req, res, next) => {
   const { thread_ids, user_feedback } = req.body;
@@ -272,32 +207,6 @@ const sendError = async (bridge_id, org_id, error_message, error_type) => {
   send_error_to_webhook(bridge_id, org_id, error_message, error_type);
 }
 
-const userFeedbackCount = async (req, res, next) => {
-  const bridge_id = req.params.bridge_id;
-  const { startDate, endDate, user_feedback } = req.query;
-
-  const result = await conversationDbService.userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback })
-  res.locals = result;
-  req.statusCode = 200
-  return next();
-}
-
-const bridgeArchive = async (req, res, next) => {
-  const { bridge_id } = req.params;
-  const { status } = req.body;
-
-  await BridgeStatusSchema.validateAsync({
-    bridge_id,
-    status
-  });
-
-  const result = await configurationService.updateBridgeArchive(bridge_id, status);
-
-  res.locals = result;
-  req.statusCode = 200;
-  return next();
-};
-
 export const createEntry = async (req, res, next) => {
   const {
     thread_id,
@@ -394,16 +303,11 @@ const getAllUserUpdates = async (req, res, next) => {
 
 export default {
   getThreads,
-  getMessageHistory,
-  bridgeArchive,
-  deleteBridges,
-  getSystemPromptHistory,
   FineTuneData,
   updateThreadMessage,
   updateMessageStatus,
   createEntry,
   extraThreadID,
-  userFeedbackCount,
   getThreadMessages,
   getAllSubThreadsController,
   getAllUserUpdates

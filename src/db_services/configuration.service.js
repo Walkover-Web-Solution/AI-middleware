@@ -238,33 +238,6 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
   }
 };
 
-const updateBridgeArchive = async (bridge_id, status) => {
-  try {
-    const updatedBridge = await configurationModel.findOneAndUpdate(
-      { _id: bridge_id },
-      { status: status },
-      { new: true }
-    );
-    if (!updatedBridge) {
-      return {
-        success: false,
-        error: "Bridge not found!",
-      };
-    }
-
-    return {
-      success: true,
-      data: updatedBridge,
-      message: updatedBridge.status ? "Bridge archived successfully!" : "Bridge unarchived successfully!",
-    };
-  } catch (error) {
-    console.error("Error updating bridge status =>", error);
-    return {
-      success: false,
-      error: "Something went wrong!!",
-    };
-  }
-};
 const getBridgesWithSelectedData = async bridge_id => {
   try {
     const bridges = await configurationModel.findOne({
@@ -1216,7 +1189,6 @@ export default {
   removeResponseIdinBridge,
   getBridgeBySlugname,
   findChatbotOfBridge,
-  updateBridgeArchive,
   getBridgeIdBySlugname,
   gettemplateById,
   addActionInBridge,

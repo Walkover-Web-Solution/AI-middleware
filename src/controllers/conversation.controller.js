@@ -1,15 +1,5 @@
 import conversationDbService from "../db_services/conversation.service.js";
 
-const getAllThreads = async (bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error, version_id) => {
-  try {
-    const chats = await conversationDbService.findAllThreads(bridge_id, org_id, pageNo, limit, startTimestamp, endTimestamp, keyword_search, user_feedback, error, version_id);
-    return { success: true, data: chats };
-  } catch (error) {
-    console.error("getAllThreads error:", error);
-    return { success: false, message: error.message };
-  }
-};
-
 const getThread = async (thread_id, org_id, bridge_id) => {
   try {
     const chats = await conversationDbService.find(org_id, thread_id, bridge_id);
@@ -93,7 +83,6 @@ const getAllThreadsUsingKeywordSearch = async ({ bridge_id, org_id, keyword_sear
 }
 
 export {
-  getAllThreads,
   getThread,
   getChatData,
   getThreadHistory,

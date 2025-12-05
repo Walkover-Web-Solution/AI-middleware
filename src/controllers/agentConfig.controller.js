@@ -10,12 +10,12 @@ const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
-import { 
-    createBridgeSchema, 
-    updateBridgeSchema, 
-    bridgeIdParamSchema, 
-    modelNameParamSchema, 
-    cloneAgentSchema 
+import {
+    createBridgeSchema,
+    updateBridgeSchema,
+    bridgeIdParamSchema,
+    modelNameParamSchema,
+    cloneAgentSchema
 } from "../validation/joi_validation/agentConfig.js";
 
 const createBridgesController = async (req, res, next) => {
@@ -519,11 +519,47 @@ const getAllBridgesController = async (req, res, next) => {
     }
 };
 
+const deleteBridges = async (req, res, next) => {
+    const { bridge_id } = req.params;
+    const { org_id, restore = false } = req.body;
+    try {
+
+        let result;
+
+        if (restore) {
+            // Restore the bridge
+            result = await ConfigurationServices.restoreBridge(bridge_id, org_id);
+
+            // Log restore operation for audit purposes
+            if (result.success) {
+                console.log(`Bridge restore completed for bridge ${bridge_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
+            }
+        } else {
+            // Soft delete the bridge
+            result = await ConfigurationServices.deleteBridge(bridge_id, org_id);
+
+            // Log soft delete operation for audit purposes
+            if (result.success) {
+                console.log(`Soft delete initiated for bridge ${bridge_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
+            }
+        }
+
+        res.locals = result;
+        req.statusCode = result?.success ? 200 : 400;
+        return next();
+    } catch (error) {
+        console.error(`${restore ? 'restore' : 'delete'} bridge error => `, error.message)
+        throw error;
+    }
+};
+
+
 export {
     createBridgesController,
     getBridgeController,
     getAllBridgesController,
     updateBridgeController,
     getBridgesAndVersionsByModelController,
-    cloneAgentController
+    cloneAgentController,
+    deleteBridges
 };
