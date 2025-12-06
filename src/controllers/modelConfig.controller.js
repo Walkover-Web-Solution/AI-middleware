@@ -1,23 +1,12 @@
-import { UserModelConfigSchema } from "../validation/joi_validation/modelConfig.validation.js";
-import modelConfigDbService from "../db_services/modelConfig.service.js"
-const { validateModel } = await import('../services/utils/modelValidation.utils.js');
+import modelConfigDbService from "../db_services/modelConfig.service.js";
+import { validateModel } from '../services/utils/modelValidation.utils.js';
 import ConfigurationServices from "../db_services/configuration.service.js";
 
 async function saveUserModelConfiguration(req,res, next) {
-
     const org_id = req.profile.org.id;
-    
-    // Merge org_id with request body for validation
-    const dataToValidate = { ...req.body, org_id };
-    
-    const { error, value } = UserModelConfigSchema.validate(dataToValidate);
-    if (error) {
-        throw new Error(error.details[0].message);
-    }
+    const { model_name, service, display_name, status, configuration, outputConfig, validationConfig } = req.body;
 
     // check models validity and support
-    const model_name = value.model_name;
-    const service = value.service;
     const isModelSupported = await validateModel(service, model_name);
     
     if (!isModelSupported) {
@@ -27,12 +16,21 @@ async function saveUserModelConfiguration(req,res, next) {
 
 
     // Check if model with same service and model_name already exists for this org
-    const modelExists = await modelConfigDbService.checkModelConfigExists(value.service, value.model_name);
+    const modelExists = await modelConfigDbService.checkModelConfigExists(service, model_name);
     if (modelExists) {
-        throw new Error(`Model configuration with service '${value.service}' and model_name '${value.model_name}' already exists`);
+        throw new Error(`Model configuration with service '${service}' and model_name '${model_name}' already exists`);
     }
     
-    const result = await modelConfigDbService.saveModelConfig(value);
+    const result = await modelConfigDbService.saveModelConfig({
+        org_id,
+        service,
+        model_name,
+        display_name,
+        status,
+        configuration,
+        outputConfig,
+        validationConfig
+    });
     res.locals = {
         success: true,
         message: `Model configuration saved successfully`,
@@ -46,10 +44,6 @@ async function saveUserModelConfiguration(req,res, next) {
 async function deleteUserModelConfiguration(req, res, next) {
     const { model_name, service } = req.query;
     const org_id = req.profile.org.id;
-
-    if (!model_name || !service || !org_id) {
-        return res.status(400).json({ success: false, error: "model_name, service, and org_id are required parameters." });
-    }
 
     const usageCheck = await ConfigurationServices.findIdsByModelAndService(model_name, service, org_id);
     
