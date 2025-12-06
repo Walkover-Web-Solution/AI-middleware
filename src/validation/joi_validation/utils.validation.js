@@ -18,29 +18,41 @@ const getRedisCache = {
 
 const callAi = {
     body: Joi.object().keys({
-        type: Joi.string().valid('structured_output', 'gpt_memory', 'improve_prompt').required(),
+        type: Joi.string().valid(
+            'structured_output',
+            'gpt_memory',
+            'improve_prompt',
+            'optimize_prompt',
+            'generate_test_cases',
+            'generate_summary',
+            'generate_json'
+        ).required(),
         json_schema: Joi.alternatives().conditional('type', {
             is: 'structured_output',
             then: Joi.alternatives().try(Joi.object(), Joi.string()).required(),
             otherwise: Joi.forbidden()
         }),
         query: Joi.alternatives().conditional('type', {
-            is: 'structured_output',
-            then: Joi.string().required(),
+            switch: [
+                { is: 'structured_output', then: Joi.string().required() },
+                { is: 'optimize_prompt', then: Joi.string().optional() }
+            ],
             otherwise: Joi.forbidden()
         }),
         thread_id: Joi.alternatives().conditional('type', {
-            is: 'structured_output',
-            then: Joi.string().optional(),
-            otherwise: Joi.alternatives().conditional('type', {
-                is: 'gpt_memory',
-                then: Joi.string().required(),
-                otherwise: Joi.forbidden()
-            })
+            switch: [
+                { is: 'structured_output', then: Joi.string().optional() },
+                { is: 'gpt_memory', then: Joi.string().required() },
+                { is: 'optimize_prompt', then: Joi.string().optional() }
+            ],
+            otherwise: Joi.forbidden()
         }),
         bridge_id: Joi.alternatives().conditional('type', {
-            is: 'gpt_memory',
-            then: Joi.string().required(),
+            switch: [
+                { is: 'gpt_memory', then: Joi.string().required() },
+                { is: 'optimize_prompt', then: Joi.string().required() },
+                { is: 'generate_test_cases', then: Joi.string().required() }
+            ],
             otherwise: Joi.forbidden()
         }),
         sub_thread_id: Joi.alternatives().conditional('type', {
@@ -49,13 +61,22 @@ const callAi = {
             otherwise: Joi.forbidden()
         }),
         version_id: Joi.alternatives().conditional('type', {
-            is: 'gpt_memory',
-            then: Joi.string().optional(),
+            switch: [
+                { is: 'gpt_memory', then: Joi.string().optional() },
+                { is: 'optimize_prompt', then: Joi.string().optional() },
+                { is: 'generate_test_cases', then: Joi.string().optional() },
+                { is: 'generate_summary', then: Joi.string().optional() }
+            ],
             otherwise: Joi.forbidden()
         }),
         variables: Joi.alternatives().conditional('type', {
             is: 'improve_prompt',
             then: Joi.object().required(),
+            otherwise: Joi.forbidden()
+        }),
+        example_json: Joi.alternatives().conditional('type', {
+            is: 'generate_json',
+            then: Joi.string().required(),
             otherwise: Joi.forbidden()
         })
     }),

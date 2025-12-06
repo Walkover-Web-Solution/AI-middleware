@@ -60,42 +60,6 @@ const retrieveGptMemoryService = async ({ bridge_id, thread_id, sub_thread_id, v
     };
 };
 
-const structuredOutputOptimizer = async (req) => {
-    try {
-        const { json_schema, query, thread_id } = req.body;
-        const org_id = req.profile.org.id;
-        const variables = { json_schema, query };
-        const user = 'create the json shcmea accroding to the dummy json explained in system prompt.';
-
-        let configuration = null;
-        const updatedPrompt = await prebuiltPromptDbService.getSpecificPrebuiltPrompt(org_id, 'structured_output_optimizer');
-        if (updatedPrompt && updatedPrompt.structured_output_optimizer) {
-            configuration = { prompt: updatedPrompt.structured_output_optimizer };
-        }
-
-        const result = await callAiMiddleware(user, bridge_ids['structured_output_optimizer'], variables, configuration, thread_id);
-        return result;
-    } catch (error) {
-        console.error("Error calling function structured_output_optimizer=>", error);
-        return null;
-    }
-};
-
-const improvePromptOptimizer = async (req) => {
-    try {
-        const { variables } = req.body;
-        const user = 'improve the prompt';
-        // Assuming bridge_ids['improve_prompt_optimizer'] exists. If not, need to check constant.js
-        const result = await callAiMiddleware(user, bridge_ids['improve_prompt_optimizer'], variables);
-        return result;
-    } catch (error) {
-        console.error('Error Calling function prompt optimise', error);
-        return null;
-    }
-};
-
 export default {
-    retrieveGptMemoryService,
-    structuredOutputOptimizer,
-    improvePromptOptimizer
+    retrieveGptMemoryService
 };

@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import { nanoid, customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import axios from 'axios'
+import { callAiMiddleware } from './aiCall.utils.js';
+import prebuiltPromptDbService from '../../db_services/prebuiltPrompt.service.js';
 
 const alphabetSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 // const basicAuthServices = require('../db_services/basic_auth_db_service.js')
@@ -58,13 +60,13 @@ function generateIdForOpenAiFunctionCall(prefix = 'call_', length = 26) {
   // Define possible characters (lowercase, uppercase, digits)
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let randomId = '';
-  
+
   // Randomly choose characters to form the ID
   for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomId += characters[randomIndex];
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    randomId += characters[randomIndex];
   }
-  
+
   // Return the ID with the prefix
   return prefix + randomId;
 }
@@ -84,10 +86,10 @@ function objectToQueryParams(obj) {
     .join('&');
 }
 
-async function sendAlert(message, error, bridgeId, orgId, channelId){
-  try{
+async function sendAlert(message, error, bridgeId, orgId, channelId) {
+  try {
     await axios.post('https://flow.sokt.io/func/scriSmH2QaBH', {
-      channelId : channelId,
+      channelId: channelId,
       error: {
         details: {
           alert: message,
@@ -98,15 +100,15 @@ async function sendAlert(message, error, bridgeId, orgId, channelId){
       }
     });
     return true;
-  }catch(err){
+  } catch (err) {
     console.error('Error sending alert', err)
     return false;
   }
 }
 
-function convertAIConversation(conversation){
-  for(let message of conversation){
-    if(message['role'] === 'tools_call'){
+function convertAIConversation(conversation) {
+  for (let message of conversation) {
+    if (message['role'] === 'tools_call') {
       message['content'] = message['content'].map((toolCall) => {
         return Object.values(toolCall)
       })
@@ -116,53 +118,53 @@ function convertAIConversation(conversation){
 
 async function sendResponse(response_format, data, success = false, variables = {}) {
   const data_to_send = {
-      'response': data
+    'response': data
   };
 
   switch (response_format.type) {
-      case 'RTLayer':
-          return await sendMessage(response_format.cred, data_to_send);
-      case 'webhook':
-          data_to_send.variables = variables;
-          return await sendRequest(
-              response_format.cred.url,
-              data_to_send,
-              'POST',
-              response_format.cred.headers || { 'Content-Type': 'application/json' }
-          );
+    case 'RTLayer':
+      return await sendMessage(response_format.cred, data_to_send);
+    case 'webhook':
+      data_to_send.variables = variables;
+      return await sendRequest(
+        response_format.cred.url,
+        data_to_send,
+        'POST',
+        response_format.cred.headers || { 'Content-Type': 'application/json' }
+      );
   }
 }
 
 async function sendMessage(cred, data) {
   //send message to rtlayer
   try {
-      const response = await fetch(`https://api.rtlayer.com/message?apiKey=${cred.apikey}`, {
+    const response = await fetch(`https://api.rtlayer.com/message?apiKey=${cred.apikey}`, {
       method: 'POST',
       headers: {
-          'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-          ...cred,
-          message: JSON.stringify(data)
+        ...cred,
+        message: JSON.stringify(data)
       })
-      });
-      return response;
+    });
+    return response;
   } catch (error) {
-      throw new Error(`send message error=>, ${error.toString()}`);
+    throw new Error(`send message error=>, ${error.toString()}`);
   }
 }
 
 async function sendRequest(url, data, method, headers) {
   //send message to webhook
   try {
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: method,
       headers: headers,
       body: JSON.stringify(data)
-      });
-      return response.json();
+    });
+    return response.json();
   } catch (error) {
-      throw new Error(`Unexpected error: ${url}, ${error.toString()}`);
+    throw new Error(`Unexpected error: ${url}, ${error.toString()}`);
   }
 }
 
@@ -184,6 +186,46 @@ function generateAuthToken(user, org, extraDetails = {}, options = {}) {
   );
 }
 
+const executeAiOperation = async (req, org_id, config) => {
+  if (config.handler) {
+    return await config.handler(req, org_id);
+  }
+  const context = config.getContext ? await config.getContext(req, org_id) : {};
+  const prompt = config.getPrompt ? config.getPrompt(context) : "";
+
+  let configuration = null;
+  if (config.prebuiltKey) {
+    const updated_prompt = await prebuiltPromptDbService
+      .getSpecificPrebuiltPrompt(org_id, config.prebuiltKey);
+    if (updated_prompt && updated_prompt[config.prebuiltKey]) {
+      configuration = { prompt: updated_prompt[config.prebuiltKey] };
+    }
+  }
+
+  const variables = config.getVariables ? config.getVariables(req, context) : {};
+  const userMessage = config.getMessage ? config.getMessage(req, context) : prompt;
+  const thread_id = req.body.thread_id;
+
+  const aiResult = await callAiMiddleware(
+    userMessage,
+    config.bridgeIdConst,
+    variables,
+    configuration,
+    'text',
+    thread_id
+  );
+
+  if (config.postProcess) {
+    return await config.postProcess(aiResult, req, context);
+  }
+
+  return {
+    success: true,
+    message: config.successMessage,
+    result: aiResult
+  };
+};
+
 
 
 export {
@@ -192,9 +234,10 @@ export {
   decrypt,
   generateIdForOpenAiFunctionCall,
   encryptString,
-  objectToQueryParams, 
-  sendAlert, 
+  objectToQueryParams,
+  sendAlert,
   convertAIConversation,
   sendResponse,
-  generateAuthToken
+  generateAuthToken,
+  executeAiOperation
 };

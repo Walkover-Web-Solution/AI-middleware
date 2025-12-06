@@ -33,7 +33,6 @@ import bridgeVersionRoutes from './routes/bridgeVersion.routes.js'
 import utilsRoutes from './routes/utils.routes.js'
 import prebuiltPromptRoutes from './routes/prebuiltPrompt.routes.js'
 import runAgentsRoutes from './routes/runAgents.routes.js'
-import bridgeRoutes from './routes/bridge.routes.js'
 import templateRoute from './routes/template.routes.js'
 import serviceRoutes from './routes/service.routes.js'
 import converstaionRoutes from './routes/conversation.routes.js'
@@ -84,7 +83,6 @@ app.use('/api/versions', bridgeVersionRoutes)
 app.use('/api/utils', utilsRoutes)
 app.use('/api/prebuilt_prompt', prebuiltPromptRoutes)
 app.use('/api/runagents', runAgentsRoutes)
-app.use('/api/bridge', bridgeRoutes)
 app.use('/api/template', templateRoute)
 
 //Metrics

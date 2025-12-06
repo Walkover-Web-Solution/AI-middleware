@@ -1,5 +1,6 @@
 import { deleteInCache, findInCache, scanCacheKeys } from "../cache_service/index.js";
-import gptMemoryService from "../services/utils/gptMemory.service.js";
+import { AI_OPERATION_CONFIG } from "../configs/constant.js";
+import { executeAiOperation } from "../services/utils/utility.service.js";
 
 const clearRedisCache = async (req, res, next) => {
     const { id, ids } = req.body;
@@ -38,28 +39,20 @@ const getRedisCache = async (req, res, next) => {
     return next();
 };
 
+
 const callAi = async (req, res, next) => {
     const { type } = req.body;
-    let result;
+    const org_id = req.profile?.org?.id;
 
-    switch (type) {
-        case 'structured_output':
-            result = await gptMemoryService.structuredOutputOptimizer(req);
-            break;
-        case 'gpt_memory':
-            // For gpt_memory, parameters are in body now due to POST request
-            const { bridge_id, thread_id, sub_thread_id, version_id } = req.body;
-            result = await gptMemoryService.retrieveGptMemoryService({ bridge_id, thread_id, sub_thread_id, version_id });
-            break;
-        case 'improve_prompt':
-            result = await gptMemoryService.improvePromptOptimizer(req);
-            break;
-        default:
-            // Should be caught by validation, but safe fallback
-            res.locals = { success: false, message: "Invalid type" };
-            req.statusCode = 400;
-            return next();
+    const config = AI_OPERATION_CONFIG[type];
+
+    if (!config) {
+        res.locals = { success: false, message: "Invalid type" };
+        req.statusCode = 400;
+        return next();
     }
+
+    const result = await executeAiOperation(req, org_id, config);
 
     res.locals = result;
     req.statusCode = 200;
