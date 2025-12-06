@@ -77,7 +77,7 @@ app.use('/api/rag', RagRouter);
 app.use('/api/testcases', testcaseRoutes);
 app.use('/api/report', reportRoute);
 app.use('/api/modelConfiguration', ModelsConfigRoutes);
-app.use('/auth', AuthRouter)
+app.use('/api/auth', AuthRouter);
 app.use('/data', agentLookupRoutes)
 app.use('/functions', apiCallRoutes)
 app.use('/bridge/versions', bridgeVersionRoutes)
