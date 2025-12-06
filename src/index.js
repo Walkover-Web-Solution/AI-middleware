@@ -78,14 +78,14 @@ app.use('/api/testcases', testcaseRoutes);
 app.use('/api/report', reportRoute);
 app.use('/api/modelConfiguration', ModelsConfigRoutes);
 app.use('/api/auth', AuthRouter);
-app.use('/data', agentLookupRoutes)
-app.use('/functions', apiCallRoutes)
-app.use('/bridge/versions', bridgeVersionRoutes)
-app.use('/utils', utilsRoutes)
-app.use('/prebuilt_prompt', prebuiltPromptRoutes)
-app.use('/runagents', runAgentsRoutes)
-app.use('/bridge', bridgeRoutes)
-app.use('/Template', templateRoute)
+app.use('/api/data', agentLookupRoutes)
+app.use('/api/functions', apiCallRoutes)
+app.use('/api/bridge/versions', bridgeVersionRoutes)
+app.use('/api/utils', utilsRoutes)
+app.use('/api/prebuilt_prompt', prebuiltPromptRoutes)
+app.use('/api/runagents', runAgentsRoutes)
+app.use('/api/bridge', bridgeRoutes)
+app.use('/api/template', templateRoute)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);

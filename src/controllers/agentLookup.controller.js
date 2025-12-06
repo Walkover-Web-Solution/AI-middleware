@@ -7,11 +7,6 @@ import { getallOrgs } from "../utils/proxy.utils.js";
 // matched by configuration.model and enriched with MSG91 org details.
 export const getAgentsByModel = async (req, res, next) => {
   const { model } = req.query;
-  if (!model || typeof model !== 'string') {
-    res.locals = { success: false, message: 'Query param "model" is required' };
-    req.statusCode = 400;
-    return next();
-  }
 
   // 1) Fetch configurations and versions that match the model (Mongo first)
   const [configs, versions] = await Promise.all([
@@ -32,11 +27,11 @@ export const getAgentsByModel = async (req, res, next) => {
     ...configs.map(c => ({ kind: 'config', data: c })),
   ];
 
-    const parentIds = Array.from(new Set(
-      versions
-        .filter(v => !configByOrg.has(String(v.org_id)) && v?.parent_id)
-        .map(v => String(v.parent_id))
-    ));
+  const parentIds = Array.from(new Set(
+    versions
+      .filter(v => !configByOrg.has(String(v.org_id)) && v?.parent_id)
+      .map(v => String(v.parent_id))
+  ));
 
   // 2) Resolve parent configurations (batch) for versions missing direct config
   let parentConfigById = new Map();
@@ -88,7 +83,6 @@ export const getAgentsByModel = async (req, res, next) => {
         }
       }
     }
-
     results.push({
       agent_id: agentId,
       version_id: versionId,
