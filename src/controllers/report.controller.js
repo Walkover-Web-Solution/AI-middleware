@@ -1,4 +1,4 @@
-import { get_latency_report_data, get_message_data } from '../db_services/report.service.js';
+import { get_latency_report_data } from '../db_services/report.service.js';
 import { getallOrgs } from '../utils/proxy.utils.js';
 import { getHistoryByMessageId } from '../db_services/history.service.js';
 

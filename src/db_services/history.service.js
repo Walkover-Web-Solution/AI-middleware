@@ -368,5 +368,5 @@ const findHistoryByMessageId = async (message_id) => {
   return result;
 }
 
-export { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId };
+export { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId };
 

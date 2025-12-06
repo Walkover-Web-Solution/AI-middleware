@@ -10,25 +10,6 @@ const generateToken = (tokenInfo) => {
   return token;
 };
 
-const getToken = (data, expire) => {
-  let token ;
-  if(expire?.exp&&expire?.iat){
-    token = jwt.sign(
-      { ...expire,...data },
-      data.org_id === "public" ? process.env.PUBLIC_CHATBOT_TOKEN : process.env.CHATBOTSECRETKEY,
-      
-    );
-  }else{
-    token = jwt.sign(
-      { ...data },
-      data.org_id === "public" ? process.env.PUBLIC_CHATBOT_TOKEN : process.env.CHATBOTSECRETKEY,
-      { expiresIn: '48h' }
-    );
-  }
-
-  return token;
-};
-
 export {
-  generateToken, getToken,
+  generateToken,
 };

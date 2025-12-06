@@ -1,7 +1,7 @@
 import configurationService from "../../db_services/configuration.service.js";
 import helper from "../../services/utils/helper.utils.js";
 import token from "../../services/commonService/generateToken.js";
-import ModelsConfig from "../../configs/modelConfiguration.js";
+
 const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {
   let RTLayer = false;
   let bridge;
@@ -30,38 +30,6 @@ const getConfiguration = async (configuration, service, bridge_id, api_key, temp
     template: templateContent?.template
   };
 };
-const filterDataOfBridgeOnTheBaseOfUI = (result, bridge_id, update = true) => {
-  const configuration = result?.bridges?.configuration;
-  const type = result.bridges.configuration?.type ? result.bridges.configuration.type : '';
-  const model = configuration?.model ? configuration.model : '';
-  const modelname = model.replaceAll("-", "_").replaceAll(".", "_");
-  const modelfunc = ModelsConfig[modelname];
-  let modelConfig = modelfunc().configuration;
-  for (const key in modelConfig) {
-    if (Object.prototype.hasOwnProperty.call(configuration, key)) {
-      modelConfig[key].default = configuration[key];
-    }
-  }
-  let customConfig = modelConfig;
-  for (const keys in configuration) {
-    if (keys != "name" && keys != "type") {
-      customConfig[keys] = modelConfig[keys] ? customConfig[keys] : configuration[keys];
-    }
-  }
-
-  if (configuration?.max_tokens > modelConfig?.max_tokens?.max) {
-    configuration.max_tokens = modelConfig.max_tokens.default;
-  }
-
-  result.bridges.apikey = helper.decrypt(result.bridges.apikey);
-  if (update) {
-    const embed_token = token.generateToken({ payload: { org_id: process.env.ORG_ID, project_id: process.env.PROJECT_ID, user_id: bridge_id }, accessKey: process.env.Access_key });
-    result.bridges.embed_token = embed_token;
-  }
-  result.bridges.type = type;
-  result.bridges.configuration = customConfig;
-};
-
 
 function convertToTimestamp(dateTimeStr) {
   const dateObj = new Date(dateTimeStr);
@@ -70,6 +38,5 @@ function convertToTimestamp(dateTimeStr) {
 
 export {
   getConfiguration,
-  filterDataOfBridgeOnTheBaseOfUI,
   convertToTimestamp
 };
