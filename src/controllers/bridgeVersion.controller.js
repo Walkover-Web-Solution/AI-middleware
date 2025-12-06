@@ -104,11 +104,7 @@ const bulkPublishVersion = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const user_id = req.profile.user.id;
 
-    if (!Array.isArray(version_ids) || version_ids.length === 0) {
-        res.locals = { success: false, message: "version_ids must be a non-empty list" };
-        req.statusCode = 400;
-        return next();
-    }
+    // Validation handled by middleware
 
     const results = await Promise.all(version_ids.map(async (vid) => {
         try {
@@ -157,85 +153,81 @@ const discardVersion = async (req, res, next) => {
 };
 
 const suggestModel = async (req, res, next) => {
-    try {
-        const { version_id } = req.params;
-        const org_id = req.profile.org.id;
-        const folder_id = req.profile.user.folder_id;
+    const { version_id } = req.params;
+    const org_id = req.profile.org.id;
+    const folder_id = req.profile.user.folder_id;
 
-        const versionDataResult = await bridgeVersionDbService.getVersionWithTools(version_id);
-        const versionData = versionDataResult?.bridges;
+    const versionDataResult = await bridgeVersionDbService.getVersionWithTools(version_id);
+    const versionData = versionDataResult?.bridges;
 
-        if (!versionData) {
-            throw new Error("Version not found");
-        }
-
-        let available_services = versionData.apikey_object_id ? Object.keys(versionData.apikey_object_id) : [];
-
-        if (folder_id) {
-            const folderData = await folderDbService.getFolderData(folder_id);
-            if (folderData && folderData.apikey_object_id) {
-                available_services = Object.keys(folderData.apikey_object_id);
-            }
-        }
-
-        if (!available_services || available_services.length === 0) {
-            throw new Error('Please select api key for proceeding further');
-        }
-
-        const available_models = [];
-        const unavailable_models = [];
-
-        for (const service in modelConfigDocument) {
-            if (available_services.includes(service)) {
-                for (const model in modelConfigDocument[service]) {
-                    if (modelFeatures[model]) {
-                        available_models.push({ [model]: modelFeatures[model] });
-                    }
-                }
-            } else {
-                for (const model in modelConfigDocument[service]) {
-                    if (modelFeatures[model]) {
-                        unavailable_models.push({ [model]: modelFeatures[model] });
-                    }
-                }
-            }
-        }
-
-        const prompt = versionData.configuration?.prompt;
-        const tool_calls = Object.values(versionData.apiCalls || {}).map(call => ({ [call.endpoint_name]: call.description }));
-
-        const message = JSON.stringify({ prompt: prompt, tool_calls: tool_calls });
-        const variables = {
-            available_models: JSON.stringify(available_models),
-            unavailable_models: JSON.stringify(unavailable_models)
-        };
-
-        const ai_response = await callAiMiddleware(message, { bridge_id: bridge_ids['suggest_model'], variables: variables });
-
-        const response = {
-            available: {
-                model: ai_response.best_model_from_available_models,
-                service: getServiceByModel(ai_response.best_model_from_available_models)
-            }
-        };
-
-        if (ai_response.best_model_from_unavailable_models) {
-            response.unavailable = {
-                model: ai_response.best_model_from_unavailable_models,
-                service: getServiceByModel(ai_response.best_model_from_unavailable_models)
-            };
-        }
-
-        res.locals = { success: true, message: "suggestion fetched successfully", data: response };
-        req.statusCode = 200;
-        return next();
-
-    } catch (e) {
-        console.error(`Error in suggest_model: ${e.message}`);
-        res.locals = { success: false, message: e.message, data: { model: null, error: e.message } };
+    if (!versionData) {
+        res.locals = { success: false, message: "Version not found", data: { model: null, error: "Version not found" } };
         req.statusCode = 400;
         return next();
     }
+
+    let available_services = versionData.apikey_object_id ? Object.keys(versionData.apikey_object_id) : [];
+
+    if (folder_id) {
+        const folderData = await folderDbService.getFolderData(folder_id);
+        if (folderData && folderData.apikey_object_id) {
+            available_services = Object.keys(folderData.apikey_object_id);
+        }
+    }
+
+    if (!available_services || available_services.length === 0) {
+        res.locals = { success: false, message: 'Please select api key for proceeding further', data: { model: null, error: 'Please select api key for proceeding further' } };
+        req.statusCode = 400;
+        return next();
+    }
+
+    const available_models = [];
+    const unavailable_models = [];
+
+    for (const service in modelConfigDocument) {
+        if (available_services.includes(service)) {
+            for (const model in modelConfigDocument[service]) {
+                if (modelFeatures[model]) {
+                    available_models.push({ [model]: modelFeatures[model] });
+                }
+            }
+        } else {
+            for (const model in modelConfigDocument[service]) {
+                if (modelFeatures[model]) {
+                    unavailable_models.push({ [model]: modelFeatures[model] });
+                }
+            }
+        }
+    }
+
+    const prompt = versionData.configuration?.prompt;
+    const tool_calls = Object.values(versionData.apiCalls || {}).map(call => ({ [call.endpoint_name]: call.description }));
+
+    const message = JSON.stringify({ prompt: prompt, tool_calls: tool_calls });
+    const variables = {
+        available_models: JSON.stringify(available_models),
+        unavailable_models: JSON.stringify(unavailable_models)
+    };
+
+    const ai_response = await callAiMiddleware(message, { bridge_id: bridge_ids['suggest_model'], variables: variables });
+
+    const response = {
+        available: {
+            model: ai_response.best_model_from_available_models,
+            service: getServiceByModel(ai_response.best_model_from_available_models)
+        }
+    };
+
+    if (ai_response.best_model_from_unavailable_models) {
+        response.unavailable = {
+            model: ai_response.best_model_from_unavailable_models,
+            service: getServiceByModel(ai_response.best_model_from_unavailable_models)
+        };
+    }
+
+    res.locals = { success: true, message: "suggestion fetched successfully", data: response };
+    req.statusCode = 200;
+    return next();
 };
 
 const getConnectedAgents = async (req, res, next) => {

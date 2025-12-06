@@ -160,236 +160,214 @@ const createBridgesController = async (req, res, next) => {
 };
 
 const updateBridgeController = async (req, res, next) => {
-    try {
-        // Validate params
-        const { error: paramsError, value: paramsValue } = bridgeIdParamSchema.validate(req.params);
-        if (paramsError) {
-            res.locals = { success: false, message: paramsError.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const { bridgeId, version_id } = paramsValue;
-
-        // Validate request body
-        const { error: bodyError, value: bodyValue } = updateBridgeSchema.validate(req.body);
-        if (bodyError) {
-            res.locals = { success: false, message: bodyError.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const body = bodyValue;
-        const org_id = req.profile.org.id;
-        const user_id = req.profile.user.id;
-        const bridgeData = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
-        if (!bridgeData.bridges) {
-            res.locals = { success: false, message: "Bridge not found" };
-            req.statusCode = 404;
-            return next();
-        }
-        const bridge = bridgeData.bridges;
-        const parent_id = bridge.parent_id;
-        const current_configuration = bridge.configuration || {};
-        let current_variables_path = bridge.variables_path || {};
-        let function_ids = bridge.function_ids || [];
-
-        const update_fields = {};
-        const user_history = [];
-
-        const new_configuration = body.configuration;
-        const service = body.service;
-        const page_config = body.page_config;
-        const web_search_filter = body.web_search_filters;
-
-        if (new_configuration) {
-            const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
-            if (!isValid) {
-                res.locals = { success: false, message: errorMessage };
-                req.statusCode = 400;
-                return next();
-            }
-        }
-
-        if (body.connected_agent_details) {
-            update_fields.connected_agent_details = body.connected_agent_details;
-        }
-
-        if (body.apikey_object_id) {
-            const apikey_object_id = body.apikey_object_id;
-            await ConfigurationServices.getApikeyCreds(org_id, apikey_object_id);
-            update_fields.apikey_object_id = apikey_object_id;
-
-            if (version_id) {
-                await ConfigurationServices.updateApikeyCreds(version_id, apikey_object_id);
-            }
-        }
-
-        if (new_configuration && new_configuration.prompt) {
-            const prompt_result = await storeSystemPrompt(new_configuration.prompt, org_id, parent_id || version_id);
-            if (prompt_result && prompt_result.id) {
-                new_configuration.system_prompt_version_id = prompt_result.id;
-            }
-        }
-
-        if (new_configuration && new_configuration.type && new_configuration.type !== 'fine-tune') {
-            new_configuration.fine_tune_model = { current_model: null };
-        }
-
-        const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters'];
-
-        for (const field of simple_fields) {
-            if (body[field] !== undefined) {
-                update_fields[field] = body[field];
-            }
-        }
-
-        if (body.bridge_limit !== undefined) update_fields.bridge_limit = body.bridge_limit;
-        if (body.bridge_usage !== undefined) update_fields.bridge_usage = body.bridge_usage;
-
-        if (page_config) update_fields.page_config = page_config;
-        if (web_search_filter) update_fields.web_search_filters = web_search_filter;
-
-        if (service) {
-            update_fields.service = service;
-            if (new_configuration && new_configuration.model) {
-                const configuration = await getDefaultValuesController(service, new_configuration.model, current_configuration, new_configuration.type);
-                new_configuration = { ...configuration, type: new_configuration.type || 'chat' };
-            }
-        }
-
-        if (new_configuration) {
-            if (new_configuration.model && !service) {
-                const current_service = bridge.service;
-                const configuration = await getDefaultValuesController(current_service, new_configuration.model, current_configuration, new_configuration.type);
-                new_configuration = { ...new_configuration, ...configuration, type: new_configuration.type || 'chat' };
-            }
-            update_fields.configuration = { ...current_configuration, ...new_configuration };
-        }
-
-        if (body.variables_path) {
-            const variables_path = body.variables_path;
-            const updated_variables_path = { ...current_variables_path, ...variables_path };
-            for (const key in updated_variables_path) {
-                if (Array.isArray(updated_variables_path[key])) {
-                    updated_variables_path[key] = {};
-                }
-            }
-            update_fields.variables_path = updated_variables_path;
-            current_variables_path = updated_variables_path; // Update local reference
-        }
-
-        // Handle built-in tools
-        if (body.built_in_tools_data) {
-            const { built_in_tools, built_in_tools_operation } = body.built_in_tools_data;
-            if (built_in_tools) {
-                const op = built_in_tools_operation === '1' ? 1 : 0;
-                await ConfigurationServices.updateBuiltInTools(version_id || bridgeId, built_in_tools, op);
-            }
-        }
-
-        // Handle agents
-        if (body.agents) {
-            const { connected_agents, agent_status } = body.agents;
-            if (connected_agents) {
-                const op = agent_status === '1' ? 1 : 0;
-                if (op === 0) {
-                    for (const agent_name in connected_agents) {
-                        const agent_info = connected_agents[agent_name];
-                        if (agent_info.bridge_id && current_variables_path[agent_info.bridge_id]) {
-                            delete current_variables_path[agent_info.bridge_id];
-                            update_fields.variables_path = current_variables_path;
-                        }
-                    }
-                }
-                await ConfigurationServices.updateAgents(version_id || bridgeId, connected_agents, op);
-            }
-        }
-
-        // Handle function data
-        if (body.functionData) {
-            const { function_id, function_operation, function_name } = body.functionData;
-            if (function_id) {
-                const op = function_operation === '1' ? 1 : 0;
-                const target_id = version_id || bridgeId;
-
-                if (op === 1) {
-                    if (!function_ids.includes(function_id)) {
-                        function_ids.push(function_id);
-                        update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
-                        await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 1);
-                    }
-                } else {
-                    if (function_name && current_variables_path[function_name]) {
-                        delete current_variables_path[function_name];
-                        update_fields.variables_path = current_variables_path;
-                    }
-                    if (function_ids.includes(function_id)) {
-                        function_ids = function_ids.filter(fid => fid.toString() !== function_id);
-                        update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
-                        await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 0);
-                    }
-                }
-            }
-        }
-
-        // Build user history entries
-        for (const key in body) {
-            const value = body[key];
-            const history_entry = {
-                user_id: user_id,
-                org_id: org_id,
-                bridge_id: parent_id || '',
-                version_id: version_id,
-                time: new Date() // Python uses default time?
-            };
-
-            if (key === 'configuration') {
-                for (const config_key in value) {
-                    user_history.push({ ...history_entry, type: config_key });
-                }
-            } else {
-                user_history.push({ ...history_entry, type: key });
-            }
-        }
-
-        if (version_id) {
-            if (body.version_description === undefined) {
-                update_fields.is_drafted = true;
-            } else {
-                update_fields.version_description = body.version_description;
-            }
-        }
-
-        await ConfigurationServices.updateBridge(bridgeId, update_fields, version_id);
-        const updatedBridge = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
-
-        await addBulkUserEntries(user_history);
-
-        try {
-            await purgeRelatedBridgeCaches(bridgeId, body.bridge_usage !== undefined ? body.bridge_usage : -1);
-        } catch (e) {
-            console.error(`Failed clearing bridge related cache on update: ${e}`);
-        }
-
-        if (service) {
-            updatedBridge.bridges.service = service;
-        }
-
-        const response = await Helper.responseMiddlewareForBridge(updatedBridge.bridges.service, {
-            success: true,
-            message: "Bridge Updated successfully",
-            bridge: updatedBridge.bridges
-        }, true);
-
-        res.locals = response;
-        req.statusCode = 200;
-        return next();
-
-    } catch (e) {
-        console.error("Error in updateBridgeController:", e);
-        res.locals = { success: false, message: e.message };
-        req.statusCode = 500;
+    // Validation handled by middleware
+    const { bridgeId, version_id } = req.params;
+    const body = req.body;
+    const org_id = req.profile.org.id;
+    const user_id = req.profile.user.id;
+    const bridgeData = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+    if (!bridgeData.bridges) {
+        res.locals = { success: false, message: "Bridge not found" };
+        req.statusCode = 404;
         return next();
     }
+    const bridge = bridgeData.bridges;
+    const parent_id = bridge.parent_id;
+    const current_configuration = bridge.configuration || {};
+    let current_variables_path = bridge.variables_path || {};
+    let function_ids = bridge.function_ids || [];
+
+    const update_fields = {};
+    const user_history = [];
+
+    const new_configuration = body.configuration;
+    const service = body.service;
+    const page_config = body.page_config;
+    const web_search_filter = body.web_search_filters;
+
+    if (new_configuration) {
+        const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
+        if (!isValid) {
+            res.locals = { success: false, message: errorMessage };
+            req.statusCode = 400;
+            return next();
+        }
+    }
+
+    if (body.connected_agent_details) {
+        update_fields.connected_agent_details = body.connected_agent_details;
+    }
+
+    if (body.apikey_object_id) {
+        const apikey_object_id = body.apikey_object_id;
+        await ConfigurationServices.getApikeyCreds(org_id, apikey_object_id);
+        update_fields.apikey_object_id = apikey_object_id;
+
+        if (version_id) {
+            await ConfigurationServices.updateApikeyCreds(version_id, apikey_object_id);
+        }
+    }
+
+    if (new_configuration && new_configuration.prompt) {
+        const prompt_result = await storeSystemPrompt(new_configuration.prompt, org_id, parent_id || version_id);
+        if (prompt_result && prompt_result.id) {
+            new_configuration.system_prompt_version_id = prompt_result.id;
+        }
+    }
+
+    if (new_configuration && new_configuration.type && new_configuration.type !== 'fine-tune') {
+        new_configuration.fine_tune_model = { current_model: null };
+    }
+
+    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters'];
+
+    for (const field of simple_fields) {
+        if (body[field] !== undefined) {
+            update_fields[field] = body[field];
+        }
+    }
+
+    if (body.bridge_limit !== undefined) update_fields.bridge_limit = body.bridge_limit;
+    if (body.bridge_usage !== undefined) update_fields.bridge_usage = body.bridge_usage;
+
+    if (page_config) update_fields.page_config = page_config;
+    if (web_search_filter) update_fields.web_search_filters = web_search_filter;
+
+    if (service) {
+        update_fields.service = service;
+        if (new_configuration && new_configuration.model) {
+            const configuration = await getDefaultValuesController(service, new_configuration.model, current_configuration, new_configuration.type);
+            new_configuration = { ...configuration, type: new_configuration.type || 'chat' };
+        }
+    }
+
+    if (new_configuration) {
+        if (new_configuration.model && !service) {
+            const current_service = bridge.service;
+            const configuration = await getDefaultValuesController(current_service, new_configuration.model, current_configuration, new_configuration.type);
+            new_configuration = { ...new_configuration, ...configuration, type: new_configuration.type || 'chat' };
+        }
+        update_fields.configuration = { ...current_configuration, ...new_configuration };
+    }
+
+    if (body.variables_path) {
+        const variables_path = body.variables_path;
+        const updated_variables_path = { ...current_variables_path, ...variables_path };
+        for (const key in updated_variables_path) {
+            if (Array.isArray(updated_variables_path[key])) {
+                updated_variables_path[key] = {};
+            }
+        }
+        update_fields.variables_path = updated_variables_path;
+        current_variables_path = updated_variables_path; // Update local reference
+    }
+
+    // Handle built-in tools
+    if (body.built_in_tools_data) {
+        const { built_in_tools, built_in_tools_operation } = body.built_in_tools_data;
+        if (built_in_tools) {
+            const op = built_in_tools_operation === '1' ? 1 : 0;
+            await ConfigurationServices.updateBuiltInTools(version_id || bridgeId, built_in_tools, op);
+        }
+    }
+
+    // Handle agents
+    if (body.agents) {
+        const { connected_agents, agent_status } = body.agents;
+        if (connected_agents) {
+            const op = agent_status === '1' ? 1 : 0;
+            if (op === 0) {
+                for (const agent_name in connected_agents) {
+                    const agent_info = connected_agents[agent_name];
+                    if (agent_info.bridge_id && current_variables_path[agent_info.bridge_id]) {
+                        delete current_variables_path[agent_info.bridge_id];
+                        update_fields.variables_path = current_variables_path;
+                    }
+                }
+            }
+            await ConfigurationServices.updateAgents(version_id || bridgeId, connected_agents, op);
+        }
+    }
+
+    // Handle function data
+    if (body.functionData) {
+        const { function_id, function_operation, function_name } = body.functionData;
+        if (function_id) {
+            const op = function_operation === '1' ? 1 : 0;
+            const target_id = version_id || bridgeId;
+
+            if (op === 1) {
+                if (!function_ids.includes(function_id)) {
+                    function_ids.push(function_id);
+                    update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
+                    await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 1);
+                }
+            } else {
+                if (function_name && current_variables_path[function_name]) {
+                    delete current_variables_path[function_name];
+                    update_fields.variables_path = current_variables_path;
+                }
+                if (function_ids.includes(function_id)) {
+                    function_ids = function_ids.filter(fid => fid.toString() !== function_id);
+                    update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
+                    await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 0);
+                }
+            }
+        }
+    }
+
+    // Build user history entries
+    for (const key in body) {
+        const value = body[key];
+        const history_entry = {
+            user_id: user_id,
+            org_id: org_id,
+            bridge_id: parent_id || '',
+            version_id: version_id,
+            time: new Date() // Python uses default time?
+        };
+
+        if (key === 'configuration') {
+            for (const config_key in value) {
+                user_history.push({ ...history_entry, type: config_key });
+            }
+        } else {
+            user_history.push({ ...history_entry, type: key });
+        }
+    }
+
+    if (version_id) {
+        if (body.version_description === undefined) {
+            update_fields.is_drafted = true;
+        } else {
+            update_fields.version_description = body.version_description;
+        }
+    }
+
+    await ConfigurationServices.updateBridge(bridgeId, update_fields, version_id);
+    const updatedBridge = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+
+    await addBulkUserEntries(user_history);
+
+    try {
+        await purgeRelatedBridgeCaches(bridgeId, body.bridge_usage !== undefined ? body.bridge_usage : -1);
+    } catch (e) {
+        console.error(`Failed clearing bridge related cache on update: ${e}`);
+    }
+
+    if (service) {
+        updatedBridge.bridges.service = service;
+    }
+
+    const response = await Helper.responseMiddlewareForBridge(updatedBridge.bridges.service, {
+        success: true,
+        message: "Bridge Updated successfully",
+        bridge: updatedBridge.bridges
+    }, true);
+
+    res.locals = response;
+    req.statusCode = 200;
+    return next();
 };
 
 const getBridgesAndVersionsByModelController = async (req, res, next) => {

@@ -2,34 +2,37 @@ import express from "express";
 import bridgeVersionController from "../controllers/bridgeVersion.controller.js";
 import { updateBridgeController } from "../controllers/agentConfig.controller.js";
 import { middleware } from "../middlewares/middleware.js";
+import validate from "../middlewares/validate.middleware.js";
+import bridgeVersionValidation from "../validation/joi_validation/bridgeVersion.validation.js";
+import { updateBridgeSchema, bridgeIdParamSchema } from "../validation/joi_validation/agentConfig.validation.js";
 
 const router = express.Router();
 
 //create Version
-router.post("/create", middleware, bridgeVersionController.createVersion);
+router.post("/create", middleware, validate(bridgeVersionValidation.createVersion), bridgeVersionController.createVersion);
 
 //bulk publish
-router.post("/bulk_publish", middleware, bridgeVersionController.bulkPublishVersion);
+router.post("/bulk_publish", middleware, validate(bridgeVersionValidation.bulkPublishVersion), bridgeVersionController.bulkPublishVersion);
 
 //get Version
-router.get("/get/:version_id", middleware, bridgeVersionController.getVersion);
+router.get("/get/:version_id", middleware, validate(bridgeVersionValidation.getVersion), bridgeVersionController.getVersion);
 
 //publish Version
-router.post("/publish/:version_id", middleware, bridgeVersionController.publishVersion);
+router.post("/publish/:version_id", middleware, validate(bridgeVersionValidation.publishVersion), bridgeVersionController.publishVersion);
 
 //delete Version
-router.delete("/:version_id", middleware, bridgeVersionController.removeVersion);
+router.delete("/:version_id", middleware, validate(bridgeVersionValidation.removeVersion), bridgeVersionController.removeVersion);
 
 //discard Version
-router.post("/discard/:version_id", middleware, bridgeVersionController.discardVersion);
+router.post("/discard/:version_id", middleware, validate(bridgeVersionValidation.discardVersion), bridgeVersionController.discardVersion);
 
 //suggest Model
-router.get("/suggest/:version_id", middleware, bridgeVersionController.suggestModel);
+router.get("/suggest/:version_id", middleware, validate(bridgeVersionValidation.suggestModel), bridgeVersionController.suggestModel);
 
 //get Connected Agents
-router.get("/connected-agents/:version_id", middleware, bridgeVersionController.getConnectedAgents);
+router.get("/connected-agents/:version_id", middleware, validate(bridgeVersionValidation.getConnectedAgents), bridgeVersionController.getConnectedAgents);
 
 //update Version
-router.put("/update/:version_id", middleware, updateBridgeController);
+router.put("/update/:version_id", middleware, validate(bridgeIdParamSchema), validate(updateBridgeSchema), updateBridgeController);
 
 export default router;
