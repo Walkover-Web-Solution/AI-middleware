@@ -1,12 +1,12 @@
 
-import { createThreadHistory, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
+import { createThreadHistory, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
 import configurationService from "../../db_services/configuration.service.js";
-import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
+import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.validation.js";
 import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import conversationDbService from "../../db_services/conversation.service.js";
 import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.service.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
-import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
+import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatBot.validation.js";
 import { send_error_to_webhook } from "../sendErrorWebhook.service.js"
 import { findThreadHistoryFormatted } from "../../db_services/history.service.js";
 

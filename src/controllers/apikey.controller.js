@@ -1,6 +1,6 @@
 import apikeyService from "../db_services/apikey.service.js";
 import Helper from "../services/utils/helper.utils.js";
-import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../validation/joi_validation/apikey.js";
+import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../validation/joi_validation/apikey.validation.js";
 import {findInCache,deleteInCache} from "../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../services/utils/aiServices.js"
 import { redis_keys,cost_types } from "../configs/constant.js";

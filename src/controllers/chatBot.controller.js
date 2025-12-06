@@ -2,7 +2,7 @@ import ChatbotDbService from "../db_services/chatBot.service.js";
 import responseTypeService from "../db_services/responseType.service.js";
 import token from "../services/commonService/generateToken.js";
 import { generateIdentifier } from "../services/utils/utility.service.js";
-import { getAllChatBotsSchema } from "../validation/joi_validation/chatbot.js";
+import { getAllChatBotsSchema } from "../validation/joi_validation/chatBot.validation.js";
 
 const getAllChatBots = async (req, res, next) => {
     const org_id = req.params.orgId;

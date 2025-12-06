@@ -1,4 +1,4 @@
-import { UserModelConfigSchema } from "../validation/joi_validation/modelConfigValidation.js";
+import { UserModelConfigSchema } from "../validation/joi_validation/modelConfig.validation.js";
 import modelConfigDbService from "../db_services/modelConfig.service.js"
 const { validateModel } = await import('../services/utils/modelValidation.utils.js');
 import ConfigurationServices from "../db_services/configuration.service.js";

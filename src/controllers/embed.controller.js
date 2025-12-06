@@ -10,7 +10,7 @@ import {
     createEmbedSchema,
     updateEmbedSchema,
     getEmbedDataByUserIdQuerySchema
-} from "../validation/joi_validation/embed.js";
+} from "../validation/joi_validation/embed.validation.js";
 const embedLogin = async (req, res, next) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
   const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email, folder_id: req.Embed.folder_id };

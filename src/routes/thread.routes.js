@@ -1,11 +1,12 @@
-import { Router } from 'express';
-import { createSubThreadWithAi, createThreadController, getAllThreadsController } from '../controllers/thread.controller.js';
+import express from "express";
+import { createSubThreadWithAiController, createSubThreadController, getAllSubThreadController } from '../controllers/thread.controller.js';
 import { combinedAuthWithChatBotAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
 
-const router = Router();
+const router = express.Router();
+
 // Define routes
-router.post('/', combinedAuthWithChatBotAndPublicChatbot, createThreadController);
-router.post('/new', combinedAuthWithChatBotAndPublicChatbot, createSubThreadWithAi);
-router.get('/:thread_id', combinedAuthWithChatBotAndPublicChatbot, getAllThreadsController);
+router.post('/', combinedAuthWithChatBotAndPublicChatbot, createSubThreadController);
+router.post('/ai', combinedAuthWithChatBotAndPublicChatbot, createSubThreadWithAiController);
+router.get('/:thread_id', combinedAuthWithChatBotAndPublicChatbot, getAllSubThreadController);
 
 export default router;

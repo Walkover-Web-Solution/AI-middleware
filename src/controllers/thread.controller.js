@@ -4,12 +4,23 @@ import { ResponseSender } from '../services/utils/customResponse.utils.js';
 import { generateIdentifier } from '../services/utils/utility.service.js';
 import configurationService from '../db_services/configuration.service.js';
 import conversationDbService from '../db_services/conversation.service.js';
+import {
+    createThreadBodySchema,
+    createSubThreadWithAiBodySchema,
+    getAllThreadsParamsSchema,
+    getAllThreadsQuerySchema
+} from '../validation/joi_validation/thread.validation.js';
+
 const responseSender = new ResponseSender();
 
 // Create a new thread
-async function createThreadController(req, res, next) {
-    const { name = "", thread_id, subThreadId } = req.body;
+async function createSubThreadController(req, res, next) {
     const { org_id } = req.profile;
+
+    // Validate request body
+    const validatedBody = await createThreadBodySchema.validateAsync(req.body);
+    const { name = "", thread_id, subThreadId } = validatedBody;
+
     const sub_thread_id = subThreadId || generateIdentifier()
     if (!thread_id || !org_id || !sub_thread_id) {
         throw new Error('All fields are required');
@@ -28,9 +39,13 @@ async function createThreadController(req, res, next) {
     return next();
 }
 
-async function createSubThreadWithAi(req, res, next) {
-    const { name = "", thread_id, subThreadId, user = "", botId } = req.body;
+async function createSubThreadWithAiController(req, res, next) {
     const { org_id, user_id } = req.profile;
+
+    // Validate request body
+    const validatedBody = await createSubThreadWithAiBodySchema.validateAsync(req.body);
+    const { name = "", thread_id, subThreadId, user = "", botId } = validatedBody;
+
     const sub_thread_id = subThreadId || generateIdentifier()
     let display_name;
     if (!thread_id || !org_id || !sub_thread_id) {
@@ -73,9 +88,15 @@ async function createSubThreadWithAi(req, res, next) {
 }
 
 // Get all threads
-async function getAllThreadsController(req, res, next) {
-    const { thread_id } = req.params;
-    const { slugName } = req.query;
+async function getAllSubThreadController(req, res, next) {
+    // Validate URL params
+    const validatedParams = await getAllThreadsParamsSchema.validateAsync(req.params);
+    const { thread_id } = validatedParams;
+
+    // Validate query params
+    const validatedQuery = await getAllThreadsQuerySchema.validateAsync(req.query);
+    const { slugName } = validatedQuery;
+
     const org_id = req?.profile?.org_id || req?.profile?.org?.id
     const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);
     const bridge_id = data?._id?.toString();
@@ -119,7 +140,7 @@ async function createSubThreadNameAI({ user }) {
 
 
 export {
-    createThreadController,
-    createSubThreadWithAi,
-    getAllThreadsController
+    createSubThreadController,
+    createSubThreadWithAiController,
+    getAllSubThreadController
 }

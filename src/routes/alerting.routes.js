@@ -1,13 +1,12 @@
 import express from "express";
-import alertingContoller from "../controllers/alerting.controller.js";
-import {middleware} from "../middlewares/middleware.js";
-// import middleware from "../middlewares/middleware.js";
+import { middleware } from "../middlewares/middleware.js";
+import alertingController from "../controllers/alerting.controller.js";
 
-let router = express.Router();
+const router = express.Router();
 
-router.post('/',middleware, alertingContoller.createAlert);
-router.get('/', middleware, alertingContoller.getAllAlerts);
-router.put('/:id',middleware, alertingContoller.updateAlert);
-router.delete('/',middleware, alertingContoller.deleteAlert);
+router.post('/', middleware, alertingController.createAlert);
+router.get('/', middleware, alertingController.getAllAlerts);
+router.put('/:id', middleware, alertingController.updateAlert);
+router.delete('/', middleware, alertingController.deleteAlert);
 
 export default router;

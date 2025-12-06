@@ -5,7 +5,7 @@ import {
   searchConversationLogsParamsSchema,
   searchConversationLogsBodySchema,
   paginationQuerySchema
-} from "../validation/joi_validation/conversationLogs.js";
+} from "../validation/joi_validation/history.validation.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id

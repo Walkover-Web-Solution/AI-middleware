@@ -16,7 +16,7 @@ import {
     bridgeIdParamSchema,
     modelNameParamSchema,
     cloneAgentSchema
-} from "../validation/joi_validation/agentConfig.js";
+} from "../validation/joi_validation/agentConfig.validation.js";
 
 const createBridgesController = async (req, res, next) => {
     try {

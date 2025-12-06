@@ -4,7 +4,7 @@ import {
     getChannelList
 } from '../utils/hello.utils.js';
 import ConfigurationServices from '../db_services/configuration.service.js';
-import { subscribeSchema } from '../validation/joi_validation/bridge.js';
+import { subscribeSchema } from '../validation/joi_validation/bridge.validation.js';
 import modelConfigService from '../db_services/modelConfig.service.js'
 // import helloService from '../db_services/helloService.js';
 export const subscribe = async (req, res, next) => {

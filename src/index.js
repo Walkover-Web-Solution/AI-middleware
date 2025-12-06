@@ -7,7 +7,6 @@ import './consumers/index.js';
 import './services/cache.service.js';
 import configRoutes from './routes/config.routes.js';
 import apikeyRoutes from "./routes/apikey.routes.js";
-import helloRoutes from './routes/hello.routes.js';
 import threadRoutes from './routes/thread.routes.js'
 import metricsRoutes from "./routes/metrics.routes.js"
 import mongoose from "mongoose";
@@ -68,12 +67,11 @@ app.use('/api/agent', configRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
 app.use('/api/service', serviceRoutes);
-app.use('api/chatbot', chatbot);
+app.use('/api/chatbot', chatbot);
 app.use('/api/embed', EmbedRoutes);
 app.use('/user', userOrgLocalController);
-app.use('/alerting', alerting)
-app.use('/hello', helloRoutes);
-app.use('/thread', threadRoutes);
+app.use('/api/alerting', alerting)
+app.use('/api/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/internal', InternalRoutes);
