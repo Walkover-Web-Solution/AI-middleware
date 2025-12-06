@@ -1,8 +1,10 @@
 import multer from 'multer';
 import express from "express";
-import { GetAllDocuments, create_vectors, delete_doc, updateDoc, getKnowledgeBaseToken, getEmebedToken, ragEmbedUserLogin } from "../controllers/rag.controller.js";
+import { getAllDocuments, createVectors, deleteDoc, updateDoc, getKnowledgeBaseToken, getEmbedToken, ragEmbedUserLogin } from "../controllers/rag.controller.js";
 import { EmbeddecodeToken, middleware } from "../middlewares/middleware.js";
 import bucketService from "../services/bucket.service.js";
+import validate from "../middlewares/validate.middleware.js";
+import { createVectorsSchema, docIdSchema, updateDocSchema } from "../validation/joi_validation/rag.validation.js";
 
 // Initialize multer for memory storage
 const storage = multer.memoryStorage();
@@ -11,11 +13,11 @@ const upload = multer({ storage });
 const routes = express.Router();
 
 routes.route('/embed/login').get(EmbeddecodeToken, ragEmbedUserLogin);
-routes.post('/', middleware, upload.single('file'), bucketService.handleFileUpload, create_vectors); // <-- Fix applied
-routes.get('/docs', middleware, GetAllDocuments);
-routes.delete('/docs/:id', middleware, delete_doc);
-routes.patch('/docs/:id', middleware, updateDoc);
-routes.get('/docs/token',middleware,getKnowledgeBaseToken)
-routes.get('/get-emebed-token', middleware, getEmebedToken)
+routes.post('/', middleware, upload.single('file'), bucketService.handleFileUpload, validate({ body: createVectorsSchema }), createVectors);
+routes.get('/docs', middleware, getAllDocuments);
+routes.delete('/docs/:id', middleware, validate({ params: docIdSchema }), deleteDoc);
+routes.patch('/docs/:id', middleware, validate({ params: docIdSchema, body: updateDocSchema }), updateDoc);
+routes.get('/docs/token', middleware, getKnowledgeBaseToken);
+routes.get('/get-emebed-token', middleware, getEmbedToken);
 
 export default routes;
