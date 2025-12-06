@@ -3,7 +3,7 @@ import { getOrganizationById, updateOrganizationData, createProxyToken } from ".
 import auth_service from "../db_services/auth.service.js";
 import jwt from 'jsonwebtoken';
 
-const CreateAuthToken = async (req, res, next) => {
+const createAuthToken = async (req, res, next) => {
     const org_id = req.profile.org.id
     const auth_token = generateIdentifier(14);
     const data = await getOrganizationById(org_id)
@@ -19,13 +19,11 @@ const CreateAuthToken = async (req, res, next) => {
     return next();
 }
 
-
-
-const save_auth_token_in_db_controller = async (req, res, next) => {
+const saveAuthTokenInDbController = async (req, res, next) => {
     const { name, redirection_url } = req.body;
     const org_id = req.profile.org.id;
 
-    const result = await auth_service.save_auth_token_in_db(name, redirection_url, org_id);
+    const result = await auth_service.saveAuthTokenInDb(name, redirection_url, org_id);
     res.locals = {
         success: true,
         message: "Auth token saved successfully",
@@ -35,10 +33,10 @@ const save_auth_token_in_db_controller = async (req, res, next) => {
     return next();
 };
 
-const get_auth_token_in_db_controller = async (req, res, next) => {
+const getAuthTokenInDbController = async (req, res, next) => {
     const org_id = req.profile.org.id;
 
-    const result = await auth_service.find_auth_by_org_id(org_id);
+    const result = await auth_service.findAuthByOrgId(org_id);
 
     res.locals = {
         success: true,
@@ -51,11 +49,11 @@ const get_auth_token_in_db_controller = async (req, res, next) => {
 };
 
 
-const verify_auth_token_controller = async (req, res) => {
+const verifyAuthTokenController = async (req, res) => {
     const { client_id, redirection_url, state } = req.body;
     const { user, org } = req.profile;
 
-    await auth_service.verify_auth_token(client_id, redirection_url);
+    await auth_service.verifyAuthToken(client_id, redirection_url);
 
     const data = {
         company_id: org.id,
@@ -76,14 +74,14 @@ const verify_auth_token_controller = async (req, res) => {
 
 
 
-const get_client_info_controller = async (req, res, next) => {
+const getClientInfoController = async (req, res, next) => {
     const { client_id } = req.query;
 
     if (!client_id) {
         throw new Error('Client id is required');
     }
 
-    const result = await auth_service.find_auth_by_client_id(client_id);
+    const result = await auth_service.findAuthByClientId(client_id);
 
     res.locals = {
         success: true,
@@ -95,9 +93,9 @@ const get_client_info_controller = async (req, res, next) => {
 };
 
 export {
-    CreateAuthToken,
-    save_auth_token_in_db_controller,
-    verify_auth_token_controller,
-    get_client_info_controller,
-    get_auth_token_in_db_controller
+    createAuthToken,
+    saveAuthTokenInDbController,
+    verifyAuthTokenController,
+    getClientInfoController,
+    getAuthTokenInDbController
 }

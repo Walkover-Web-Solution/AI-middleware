@@ -1,11 +1,7 @@
 import { storeInCache } from "../cache_service/index.js";
 import { updateProxyDetails, getProxyDetails, removeClientUser } from "../services/proxy.service.js";
 import { generateAuthToken } from "../services/utils/utility.service.js";
-import {
-    switchUserOrgLocalBodySchema,
-    updateUserDetailsBodySchema,
-    removeUsersFromOrgBodySchema
-} from "../validation/joi_validation/userOrgLocal.validation.js";
+
 
 const userOrgLocalToken = async (req, res, next) => {
   const { user, org, exp, iat, ...extra } = req.profile;
@@ -16,9 +12,7 @@ const userOrgLocalToken = async (req, res, next) => {
 }
 
 const switchUserOrgLocal = async (req, res, next) => {
-  // Validate request body
-  const validatedBody = await switchUserOrgLocalBodySchema.validateAsync(req.body);
-  const { orgId, orgName } = validatedBody;
+  const { orgId, orgName } = req.body;
   const { user, org, exp, iat, ...extra } = req.profile;
   const nowInSeconds = Math.floor(Date.now() / 1000);
   const remainingLifetime = Number.isFinite(exp) ? Math.max(exp - nowInSeconds, 0) : null;
@@ -37,9 +31,7 @@ const switchUserOrgLocal = async (req, res, next) => {
 }
 
 const updateUserDetails = async (req, res, next) => {
-  // Validate request body
-  const validatedBody = await updateUserDetailsBodySchema.validateAsync(req.body);
-  const { company_id, company, user_id, user } = validatedBody;
+  const { company_id, company, user_id, user } = req.body;
   const isCompanyUpdate = company_id && company;
   const updateObject = isCompanyUpdate
     ? { company_id, company: { "meta": company?.meta } }
@@ -63,9 +55,7 @@ const updateUserDetails = async (req, res, next) => {
 };
 
 const removeUsersFromOrg = async (req, res, next) => {
-  // Validate request body
-  const validatedBody = await removeUsersFromOrgBodySchema.validateAsync(req.body);
-  const userId = validatedBody.user_id;
+  const { user_id: userId } = req.body;
   const companyId = req.profile.org.id;
   const featureId = `${process.env.PROXY_USER_REFERENCE_ID}`;
 
