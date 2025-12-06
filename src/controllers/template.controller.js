@@ -1,6 +1,6 @@
 import templateService from "../db_services/template.service.js";
 
-async function allTemplates(req, res, next) {
+const allTemplates = async (req, res, next) => {
   const result = await templateService.getAll();
   res.locals = {
     success: true,
@@ -8,6 +8,18 @@ async function allTemplates(req, res, next) {
   };
   req.statusCode = 200;
   return next();
-}
+};
 
-export { allTemplates };
+const getToken = async (req, res, next) => {
+  res.locals = {
+    success: true,
+    data: req.profile,
+  };
+  req.statusCode = 200;
+  return next();
+};
+
+export default {
+  allTemplates,
+  getToken
+};
