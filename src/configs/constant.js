@@ -70,3 +70,100 @@ export {
   prebuilt_prompt_bridge_id,
   new_agent_service
 };
+
+
+export const AI_OPERATION_CONFIG = {
+    optimize_prompt: {
+        bridgeIdConst: bridge_ids['optimze_prompt'],
+        prebuiltKey: 'optimze_prompt',
+        getContext: async (req, org_id) => {
+            const { version_id, bridge_id } = req.body;
+            const bridgeResult = await ConfigurationServices.getBridges(bridge_id, org_id, version_id);
+            return { bridge: bridgeResult.bridges };
+        },
+        getPrompt: (context) => context.bridge.configuration?.prompt || "",
+        getVariables: (req) => ({ query: req.body.query || "" }),
+        getMessage: (req, context) => context.bridge.configuration?.prompt || "", // optimize_prompt uses prompt as message
+        successMessage: "Prompt optimized successfully"
+    },
+    generate_summary: {
+        bridgeIdConst: bridge_ids['generate_summary'],
+        prebuiltKey: 'generate_summary',
+        getContext: async (req, org_id) => {
+            const { version_id } = req.body;
+            const bridgeResult = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+            if (!bridgeResult.bridges) throw new Error("Version data not found");
+            return { bridgeData: bridgeResult.bridges };
+        },
+        getVariables: (req, context) => {
+            const { bridgeData } = context;
+            const tools = {};
+            if (bridgeData.apiCalls) {
+                Object.values(bridgeData.apiCalls).forEach(tool => {
+                    tools[tool.endpoint_name] = tool.description;
+                });
+            }
+            let system_prompt = bridgeData.configuration?.prompt || "";
+            if (Object.keys(tools).length > 0) {
+                system_prompt += `Available tool calls :-  ${JSON.stringify(tools)}`;
+            }
+            return { prompt: system_prompt };
+        },
+        getMessage: () => "generate summary from the user message provided in system prompt",
+        successMessage: "Summary generated successfully"
+    },
+    generate_json: {
+        bridgeIdConst: bridge_ids['function_agrs_using_ai'],
+        getMessage: (req) => `geneate the json using the example json data : ${req.body.example_json}`,
+        successMessage: "json generated successfully"
+    },
+    generate_test_cases: {
+        bridgeIdConst: bridge_ids['generate_test_cases'],
+        prebuiltKey: 'generate_test_cases',
+        getContext: async (req, org_id) => {
+            const { version_id, bridge_id } = req.body;
+            const bridgeResult = await ConfigurationServices.getBridgesWithTools(bridge_id, org_id, version_id);
+            if (!bridgeResult.bridges) throw new Error("Bridge data not found");
+            return { bridgeData: bridgeResult.bridges };
+        },
+        getVariables: (req, context) => ({ system_prompt: context.bridgeData.configuration?.prompt || "" }),
+        getMessage: () => "Generate 10 comprehensive test cases for this AI assistant based on its system prompt and available tools. Each test case should include a UserInput and ExpectedOutput.",
+        postProcess: async (aiResult, req) => {
+            const savedTestcases = await testcaseDbservice.parseAndSaveTestcases(aiResult, req.body.bridge_id);
+            return {
+                success: true,
+                message: `Test cases generated and ${savedTestcases.length} saved successfully`,
+                result: aiResult,
+                saved_testcase_ids: savedTestcases
+            };
+        }
+    },
+    structured_output: {
+        bridgeIdConst: bridge_ids['structured_output_optimizer'],
+        prebuiltKey: 'structured_output_optimizer',
+        getVariables: (req) => ({ json_schema: req.body.json_schema, query: req.body.query }),
+        getMessage: () => 'create the json shcmea accroding to the dummy json explained in system prompt.',
+        successMessage: "Structured output optimized successfully" // Or whatever default success message is appropriate, though callAiMiddleware returns result directly usually
+    },
+    improve_prompt: {
+        bridgeIdConst: bridge_ids['improve_prompt_optimizer'],
+        getVariables: (req) => req.body.variables, // Assuming variables are passed directly in body as 'variables' object based on original code
+        getMessage: () => 'improve the prompt',
+        successMessage: "Prompt improved successfully"
+    },
+    gpt_memory: {
+        handler: async (req) => {
+            const { bridge_id, thread_id, sub_thread_id, version_id } = req.body;
+            const { memoryId, memory } = await retrieveGptMemoryService(bridge_id, thread_id, sub_thread_id, version_id );
+            return {
+                bridge_id,
+                thread_id,
+                sub_thread_id,
+                version_id,
+                memory_id: memoryId,
+                found: !!memory,
+                memory
+            };
+        }
+    }
+};

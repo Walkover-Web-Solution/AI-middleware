@@ -1,5 +1,5 @@
 
-import client from '../services/cacheService.js';
+import client from '../services/cache.service.js';
 const REDIS_PREFIX = 'AIMIDDLEWARE_';
 const DEFAULT_REDIS_TTL = 172800; //  2 day
 async function storeInCache(identifier, data, ttl = DEFAULT_REDIS_TTL) {

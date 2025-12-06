@@ -1,5 +1,5 @@
 import logger from "../logger.js";
-import queue from "../services/queue.js";
+import queue from "../services/queue.service.js";
 
 export async function pushLogInQueue(logData, queueName, max_retries = 2) {
     if (!Array.isArray(logData)) {

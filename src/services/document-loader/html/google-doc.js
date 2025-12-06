@@ -1,5 +1,5 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { fetchAndProcessCSV, getFileFormatByUrl } from "../../../utils/ragUtils.js";
+import { fetchAndProcessCSV, getFileFormatByUrl } from "../../../utils/rag.utils.js";
 
 export class GoogleDocLoader  {
     static format = {

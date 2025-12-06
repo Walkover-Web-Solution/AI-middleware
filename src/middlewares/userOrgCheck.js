@@ -1,6 +1,6 @@
-import { getUserOrgMapping, switchOrganization } from '../services/proxyService.js';
-import ChatBotDbService from '../db_services/ChatBotDbService.js';
-import configurationModel from '../mongoModel/configuration.js';
+import { getUserOrgMapping, switchOrganization } from '../services/proxy.service.js';
+import ChatBotDbService from '../db_services/chatBot.service.js';
+import configurationModel from '../mongoModel/Configuration.model.js';
 
 async function userOrgAccessCheck(req, res, next) {
   const { params,profile } = req;

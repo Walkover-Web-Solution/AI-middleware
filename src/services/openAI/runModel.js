@@ -1,4 +1,4 @@
-import OpenAIInitializer from "./openaiInitializerService.js";
+import OpenAIInitializer from "./openaiInitializer.service.js";
 const runModel = async (configuration, chat = true, apiKey) => {
   try {
     const OpenAIConfig = new OpenAIInitializer(apiKey);

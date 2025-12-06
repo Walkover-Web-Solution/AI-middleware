@@ -1,4 +1,4 @@
-import { sendAlert } from '../utils/utilityService.js';
+import { sendAlert } from '../../services/utils/utility.service.js';
 import { DocxLoader } from './docx.js';
 import { HTMLLoader } from './html/index.js';
 import { ImageLoader } from './image.js';
