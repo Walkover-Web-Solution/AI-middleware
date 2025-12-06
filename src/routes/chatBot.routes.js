@@ -13,6 +13,6 @@ const router = express.Router();
 router.post('/subscribe', combinedAuthWithChatBotAndPublicChatbot, subscribe);
 
 // Get all chatbots
-router.get('/:orgId', middleware, userOrgAccessCheck, validate(chatBotValidation.getAllChatBots), getAllChatBots); // check why in params
+router.get('/', middleware, userOrgAccessCheck, validate(chatBotValidation.getAllChatBots), getAllChatBots);
 
 export default router;
