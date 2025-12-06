@@ -21,7 +21,6 @@ import AuthRouter from "./routes/auth.routes.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import InternalRoutes from './routes/internal.routes.js';
 import alerting from './routes/alerting.routes.js';
 import testcaseRoutes from './routes/testcase.routes.js'
 import reportRoute from './routes/report.routes.js'
@@ -74,7 +73,6 @@ app.use('/api/alerting', alerting)
 app.use('/api/thread', threadRoutes);
 app.use('/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
-app.use('/internal', InternalRoutes);
 app.use('/rag', RagRouter);
 app.use('/testcases', testcaseRoutes);
 app.use('/report', reportRoute);

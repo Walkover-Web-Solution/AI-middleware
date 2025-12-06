@@ -2,12 +2,6 @@ import apiCallModel from "../mongoModel/ApiCall.model.js";
 import versionModel from "../mongoModel/BridgeVersion.model.js";
 import mongoose from "mongoose";
 
-async function getAllScriptsByFunctionName(function_names) {
-    return await apiCallModel.find({
-        function_name: { $in: function_names }
-    }).select({ org_id: 1, function_name: 1, _id: 1 });
-}
-
 async function getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser) {
     let query = { org_id: org_id };
     if (folder_id) query.folder_id = folder_id;
@@ -196,7 +190,6 @@ async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = 
 }
 
 export default {
-    getAllScriptsByFunctionName,
     getAllApiCallsByOrgId,
     updateApiCallByFunctionId,
     getFunctionById,
