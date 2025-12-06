@@ -1,13 +1,13 @@
 import express from "express";
 import utilsController from "../controllers/utils.controller.js";
 import { middleware } from "../middlewares/middleware.js";
+import validate from "../middlewares/validate.middleware.js";
+import utilsValidation from "../validation/joi_validation/utils.validation.js";
 
 const router = express.Router();
 
-router.delete('/redis', utilsController.clearRedisCache);
-router.get('/redis/:id', utilsController.getRedisCache);
-router.post('/structured_output', middleware, utilsController.structuredOutput);
-router.get('/gpt-memory', middleware, utilsController.retrieveGptMemory);
-router.post('/improve_prompt', utilsController.improvePrompt);
+router.delete('/redis', validate(utilsValidation.clearRedisCache), utilsController.clearRedisCache);
+router.get('/redis/:id', validate(utilsValidation.getRedisCache), utilsController.getRedisCache);
+router.post('/call-ai', middleware, validate(utilsValidation.callAi), utilsController.callAi);
 
 export default router;
