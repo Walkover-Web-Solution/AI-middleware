@@ -1,14 +1,16 @@
 import express from "express";
 import { middleware } from "../middlewares/middleware.js";
 import controller from "../controllers/apiCall.controller.js";
+import validate from '../middlewares/validate.middleware.js';
+import apiCallValidation from '../validation/joi_validation/apiCall.validation.js';
 
 const router = express.Router();
 
-router.get('/all', middleware, controller.getAllApiCalls);
-router.put('/:function_id', middleware, controller.updateApiCalls);
-router.delete('/', middleware, controller.deleteFunction);
-router.post('/createapi', middleware, controller.createApi);
-router.post('/updateapi/:bridgeId', middleware, controller.updateApi);
-router.get('/inbuilt/tools', middleware, controller.getAllInBuiltToolsController);
+router.get('/', middleware, controller.getAllApiCalls);
+router.put('/:tool_id', middleware, validate(apiCallValidation.updateApiCalls), controller.updateApiCalls);
+router.delete('/', middleware, validate(apiCallValidation.deleteFunction), controller.deleteFunction);
+router.post('/', middleware, validate(apiCallValidation.createApi), controller.createApi);
+router.put('/:agent_id', middleware, validate(apiCallValidation.updateApi), controller.updateApi);
+router.get('/inbuilt', middleware, controller.getAllInBuiltToolsController);
 
 export default router;

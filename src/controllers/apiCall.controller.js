@@ -24,17 +24,8 @@ const getAllApiCalls = async (req, res, next) => {
 const updateApiCalls = async (req, res, next) => {
     const org_id = req.profile?.org?.id;
     const { function_id } = req.params;
-    const body = req.body;
-    let data_to_update = validateRequiredParams(body.dataToSend);
-
-    if (!function_id || !data_to_update) {
-        res.locals = {
-            success: false,
-            message: "Missing function_id or data to update"
-        };
-        req.statusCode = 400;
-        return next();
-    }
+    const { dataToSend } = req.body;
+    let data_to_update = validateRequiredParams(dataToSend);
 
     const data = await service.getFunctionById(function_id);
     const old_fields = data.fields || {};
@@ -59,15 +50,6 @@ const deleteFunction = async (req, res, next) => {
     const org_id = req.profile?.org?.id;
     const { function_name } = req.body;
 
-    if (!function_name) {
-        res.locals = {
-            success: false,
-            message: "Missing function_name"
-        };
-        req.statusCode = 400;
-        return next();
-    }
-
     const result = await service.deleteFunctionFromApicallsDb(org_id, function_name);
     res.locals = result;
     req.statusCode = 200;
@@ -76,22 +58,11 @@ const deleteFunction = async (req, res, next) => {
 
 const createApi = async (req, res, next) => {
     try {
-        const body = req.body;
+        const { id: function_name, payload, status, title: endpoint_name, desc } = req.body;
         const org_id = req.profile.org.id;
         const folder_id = req.folder_id || null;
         const user_id = req.profile.user.id;
         const isEmbedUser = req.embed;
-        const function_name = body.id;
-        const payload = body.payload;
-        const status = body.status;
-        const endpoint_name = body.title;
-        const desc = body.desc;
-
-        if (!desc || !function_name || !status || !org_id) {
-            res.locals = { success: false, message: "Required details must not be empty!!" };
-            req.statusCode = 400;
-            return next();
-        }
 
         if (status === "published" || status === "updated") {
             const body_content = payload ? payload.body : null;
@@ -153,17 +124,8 @@ const createApi = async (req, res, next) => {
 const updateApi = async (req, res, next) => {
     try {
         const { bridgeId } = req.params;
-        const body = req.body;
-        const version_id = body.version_id;
+        const { version_id, pre_tools: pre_tool_id, status } = req.body;
         const org_id = req.profile.org.id;
-        const pre_tool_id = body.pre_tools;
-        const status = body.status;
-
-        if (!pre_tool_id || !bridgeId || !org_id) {
-            res.locals = { success: false, message: "Required details must not be empty!!" };
-            req.statusCode = 400;
-            return next();
-        }
 
         const model_config = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
 
