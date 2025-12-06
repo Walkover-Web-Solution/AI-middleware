@@ -89,7 +89,6 @@ const middleware = async (req, res, next) => {
     }
 
     req.profile.org.id = req.profile.org.id.toString();
-    req.body.org_id = req.profile.org.id;
     req.IsEmbedUser = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false
     return next();
   } catch (err) {

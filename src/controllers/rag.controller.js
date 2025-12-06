@@ -2,12 +2,54 @@ import rag_parent_data from '../db_services/ragParentData.service.js';
 import queue from '../services/queue.service.js';
 import { genrateToken } from '../utils/rag.utils.js';
 import { sendRagUpdates } from '../services/alerting.service.js';
-import { generateIdentifier } from '../services/utils/utility.service.js';
-import { getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
+import { generateAuthToken, generateIdentifier } from '../services/utils/utility.service.js';
+import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import token from "../services/commonService/generateToken.js";
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
+
+export const ragEmbedUserLogin = async (req, res, next) => {
+  const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
+  const Tokendata = {
+    "user": {
+      id: req.Embed.user_id,
+      name: embeduser_name,
+      email: embeduser_email,
+
+    },
+    "org": {
+      id: req.Embed.org_id,
+      name: req.Embed.org_name,
+
+    },
+    "extraDetails": {
+      type: 'embed'
+    }
+  }
+  const embedDetails = !req.isGtwyUser ?
+    {
+      user_id: req.Embed.user_id,
+      company_id: req?.Embed?.org_id,
+      company_name: req.Embed.org_name,
+      tokenType: 'embed',
+      embeduser_name, embeduser_email
+    }
+    : {
+      company_id: req.company_id,
+      company_name: req.company_name,
+      user_id: req.user_id
+    };
+  await createProxyToken(embedDetails);
+  const response = {
+    ...(req?.Embed || {}),
+    ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
+    token: generateAuthToken(Tokendata.user, Tokendata.org, { "extraDetails": Tokendata.extraDetails }),
+  };
+  res.locals = { data: response, success: true };
+  req.statusCode = 200;
+  return next();
+};
 
 export const GetAllDocuments = async (req, res, next) => {
     const { org, user, IsEmbedUser } = req.profile || {};

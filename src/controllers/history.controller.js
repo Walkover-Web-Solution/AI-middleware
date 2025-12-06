@@ -12,7 +12,7 @@ import {
  * Get conversation logs with pagination
  */
 const getConversationLogs = async (req, res, next) => {
-  const org_id = req.body.org_id; // From middleware
+  const org_id = req.profile.org.id; // From middleware
 
   // Validate URL params
   const validatedParams = await getConversationLogsParamsSchema.validateAsync(req.params);
@@ -55,7 +55,7 @@ const getConversationLogs = async (req, res, next) => {
  * Get recent threads by bridge_id with pagination
  */
 const getRecentThreads = async (req, res, next) => {
-  const org_id = req.body.org_id; // From middleware
+  const org_id = req.profile.org.id; // From middleware
   const user_feedback = req.query.user_feedback || 'all';
   const error = req.query.error || 'false';
   // Validate URL params
@@ -100,7 +100,7 @@ const getRecentThreads = async (req, res, next) => {
  * Search conversation logs with flexible filters
  */
 const searchConversationLogs = async (req, res, next) => {
-  const org_id = req.body.org_id; // From middleware
+  const org_id = req.profile.org.id; // From middleware
 
   // Validate URL params
   const validatedParams = await searchConversationLogsParamsSchema.validateAsync(req.params);
