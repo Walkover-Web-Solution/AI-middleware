@@ -121,9 +121,9 @@ const createApi = async (req, res, next) => {
     }
 };
 
-const updateApi = async (req, res, next) => {
+const addPreTool = async (req, res, next) => {
     try {
-        const { bridgeId } = req.params;
+        const { agent_id: bridgeId } = req.params;
         const { version_id, pre_tools: pre_tool_id, status } = req.body;
         const org_id = req.profile.org.id;
 
@@ -160,7 +160,7 @@ const updateApi = async (req, res, next) => {
         }
 
     } catch (e) {
-        console.error("Error in updateApi:", e);
+        console.error("Error in addPreTool:", e);
         res.locals = { success: false, message: e.message };
         req.statusCode = 400;
         return next();
@@ -185,6 +185,6 @@ export default {
     updateApiCalls,
     deleteFunction,
     createApi,
-    updateApi,
+    addPreTool,
     getAllInBuiltToolsController
 };

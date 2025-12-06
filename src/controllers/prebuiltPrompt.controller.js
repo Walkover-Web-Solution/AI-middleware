@@ -37,21 +37,8 @@ const getPrebuiltPrompts = async (req, res, next) => {
 const updatePrebuiltPrompt = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const body = req.body;
-
-    if (!body || Object.keys(body).length === 0) {
-        res.locals = { success: false, message: "Request body cannot be empty" };
-        req.statusCode = 400;
-        return next();
-    }
-
     const prompt_id = Object.keys(body)[0];
     const prompt_text = body[prompt_id];
-
-    if (!prebuilt_prompt_bridge_id.includes(prompt_id) || !prompt_text) {
-        res.locals = { success: false, message: `Invalid prompt_id. Must be one of: ${prebuilt_prompt_bridge_id.join(', ')}` };
-        req.statusCode = 400;
-        return next();
-    }
 
     const updatedPrompt = await prebuiltPromptDbService.updatePrebuiltPromptService(org_id, prompt_id, { prompt: prompt_text });
 
@@ -67,18 +54,6 @@ const updatePrebuiltPrompt = async (req, res, next) => {
 const resetPrebuiltPrompts = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const { prompt_id } = req.body;
-
-    if (!prompt_id) {
-        res.locals = { success: false, message: "prompt_id is required in request body" };
-        req.statusCode = 400;
-        return next();
-    }
-
-    if (!prebuilt_prompt_bridge_id.includes(prompt_id)) {
-        res.locals = { success: false, message: `Invalid prompt_id. Must be one of: ${prebuilt_prompt_bridge_id.join(', ')}` };
-        req.statusCode = 400;
-        return next();
-    }
 
     const bridge_id = bridge_ids[prompt_id];
     const bridgePrompt = await getAiMiddlewareAgentData(bridge_id);
@@ -102,20 +77,8 @@ const resetPrebuiltPrompts = async (req, res, next) => {
 };
 
 const getSpecificPrebuiltPrompt = async (req, res, next) => {
-    const { prompt_key } = req.body;
+    const { prompt_key } = req.params;
     const org_id = req.profile.org.id;
-
-    if (!prompt_key) {
-        res.locals = { success: false, message: "prompt_key is required in request body" };
-        req.statusCode = 400;
-        return next();
-    }
-
-    if (!prebuilt_prompt_bridge_id.includes(prompt_key)) {
-        res.locals = { success: false, message: `Invalid prompt_key. Must be one of: ${prebuilt_prompt_bridge_id.join(', ')}` };
-        req.statusCode = 400;
-        return next();
-    }
 
     const specificPrompt = await prebuiltPromptDbService.getSpecificPrebuiltPrompt(org_id, prompt_key);
 

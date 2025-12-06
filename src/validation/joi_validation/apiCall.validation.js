@@ -42,10 +42,10 @@ const createApi = {
     })
 };
 
-const updateApi = {
+const addPreTool = {
     params: Joi.object().keys({
-        bridgeId: Joi.string().required().messages({
-            'any.required': 'bridgeId is required'
+        agent_id: Joi.string().required().messages({
+            'any.required': 'agent_id is required'
         })
     }),
     body: Joi.object().keys({
@@ -69,6 +69,6 @@ export default {
     updateApiCalls,
     deleteFunction,
     createApi,
-    updateApi,
+    addPreTool,
     getAllInBuiltTools
 };
