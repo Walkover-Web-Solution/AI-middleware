@@ -1,8 +1,8 @@
 
-import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
+import { createThreadHistory, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
 import configurationService from "../../db_services/configuration.service.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
-import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
+import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import conversationDbService from "../../db_services/conversation.service.js";
 import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.service.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";

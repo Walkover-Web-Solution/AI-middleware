@@ -1,14 +1,15 @@
 import express from "express";
-import { createEmbed, embedLogin, genrateToken, getAllEmbed, getEmbedDataByUserId, updateEmbed } from "../controllers/embed.controller.js";
-import {middleware } from "../middlewares/middleware.js";
+import { middleware } from "../middlewares/middleware.js";
+import embedController from "../controllers/embed.controller.js";
 import { GtwyEmbeddecodeToken } from "../middlewares/gtwyEmbedMiddleware.js";
-const routes = express.Router();
 
-routes.route('/login').get(GtwyEmbeddecodeToken, embedLogin)
-routes.route('/').post(middleware, createEmbed)
-routes.route('/').get(middleware, getAllEmbed)
-routes.route('/').put(middleware, updateEmbed)
-routes.route('/token').get(middleware, genrateToken)
-routes.route('/getAgents').get(GtwyEmbeddecodeToken, getEmbedDataByUserId)
+const router = express.Router();
 
-export default routes;
+router.post('/login', GtwyEmbeddecodeToken, embedController.embedLogin);
+router.post('/', middleware, embedController.createEmbed);
+router.get('/', middleware, embedController.getAllEmbed);
+router.put('/', middleware, embedController.updateEmbed);
+router.get('/getToken', middleware, embedController.genrateToken);
+router.get('/getAgents', GtwyEmbeddecodeToken, embedController.getEmbedDataByUserId);
+
+export default router;

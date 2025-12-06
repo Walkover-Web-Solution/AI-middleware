@@ -6,6 +6,11 @@ import { generateIdentifier, generateAuthToken } from "../services/utils/utility
 import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
+import {
+    createEmbedSchema,
+    updateEmbedSchema,
+    getEmbedDataByUserIdQuerySchema
+} from "../validation/joi_validation/embed.js";
 const embedLogin = async (req, res, next) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
   const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email, folder_id: req.Embed.folder_id };
@@ -42,16 +47,27 @@ const embedLogin = async (req, res, next) => {
 }
 
 const createEmbed = async (req, res, next) => {
-  const name = req.body.name;
-  const config = req.body.config;
-  const org_id = req.profile.org.id
-  const apikey_object_id = req.body.apikey_object_id;
-  const type = "embed"
-  const folder_limit = req.body.folder_limit;
-  const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id, folder_limit });
-  res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
-  req.statusCode = 200;
-  return next();
+  try {
+    // Validate request body
+    const { error, value } = createEmbedSchema.validate(req.body);
+    if (error) {
+      res.locals = { success: false, message: error.details[0].message };
+      req.statusCode = 400;
+      return next();
+    }
+
+    const { name, config, apikey_object_id, folder_limit } = value;
+    const org_id = req.profile.org.id;
+    const type = "embed";
+    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id, folder_limit });
+    res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
+    req.statusCode = 200;
+    return next();
+  } catch (e) {
+    res.locals = { success: false, message: "Error in creating embed: " + e.message };
+    req.statusCode = 400;
+    return next();
+  }
 }
 
 const getAllEmbed = async (req, res, next) => {
@@ -80,52 +96,62 @@ const getAllEmbed = async (req, res, next) => {
 }
 
 const updateEmbed = async (req, res, next) => {
-  const folder_id = req.body.folder_id;
-  const config = req.body.config;
-  const org_id = req.profile.org.id;
-  const apikey_object_id = req.body.apikey_object_id;
-  const folder_limit = req.body.folder_limit;
-  const folder_usage = req.body.folder_usage
+  try {
+    // Validate request body
+    const { error, value } = updateEmbedSchema.validate(req.body);
+    if (error) {
+      res.locals = { success: false, message: error.details[0].message };
+      req.statusCode = 400;
+      return next();
+    }
 
-  const folder = await FolderModel.findOne({ _id: folder_id, org_id });
-  if (!folder) {
-    res.locals = { message: 'Folder not found' };
-    req.statusCode = 404;
-    return next();
-  }
+    const { folder_id, config, apikey_object_id, folder_limit, folder_usage } = value;
+    const org_id = req.profile.org.id;
 
-  // Find all bridge objects using folder_id and delete from cache
-  const bridgeObjects = await configurationModel.find({ folder_id: folder_id });
-  if (bridgeObjects?.length > 0) {
-    for (const bridgeObject of bridgeObjects) {
-      // Delete cache using object id
-      await deleteInCache(bridgeObject._id.toString());
+    const folder = await FolderModel.findOne({ _id: folder_id, org_id });
+    if (!folder) {
+      res.locals = { success: false, message: 'Folder not found' };
+      req.statusCode = 404;
+      return next();
+    }
 
-      // Delete cache for all version_ids for this object
-      // Access versions from _doc since direct access returns undefined
-      const versionIds = bridgeObject._doc?.versions;
-      if (versionIds?.length > 0) {
-        await deleteInCache(versionIds);
+    // Find all bridge objects using folder_id and delete from cache
+    const bridgeObjects = await configurationModel.find({ folder_id: folder_id });
+    if (bridgeObjects?.length > 0) {
+      for (const bridgeObject of bridgeObjects) {
+        // Delete cache using object id
+        await deleteInCache(bridgeObject._id.toString());
+
+        // Delete cache for all version_ids for this object
+        // Access versions from _doc since direct access returns undefined
+        const versionIds = bridgeObject._doc?.versions;
+        if (versionIds?.length > 0) {
+          await deleteInCache(versionIds);
+        }
       }
     }
-  }
 
-  folder.config = config;
-  folder.apikey_object_id = apikey_object_id;
-  if (folder_limit >= 0) {
-    folder.folder_limit = folder_limit
+    folder.config = config;
+    folder.apikey_object_id = apikey_object_id;
+    if (folder_limit >= 0) {
+      folder.folder_limit = folder_limit;
+    }
+    if (folder_usage == 0) {
+      folder.folder_usage = 0;
+    }
+    await folder.save();
+    await cleanupCache(cost_types.folder, folder_id);
+    if (folder_usage == 0) {
+      await deleteInCache(`${redis_keys.folderusedcost_}${folder_id}`);
+    }
+    res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
+    req.statusCode = 200;
+    return next();
+  } catch (e) {
+    res.locals = { success: false, message: "Error in updating embed: " + e.message };
+    req.statusCode = 400;
+    return next();
   }
-  if (folder_usage == 0) {
-    folder.folder_usage = 0
-  }
-  await folder.save();
-  await cleanupCache(cost_types.folder, folder_id);
-  if (folder_usage == 0) {
-    await deleteInCache(`${redis_keys.folderusedcost_}${folder_id}`)
-  }
-  res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
-  req.statusCode = 200;
-  return next();
 }
 
 
@@ -149,19 +175,40 @@ const genrateToken = async (req, res, next) => {
 }
 
 const getEmbedDataByUserId = async (req, res, next) => {
-  const user_id = req.profile.user.id;
-  const org_id = req.profile.org.id;
-  const agent_id = req?.query?.agent_id;
+  try {
+    // Validate query params
+    const { error, value } = getEmbedDataByUserIdQuerySchema.validate(req.query);
+    if (error) {
+      res.locals = { success: false, message: error.details[0].message };
+      req.statusCode = 400;
+      return next();
+    }
 
-  const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
+    const user_id = req.profile.user.id;
+    const org_id = req.profile.org.id;
+    const agent_id = value?.agent_id;
 
-  res.locals = {
-    success: true,
-    message: "Get Agents data successfully",
-    data
-  };
+    const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
 
-  req.statusCode = 200;
-  return next();
+    res.locals = {
+      success: true,
+      message: "Get Agents data successfully",
+      data
+    };
+
+    req.statusCode = 200;
+    return next();
+  } catch (e) {
+    res.locals = { success: false, message: "Error in getting embed data: " + e.message };
+    req.statusCode = 400;
+    return next();
+  }
 };
-export { embedLogin, createEmbed, getAllEmbed, genrateToken, updateEmbed, getEmbedDataByUserId };
+export default {
+    embedLogin,
+    createEmbed,
+    getAllEmbed,
+    genrateToken,
+    updateEmbed,
+    getEmbedDataByUserId
+};

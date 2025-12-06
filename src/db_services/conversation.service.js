@@ -571,10 +571,8 @@ async function addBulkUserEntries(entries) {
 }
 
 export default {
-  findAllThreads,
   findMessageByMessageId,
   deleteLastThread,
-  getHistory,
   storeSystemPrompt,
   findMessage,
   findThreadsForFineTune,
@@ -583,13 +581,11 @@ export default {
   updateStatus,
   create,
   addThreadId,
-  userFeedbackCounts,
   findThreadMessage,
   getSubThreads,
   getUserUpdates,
   sortThreadsByHits,
   getSubThreadsByError,
-  findAllThreadsUsingKeywordSearch,
   sortThreadsByLatestActivity,
   addBulkUserEntries
 };

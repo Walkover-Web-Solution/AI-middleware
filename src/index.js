@@ -68,7 +68,7 @@ app.use('/api/agent', configRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
 app.use('/api/service', serviceRoutes);
-app.use('/chatbot', chatbot);
+app.use('api/chatbot', chatbot);
 app.use('/api/embed', EmbedRoutes);
 app.use('/user', userOrgLocalController);
 app.use('/alerting', alerting)

@@ -72,15 +72,6 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
   }
 };
 
-const getAllThreadsUsingKeywordSearch = async ({ bridge_id, org_id, keyword_search, version_id }) => {
-  try {
-    const chats = await conversationDbService.findAllThreadsUsingKeywordSearch(bridge_id, org_id, keyword_search, version_id);
-    return { success: true, data: chats };
-  } catch (error) {
-    console.error("getAllThreadsUsingKeywordSearch error:", error);
-    return { success: false, message: error.message };
-  }
-}
 
 export {
   getThread,
@@ -88,6 +79,5 @@ export {
   getThreadHistory,
   getThreadHistoryByMessageId,
   createThreadHistory,
-  getThreadMessageHistory,
-  getAllThreadsUsingKeywordSearch
+  getThreadMessageHistory
 };
