@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { getMonthlyreports } from '../controllers/reportController.js';
+import { getMonthlyreports } from '../controllers/report.controller.js';
 
 const initializeMonthlyLatencyReport = () => {
   cron.schedule('1 0 1 * *', async () => {

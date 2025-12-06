@@ -1,4 +1,4 @@
-import ModelsConfigModel from "../../mongoModel/ModelConfigModel.js";
+import ModelsConfigModel from "../../mongoModel/ModelConfig.model.js";
 
 let modelConfigDocument = {};
 

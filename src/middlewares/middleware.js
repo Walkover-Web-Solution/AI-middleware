@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
-import { getOrganizationById, validateCauthKey } from "../services/proxyService.js";
-import { encryptString } from "../services/utils/utilityService.js";
-import { createOrGetUser } from "../utils/proxyUtils.js";
+import { getOrganizationById, validateCauthKey } from "../services/proxy.service.js";
+import { encryptString } from "../services/utils/utility.service.js";
+import { createOrGetUser } from "../utils/proxy.utils.js";
 dotenv.config();
 
 const makeDataIfProxyTokenGiven = async (req) => {
@@ -89,7 +89,6 @@ const middleware = async (req, res, next) => {
     }
 
     req.profile.org.id = req.profile.org.id.toString();
-    req.body.org_id = req.profile.org.id;
     req.IsEmbedUser = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false
     return next();
   } catch (err) {

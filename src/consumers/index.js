@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import logger from '../logger.js';
-import rabbitmqService from '../services/rabbitmq.js';
+import rabbitmqService from '../services/rabbitmq.service.js';
 import ragConsumer from './ragConsumer.js';
 
 dotenv.config();
