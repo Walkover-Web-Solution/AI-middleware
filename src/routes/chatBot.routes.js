@@ -4,6 +4,8 @@ import { subscribe } from '../controllers/hello.controller.js';
 import { middleware } from "../middlewares/middleware.js";
 import userOrgAccessCheck from "../middlewares/userOrgCheck.js";
 import { combinedAuthWithChatBotAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
+import validate from '../middlewares/validate.middleware.js';
+import chatBotValidation from '../validation/joi_validation/chatBot.validation.js';
 
 const router = express.Router();
 
@@ -11,6 +13,6 @@ const router = express.Router();
 router.post('/subscribe', combinedAuthWithChatBotAndPublicChatbot, subscribe);
 
 // Get all chatbots
-router.get('/:orgId/all', middleware, userOrgAccessCheck, getAllChatBots);
+router.get('/:orgId/all', middleware, userOrgAccessCheck, validate(chatBotValidation.getAllChatBots), getAllChatBots);
 
 export default router;

@@ -71,7 +71,7 @@ app.use('/api/embed', EmbedRoutes);
 app.use('/user', userOrgLocalController);
 app.use('/api/alerting', alerting)
 app.use('/api/thread', threadRoutes);
-app.use('/metrics', metricsRoutes);
+app.use('/api/metrics', metricsRoutes);
 app.use('/org', AuthRouter);
 app.use('/rag', RagRouter);
 app.use('/testcases', testcaseRoutes);

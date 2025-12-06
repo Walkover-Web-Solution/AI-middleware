@@ -6,42 +6,57 @@ const idSchema = Joi.alternatives().try(
 );
 
 /**
+ * Schema for POST /localToken - userOrgLocalToken
+ * No validation needed - uses loginAuth middleware
+ */
+const userOrgLocalToken = {
+    // No validation needed
+};
+
+/**
  * Schema for POST /switchOrg - switchUserOrgLocal
  * Validates request body
  */
-const switchUserOrgLocalBodySchema = Joi.object({
-    orgId: idSchema.required().messages({
-        'any.required': 'orgId is required'
-    }),
-    orgName: Joi.string().allow("", null).optional()
-});
+const switchUserOrgLocal = {
+    body: Joi.object().keys({
+        orgId: idSchema.required().messages({
+            'any.required': 'orgId is required'
+        }),
+        orgName: Joi.string().allow("", null).optional()
+    })
+};
 
 /**
  * Schema for PUT /updateDetails - updateUserDetails
  * Validates request body
  */
-const updateUserDetailsBodySchema = Joi.object({
-    company_id: idSchema.optional(),
-    company: Joi.object().optional(),
-    user_id: idSchema.optional(),
-    user: Joi.object().optional()
-}).or('company_id', 'user_id').and('company_id', 'company').and('user_id', 'user').messages({
-    'object.missing': 'Either company_id or user_id is required',
-    'object.and': 'company_id must be provided with company, and user_id must be provided with user'
-});
+const updateUserDetails = {
+    body: Joi.object().keys({
+        company_id: idSchema.optional(),
+        company: Joi.object().optional(),
+        user_id: idSchema.optional(),
+        user: Joi.object().optional()
+    }).or('company_id', 'user_id').and('company_id', 'company').and('user_id', 'user').messages({
+        'object.missing': 'Either company_id or user_id is required',
+        'object.and': 'company_id must be provided with company, and user_id must be provided with user'
+    })
+};
 
 /**
  * Schema for DELETE /deleteUser - removeUsersFromOrg
  * Validates request body
  */
-const removeUsersFromOrgBodySchema = Joi.object({
-    user_id: idSchema.required().messages({
-        'any.required': 'user_id is required'
+const removeUsersFromOrg = {
+    body: Joi.object().keys({
+        user_id: idSchema.required().messages({
+            'any.required': 'user_id is required'
+        })
     })
-});
+};
 
-export {
-    switchUserOrgLocalBodySchema,
-    updateUserDetailsBodySchema,
-    removeUsersFromOrgBodySchema
+export default {
+    userOrgLocalToken,
+    switchUserOrgLocal,
+    updateUserDetails,
+    removeUsersFromOrg
 };

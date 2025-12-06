@@ -1,6 +1,5 @@
 import apikeyService from "../db_services/apikey.service.js";
 import Helper from "../services/utils/helper.utils.js";
-import { saveApikeySchema, updateApikeySchema, deleteApikeySchema } from "../validation/joi_validation/apikey.validation.js";
 import {findInCache,deleteInCache} from "../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../services/utils/aiServices.js"
 import { redis_keys,cost_types } from "../configs/constant.js";
@@ -12,17 +11,6 @@ const saveApikey = async(req, res, next) => {
     const folder_id = req.profile?.extraDetails?.folder_id;
     const user_id = req.profile.user.id;
     let apikey = req.body.apikey;
-
-    // Validate request body
-    await saveApikeySchema.validateAsync({
-        apikey,
-        service,
-        name,
-        comment,
-        folder_id,
-        user_id,
-        apikey_limit
-    });
 
     // Check API key validity
     await checkApikey(apikey, service);
@@ -110,22 +98,8 @@ const getAllApikeys = async(req, res, next) => {
 
 const updateApikey = async(req, res, next) => {
     let apikey = req.body.apikey;
-    const { name, comment, service, folder_id, user_id, apikey_limit = 0, apikey_usage = -1} = req.body;
-    const { apikey_object_id } = req.params;
-    
-    // Validate request body and params
-    const payload = {
-        apikey,
-        name,
-        comment,
-        service,
-        apikey_object_id,
-        folder_id,
-        user_id,
-        apikey_limit,
-        ...(typeof apikey_usage !== 'undefined' && { apikey_usage }),
-    };
-    await updateApikeySchema.validateAsync(payload);
+    const { name, comment, service, apikey_limit = 0, apikey_usage = -1} = req.body;
+    const { apikey_id: apikey_object_id } = req.params;
     
     // Check API key validity if provided
     if(apikey){
@@ -167,14 +141,8 @@ const updateApikey = async(req, res, next) => {
 }
 
 const deleteApikey = async(req, res, next) => {
-    const body = req.body;
-    const apikey_object_id = body.apikey_object_id;
+    const { apikey_object_id } = req.body;
     const org_id = req.profile.org.id;
-    
-    // Validate request body
-    await deleteApikeySchema.validateAsync({
-        apikey_object_id
-    });
     
     const apikeys_data = await apikeyService.findApikeyById(apikey_object_id);
     let version_ids = apikeys_data?.version_ids || [];

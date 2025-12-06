@@ -2,7 +2,6 @@ import { storeInCache } from "../cache_service/index.js";
 import { updateProxyDetails, getProxyDetails, removeClientUser } from "../services/proxy.service.js";
 import { generateAuthToken } from "../services/utils/utility.service.js";
 
-
 const userOrgLocalToken = async (req, res, next) => {
   const { user, org, exp, iat, ...extra } = req.profile;
   const token = generateAuthToken(user, org, extra);

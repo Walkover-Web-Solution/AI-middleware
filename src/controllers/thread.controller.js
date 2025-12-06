@@ -4,22 +4,13 @@ import { ResponseSender } from '../services/utils/customResponse.utils.js';
 import { generateIdentifier } from '../services/utils/utility.service.js';
 import configurationService from '../db_services/configuration.service.js';
 import conversationDbService from '../db_services/conversation.service.js';
-import {
-    createThreadBodySchema,
-    createSubThreadWithAiBodySchema,
-    getAllThreadsParamsSchema,
-    getAllThreadsQuerySchema
-} from '../validation/joi_validation/thread.validation.js';
 
 const responseSender = new ResponseSender();
 
 // Create a new thread
 async function createSubThreadController(req, res, next) {
     const { org_id } = req.profile;
-
-    // Validate request body
-    const validatedBody = await createThreadBodySchema.validateAsync(req.body);
-    const { name = "", thread_id, subThreadId } = validatedBody;
+    const { name = "", thread_id, subThreadId } = req.body;
 
     const sub_thread_id = subThreadId || generateIdentifier()
     if (!thread_id || !org_id || !sub_thread_id) {
@@ -41,10 +32,7 @@ async function createSubThreadController(req, res, next) {
 
 async function createSubThreadWithAiController(req, res, next) {
     const { org_id, user_id } = req.profile;
-
-    // Validate request body
-    const validatedBody = await createSubThreadWithAiBodySchema.validateAsync(req.body);
-    const { name = "", thread_id, subThreadId, user = "", botId } = validatedBody;
+    const { name = "", thread_id, subThreadId, user = "", botId } = req.body;
 
     const sub_thread_id = subThreadId || generateIdentifier()
     let display_name;
@@ -89,13 +77,8 @@ async function createSubThreadWithAiController(req, res, next) {
 
 // Get all threads
 async function getAllSubThreadController(req, res, next) {
-    // Validate URL params
-    const validatedParams = await getAllThreadsParamsSchema.validateAsync(req.params);
-    const { thread_id } = validatedParams;
-
-    // Validate query params
-    const validatedQuery = await getAllThreadsQuerySchema.validateAsync(req.query);
-    const { slugName } = validatedQuery;
+    const { thread_id } = req.params;
+    const { slugName } = req.query;
 
     const org_id = req?.profile?.org_id || req?.profile?.org?.id
     const data = req?.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(slugName) : await configurationService.getBridgeIdBySlugname(org_id, slugName);

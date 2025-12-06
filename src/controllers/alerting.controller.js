@@ -1,12 +1,10 @@
 import alertingDbservices from "../db_services/alerting.service.js";
-import validateFunctions from "../validation/joi_validation/alerting.validation.js";
 
 async function createAlert(req, res, next) {
   const org_id = req.profile?.org?.id;
   const { webhookConfiguration, name, bridges, alertType, limit } = req.body;
-  
-  // Validate request body
-  const { error, value } = validateFunctions.createAlertSchema.validate({
+
+  res.locals = await alertingDbservices.create({
     org_id,
     webhookConfiguration,
     name,
@@ -14,41 +12,12 @@ async function createAlert(req, res, next) {
     alertType,
     limit
   });
-  
-  if (error) {
-    res.locals = {
-      success: false,
-      message: error.details[0].message
-    };
-    req.statusCode = 400;
-    return next();
-  }
-
-  res.locals = await alertingDbservices.create({
-    org_id: value.org_id,
-    webhookConfiguration: value.webhookConfiguration,
-    name: value.name,
-    bridges: value.bridges,
-    alertType: value.alertType,
-    limit: value.limit
-  });
   req.statusCode = 201;
   return next();
 }
 
 async function getAllAlerts(req, res, next) {
   const org_id = req.profile?.org?.id;
-  
-  // Validate org_id
-  const { error } = validateFunctions.getAlertSchema.validate({ org_id });
-  if (error) {
-    res.locals = {
-      success: false,
-      message: error.details[0].message
-    };
-    req.statusCode = 400;
-    return next();
-  }
 
   const alerts = await alertingDbservices.getAll(org_id);
   if (alerts.success) {
@@ -69,20 +38,9 @@ async function getAllAlerts(req, res, next) {
 }
 
 async function deleteAlert(req, res, next) {
-  const id = req.body.id;
-  
-  // Validate request body
-  const { error, value } = validateFunctions.deleteAlertSchema.validate({ id });
-  if (error) {
-    res.locals = {
-      success: false,
-      message: error.details[0].message
-    };
-    req.statusCode = 400;
-    return next();
-  }
+  const { id } = req.body;
 
-  const result = await alertingDbservices.deleteAlert(value.id);
+  const result = await alertingDbservices.deleteAlert(id);
 
   if (!result.success) {
     res.locals = {
@@ -102,33 +60,8 @@ async function deleteAlert(req, res, next) {
 }
 
 async function updateAlert(req, res, next) {
-  // Validate params
-  const { error: paramsError, value: paramsValue } = validateFunctions.updateAlertParamSchema.validate(req.params);
-  if (paramsError) {
-    res.locals = {
-      success: false,
-      message: paramsError.details[0].message
-    };
-    req.statusCode = 400;
-    return next();
-  }
-  const id = paramsValue.id;
-
-  // Validate request body
-  const { error: bodyError, value: bodyValue } = validateFunctions.updateAlertSchema.validate({
-    id,
-    ...req.body
-  });
-  if (bodyError) {
-    res.locals = {
-      success: false,
-      message: bodyError.details[0].message
-    };
-    req.statusCode = 400;
-    return next();
-  }
-
-  const { webhookConfiguration, bridges, name, alertType } = bodyValue;
+  const { id } = req.params;
+  const { webhookConfiguration, bridges, name, alertType } = req.body;
   
   const alertData = await alertingDbservices.getById(id);
   if (!alertData.success) {

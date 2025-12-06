@@ -6,11 +6,6 @@ import { generateIdentifier, generateAuthToken } from "../services/utils/utility
 import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
-import {
-    createEmbedSchema,
-    updateEmbedSchema,
-    getEmbedDataByUserIdQuerySchema
-} from "../validation/joi_validation/embed.validation.js";
 const embedLogin = async (req, res, next) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
   const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email, folder_id: req.Embed.folder_id };
@@ -48,15 +43,7 @@ const embedLogin = async (req, res, next) => {
 
 const createEmbed = async (req, res, next) => {
   try {
-    // Validate request body
-    const { error, value } = createEmbedSchema.validate(req.body);
-    if (error) {
-      res.locals = { success: false, message: error.details[0].message };
-      req.statusCode = 400;
-      return next();
-    }
-
-    const { name, config, apikey_object_id, folder_limit } = value;
+    const { name, config, apikey_object_id, folder_limit } = req.body;
     const org_id = req.profile.org.id;
     const type = "embed";
     const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id, folder_limit });
@@ -97,15 +84,7 @@ const getAllEmbed = async (req, res, next) => {
 
 const updateEmbed = async (req, res, next) => {
   try {
-    // Validate request body
-    const { error, value } = updateEmbedSchema.validate(req.body);
-    if (error) {
-      res.locals = { success: false, message: error.details[0].message };
-      req.statusCode = 400;
-      return next();
-    }
-
-    const { folder_id, config, apikey_object_id, folder_limit, folder_usage } = value;
+    const { folder_id, config, apikey_object_id, folder_limit, folder_usage } = req.body;
     const org_id = req.profile.org.id;
 
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
@@ -176,17 +155,9 @@ const genrateToken = async (req, res, next) => {
 
 const getEmbedDataByUserId = async (req, res, next) => {
   try {
-    // Validate query params
-    const { error, value } = getEmbedDataByUserIdQuerySchema.validate(req.query);
-    if (error) {
-      res.locals = { success: false, message: error.details[0].message };
-      req.statusCode = 400;
-      return next();
-    }
-
     const user_id = req.profile.user.id;
     const org_id = req.profile.org.id;
-    const agent_id = value?.agent_id;
+    const { agent_id } = req.query;
 
     const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
 

@@ -1,11 +1,4 @@
 import { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters } from "../db_services/history.service.js";
-import {
-  getConversationLogsParamsSchema,
-  getRecentThreadsParamsSchema,
-  searchConversationLogsParamsSchema,
-  searchConversationLogsBodySchema,
-  paginationQuerySchema
-} from "../validation/joi_validation/history.validation.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
@@ -13,15 +6,9 @@ import {
  */
 const getConversationLogs = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
-
-  // Validate URL params
-  const validatedParams = await getConversationLogsParamsSchema.validateAsync(req.params);
-  const { bridge_id, thread_id, sub_thread_id } = validatedParams;
-
-  // Validate query params
-  const validatedQuery = await paginationQuerySchema.validateAsync(req.query);
-  const pageNum = validatedQuery.page || 1;
-  const limitNum = validatedQuery.limit || 30;
+  const { bridge_id, thread_id, sub_thread_id } = req.params;
+  const pageNum = req.query.page || 1;
+  const limitNum = req.query.limit || 30;
 
   // Get conversation logs
   const result = await findConversationLogsByIds(
@@ -56,16 +43,11 @@ const getConversationLogs = async (req, res, next) => {
  */
 const getRecentThreads = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
+  const { bridge_id } = req.params;
   const user_feedback = req.query.user_feedback || 'all';
   const error = req.query.error || 'false';
-  // Validate URL params
-  const validatedParams = await getRecentThreadsParamsSchema.validateAsync(req.params);
-  const { bridge_id } = validatedParams;
-
-  // Validate query params
-  const validatedQuery = await paginationQuerySchema.validateAsync(req.query);
-  const pageNum = validatedQuery.page || 1;
-  const limitNum = validatedQuery.limit || 30;
+  const pageNum = req.query.page || 1;
+  const limitNum = req.query.limit || 30;
 
   // Get recent threads
   const result = await findRecentThreadsByBridgeId(
@@ -101,14 +83,8 @@ const getRecentThreads = async (req, res, next) => {
  */
 const searchConversationLogs = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
-
-  // Validate URL params
-  const validatedParams = await searchConversationLogsParamsSchema.validateAsync(req.params);
-  const { bridge_id } = validatedParams;
-
-  // Validate request body
-  const validatedBody = await searchConversationLogsBodySchema.validateAsync(req.body);
-  const { keyword, time_range } = validatedBody;
+  const { bridge_id } = req.params;
+  const { keyword, time_range } = req.body;
 
   // Build filters object from validated request body
   const filters = {
