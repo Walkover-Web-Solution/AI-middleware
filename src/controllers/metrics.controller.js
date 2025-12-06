@@ -2,7 +2,7 @@ import metrics_sevice from "../db_services/metrics.service.js";
 import { buildWhereClause, selectTable } from "../utils/metrics.utils.js"
 
 
-const get_metrics_data = async (req, res, next) => {
+const getMetricsData = async (req, res, next) => {
   const org_id = req.profile?.org?.id;
   const {
     startTime,
@@ -54,6 +54,6 @@ const get_metrics_data = async (req, res, next) => {
   return next();
 };
 
-export {
-  get_metrics_data
-}
+export default {
+  getMetricsData
+};

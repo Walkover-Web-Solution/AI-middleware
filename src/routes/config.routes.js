@@ -14,8 +14,6 @@ router.post('/', middleware, agentConfigController.createBridgesController);
 
 router.put('/:bridgeId', middleware, agentConfigController.updateBridgeController);
 
-router.get('/getBridgesAndVersions/:modelName', agentConfigController.getBridgesAndVersionsByModelController); // add in utils
-
 router.post('/clone', middleware, agentConfigController.cloneAgentController);
 
 router.delete('/:bridge_id', middleware, validate(conversationValidation.deleteBridges), agentConfigController.deleteBridges);

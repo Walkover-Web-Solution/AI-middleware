@@ -38,12 +38,12 @@ const getConversationLogs = async (req, res, next) => {
 };
 
 /**
- * GET /threads/:bridge_id
- * Get recent threads by bridge_id with pagination
+ * GET /threads/:agent_id
+ * Get recent threads by agent_id with pagination
  */
 const getRecentThreads = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
-  const { bridge_id } = req.params;
+  const { agent_id } = req.params;
   const user_feedback = req.query.user_feedback || 'all';
   const error = req.query.error || 'false';
   const pageNum = req.query.page || 1;
@@ -52,7 +52,7 @@ const getRecentThreads = async (req, res, next) => {
   // Get recent threads
   const result = await findRecentThreadsByBridgeId(
     org_id,
-    bridge_id,
+    agent_id,
     user_feedback,
     error,
     pageNum,
@@ -78,13 +78,13 @@ const getRecentThreads = async (req, res, next) => {
 };
 
 /**
- * POST /search/:bridge_id
+ * GET /search/:agent_id
  * Search conversation logs with flexible filters
  */
 const searchConversationLogs = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
-  const { bridge_id } = req.params;
-  const { keyword, time_range } = req.body;
+  const { agent_id: bridge_id } = req.params;
+  const { keyword, time_range } = req.query;
 
   // Build filters object from validated request body
   const filters = {

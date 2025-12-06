@@ -2,35 +2,30 @@ import { new_agent_service } from "../configs/constant.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 
 const getAllServiceModelsController = async (req, res, next) => {
-    try {
-        const { service } = req.params;
-        const service_lower = service.toLowerCase();
 
-        if (!modelConfigDocument[service_lower]) {
-            res.locals = {};
-            req.statusCode = 200;
-            return next();
-        }
+    const { service } = req.params;
+    const service_lower = service.toLowerCase();
 
-        const result = { chat: {}, "fine-tune": {}, reasoning: {}, image: {}, embedding: {} };
-        const service_models = modelConfigDocument[service_lower];
-
-        for (const [model_name, config] of Object.entries(service_models)) {
-            if (config.status !== 1) continue;
-            const type = config.validationConfig?.type || 'chat';
-            if (result[type]) {
-                result[type][model_name] = config;
-            }
-        }
-
-        res.locals = result;
-        req.statusCode = 200;
-        return next();
-    } catch (e) {
+    if (!modelConfigDocument[service_lower]) {
         res.locals = {};
         req.statusCode = 200;
         return next();
     }
+
+    const result = { chat: {}, "fine-tune": {}, reasoning: {}, image: {}, embedding: {} };
+    const service_models = modelConfigDocument[service_lower];
+
+    for (const [model_name, config] of Object.entries(service_models)) {
+        if (config.status !== 1) continue;
+        const type = config.validationConfig?.type || 'chat';
+        if (result[type]) {
+            result[type][model_name] = config;
+        }
+    }
+
+    res.locals = result;
+    req.statusCode = 200;
+    return next();
 };
 
 const getAllServiceController = async (req, res, next) => {

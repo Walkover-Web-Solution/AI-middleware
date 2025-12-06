@@ -11,9 +11,9 @@ import threadRoutes from './routes/thread.routes.js'
 import metricsRoutes from "./routes/metrics.routes.js"
 import mongoose from "mongoose";
 import config from "../config/config.js";
-import chatbot from "./routes/chatBot.routes.js";
+import chatbotRoutes from "./routes/chatBot.routes.js";
 import ragRouter from "./routes/rag.routes.js";
-import clientAuthController from "./routes/userOrgLocal.routes.js";
+import clientAuthRoutes from "./routes/userOrgLocal.routes.js";
 import initializeMonthlyLatencyReport from './cron/monthlyLatencyReport.js';
 import initializeWeeklyLatencyReport from './cron/weeklyLatencyReport.js';
 import initializeDailyUpdateCron from './cron/initializeDailyUpdateCron.js';
@@ -21,12 +21,11 @@ import authRouter from "./routes/auth.routes.js";
 import notFoundMiddleware from './middlewares/notFound.js';
 import errorHandlerMiddleware from './middlewares/errorHandler.js';
 import responseMiddleware from './middlewares/responseMiddleware.js';
-import alerting from './routes/alerting.routes.js';
+import alertingRoutes from './routes/alerting.routes.js';
 import testcaseRoutes from './routes/testcase.routes.js'
 import reportRoute from './routes/report.routes.js'
-import modelsConfigRoutes from './routes/modelConfig.routes.js'
+import modelsRoutes from './routes/modelConfig.routes.js'
 import embedRoutes from './routes/embed.routes.js'
-import agentLookupRoutes from './routes/agentLookup.routes.js'
 import historyRoutes from './routes/history.routes.js'
 import apiCallRoutes from './routes/apiCall.routes.js'
 import bridgeVersionRoutes from './routes/bridgeVersion.routes.js'
@@ -65,20 +64,19 @@ app.use('/api/agent', configRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/apikeys', apikeyRoutes);
 app.use('/api/service', serviceRoutes);
-app.use('/api/chatbot', chatbot);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/embed', embedRoutes);
-app.use('/api/user', clientAuthController);
-app.use('/api/alerting', alerting)
+app.use('/api/user', clientAuthRoutes);
+app.use('/api/alerting', alertingRoutes);
 app.use('/api/thread', threadRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/org', authRouter);
 app.use('/api/rag', ragRouter);
 app.use('/api/testcases', testcaseRoutes);
 app.use('/api/report', reportRoute);
-app.use('/api/modelConfiguration', modelsConfigRoutes);
+app.use('/api/models', modelsRoutes); 
 app.use('/api/auth', authRouter);
-app.use('/api/data', agentLookupRoutes)
-app.use('/api/functions', apiCallRoutes)
+app.use('/api/tools', apiCallRoutes)
 app.use('/api/versions', bridgeVersionRoutes)
 app.use('/api/utils', utilsRoutes)
 app.use('/api/prebuilt_prompt', prebuiltPromptRoutes)

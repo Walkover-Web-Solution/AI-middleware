@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Define routes
 router.post('/', combinedAuthWithChatBotAndPublicChatbot, validate(threadValidation.createSubThread), createSubThreadController);
-router.post('/ai', combinedAuthWithChatBotAndPublicChatbot, validate(threadValidation.createSubThreadWithAi), createSubThreadWithAiController);
+router.post('/ai', combinedAuthWithChatBotAndPublicChatbot, validate(threadValidation.createSubThreadWithAi), createSubThreadWithAiController); // think later 
 router.get('/:thread_id', combinedAuthWithChatBotAndPublicChatbot, validate(threadValidation.getAllSubThread), getAllSubThreadController);
 
 export default router;

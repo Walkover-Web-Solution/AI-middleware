@@ -10,16 +10,6 @@ const allTemplates = async (req, res, next) => {
   return next();
 };
 
-const getToken = async (req, res, next) => {
-  res.locals = {
-    success: true,
-    data: req.profile,
-  };
-  req.statusCode = 200;
-  return next();
-};
-
 export default {
-  allTemplates,
-  getToken
+  allTemplates
 };

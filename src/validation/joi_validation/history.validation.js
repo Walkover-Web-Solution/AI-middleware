@@ -66,17 +66,17 @@ const getRecentThreads = {
 };
 
 /**
- * Schema for POST /search/:bridge_id - searchConversationLogs
- * Validates URL params and request body
+ * Schema for GET /search/:agent_id - searchConversationLogs
+ * Validates URL params and query params
  */
 const searchConversationLogs = {
   params: Joi.object().keys({
-    bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-      'string.pattern.base': 'bridge_id must be a valid MongoDB ObjectId',
-      'any.required': 'bridge_id is required'
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+      'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+      'any.required': 'agent_id is required'
     })
   }),
-  body: Joi.object().keys({
+  query: Joi.object().keys({
     keyword: Joi.string().required().messages({
       'string.empty': 'keyword is required',
       'any.required': 'keyword is required'
