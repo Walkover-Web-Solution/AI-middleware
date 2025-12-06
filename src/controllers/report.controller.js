@@ -33,30 +33,12 @@ async function getWeeklyreports(req, res, next) {
 
 
 async function getMessageData(req, res, next) {
-    try {
-        const { message_id } = req.body;
-        
-        if (!message_id) {
-            res.locals = { 
-                error: 'message_id is required', 
-                success: false 
-            };
-            req.statusCode = 400;
-            return next();
-        }
-        
-        const data = await getHistoryByMessageId(message_id);
-        res.locals = { data, success: true };
-        req.statusCode = 200;
-        return next();
-    } catch (error) {
-        res.locals = { 
-            error: error.message, 
-            success: false 
-        };
-        req.statusCode = 400;
-        return next();
-    }
+    const { message_id } = req.body;
+
+    const data = await getHistoryByMessageId(message_id);
+    res.locals = { data, success: true };
+    req.statusCode = 200;
+    return next();
 }
 
 export {

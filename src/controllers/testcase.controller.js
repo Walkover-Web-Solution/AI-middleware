@@ -2,15 +2,9 @@ import testcaseSevice from "../db_services/testcase.service.js"
 
 async function createTestcase(req, res, next) {
     const body = req.body;
-    const requiredFields = ['bridge_id', 'conversation', 'type', 'expected', 'matching_type'];
 
-    for (const field of requiredFields) {
-        if (!body[field]) {
-            res.locals = { success: false, error: `Missing required field: ${field}` };
-            req.statusCode = 400;
-            return next();
-        }
-    }
+    // Validation is now handled by middleware
+
     const result = await testcaseSevice.saveTestCase(body);
 
     res.locals = {
