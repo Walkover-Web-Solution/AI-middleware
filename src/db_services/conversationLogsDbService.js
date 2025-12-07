@@ -1,5 +1,7 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
+const { fn, col } = models.pg.sequelize;
+
 
 /**
  * Get conversation logs with pagination and filtering
@@ -421,24 +423,43 @@ async function sortThreadsByHits(threads) {
   const latestEntries = await models.pg.conversation_logs.findAll({
     attributes: [
       'sub_thread_id',
-      [models.pg.sequelize.fn('MAX', 'created_at'), 'latestCreatedAt']
+      [fn('MAX', col('created_at')), 'latestCreatedAt']
     ],
     where: { sub_thread_id: subThreadIds },
     group: ['sub_thread_id'],
     raw: true
   });
 
-  const latestSubThreadMap = new Map(
-    latestEntries.map(entry => [entry.sub_thread_id, new Date(entry.latestCreatedAt)])
-  );
+    let latestSubThreadMap = {}
+    latestEntries.map(entry => {
+      latestSubThreadMap[entry.sub_thread_id]= new Date(entry.latestCreatedAt)
+    })
 
-  threads.sort((a, b) => {
-    const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
-    const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
-    return dateB - dateA;
+  // threads.sort((a, b) => {
+  //   const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
+  //   const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
+  //   return dateB - dateA;
+  // });
+  
+const finalArray = [];
+
+for (let i = 0; i < threads.length; i++) {
+  const item = threads[i];
+  const created_at = latestSubThreadMap[item.sub_thread_id]
+
+  finalArray.push({
+    id: item.id || item._id || null,
+    thread_id: item.thread_id || null,
+    sub_thread_id: item.sub_thread_id || null,
+    bridge_id: item.bridge_id || null,
+    org_id: item.org_id || null,
+    created_at: created_at,
+    display_name: item.display_name || null
   });
+}
 
-  return threads;
+
+  return finalArray;
 }
 
 
