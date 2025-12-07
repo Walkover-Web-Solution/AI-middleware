@@ -369,4 +369,77 @@ const getHistoryByMessageId = async (message_id) => {
   return result;
 }
 
-export { getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted, getHistoryByMessageId };
+
+const getSubThreads = async (org_id,thread_id, bridge_id) =>{
+    return await models.pg.conversation_logs.find({ org_id, thread_id, bridge_id });
+}
+
+
+
+async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError) {
+  try {
+    let rawDataWhereClause = {};
+    let conversationsWhereClause = {
+      org_id,
+      thread_id,
+      bridge_id
+    };
+    
+    // Apply version_id filter to the conversations table
+    if (version_id) {
+      conversationsWhereClause.version_id = version_id;
+    }
+    
+    if(isError) {
+      rawDataWhereClause.error = {
+        [models.pg.Sequelize.Op.ne]: ''
+      };
+    }
+    
+    const result = await models.pg.conversation_logs.findAll({
+      attributes: [
+        'sub_thread_id',
+        'version_id',
+        [models.pg.Sequelize.fn('MAX', 'created_at'), 'latest_error']
+      ],
+      where: conversationsWhereClause,
+      group: ['sub_thread_id', 'version_id'],
+      order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
+      raw: true
+    });
+
+    return result.map(item => item.sub_thread_id);
+  } catch (error) {
+    console.error('getSubThreadsByError error =>', error);
+    return [];
+  }
+}
+
+async function sortThreadsByHits(threads) {
+  const subThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
+
+  const latestEntries = await models.pg.conversation_logs.findAll({
+    attributes: [
+      'sub_thread_id',
+      [models.pg.sequelize.fn('MAX', 'created_at'), 'latestCreatedAt']
+    ],
+    where: { sub_thread_id: subThreadIds },
+    group: ['sub_thread_id'],
+    raw: true
+  });
+
+  const latestSubThreadMap = new Map(
+    latestEntries.map(entry => [entry.sub_thread_id, new Date(entry.latestCreatedAt)])
+  );
+
+  threads.sort((a, b) => {
+    const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
+    const dateB = latestSubThreadMap.get(b.sub_thread_id) || new Date(0);
+    return dateB - dateA;
+  });
+
+  return threads;
+}
+
+
+export { sortThreadsByHits, getSubThreadsByError, getSubThreads, getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted, getHistoryByMessageId };

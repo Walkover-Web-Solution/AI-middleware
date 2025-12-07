@@ -5,6 +5,7 @@ import { createThreadHistrorySchema} from "../../validation/joi_validation/bridg
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp} from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
+import { sortThreadsByHits, getSubThreadsByError, getSubThreads } from "../../db_services/conversationLogsDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
@@ -446,9 +447,9 @@ const getAllSubThreadsController = async(req, res, next) => {
   const {bridge_id, error, version_id} = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req.profile.org.id
-  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
+  const threads = await getSubThreads(org_id, thread_id, bridge_id);
   if(isError || version_id){
-    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
+    const sub_thread_ids = await getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
       return {
@@ -459,7 +460,7 @@ const getAllSubThreadsController = async(req, res, next) => {
     return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
   }
   // sort the threads accroing to their hits in PG.
-  const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
+  const sortedThreads = await sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };
   req.statusCode = 200;
   return next();
