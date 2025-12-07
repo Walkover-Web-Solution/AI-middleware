@@ -371,7 +371,7 @@ const getHistoryByMessageId = async (message_id) => {
 
 
 const getSubThreads = async (org_id,thread_id, bridge_id) =>{
-    return await models.pg.conversation_logs.findAll({ org_id, thread_id, bridge_id });
+    return await models.pg.conversation_logs.findAll({where:{ org_id, thread_id, bridge_id }});
 }
 
 
