@@ -6,14 +6,14 @@ import { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversatio
  */
 const getConversationLogs = async (req, res, next) => {
   const org_id = req.profile.org.id; // From middleware
-  const { bridge_id, thread_id, sub_thread_id } = req.params;
+  const { agent_id, thread_id, sub_thread_id } = req.params;
   const pageNum = req.query.page || 1;
   const limitNum = req.query.limit || 30;
 
   // Get conversation logs
   const result = await findConversationLogsByIds(
     org_id,
-    bridge_id,
+    agent_id,
     thread_id,
     sub_thread_id,
     pageNum,

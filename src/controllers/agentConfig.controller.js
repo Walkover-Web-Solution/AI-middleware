@@ -180,7 +180,7 @@ const updateBridgeController = async (req, res, next) => {
     const update_fields = {};
     const user_history = [];
 
-    const new_configuration = body.configuration;
+    let new_configuration = body.configuration;
     const service = body.service;
     const page_config = body.page_config;
     const web_search_filter = body.web_search_filters;
