@@ -427,5 +427,21 @@ async function sortThreadsByHits(threads) {
   return finalArray;
 }
 
+async function updateStatus({ status, message_id }) {
+    const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
+      { user_feedback : status },
+      {
+        where: {
+          message_id
+        },
+        returning: true,
+      }
+    );
+    if (affectedCount === 0) {
+      return { success: true, message: 'No matching record found to update.' };
+    }
 
-export { sortThreadsByHits, getSubThreadsByError, getSubThreads, getConversationLogs, getRecentThreads, getThreadHistoryFormatted, getHistoryByMessageId };
+    return { success: true, result: affectedRows };
+}
+
+export { sortThreadsByHits, getSubThreadsByError, getSubThreads, getConversationLogs, getRecentThreads, getThreadHistoryFormatted, getHistoryByMessageId, updateStatus };
