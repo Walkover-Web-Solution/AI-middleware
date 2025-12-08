@@ -636,6 +636,27 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
   }
 };
 
+const getBridgeSummariesByUserIds = async (userIds = []) => {
+  if (!Array.isArray(userIds) || userIds.length === 0) {
+    return [];
+  }
+
+  const normalizedUserIds = userIds.map((id) => String(id));
+  const query = { user_id: { $in: normalizedUserIds } };
+
+  const bridges = await configurationModel.find(query).select({
+    published_version_id: 1,
+    total_tokens: 1,
+    user_id:1
+  }).lean();
+
+    return bridges.map((bridge) => ({
+    _id: bridge._id.toString(),
+    user_id: bridge.user_id?.toString(),
+    published_version_id: bridge.published_version_id ? bridge.published_version_id.toString() : null,
+  }));
+};
+
 const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
   try {
     const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
@@ -1198,6 +1219,7 @@ export default {
   getBridgeByUrlSlugname,
   findIdsByModelAndService,
   getBridgesByUserId,
+  getBridgeSummariesByUserIds,
   getAllAgentsData,
   getAllAgentsData,
   getAgentsData,

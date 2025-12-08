@@ -210,3 +210,27 @@ export async function removeClientUser(userId, companyId, featureId) {
     throw error;
   }
 }
+
+export async function getClientUsers(itemsPerPage = 500) {
+  const featureId = process.env.PUBLIC_REFERENCEID;
+  if (!featureId) {
+    throw new Error('PUBLIC_REFERENCEID env variable is required to fetch client users');
+  }
+
+  try {
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/clientUsers`, {
+      params: {
+        feature_id: featureId,
+        itemsPerPage,
+      },
+      headers: {
+        authkey: process.env.PROXY_ADMIN_TOKEN,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching client users:', error.message);
+    throw error;
+  }
+}
