@@ -1,11 +1,11 @@
 
-import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
+import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp} from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
-import { sortThreadsByHits, getSubThreadsByError, getSubThreads } from "../../db_services/conversationLogsDbService.js";
+import { sortThreadsByHits, getSubThreadsByError, updateStatus } from "../../db_services/conversationLogsDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
@@ -316,7 +316,6 @@ const updateThreadMessage = async (req, res, next) => {
 }
 
 const updateMessageStatus = async (req, res, next) => {
-  try {
     const status = req.params.status;
     const message_id = req.body.message_id;
     const bridge_id = req.body.bridge_id;
@@ -325,14 +324,11 @@ const updateMessageStatus = async (req, res, next) => {
     if (status === "2"){
       sendError(bridge_id, org_id, error_message,"thumbsdown");
     }
-    const result = await conversationDbService.updateStatus({ status, message_id })
+    const result = await updateStatus({ status, message_id })
+
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
-  } catch (error) {
-    console.error("Error in updateMessageStatus => ", error.message)
-    throw error;
-  }
 }
 
 const sendError = async (bridge_id, org_id, error_message, error_type) => {
