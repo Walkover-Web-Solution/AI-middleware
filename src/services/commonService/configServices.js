@@ -1,9 +1,9 @@
 
 import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistory, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
-import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
+import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
-import { convertToTimestamp} from "../../services/utils/getConfiguration.js";
+import { convertToTimestamp } from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
 import { sortThreadsByHits, getSubThreadsByError, getSubThreads } from "../../db_services/conversationLogsDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
@@ -13,27 +13,27 @@ import { getallOrgs } from "../../utils/proxyUtils.js";
 import { send_error_to_webhook } from "../send_error_webhook.js"
 import { getThreadHistoryFormatted } from "../../db_services/conversationLogsDbService.js";
 
-const getThreads = async (req, res,next) => {
+const getThreads = async (req, res, next) => {
   try {
     let page = parseInt(req.query.pageNo) || 1;
     let pageSize = parseInt(req.query.limit) || 30;
     let { bridge_id } = req.params;
     const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id=thread_id, version_id } = req.query
+    const { sub_thread_id = thread_id, version_id } = req.query
     let { org_id } = req.body;
     let starterQuestion = []
     let bridge = {}
-    let {user_feedback, error} = req.query
+    let { user_feedback, error } = req.query
     error = error?.toLowerCase() === 'true' ? true : false;
     const isChatbot = req.isChatbot || false;
 
     if (bridge_slugName) {
-      bridge =req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName): await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+      bridge = req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName) : await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
       bridge_id = bridge?._id?.toString();
-      starterQuestion = !bridge?.IsstarterQuestionEnable ? []: bridge?.starterQuestion;
+      starterQuestion = !bridge?.IsstarterQuestionEnable ? [] : bridge?.starterQuestion;
       org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
     }
-    let threads =  await getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
+    let threads = await getThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, version_id);
     threads = {
       ...threads,
       starterQuestion,
@@ -52,12 +52,12 @@ const getMessageByMessageId = async (req, res, next) => {
   let { org_id } = req.body;
 
   if (bridge_slugName) {
-    bridge_id = req.chatBot?.ispublic ? (await configurationService.getBridgeByUrlSlugname(bridge_slugName))?._id: (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
+    bridge_id = req.chatBot?.ispublic ? (await configurationService.getBridgeByUrlSlugname(bridge_slugName))?._id : (await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName))?._id;
     bridge_id = bridge_id?.toString();
     org_id = req.chatBot?.ispublic ? bridge_id?.org_id : org_id;
   }
   const thread = (await getThreadHistoryByMessageId({ bridge_id, org_id, thread_id, message_id })) || {};
-  res.locals = {success:true,thread};
+  res.locals = { success: true, thread };
   req.statusCode = 200;
   return next();
 };
@@ -68,7 +68,7 @@ const getMessageHistory = async (req, res, next) => {
     const { pageNo = 1, limit = 10 } = req.query;
     let keyword_search = req.query?.keyword_search === '' ? null : req.query?.keyword_search;
     const { startTime, endTime, version_id } = req.query;
-    let {user_feedback, error} = req.query;
+    let { user_feedback, error } = req.query;
     error = error?.toLowerCase() === 'true' ? true : false;
     let startTimestamp, endTimestamp;
     if (startTime !== 'undefined' && endTime !== 'undefined') {
@@ -103,7 +103,7 @@ const getSystemPromptHistory = async (req, res, next) => {
 
 
 
-const deleteBridges = async (req, res,next) => {
+const deleteBridges = async (req, res, next) => {
   try {
     const {
       bridge_id
@@ -112,13 +112,13 @@ const deleteBridges = async (req, res,next) => {
       org_id,
       restore = false
     } = req.body;
-    
+
     let result;
-    
+
     if (restore) {
       // Restore the bridge
       result = await configurationService.restoreBridge(bridge_id, org_id);
-      
+
       // Log restore operation for audit purposes
       if (result.success) {
         console.log(`Bridge restore completed for bridge ${bridge_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
@@ -126,13 +126,13 @@ const deleteBridges = async (req, res,next) => {
     } else {
       // Soft delete the bridge
       result = await configurationService.deleteBridge(bridge_id, org_id);
-      
+
       // Log soft delete operation for audit purposes
       if (result.success) {
         console.log(`Soft delete initiated for bridge ${bridge_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
       }
     }
-    
+
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
     return next();
@@ -320,10 +320,10 @@ const updateMessageStatus = async (req, res, next) => {
     const status = req.params.status;
     const message_id = req.body.message_id;
     const bridge_id = req.body.bridge_id;
-    const  org_id  = req.profile.org_id;
+    const org_id = req.profile.org_id;
     let error_message = "User reacted thumbs down on response"
-    if (status === "2"){
-      sendError(bridge_id, org_id, error_message,"thumbsdown");
+    if (status === "2") {
+      sendError(bridge_id, org_id, error_message, "thumbsdown");
     }
     const result = await conversationDbService.updateStatus({ status, message_id })
     res.locals = result;
@@ -336,16 +336,16 @@ const updateMessageStatus = async (req, res, next) => {
 }
 
 const sendError = async (bridge_id, org_id, error_message, error_type) => {
-    send_error_to_webhook(bridge_id, org_id, error_message, error_type);
+  send_error_to_webhook(bridge_id, org_id, error_message, error_type);
 }
 
-const userFeedbackCount = async (req, res, next) =>{
+const userFeedbackCount = async (req, res, next) => {
   const bridge_id = req.params.bridge_id;
-  const {startDate, endDate, user_feedback} = req.query;
-  
-  const result = await conversationDbService.userFeedbackCounts({bridge_id,startDate, endDate, user_feedback})
+  const { startDate, endDate, user_feedback } = req.query;
+
+  const result = await conversationDbService.userFeedbackCounts({ bridge_id, startDate, endDate, user_feedback })
   res.locals = result;
-  req.statusCode = 200 
+  req.statusCode = 200
   return next();
 }
 
@@ -376,40 +376,40 @@ const bridgeArchive = async (req, res) => {
   }
 };
 
-export const createEntry = async (req, res,next) => {
-    const {
-      thread_id,
-      bridge_id
-    } = req.params;
-    const {
-      message
-    } = req.body;
-    const message_id = crypto.randomUUID();
-    const org_id = req.profile.org.id
-    const result = (await configurationService.getBridges(bridge_id))?.bridges;
-    const payload ={
-      thread_id:thread_id,
-      org_id:org_id,
-      bridge_id:bridge_id,
-      model_name: result?.configuration?.model,
-      message:message,
-      type: "chat",
-      message_by:"assistant",
-      message_id : message_id,
-      sub_thread_id: thread_id
-    }
-    try {
-      await createThreadHistrorySchema.validateAsync(payload);
-    } catch (error) {
-      return res.status(422).json({
-        success: false,
-        error: error.details
-      });
-    }
-    const threads = await createThreadHistory(payload);
-    res.locals = threads;
-    req.statusCode =200;
-    return next();
+export const createEntry = async (req, res, next) => {
+  const {
+    thread_id,
+    bridge_id
+  } = req.params;
+  const {
+    message
+  } = req.body;
+  const message_id = crypto.randomUUID();
+  const org_id = req.profile.org.id
+  const result = (await configurationService.getBridges(bridge_id))?.bridges;
+  const payload = {
+    thread_id: thread_id,
+    org_id: org_id,
+    bridge_id: bridge_id,
+    model_name: result?.configuration?.model,
+    message: message,
+    type: "chat",
+    message_by: "assistant",
+    message_id: message_id,
+    sub_thread_id: thread_id
+  }
+  try {
+    await createThreadHistrorySchema.validateAsync(payload);
+  } catch (error) {
+    return res.status(422).json({
+      success: false,
+      error: error.details
+    });
+  }
+  const threads = await createThreadHistory(payload);
+  res.locals = threads;
+  req.statusCode = 200;
+  return next();
 };
 
 const extraThreadID = async (req, res, next) => {
@@ -418,37 +418,37 @@ const extraThreadID = async (req, res, next) => {
   const message_id = req.body.message_id;
   const result = await conversationDbService.addThreadId(message_id, thread_id, type);
   res.locals = result;
-  req.statusCode = 200 ;
+  req.statusCode = 200;
   return next();
 };
 
-const getThreadMessages = async(req,res,next)=>{
-    let { bridge_id } = req.params;
-    let page = parseInt(req.query.pageNo) || null;
-    let pageSize = parseInt(req.query.limit) || null;
-    const { thread_id, bridge_slugName } = req.params;
-    const { sub_thread_id = thread_id } = req.query;
-    const  org_id  = req.profile.org?.id || req.profile.org_id;
-    let bridge = {};
+const getThreadMessages = async (req, res, next) => {
+  let { bridge_id } = req.params;
+  let page = parseInt(req.query.pageNo) || null;
+  let pageSize = parseInt(req.query.limit) || null;
+  const { thread_id, bridge_slugName } = req.params;
+  const { sub_thread_id = thread_id } = req.query;
+  const org_id = req.profile.org?.id || req.profile.org_id;
+  let bridge = {};
 
-    if (bridge_slugName) {
-      bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
-      bridge_id = bridge?._id?.toString();
-    }
-    await chatbotHistoryValidationSchema.validateAsync({org_id,bridge_id,thread_id});
-    let threads =  await getThreadMessageHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
-    res.locals = threads;
-    req.statusCode = 200;
-    return next();
+  if (bridge_slugName) {
+    bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+    bridge_id = bridge?._id?.toString();
+  }
+  await chatbotHistoryValidationSchema.validateAsync({ org_id, bridge_id, thread_id });
+  let threads = await getThreadMessageHistory({ bridge_id, org_id, thread_id, sub_thread_id, page, pageSize });
+  res.locals = threads;
+  req.statusCode = 200;
+  return next();
 }
 
-const getAllSubThreadsController = async(req, res, next) => {
-  const {thread_id}= req.params;
-  const {bridge_id, error, version_id} = req.query;
+const getAllSubThreadsController = async (req, res, next) => {
+  const { thread_id } = req.params;
+  const { bridge_id, error, version_id } = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req.profile.org?.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
-  if(isError || version_id){
+  if (isError || version_id) {
     const sub_thread_ids = await getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
@@ -465,8 +465,8 @@ const getAllSubThreadsController = async(req, res, next) => {
   req.statusCode = 200;
   return next();
 }
-const getAllUserUpdates = async(req, res, next) => {
-  const {version_id}= req.params;
+const getAllUserUpdates = async (req, res, next) => {
+  const { version_id } = req.params;
   const org_id = req.profile.org.id
   let page = parseInt(req.query.page) || null;
   let pageSize = parseInt(req.query.limit) || null;

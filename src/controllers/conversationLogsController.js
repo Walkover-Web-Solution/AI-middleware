@@ -1,10 +1,8 @@
-import { getConversationLogs, getRecentThreads, searchConversationLogs } from "../db_services/conversationLogsDbService.js";
-import { 
-  getConversationLogsParamsSchema, 
-  getRecentThreadsParamsSchema, 
-  searchConversationLogsParamsSchema,
-  searchConversationLogsBodySchema,
-  paginationQuerySchema 
+import { getConversationLogs, getRecentThreads } from "../db_services/conversationLogsDbService.js";
+import {
+  getConversationLogsParamsSchema,
+  getRecentThreadsParamsSchema,
+  paginationQuerySchema
 } from "../validation/joi_validation/conversationLogs.js";
 
 /**
@@ -14,16 +12,16 @@ import {
 const getConversationLogsController = async (req, res, next) => {
   try {
     const org_id = req.body.org_id; // From middleware
-    
+
     // Validate URL params
     const validatedParams = await getConversationLogsParamsSchema.validateAsync(req.params);
     const { bridge_id, thread_id, sub_thread_id } = validatedParams;
-    
+
     // Validate query params
     const validatedQuery = await paginationQuerySchema.validateAsync(req.query);
     const pageNum = validatedQuery.page || 1;
     const limitNum = validatedQuery.limit || 30;
-    
+
     // Get conversation logs
     const result = await getConversationLogs(
       org_id,
@@ -31,9 +29,10 @@ const getConversationLogsController = async (req, res, next) => {
       thread_id,
       sub_thread_id,
       pageNum,
-      limitNum
+      limitNum,
+      validatedQuery.version_id
     );
-    
+
     if (result.success) {
       res.locals = {
         data: result.data,
@@ -49,10 +48,10 @@ const getConversationLogsController = async (req, res, next) => {
       req.statusCode = 500;
       return next();
     }
-    
+
   } catch (error) {
     console.error("Error in getConversationLogsController:", error);
-    
+
     // Handle Joi validation errors
     if (error.isJoi) {
       res.locals = {
@@ -62,7 +61,7 @@ const getConversationLogsController = async (req, res, next) => {
       req.statusCode = 400;
       return next();
     }
-    
+
     res.locals = {
       message: "Internal server error",
       success: false
@@ -76,30 +75,44 @@ const getConversationLogsController = async (req, res, next) => {
  * GET /threads/:bridge_id
  * Get recent threads by bridge_id with pagination
  */
+
 const getRecentThreadsController = async (req, res, next) => {
   try {
     const org_id = req.body.org_id; // From middleware
-    const user_feedback = req.query.user_feedback || 'all';
-    const error = req.query.error || 'false';
+
     // Validate URL params
     const validatedParams = await getRecentThreadsParamsSchema.validateAsync(req.params);
     const { bridge_id } = validatedParams;
-    
+
     // Validate query params
     const validatedQuery = await paginationQuerySchema.validateAsync(req.query);
     const pageNum = validatedQuery.page || 1;
     const limitNum = validatedQuery.limit || 30;
-    
+    const user_feedback = validatedQuery.user_feedback || 'all';
+    const error = validatedQuery.error || 'false';
+    const version_id = validatedQuery.version_id;
+
+    // Extract search filters
+    const filters = {
+      keyword: validatedQuery.keyword,
+      time_range: (validatedQuery.start_date || validatedQuery.end_date) ? {
+        start: validatedQuery.start_date,
+        end: validatedQuery.end_date
+      } : undefined
+    };
+
     // Get recent threads
     const result = await getRecentThreads(
       org_id,
       bridge_id,
+      filters,
       user_feedback,
       error,
       pageNum,
-      limitNum
+      limitNum,
+      version_id
     );
-    
+
     if (result.success) {
       res.locals = {
         data: result.data,
@@ -116,10 +129,10 @@ const getRecentThreadsController = async (req, res, next) => {
       req.statusCode = 500;
       return next();
     }
-    
+
   } catch (error) {
     console.error("Error in getRecentThreadsController:", error);
-    
+
     // Handle Joi validation errors
     if (error.isJoi) {
       res.locals = {
@@ -129,7 +142,7 @@ const getRecentThreadsController = async (req, res, next) => {
       req.statusCode = 400;
       return next();
     }
-    
+
     res.locals = {
       message: "Internal server error",
       success: false
@@ -139,70 +152,4 @@ const getRecentThreadsController = async (req, res, next) => {
   }
 };
 
-/**
- * POST /search/:bridge_id
- * Search conversation logs with flexible filters
- */
-const searchConversationLogsController = async (req, res, next) => {
-  try {
-    const org_id = req.body.org_id; // From middleware
-    
-    // Validate URL params
-    const validatedParams = await searchConversationLogsParamsSchema.validateAsync(req.params);
-    const { bridge_id } = validatedParams;
-    
-    // Validate request body
-    const validatedBody = await searchConversationLogsBodySchema.validateAsync(req.body);
-    const { keyword, time_range } = validatedBody;
-    
-    // Build filters object from validated request body
-    const filters = {
-      keyword: keyword
-    };
-    
-    if (time_range) {
-      filters.time_range = time_range;
-    }
-    
-    // Search conversation logs
-    const result = await searchConversationLogs(org_id, bridge_id, filters);
-    
-    if (result.success) {
-      res.locals = {
-        data: result.data,
-        success: true
-      };
-      req.statusCode = 200;
-      return next();
-    } else {
-      res.locals = {
-        message: result.message,
-        success: false
-      };
-      req.statusCode = 500;
-      return next();
-    }
-    
-  } catch (error) {
-    console.error("Error in searchConversationLogsController:", error);
-    
-    // Handle Joi validation errors
-    if (error.isJoi) {
-      res.locals = {
-        message: error.details[0].message,
-        success: false
-      };
-      req.statusCode = 400;
-      return next();
-    }
-    
-    res.locals = {
-      message: "Internal server error",
-      success: false
-    };
-    req.statusCode = 500;
-    return next();
-  }
-};
-
-export { getConversationLogsController, getRecentThreadsController, searchConversationLogsController };
+export { getConversationLogsController, getRecentThreadsController };

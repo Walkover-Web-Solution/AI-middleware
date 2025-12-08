@@ -52,6 +52,18 @@ const paginationQuerySchema = Joi.object({
   error: Joi.string().optional().default('false').messages({
     'string.empty': 'error is required',
     'any.required': 'error is required'
+  }),
+  keyword: Joi.string().optional().allow('').messages({
+    'string.base': 'keyword must be a string'
+  }),
+  start_date: Joi.string().isoDate().optional().messages({
+    'string.isoDate': 'start_date must be a valid ISO date string'
+  }),
+  end_date: Joi.string().isoDate().optional().messages({
+    'string.isoDate': 'end_date must be a valid ISO date string'
+  }),
+  version_id: Joi.string().optional().messages({
+    'string.base': 'version_id must be a string'
   })
 });
 
