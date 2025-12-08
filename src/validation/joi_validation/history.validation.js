@@ -9,9 +9,9 @@ Joi.objectId = joiObjectId(Joi);
  */
 const getConversationLogs = {
   params: Joi.object().keys({
-    bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-      'string.pattern.base': 'bridge_id must be a valid MongoDB ObjectId',
-      'any.required': 'bridge_id is required'
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+      'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+      'any.required': 'agent_id is required'
     }),
     thread_id: Joi.string().required().messages({
       'string.empty': 'thread_id is required',
@@ -33,7 +33,9 @@ const getConversationLogs = {
       'number.integer': 'Limit must be an integer',
       'number.min': 'Limit must be at least 1',
       'number.max': 'Limit must be at most 100'
-    })
+    }),
+    user_feedback: Joi.string().optional().default('all'),
+    error: Joi.string().optional().default('false')
   })
 };
 
@@ -43,9 +45,9 @@ const getConversationLogs = {
  */
 const getRecentThreads = {
   params: Joi.object().keys({
-    bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-      'string.pattern.base': 'bridge_id must be a valid MongoDB ObjectId',
-      'any.required': 'bridge_id is required'
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+      'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+      'any.required': 'agent_id is required'
     })
   }),
   query: Joi.object().keys({

@@ -9,7 +9,7 @@ const router = express.Router();
 // Define routes
 router.get('/:agent_id', middleware, validate(historyValidation.getRecentThreads), historyController.getRecentThreads);
 router.get('/:agent_id/:thread_id/:sub_thread_id', middleware, validate(historyValidation.getConversationLogs), historyController.getConversationLogs);
-router.get('/search/:agent_id', middleware, validate(historyValidation.searchConversationLogs), historyController.searchConversationLogs); 
+router.get('/search/:agent_id', middleware, validate(historyValidation.searchConversationLogs), historyController.searchConversationLogs);
 
 export default router;
 
