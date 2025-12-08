@@ -1,6 +1,7 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
 
+
 /**
  * Get conversation logs with pagination and filtering
  * @param {string} org_id - Organization ID
@@ -368,5 +369,22 @@ const findHistoryByMessageId = async (message_id) => {
   return result;
 }
 
-export { findConversationLogsByIds, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId };
+async function updateStatus({ status, message_id }) {
+    const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
+      { user_feedback : status },
+      {
+        where: {
+          message_id
+        },
+        returning: true,
+      }
+    );
+    if (affectedCount === 0) {
+      return { success: true, message: 'No matching record found to update.' };
+    }
+
+    return { success: true, result: affectedRows };
+}
+
+export { findConversationLogsByIds, updateStatus,  findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId };
 
