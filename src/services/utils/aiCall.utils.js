@@ -27,7 +27,7 @@ async function callAiMiddleware(user, bridge_id, variables = {}, configuration =
             requestBody,
             {
                 headers: {
-                    "pauthkey": process.env.AI_MIDDLEWARE_PAUTH_KEY,
+                    "pauthkey": process.env.GTWY_PAUTH_KEY,
                     "Content-Type": "application/json",
                     "Accept-Encoding": "gzip"
                 }
