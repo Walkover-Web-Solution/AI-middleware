@@ -33,13 +33,7 @@ const switchUserOrgLocal = async (req, res, next) => {
   
   // Call external API to generate auth token with new org
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
-  const response = await axios.post(apiUrl,
-    { 
-      user, 
-      org: { id: orgId, name: orgName || '' },
-      ...extra,
-      ...expiresInOptions
-    },
+  const response = await axios.get(apiUrl,
     {
       headers: {
         'authkey': process.env.ADMIN_API_KEY,
