@@ -13,7 +13,7 @@ const router = express.Router();
 router.post('/subscribe', combinedAuthWithChatBotAndPublicChatbot, subscribe);
 
 // Get all chatbots
-router.get('/', middleware, userOrgAccessCheck, validate(chatBotValidation.getAllChatBots), getAllChatBots);
+router.get('/', middleware, getAllChatBots);
 
 // Login user
 router.post('/loginuser', combinedAuthWithChatBotTokenDecodeAndPublicChatbot, loginUser);
