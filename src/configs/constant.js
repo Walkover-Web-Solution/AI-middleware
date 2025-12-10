@@ -40,7 +40,8 @@ const redis_keys = {
   avg_response_time_: 'avg_response_time_',
   timezone_and_org_: 'timezone_and_org_',
   conversation_: 'conversation_',
-  last_transffered_agent_: 'last_transffered_agent_'
+  last_transffered_agent_: 'last_transffered_agent_',
+  ui_bridge_data_with_tools_:'ui_bridge_data_with_tools_'
 };
 
 const cost_types = {
