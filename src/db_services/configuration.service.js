@@ -9,6 +9,7 @@ import { ObjectId } from "mongodb";
 import { findInCache, storeInCache, deleteInCache } from "../cache_service/index.js";
 import { redis_keys } from "../configs/constant.js";
 import apikeyCredentialsModel from "../mongoModel/Api.model.js";
+import conversationService from "./conversation.service.js";
 
 const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = null, depth = 0) => {
   try {
@@ -1164,10 +1165,12 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     bridge_limit: 1,
     bridge_usage: 1,
     last_used: 1,
-    variables_path: 1
+    variables_path: 1,
+    users: 1
   }).sort({ createdAt: -1 }).lean();
 
-  return bridges.map(bridge => {
+  // Process bridges and fetch user details
+  const processedBridges = await Promise.all(bridges.map(async (bridge) => {
     bridge._id = bridge._id.toString();
     bridge.bridge_id = bridge._id; // Alias _id as bridge_id
     if (bridge.function_ids) {
@@ -1176,8 +1179,26 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     if (bridge.published_version_id) {
       bridge.published_version_id = bridge.published_version_id.toString();
     }
+
+    // Fetch user details if users array exists
+    if (bridge.users && Array.isArray(bridge.users) && bridge.users.length > 0) {
+      try {
+        const userDetailsResponse = await conversationService.getUserUpdates(org_id, null, 1, 10, bridge.users);
+        if (userDetailsResponse.success) {
+          bridge.users = userDetailsResponse.users;
+        }
+      } catch (error) {
+        console.error('Error fetching user details for bridge:', bridge._id, error);
+        bridge.users = [];
+      }
+    } else {
+      bridge.users = [];
+    }
+
     return bridge;
-  });
+  }));
+
+  return processedBridges;
 };
 
 export default {

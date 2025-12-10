@@ -380,7 +380,7 @@ async function sortThreadsByHits(threads) {
 }
 
 
-async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10,users=[]) {
   try {
     const offset = (page - 1) * pageSize;
     let pageNo = 1;
@@ -417,7 +417,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
       await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
       userData = allUserData;
     }
-
+    if(version_id){
     const history = await models.pg.user_bridge_config_history.findAll({
       where: {
         org_id: org_id,
@@ -434,7 +434,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     if (history.length === 0) {
       return { success: false, message: "No updates found" };
     }
-
+    
     const updatedHistory = history?.map(entry => {
       const user = Array.isArray(userData) ? userData.find(user => user?.id === entry?.dataValues?.user_id) : null;
       return {
@@ -444,6 +444,25 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     });
 
     return { success: true, updates: updatedHistory };
+  }
+  else{
+    let filteredUsers = [];
+    
+    if (Array.isArray(users) && users.length > 0 && Array.isArray(userData)) {
+      const userIdSet = new Set(users);
+      filteredUsers = userData.filter(user => user && userIdSet.has(user.id));
+    } else {
+      filteredUsers = Array.isArray(userData) ? userData : [];
+    }
+
+    const mappedUsers = filteredUsers.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email
+    }));
+
+    return { success: true, users: mappedUsers };
+  } 
   } catch (error) {
     console.error("Error fetching user updates:", error);
     return { success: false, message: "Error fetching updates" };

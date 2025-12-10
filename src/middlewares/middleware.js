@@ -15,9 +15,9 @@ const ROLE_PERMISSIONS = {
   ],
   member: [
     'get_agent',
-    'create_agent',
-    'delete_agent',
-    'update_agent'
+    'create_agent'
+    // 'delete_agent',
+    // 'update_agent'
   ],
   owner: [
     'get_agent',
