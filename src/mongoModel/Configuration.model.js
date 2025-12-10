@@ -238,10 +238,6 @@ const configuration = new mongoose.Schema({
   last_used: {
     type: Date,
     default: null
-  },
-  users: {
-    type: [mongoose.Schema.Types.Mixed],
-    default: undefined
   }
 });
 

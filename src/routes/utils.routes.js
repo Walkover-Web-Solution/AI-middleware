@@ -10,6 +10,6 @@ const router = express.Router();
 router.delete('/redis', validate(utilsValidation.clearRedisCache), utilsController.clearRedisCache);
 router.get('/redis/:id', validate(utilsValidation.getRedisCache), utilsController.getRedisCache);
 router.post('/call-ai', middleware, validate(utilsValidation.callAi), utilsController.callAi);
-router.get('/getBridgesAndVersions/:modelName', agentConfigController.getAgentsAndVersionsByModelController);
+router.get('/getBridgesAndVersions/:modelName', agentConfigController.getBridgesAndVersionsByModelController);
 
 export default router;
