@@ -1201,6 +1201,20 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
   return processedBridges;
 };
 
+const getBridgeUsers = async (bridge_id, org_id) => {
+  try {
+    const bridge = await configurationModel.findOne(
+      { _id: new ObjectId(bridge_id), org_id: org_id },
+      { users: 1 }
+    ).lean();
+    
+    return bridge ? bridge.users : null;
+  } catch (error) {
+    console.error(`Error fetching bridge users: ${error}`);
+    return null;
+  }
+};
+
 export default {
   deleteBridge,
   restoreBridge,
@@ -1233,5 +1247,6 @@ export default {
   updateApikeyCreds,
   getBridgesAndVersionsByModel,
   getBridgesWithoutTools,
-  cloneAgentToOrg
+  cloneAgentToOrg,
+  getBridgeUsers
 };
