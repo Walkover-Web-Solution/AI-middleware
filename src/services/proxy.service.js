@@ -124,7 +124,7 @@ export async function createProxyToken(token_data) {
 
 export async function getUsers(org_id, page = 1, pageSize = 10) {
   try {
-    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getDetails`, {
       params: {
         company_id: org_id,
         pageNo: page,

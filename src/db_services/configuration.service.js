@@ -9,6 +9,8 @@ import { ObjectId } from "mongodb";
 import { findInCache, storeInCache, deleteInCache } from "../cache_service/index.js";
 import { redis_keys } from "../configs/constant.js";
 import apikeyCredentialsModel from "../mongoModel/Api.model.js";
+import { getUsers } from "../services/proxy.service.js";
+import conversationService from "./conversation.service.js";
 
 const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = null, depth = 0) => {
   try {
@@ -1164,10 +1166,50 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     bridge_limit: 1,
     bridge_usage: 1,
     last_used: 1,
-    variables_path: 1
+    variables_path: 1,
+    user_id
   }).sort({ createdAt: -1 }).lean();
-
-  return bridges.map(bridge => {
+  
+  const userIds = [...new Set(bridges.filter(bridge => bridge.user_id).map(bridge => bridge.user_id))];
+      let userData = await findInCache(`user_data_${org_id}`);
+      if (userData) {
+        try {
+          userData = JSON.parse(userData);
+          if (!Array.isArray(userData) || userData.length === 0) {
+            userData = null;
+          }
+        } catch {
+          userData = null;
+        }
+      }
+  if (userIds.length > 0) {
+    try {
+      let allUserData = [];
+      let hasMoreData = true;
+      let pageNo = 1;
+      const pageSize = 50;
+      
+      while (hasMoreData) {
+        const response = await getUsers(org_id, pageNo, pageSize);
+        if (response && Array.isArray(response.data)) {
+          allUserData = [...allUserData, ...response.data];
+          hasMoreData = response?.totalEntityCount > allUserData.length;
+        } else {
+          console.log(response,"helllo")
+          hasMoreData = false;
+        }
+        pageNo++;
+      }
+      
+      userData = allUserData;
+      storeInCache(`user_data_${org_id}`, JSON.stringify(userData));
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
+  
+  // First, process basic bridge information
+  const processedBridges = bridges.map(bridge => {
     bridge._id = bridge._id.toString();
     bridge.bridge_id = bridge._id; // Alias _id as bridge_id
     if (bridge.function_ids) {
@@ -1176,8 +1218,38 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     if (bridge.published_version_id) {
       bridge.published_version_id = bridge.published_version_id.toString();
     }
+    if (bridge.user_id && userData && userData.length > 0) {
+      const user = userData.find(user => user.id === bridge.user_id);
+      if (user) {
+        bridge.user_name = user.name || 'Unknown';
+      }
+    }
     return bridge;
   });
+  
+  // Now process the last published user information for each bridge
+  const promises = processedBridges.map(async (bridge) => {
+    if (bridge.published_version_id) {
+      try {
+        const lastUpdateInfo = await conversationService.getUserLastUpdates(org_id, bridge.published_version_id);
+        if (lastUpdateInfo.success && lastUpdateInfo.updates && lastUpdateInfo.updates.length > 0) {
+          // Get the most recent update (first in the array since it's sorted DESC)
+          const lastUpdate = lastUpdateInfo.updates[0];
+          bridge.last_published_by = {
+            user_id: lastUpdate.user_id,
+            user_name: lastUpdate.user_name,
+            time: lastUpdate.time
+          };
+        }
+      } catch (error) {
+        console.error(`Error getting last updates for bridge ${bridge._id}:`, error);
+      }
+    }
+    return bridge;
+  });
+  
+  // Return the processed bridges with last published user information
+  return Promise.all(promises);
 };
 
 export default {
@@ -1198,7 +1270,6 @@ export default {
   getBridgeByUrlSlugname,
   findIdsByModelAndService,
   getBridgesByUserId,
-  getAllAgentsData,
   getAllAgentsData,
   getAgentsData,
   getBridgesWithTools,

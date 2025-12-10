@@ -436,10 +436,118 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10) {
     }
 
     const updatedHistory = history?.map(entry => {
-      const user = Array.isArray(userData) ? userData.find(user => user?.id === entry?.dataValues?.user_id) : null;
+      const entryUserId = entry?.dataValues?.user_id;
+
+      // Normalize userData to an array of user objects.
+      let users = Array.isArray(userData)
+        ? userData
+        : (userData ? [userData] : []);
+
+      // Parse elements that are JSON strings (like the format you showed).
+      users = users.map(u => {
+        if (typeof u === 'string') {
+          try {
+            return JSON.parse(u);
+          } catch {
+            return null;
+          }
+        }
+        return u;
+      }).filter(Boolean);
+
+      const user = users.find(u => u?.id !== undefined && String(u.id) === String(entryUserId));
+
       return {
         ...entry?.dataValues,
-        user_name: user ? user?.name : 'Unknown'
+        user_name: user?.name ?? 'Unknown'
+      };
+    });
+
+    return { success: true, updates: updatedHistory };
+  } catch (error) {
+    console.error("Error fetching user updates:", error);
+    return { success: false, message: "Error fetching updates" };
+  }
+}
+
+async function getUserLastUpdates(org_id, version_id, page = 1) {
+  try {
+    let pageNo = 1;
+    let userData = await findInCache(`user_data_${org_id}`);
+
+    // Parse cached data if it exists, otherwise fetch fresh data
+    if (userData) {
+      try {
+        userData = JSON.parse(userData);
+        // If parsed data is not an array or is empty, fetch fresh data
+        if (userData.length === 0) {
+          userData = null;
+        }
+      } catch {
+        // If JSON parsing fails, treat as no cached data
+        userData = null;
+      }
+    }
+
+    if (!userData) {
+      let allUserData = [];
+      let hasMoreData = true;
+
+      while (hasMoreData) {
+        const response = await getUsers(org_id, pageNo, pageSize = 50)
+        if (response && Array.isArray(response.data)) {
+          allUserData = [...allUserData, ...response.data];
+          hasMoreData = response?.totalEntityCount > allUserData.length;
+        } else {
+          hasMoreData = false;
+        }
+        pageNo++;
+      }
+      await storeInCache(`user_data_${org_id}`, allUserData, 86400); // Cache for 1 day
+      userData = allUserData;
+    }
+
+    const history = await models.pg.user_bridge_config_history.findAll({
+      where: {
+        org_id: org_id,
+        version_id: version_id,
+        type: 'Version published'
+      },
+      attributes: ['id', 'user_id', 'org_id', 'bridge_id', 'type', 'time', 'version_id'],
+      order: [
+        ['time', 'DESC'],
+      ],
+    });
+
+    if (history.length === 0) {
+      return { success: false, message: "No updates found" };
+    }
+
+    const updatedHistory = history?.map(entry => {
+      const entryUserId = entry?.dataValues?.user_id;
+
+      // Normalize userData to an array of user objects.
+      let users = Array.isArray(userData)
+        ? userData
+        : (userData ? [userData] : []);
+
+      // Parse elements that are JSON strings like the format you showed.
+      users = users.map(u => {
+        if (typeof u === 'string') {
+          try {
+            return JSON.parse(u);
+          } catch {
+            return null;
+          }
+        }
+        return u;
+      }).filter(Boolean);
+
+      const user = users.find(u => u?.id !== undefined && String(u.id) === String(entryUserId));
+
+      return {
+        ...entry?.dataValues,
+        user_name: user?.name ?? 'Unknown'
       };
     });
 
@@ -587,6 +695,7 @@ export default {
   sortThreadsByHits,
   getSubThreadsByError,
   sortThreadsByLatestActivity,
-  addBulkUserEntries
+  addBulkUserEntries,
+  getUserLastUpdates
 };
 
