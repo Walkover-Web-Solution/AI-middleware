@@ -481,10 +481,63 @@ const getAllBridgesController = async (req, res, next) => {
 
         const bridges = await ConfigurationServices.getAllBridgesInOrg(org_id, folder_id, user_id, isEmbedUser);
 
+        // Generate tokens
+        const viasocket_embed_user_id = user_id; // Assuming this is the user_id from the request
+        
+        const embed_token = Helper.generate_token(
+            { 
+                "org_id": process.env.ORG_ID, 
+                "project_id": process.env.PROJECT_ID, 
+                "user_id": viasocket_embed_user_id 
+            }, 
+            process.env.ACCESS_KEY
+        );
+        
+        const alerting_embed_token = Helper.generate_token(
+            { 
+                "org_id": process.env.ORG_ID, 
+                "project_id": process.env.ALERTING_PROJECT_ID, 
+                "user_id": viasocket_embed_user_id 
+            }, 
+            process.env.ACCESS_KEY
+        );
+        
+        const trigger_embed_token = Helper.generate_token(
+            { 
+                "org_id": process.env.ORG_ID, 
+                "project_id": process.env.TRIGGER_PROJECT_ID, 
+                "user_id": viasocket_embed_user_id 
+            }, 
+            process.env.ACCESS_KEY
+        );
+        
+        const history_page_chatbot_token = Helper.generate_token(
+            { 
+                "org_id": "11202", 
+                "chatbot_id": "67286d4083e482fd5b466b69", 
+                "user_id": org_id 
+            }, 
+            process.env.CHATBOT_ACCESS_KEY
+        );
+        
+        const doctstar_embed_token = Helper.generate_token(
+            { 
+                "org_id": process.env.DOCSTAR_ORG_ID, 
+                "collection_id": process.env.DOCSTAR_COLLECTION_ID, 
+                "user_id": org_id 
+            }, 
+            process.env.DOCSTAR_ACCESS_KEY
+        );
+
         res.locals = {
             success: true,
             message: "Get all bridges successfully",
             bridge: bridges,
+            embed_token: embed_token,
+            alerting_embed_token: alerting_embed_token,
+            trigger_embed_token: trigger_embed_token,
+            history_page_chatbot_token: history_page_chatbot_token,
+            doctstar_embed_token: doctstar_embed_token,
             org_id: org_id
         };
         req.statusCode = 200;
