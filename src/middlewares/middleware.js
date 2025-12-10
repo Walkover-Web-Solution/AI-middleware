@@ -79,7 +79,7 @@ const middleware = async (req, res, next) => {
       if (!token) {
         return res.status(401).json({ message: 'invalid token' });
       }
-      req.profile = jwt.verify(token, 'secret');
+      req.profile = jwt.verify(token, process.env.SecretKey);
     }
     else if (req.headers.pauthkey || req.headers.pauthtoken) {
       req.profile = await makeDataIfPauthKeyGiven(req);
