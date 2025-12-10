@@ -13,7 +13,7 @@ const saveAuthTokenInDb = {
             'any.required': 'redirection_url is required',
             'string.uri': 'redirection_url must be a valid URI'
         })
-    })
+    }).unknown(true)
 };
 
 const getAuthTokenInDb = {
@@ -32,7 +32,7 @@ const verifyAuthToken = {
         state: Joi.string().required().messages({
             'any.required': 'state is required'
         })
-    })
+    }).unknown(true)
 };
 
 const getClientInfo = {
@@ -40,7 +40,7 @@ const getClientInfo = {
         client_id: Joi.string().required().messages({
             'any.required': 'client_id is required'
         })
-    })
+    }).unknown(true)
 };
 
 // Named exports for backward compatibility (used in routes)

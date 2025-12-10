@@ -17,18 +17,18 @@ const createVectorsSchema = Joi.object({
     docType: Joi.string().required(),
     fileFormat: Joi.string().valid('csv', 'txt', 'script', 'unknown').required(),
     nestedCrawling: Joi.boolean().default(false)
-});
+}).unknown(true);
 
 const docIdSchema = Joi.object({
     id: Joi.string().required().messages({
         'any.required': 'id is required'
     })
-});
+}).unknown(true);
 
 const updateDocSchema = Joi.object({
     name: Joi.string().optional(),
     description: Joi.string().optional()
-});
+}).unknown(true);
 
 export {
     createVectorsSchema,

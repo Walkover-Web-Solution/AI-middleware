@@ -21,7 +21,7 @@ const getConversationLogs = {
       'string.empty': 'sub_thread_id is required',
       'any.required': 'sub_thread_id is required'
     })
-  }),
+  }).unknown(true),
   query: Joi.object().keys({
     page: Joi.number().integer().min(1).optional().default(1).messages({
       'number.base': 'Page must be a number',
@@ -36,7 +36,7 @@ const getConversationLogs = {
     }),
     user_feedback: Joi.string().optional().default('all'),
     error: Joi.string().optional().default('false')
-  })
+  }).unknown(true)
 };
 
 /**
@@ -49,7 +49,7 @@ const getRecentThreads = {
       'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
       'any.required': 'agent_id is required'
     })
-  }),
+  }).unknown(true),
   query: Joi.object().keys({
     page: Joi.number().integer().min(1).optional().default(1).messages({
       'number.base': 'Page must be a number',
@@ -64,7 +64,7 @@ const getRecentThreads = {
     }),
     user_feedback: Joi.string().optional().default('all'),
     error: Joi.string().optional().default('false')
-  })
+  }).unknown(true)
 };
 
 /**
@@ -77,7 +77,7 @@ const searchConversationLogs = {
       'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
       'any.required': 'agent_id is required'
     })
-  }),
+  }).unknown(true),
   query: Joi.object().keys({
     keyword: Joi.string().required().messages({
       'string.empty': 'keyword is required',
@@ -90,8 +90,8 @@ const searchConversationLogs = {
       end: Joi.string().isoDate().optional().messages({
         'string.isoDate': 'time_range.end must be a valid ISO date string'
       })
-    }).optional()
-  })
+    }).unknown(true).optional()
+  }).unknown(true)
 };
 
 export default {

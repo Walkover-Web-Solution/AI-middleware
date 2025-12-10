@@ -1,13 +1,13 @@
 import Joi from 'joi';
 
 const getWeeklyreports = {
-    body: Joi.object().keys({}).unknown(false),
+    body: Joi.object().keys({}).unknown(true),
 };
 
 const getMessageData = {
     body: Joi.object().keys({
         message_id: Joi.string().required(),
-    }).unknown(false),
+    }).unknown(true),
 };
 
 export default {

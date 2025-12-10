@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+
 class Helper {
   static encrypt(text) {
     const algorithm = process.env.ALGORITHM;
@@ -138,6 +140,10 @@ class Helper {
     }
 
     return { paths, fields, required_params };
+  }
+
+  static generate_token(payload, accesskey) {
+    return jwt.sign(payload, accesskey);
   }
 
 }

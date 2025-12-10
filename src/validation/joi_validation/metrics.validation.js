@@ -13,7 +13,7 @@ const getMetricsData = {
     query: Joi.object().keys({
         startTime: Joi.string().optional(),
         endTime: Joi.string().optional(),
-    }),
+    }).unknown(true),
     body: Joi.object().keys({
         apikey_id: idSchema.optional(),
         service: Joi.string().optional(),
@@ -31,7 +31,7 @@ const getMetricsData = {
         }),
         start_date: Joi.date().optional(),
         end_date: Joi.date().optional(),
-    }),
+    }).unknown(true),
 };
 
 export default {

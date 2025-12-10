@@ -52,14 +52,15 @@ const cost_types = {
 const prebuilt_prompt_bridge_id = ['optimze_prompt', 'gpt_memory', 'structured_output_optimizer', 'chatbot_suggestions', 'generate_summary', 'generate_test_cases'];
 
 const new_agent_service = {
-  openai: "gpt-4o",
-  anthropic: "claude-3-5-sonnet-20240620",
+  openai: "gpt-5-mini",
+  anthropic: "claude-sonnet-4-20250514",
   groq: "llama3-70b-8192",
   open_router: "openai/gpt-4o",
-  mistral: "mistral-large-latest",
-  gemini: "gemini-1.5-pro-latest",
+  mistral: "mistral-small-latest",
+  gemini: "gemini-2.5-pro",
   ai_ml: "gpt-oss-120b",
-  grok: "grok-beta"
+  grok: "grok-4-fast"
+
 };
 
 export {

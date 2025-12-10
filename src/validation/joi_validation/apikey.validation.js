@@ -8,7 +8,7 @@ const saveApikey = {
         comment: Joi.string().allow('').optional(),
         apikey_limit: Joi.number().min(0).precision(6).optional(),
         apikey_usage: Joi.number().min(0).precision(6).optional()
-    })
+    }).unknown(true)
 }
 
 const getAllApikeys = {
@@ -21,7 +21,7 @@ const updateApikey = {
             'string.pattern.base': 'apikey_id must be a valid MongoDB ObjectId',
             'any.required': 'apikey_id is required'
         })
-    }),
+    }).unknown(true),
     body: Joi.object().keys({
         name: Joi.string().optional(),
         apikey: Joi.string().optional(),
@@ -29,7 +29,7 @@ const updateApikey = {
         comment: Joi.string().allow('').optional(),
         apikey_limit: Joi.number().min(0).precision(6).optional(),
         apikey_usage: Joi.number().min(0).precision(6).optional()
-    })
+    }).unknown(true)
 }
 
 const deleteApikey = {
@@ -38,7 +38,7 @@ const deleteApikey = {
             'string.pattern.base': 'apikey_object_id must be a valid MongoDB ObjectId',
             'any.required': 'apikey_object_id is required'
         })
-    })
+    }).unknown(true)
 }
 
 export default {

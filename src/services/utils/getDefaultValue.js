@@ -116,6 +116,7 @@ const getDefaultValuesController = async (service, model, current_configuration,
         };
 
         if (!modelConfigDocument[service] || !modelConfigDocument[service][model]) {
+            
             // If service exists but model doesn't, or service doesn't exist
             if (!modelConfigDocument[service]) {
                 throw new Error(`Service '${service}' not found.`);

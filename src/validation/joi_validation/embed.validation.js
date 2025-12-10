@@ -19,7 +19,7 @@ const createEmbed = {
             Joi.string().pattern(/^[0-9a-fA-F]{24}$/)
         ).optional().default({}),
         folder_limit: Joi.number().min(0).optional().default(0)
-    })
+    }).unknown(true)
 };
 
 const getAllEmbed = {
@@ -39,7 +39,7 @@ const updateEmbed = {
         ).optional(),
         folder_limit: Joi.number().min(0).optional(),
         folder_usage: Joi.number().min(0).optional()
-    })
+    }).unknown(true)
 };
 
 const genrateToken = {
@@ -51,7 +51,7 @@ const getEmbedDataByUserId = {
         agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional().messages({
             'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId'
         })
-    })
+    }).unknown(true)
 };
 
 export default {

@@ -8,7 +8,7 @@ const updateMessageSchema = Joi.object({
     message: Joi.string().required(),
     id: Joi.number().required(),
     org_id: Joi.number().required()
-});
+}).unknown(true);
 
 export {
     updateMessageSchema
