@@ -1,6 +1,6 @@
 import express from "express";
 import bridgeVersionController from "../controllers/bridgeVersion.controller.js";
-import { updateBridgeController } from "../controllers/agentConfig.controller.js";
+import { updateAgentController } from "../controllers/agentConfig.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import bridgeVersionValidation from "../validation/joi_validation/bridgeVersion.validation.js";
@@ -33,6 +33,6 @@ router.get("/suggest-model/:version_id", middleware, validate(bridgeVersionValid
 router.get("/connected-agents/:version_id", middleware, validate(bridgeVersionValidation.getConnectedAgents), bridgeVersionController.getConnectedAgents);
 
 //update Version
-router.put("/:version_id", middleware, validate(bridgeIdParamSchema), validate(updateBridgeSchema), updateBridgeController);
+router.put("/:version_id", middleware, validate(bridgeIdParamSchema), validate(updateBridgeSchema), updateAgentController);
 
 export default router;
