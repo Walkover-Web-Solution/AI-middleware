@@ -12,7 +12,7 @@ const getAllChatBots = {
             'number.base': 'orgId must be a number',
             'any.required': 'orgId is mandatory'
         })
-    })
+    }).unknown(true)
     // userId comes from req.profile.user.id (from middleware)
 };
 
@@ -21,7 +21,7 @@ const chatbotHistoryValidationSchema = Joi.object({
     org_id: Joi.string().required(),
     thread_id: Joi.string().required(),
     bridge_id: Joi.objectId().required()
-});
+}).unknown(true);
 
 export default {
     subscribe,

@@ -8,7 +8,7 @@ const createAlert = {
         webhookConfiguration: Joi.object({
             url: Joi.string().uri().optional(),
             headers: Joi.object().optional()
-        }).required().messages({
+        }).unknown(true).required().messages({
             'any.required': 'webhookConfiguration is required'
         }),
         name: Joi.string().required().messages({
@@ -26,7 +26,7 @@ const createAlert = {
             'any.required': 'alertType is required'
         }),
         limit: Joi.number().min(0).optional()
-    })
+    }).unknown(true)
 };
 
 const getAllAlerts = {
@@ -39,18 +39,18 @@ const updateAlert = {
             'string.pattern.base': 'id must be a valid MongoDB ObjectId',
             'any.required': 'id is required'
         })
-    }),
+    }).unknown(true),
     body: Joi.object().keys({
         webhookConfiguration: Joi.object({
             url: Joi.string().uri().optional(),
             headers: Joi.object().optional()
-        }).optional(),
+        }).unknown(true).optional(),
         bridges: Joi.array().items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/)).optional(),
         name: Joi.string().optional(),
         alertType: Joi.array().items(
             Joi.string().valid('thumbsdown', 'Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')
         ).optional()
-    })
+    }).unknown(true)
 };
 
 const deleteAlert = {
@@ -59,7 +59,7 @@ const deleteAlert = {
             'string.pattern.base': 'id must be a valid MongoDB ObjectId',
             'any.required': 'id is required'
         })
-    })
+    }).unknown(true)
 };
 
 export default {

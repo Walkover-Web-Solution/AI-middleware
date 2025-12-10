@@ -9,12 +9,12 @@ const updateApiCalls = {
         function_id: Joi.string().required().messages({
             'any.required': 'function_id is required'
         })
-    }),
+    }).unknown(true),
     body: Joi.object().keys({
         dataToSend: Joi.object().required().messages({
             'any.required': 'dataToSend is required'
         })
-    })
+    }).unknown(true)
 };
 
 const deleteFunction = {
@@ -22,7 +22,7 @@ const deleteFunction = {
         function_name: Joi.string().required().messages({
             'any.required': 'function_name is required'
         })
-    })
+    }).unknown(true)
 };
 
 const createApi = {
@@ -39,7 +39,7 @@ const createApi = {
             'any.only': 'status must be one of: published, updated, delete, paused'
         }),
         payload: Joi.object().optional()
-    })
+    }).unknown(true)
 };
 
 const addPreTool = {
@@ -47,7 +47,7 @@ const addPreTool = {
         agent_id: Joi.string().required().messages({
             'any.required': 'agent_id is required'
         })
-    }),
+    }).unknown(true),
     body: Joi.object().keys({
         version_id: Joi.string().optional(),
         pre_tools: Joi.string().required().messages({
@@ -57,7 +57,7 @@ const addPreTool = {
             'any.required': 'status is required',
             'any.only': 'status must be either "0" or "1"'
         })
-    })
+    }).unknown(true)
 };
 
 const getAllInBuiltTools = {

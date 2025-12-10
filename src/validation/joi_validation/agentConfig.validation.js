@@ -94,13 +94,13 @@ const bridgeIdParamSchema = Joi.object({
         'any.required': 'bridgeId is required'
     }),
     version_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional()
-});
+}).unknown(true);
 
 const modelNameParamSchema = Joi.object({
     modelName: Joi.string().required().messages({
         'any.required': 'modelName is required'
     })
-});
+}).unknown(true);
 
 const cloneAgentSchema = Joi.object({
     bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
@@ -113,7 +113,7 @@ const cloneAgentSchema = Joi.object({
     ).required().messages({
         'any.required': 'to_shift_org_id is required'
     })
-});
+}).unknown(true);
 
 export {
     createBridgeSchema,

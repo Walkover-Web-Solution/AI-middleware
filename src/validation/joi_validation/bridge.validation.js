@@ -311,7 +311,7 @@ const updateBridgeSchema = Joi.object({
 
     }).unknown() // Allow any additional properties within each model's configuration
   })
-});
+}).unknown(true);
 
 const createThreadHistrorySchema = Joi.object({
   bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
@@ -325,7 +325,7 @@ const createThreadHistrorySchema = Joi.object({
   type: Joi.string().valid('chat').required(),
   message_by: Joi.string().valid('assistant').required(),
   message_id: Joi.string()
-});
+}).unknown(true);
 
 const subscribeSchema = Joi.object({
   slugName: Joi.string().required().messages({

@@ -7,7 +7,7 @@ const modelConfigSchema = Joi.object({
     configuration: Joi.object().unknown(true).required(),
     outputConfig: Joi.object().unknown(true).required(),
     validationConfig: Joi.object().unknown(true).required()
-});
+}).unknown(true);
 
 const saveUserModelConfigurationBodySchema = Joi.object({
     service: Joi.string().valid('openai','openai_response', 'gemini', 'anthropic', 'groq', 'open_router', 'mistral', 'ai_ml').required(),
@@ -17,7 +17,7 @@ const saveUserModelConfigurationBodySchema = Joi.object({
     configuration: Joi.object().unknown(true).required(),
     outputConfig: Joi.object().unknown(true).required(),
     validationConfig: Joi.object().unknown(true).required()
-});
+}).unknown(true);
 
 const deleteUserModelConfigurationQuerySchema = Joi.object({
     model_name: Joi.string().required().messages({
@@ -26,7 +26,7 @@ const deleteUserModelConfigurationQuerySchema = Joi.object({
     service: Joi.string().valid('openai','openai_response', 'gemini', 'anthropic', 'groq', 'open_router', 'mistral', 'ai_ml').required().messages({
         'any.required': 'service is required'
     })
-});
+}).unknown(true);
 
 // Legacy schema for backward compatibility
 const UserModelConfigSchema = Joi.object({
@@ -38,7 +38,7 @@ const UserModelConfigSchema = Joi.object({
     configuration: Joi.object().unknown(true).required(),
     outputConfig: Joi.object().unknown(true).required(),
     validationConfig: Joi.object().unknown(true).required()
-});
+}).unknown(true);
 
 export { 
     modelConfigSchema, 

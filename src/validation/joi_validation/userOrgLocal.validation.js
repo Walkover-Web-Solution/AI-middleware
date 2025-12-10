@@ -22,7 +22,7 @@ const switchUserOrgLocalBodySchema = Joi.object().keys({
         'any.required': 'orgId is required'
     }),
     orgName: Joi.string().allow("", null).optional()
-});
+}).unknown(true);
 
 const switchUserOrgLocal = {
     body: switchUserOrgLocalBodySchema
@@ -40,7 +40,7 @@ const updateUserDetailsBodySchema = Joi.object().keys({
 }).or('company_id', 'user_id').and('company_id', 'company').and('user_id', 'user').messages({
     'object.missing': 'Either company_id or user_id is required',
     'object.and': 'company_id must be provided with company, and user_id must be provided with user'
-});
+}).unknown(true);
 
 const updateUserDetails = {
     body: updateUserDetailsBodySchema
@@ -54,7 +54,7 @@ const removeUsersFromOrgBodySchema = Joi.object().keys({
     user_id: idSchema.required().messages({
         'any.required': 'user_id is required'
     })
-});
+}).unknown(true);
 
 const removeUsersFromOrg = {
     body: removeUsersFromOrgBodySchema

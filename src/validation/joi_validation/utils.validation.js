@@ -7,13 +7,13 @@ const clearRedisCache = {
             Joi.string(),
             Joi.array().items(Joi.string())
         ).optional(),
-    }),
+    }).unknown(true),
 };
 
 const getRedisCache = {
     params: Joi.object().keys({
         id: Joi.string().required(),
-    }),
+    }).unknown(true),
 };
 
 const callAi = {
@@ -79,7 +79,7 @@ const callAi = {
             then: Joi.string().required(),
             otherwise: Joi.forbidden()
         })
-    }),
+    }).unknown(true),
 };
 
 export default {

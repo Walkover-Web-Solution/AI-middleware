@@ -32,7 +32,7 @@ const resetPrebuiltPrompts = {
             'any.required': 'prompt_id is required in request body',
             'any.only': `Invalid prompt_id. Must be one of: ${validPromptIds.join(', ')}`
         })
-    })
+    }).unknown(true)
 };
 
 const getSpecificPrebuiltPrompt = {
@@ -41,7 +41,7 @@ const getSpecificPrebuiltPrompt = {
             'any.required': 'prompt_key is required',
             'any.only': `Invalid prompt_key. Must be one of: ${validPromptIds.join(', ')}`
         })
-    })
+    }).unknown(true)
 };
 
 export default {
