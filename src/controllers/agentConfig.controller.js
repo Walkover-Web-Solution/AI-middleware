@@ -165,7 +165,7 @@ const updateBridgeController = async (req, res, next) => {
     const body = req.body;
     const org_id = req.profile.org.id;
     const user_id = req.profile.user.id;
-    const bridgeData = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+    const bridgeData = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
     if (!bridgeData.bridges) {
         res.locals = { success: false, message: "Bridge not found" };
         req.statusCode = 404;

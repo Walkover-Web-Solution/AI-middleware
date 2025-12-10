@@ -12,7 +12,7 @@ router.get('/:bridgeId', middleware, agentConfigController.getBridgeController);
 
 router.post('/', middleware, agentConfigController.createBridgesController);
 
-router.put('/:version_id', middleware, agentConfigController.updateBridgeController);
+router.put('/:bridgeId', middleware, agentConfigController.updateBridgeController);
 
 router.post('/clone', middleware, agentConfigController.cloneAgentController);
 
