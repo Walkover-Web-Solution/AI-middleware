@@ -4,7 +4,7 @@ import token from "../services/commonService/generateToken.js";
 import { generateIdentifier } from "../services/utils/utility.service.js";
 
 const getAllChatBots = async (req, res, next) => {
-    const { orgId: org_id } = req.params;
+    const org_id = req.profile.org.id;
     const userId = req.profile.user.id;
 
     const result = await ChatbotDbService.getAll(org_id);
