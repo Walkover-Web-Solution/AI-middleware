@@ -40,6 +40,10 @@ const configuration = new mongoose.Schema({
     type: String,
     required: true
   },
+  user_id: {
+    type: String,
+    required: true
+  },
   service: {
     type: String,
     default: ""
@@ -61,6 +65,102 @@ const configuration = new mongoose.Schema({
   apikey: {
     type: String,
     default: ""
+  },
+  gpt_memory: {
+    type: Boolean,
+    default: false
+  },
+  folder_id: {
+    type: String,
+    default: null
+  },
+  is_drafted: {
+    type: Boolean,
+    default: false
+  },
+  parent_id: {
+    type: String,
+    default: null
+  },
+  published_version_id: {
+    type: String,
+    default: null
+  },
+  variables_path: {
+    type: Object,
+    default: {}
+  },
+  variables_state: {
+    type: Object,
+    default: {}
+  },
+  starterQuestion: {
+    type: Array,
+    default: []
+  },
+  tool_call_count: {
+    type: Number,
+    default: 0
+  },
+  version_description: {
+    type: String,
+    default: ""
+  },
+  connected_agents: {
+    type: Object,
+    default: {}
+  },
+  doc_ids: {
+    type: Array,
+    default: []
+  },
+  guardrails: {
+    type: Object,
+    default: {
+      is_enabled: false,
+      guardrails_configuration: {},
+      guardrails_custom_prompt: ""
+    }
+  },
+  built_in_tools: {
+    type: Array,
+    default: []
+  },
+  fall_back: {
+    type: Object,
+    default: {
+      is_enable: false,
+      service: "",
+      model: ""
+    }
+  },
+  bridge_summary: {
+    type: String,
+    default: ""
+  },
+  connected_agent_details: {
+    type: Object,
+    default: {}
+  },
+  user_reference: {
+    type: String,
+    default: ""
+  },
+  bridge_status: {
+    type: Number,
+    default: 1
+  },
+  function_ids: {
+    type: Array,
+    default: []
+  },
+  agent_variables: {
+    type: Object,
+    default: {}
+  },
+  total_tokens: {
+    type: Number,
+    default: 0
   },
   created_at: {
     type: Date,
