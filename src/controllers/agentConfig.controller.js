@@ -18,7 +18,7 @@ import {
     cloneAgentSchema
 } from "../validation/joi_validation/agentConfig.validation.js";
 
-const createBridgesController = async (req, res, next) => {
+const createAgentController = async (req, res, next) => {
     try {
         // Validate request body
         const { error, value } = createBridgeSchema.validate(req.body);
@@ -159,13 +159,13 @@ const createBridgesController = async (req, res, next) => {
     }
 };
 
-const updateBridgeController = async (req, res, next) => {
+const updateAgentController = async (req, res, next) => {
     // Validation handled by middleware
-    const { bridgeId, version_id } = req.params;
+    const { bridge_id, version_id } = req.params;
     const body = req.body;
     const org_id = req.profile.org.id;
     const user_id = req.profile.user.id;
-    const bridgeData = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+    const bridgeData = await ConfigurationServices.getBridgesWithTools(bridge_id, org_id, version_id);
     if (!bridgeData.bridges) {
         res.locals = { success: false, message: "Bridge not found" };
         req.statusCode = 404;
@@ -173,6 +173,27 @@ const updateBridgeController = async (req, res, next) => {
     }
     const bridge = bridgeData.bridges;
     const parent_id = bridge.parent_id;
+    
+    // Authorization check: Check users array from bridge configuration (not version data)
+    // If version_id is present, check parent bridge's users array
+    // If users array exists and user_id is not present, deny access
+    let usersArray = bridge.users;
+    if (version_id && parent_id) {
+        // Fetch only users array from parent bridge
+        usersArray = await ConfigurationServices.getBridgeUsers(parent_id, org_id);
+    }
+    
+    if (usersArray && Array.isArray(usersArray)) {
+        const current_user_id = req.user_id;
+        if (current_user_id) {
+            const user_authorized = usersArray.some(u => String(u) === current_user_id);
+            if (!user_authorized) {
+                res.locals = { success: false, message: "you are not authorized to update the agent" };
+                req.statusCode = 403;
+                return next();
+            }
+        }
+    }
     const current_configuration = bridge.configuration || {};
     let current_variables_path = bridge.variables_path || {};
     let function_ids = bridge.function_ids || [];
@@ -267,7 +288,7 @@ const updateBridgeController = async (req, res, next) => {
         const { built_in_tools, built_in_tools_operation } = body.built_in_tools_data;
         if (built_in_tools) {
             const op = built_in_tools_operation === '1' ? 1 : 0;
-            await ConfigurationServices.updateBuiltInTools(version_id || bridgeId, built_in_tools, op);
+            await ConfigurationServices.updateBuiltInTools(version_id || bridge_id, built_in_tools, op);
         }
     }
 
@@ -285,7 +306,7 @@ const updateBridgeController = async (req, res, next) => {
                     }
                 }
             }
-            await ConfigurationServices.updateAgents(version_id || bridgeId, connected_agents, op);
+            await ConfigurationServices.updateAgents(version_id || bridge_id, connected_agents, op);
         }
     }
 
@@ -294,7 +315,7 @@ const updateBridgeController = async (req, res, next) => {
         const { function_id, function_operation, function_name } = body.functionData;
         if (function_id) {
             const op = function_operation === '1' ? 1 : 0;
-            const target_id = version_id || bridgeId;
+            const target_id = version_id || bridge_id;
 
             if (op === 1) {
                 if (!function_ids.includes(function_id)) {
@@ -313,6 +334,52 @@ const updateBridgeController = async (req, res, next) => {
                     await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 0);
                 }
             }
+        }
+    }
+
+    // Process users array update if bridge_id is provided (not version_id)
+    // Only update bridge's users array, not version
+    if (body.user_id !== undefined && typeof body.add_user_id === 'boolean' && bridge_id && !version_id) {
+        try {
+            // Get current bridge to check if users array exists
+            const currentBridgeData = await ConfigurationServices.getBridges(bridge_id, org_id, null);
+            if (currentBridgeData && currentBridgeData.bridges) {
+                const user_id_to_update = body.user_id;
+                const add_user = body.add_user_id;
+                
+                if (user_id_to_update !== null && user_id_to_update !== undefined) {
+                    // Get current users array
+                    let current_users = currentBridgeData.bridges.users;
+                    
+                    // Initialize users array if it doesn't exist
+                    if (current_users === null || current_users === undefined) {
+                        current_users = [];
+                    } else if (!Array.isArray(current_users)) {
+                        // If users exists but is not a list, initialize as empty list
+                        current_users = [];
+                    }
+                    
+                    const user_id_str = String(user_id_to_update);
+                    
+                    if (add_user) {
+                        // Add user_id to users array if not already present
+                        const user_exists = current_users.some(u => String(u) === user_id_str);
+                        if (!user_exists) {
+                            current_users.push(user_id_to_update);
+                            // Update bridge directly (not version) - set version_id to null for this update
+                            update_fields.users = current_users;
+                        }
+                    } else {
+                        // Remove user_id from users array
+                        current_users = current_users.filter(u => String(u) !== user_id_str);
+                        // Update bridge directly (not version) - set version_id to null for this update
+                        update_fields.users = current_users;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`Error updating users array for bridge ${bridge_id}:`, e);
+            // Continue with other updates even if users array update fails
         }
     }
 
@@ -344,13 +411,13 @@ const updateBridgeController = async (req, res, next) => {
         }
     }
 
-    await ConfigurationServices.updateBridge(bridgeId, update_fields, version_id);
-    const updatedBridge = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+    await ConfigurationServices.updateBridge(bridge_id, update_fields, version_id);
+    const updatedBridge = await ConfigurationServices.getBridgesWithTools(bridge_id, org_id, version_id);
 
     await addBulkUserEntries(user_history);
 
     try {
-        await purgeRelatedBridgeCaches(bridgeId, body.bridge_usage !== undefined ? body.bridge_usage : -1);
+        await purgeRelatedBridgeCaches(bridge_id, body.bridge_usage !== undefined ? body.bridge_usage : -1);
     } catch (e) {
         console.error(`Failed clearing bridge related cache on update: ${e}`);
     }
@@ -370,7 +437,7 @@ const updateBridgeController = async (req, res, next) => {
     return next();
 };
 
-const getBridgesAndVersionsByModelController = async (req, res, next) => {
+const getAgentsAndVersionsByModelController = async (req, res, next) => {
     try {
         // Validate params
         const { error, value } = modelNameParamSchema.validate(req.params);
@@ -416,7 +483,7 @@ const cloneAgentController = async (req, res, next) => {
     }
 };
 
-const getBridgeController = async (req, res, next) => {
+const getAgentController = async (req, res, next) => {
     try {
         // Validate params
         const { error, value } = bridgeIdParamSchema.validate(req.params);
@@ -456,11 +523,15 @@ const getBridgeController = async (req, res, next) => {
         const all_variables = [...variables, ...path_variables];
         bridge.bridges.all_varaibles = all_variables;
 
+        // Get access role from middleware (second layer check)
+        const access_role = req.access_role || req.role_name || null;
+
         // Simplified response middleware
         res.locals = {
             success: true,
             message: "bridge get successfully",
-            bridge: bridge.bridges
+            bridge: bridge.bridges,
+            access: access_role
         };
         req.statusCode = 200;
         return next();
@@ -472,7 +543,7 @@ const getBridgeController = async (req, res, next) => {
     }
 };
 
-const getAllBridgesController = async (req, res, next) => {
+const getAllAgentController = async (req, res, next) => {
     try {
         const org_id = req.profile.org.id;
         const folder_id = req.folder_id || null;
@@ -481,6 +552,8 @@ const getAllBridgesController = async (req, res, next) => {
 
         const bridges = await ConfigurationServices.getAllBridgesInOrg(org_id, folder_id, user_id, isEmbedUser);
 
+        // Get role_name from middleware (first layer check)
+        const role_name = req.role_name || null;
         // Generate tokens
         const viasocket_embed_user_id = user_id; // Assuming this is the user_id from the request
         
@@ -533,6 +606,8 @@ const getAllBridgesController = async (req, res, next) => {
             success: true,
             message: "Get all bridges successfully",
             bridge: bridges,
+            org_id: org_id,
+            access: role_name,
             embed_token: embed_token,
             alerting_embed_token: alerting_embed_token,
             trigger_embed_token: trigger_embed_token,
@@ -550,7 +625,7 @@ const getAllBridgesController = async (req, res, next) => {
     }
 };
 
-const deleteBridges = async (req, res, next) => {
+const deleteAgentController = async (req, res, next) => {
     const { bridge_id } = req.params;
     const { org_id, restore = false } = req.body;
     try {
@@ -586,11 +661,11 @@ const deleteBridges = async (req, res, next) => {
 
 
 export {
-    createBridgesController,
-    getBridgeController,
-    getAllBridgesController,
-    updateBridgeController,
-    getBridgesAndVersionsByModelController,
+    createAgentController,
+    getAgentController,
+    getAllAgentController,
+    updateAgentController,
+    getAgentsAndVersionsByModelController,
     cloneAgentController,
-    deleteBridges
+    deleteAgentController
 };
