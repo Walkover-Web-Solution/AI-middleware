@@ -4,7 +4,70 @@ import axios from "axios"; // Added for making HTTP requests
 import { getOrganizationById, validateCauthKey } from "../services/proxy.service.js";
 import { encryptString } from "../services/utils/utility.service.js";
 import { createOrGetUser } from "../utils/proxy.utils.js";
+import configurationModel from "../mongoModel/Configuration.model.js";
+import mongoose from "mongoose";
 dotenv.config();
+
+// Define role permissions
+const ROLE_PERMISSIONS = {
+  viewer: [
+    'get_agent'
+  ],
+  member: [
+    'get_agent',
+    'create_agent'
+    // 'delete_agent',
+    // 'update_agent'
+  ],
+  owner: [
+    'get_agent',
+    'create_agent',
+    'delete_agent',
+    'update_agent'
+  ]
+};
+
+/**
+ * Determine user role based on their permissions.
+ * 
+ * Logic:
+ * 1. Check if user has all permissions from 'owner' role -> return 'owner'
+ * 2. Check if user has all permissions from 'member' role -> return 'member'
+ * 3. Check if user has all permissions from 'viewer' role -> return 'viewer'
+ * 4. If no match, return 'viewer' as default
+ * 
+ * @param {Array} userPermissions - List of permission strings from JWT token
+ * @returns {string} Role name ('owner', 'member', or 'viewer')
+ */
+const determineRoleFromPermissions = (userPermissions) => {
+  if (!userPermissions || !Array.isArray(userPermissions)) {
+    return 'viewer';
+  }
+  
+  // Convert to set for faster lookup
+  const userPermsSet = new Set(userPermissions);
+  
+  // Check owner first (highest privilege)
+  const ownerPermsSet = new Set(ROLE_PERMISSIONS.owner);
+  if ([...ownerPermsSet].every(perm => userPermsSet.has(perm))) {
+    return 'owner';
+  }
+  
+  // Check member
+  const memberPermsSet = new Set(ROLE_PERMISSIONS.member);
+  if ([...memberPermsSet].every(perm => userPermsSet.has(perm))) {
+    return 'member';
+  }
+  
+  // Check viewer
+  const viewerPermsSet = new Set(ROLE_PERMISSIONS.viewer);
+  if ([...viewerPermsSet].every(perm => userPermsSet.has(perm))) {
+    return 'viewer';
+  }
+  
+  // Default to viewer if no match
+  return 'viewer';
+};
 
 const makeDataIfProxyTokenGiven = async (req) => {
   const headers = {
@@ -17,6 +80,7 @@ const makeDataIfProxyTokenGiven = async (req) => {
   }
 
   const responseData = response.data;
+  console.log(responseData);
   return {
     ip: "9.255.0.55",
     user: {
@@ -79,7 +143,19 @@ const middleware = async (req, res, next) => {
       if (!token) {
         return res.status(401).json({ message: 'invalid token' });
       }
-      req.profile = jwt.verify(token, process.env.SecretKey);
+      req.profile = jwt.verify(token, process.env.TEMP_SECRET);
+      
+      // Determine role_name from permissions in JWT token
+      const userPermissions = req.profile?.user?.permissions || [];
+      const determinedRole = determineRoleFromPermissions(userPermissions);
+      
+      // Set role_name in user object for consistency
+      if (!req.profile.user) {
+        req.profile.user = {};
+      }
+      req.profile.user.role_name = determinedRole;
+      
+      console.log(`Role determined from permissions: ${determinedRole} for user ${req.profile?.user?.email || 'unknown'}`);
     }
     else if (req.headers.pauthkey || req.headers.pauthtoken) {
       req.profile = await makeDataIfPauthKeyGiven(req);
@@ -89,7 +165,13 @@ const middleware = async (req, res, next) => {
     }
 
     req.profile.org.id = req.profile.org.id.toString();
-    req.IsEmbedUser = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false
+    req.IsEmbedUser = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
+    
+    // Store user_id and role_name in req for agent access middleware (similar to Python's request.state)
+    req.user_id = req.profile?.user?.id ? req.profile.user.id.toString() : null;
+    req.role_name = req.profile?.user?.role_name || null;
+    req.org_id = req.profile.org.id;
+    
     return next();
   } catch (err) {
     console.error("middleware error =>", err);
@@ -229,4 +311,148 @@ const loginAuth = async (req, res, next) => {
 
   return next()
 }
-export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, loginAuth };
+
+/**
+ * Helper function to get access role for a specific bridge.
+ * 
+ * Logic:
+ * 1. If original_role_name is 'owner' -> return 'owner' (no DB check needed)
+ * 2. If 'users' array exists in configuration and contains user_id -> return 'member'
+ * 3. If 'users' array doesn't exist -> return original_role_name
+ * 4. If 'users' array exists but doesn't contain user_id -> return 'viewer'
+ * 
+ * @param {string} user_id - User ID
+ * @param {string} org_id - Organization ID
+ * @param {string} bridge_id - Bridge ID
+ * @param {string} original_role_name - Original role name from JWT
+ * @returns {Promise<string>} The access role ('owner', 'member', 'viewer', or original_role_name)
+ */
+const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name = null) => {
+  try {
+    // If user is owner, return 'owner' immediately without checking DB
+    if (original_role_name === 'owner') {
+      return 'owner';
+    }
+    
+    if (!user_id) {
+      // If no user_id, return original role_name
+      return original_role_name;
+    }
+    
+    // Query configuration collection for the bridge
+    try {
+      const bridge_doc = await configurationModel.findOne(
+        { _id: new mongoose.Types.ObjectId(bridge_id), org_id: org_id },
+        { users: 1 }
+      ).lean();
+      
+      if (!bridge_doc) {
+        // Bridge not found, return original role_name
+        return original_role_name;
+      }
+      
+      // Check if 'users' key exists
+      const users_array = bridge_doc.users;
+      
+      if (users_array === null || users_array === undefined) {
+        // 'users' key doesn't exist, return original role_name
+        return original_role_name;
+      }
+      
+      // Ensure users_array is a list
+      if (!Array.isArray(users_array)) {
+        // If 'users' exists but is not a list, return original role_name
+        return original_role_name;
+      }
+      
+      // Convert user_id to string for comparison (users array might contain strings or integers)
+      const user_id_str = user_id.toString();
+      
+      // Check if user_id is in the users array
+      // Handle both string and integer comparisons
+      const user_found = users_array.some(u => u.toString() === user_id_str);
+      
+      if (user_found) {
+        // User found in array, return 'member'
+        return 'member';
+      } else {
+        // User not found in array, return 'viewer'
+        return 'viewer';
+      }
+    } catch (e) {
+      console.error(`Error querying configuration for bridge ${bridge_id}:`, e);
+      // If query fails, return original role_name
+      return original_role_name;
+    }
+  } catch (err) {
+    console.error(`Error in getAgentAccessRole:`, err);
+    // On error, return original role_name
+    return original_role_name;
+  }
+};
+
+/**
+ * Middleware to check and update user's role_name based on agent-specific permissions.
+ * Stores the result in req.access_role.
+ * Reads bridge_id from req.params.bridgeId or req.params.bridge_id
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const checkAgentAccessMiddleware = async (req, res, next) => {
+  try {
+    const bridge_id = req.params.bridgeId || req.params.bridge_id;
+    if (!bridge_id) {
+      return res.status(400).json({ message: 'Bridge ID is required' });
+    }
+    
+    const user_id = req.user_id;
+    const original_role_name = req.role_name;
+    const org_id = req.org_id;
+    
+    const access_role = await getAgentAccessRole(user_id, org_id, bridge_id, original_role_name);
+    req.access_role = access_role;
+    
+    return next();
+  } catch (err) {
+    console.error("Error in checkAgentAccessMiddleware:", err);
+    // On error, fallback to original role_name
+    req.access_role = req.role_name || null;
+    return next();
+  }
+};
+
+/**
+ * Middleware to check if user has 'owner' role (editor access) for write operations.
+ * Only allows 'owner' role to proceed, others get 403 error.
+ * Note: The role system uses 'owner', 'member', 'viewer'. 'owner' role has permissions
+ * for create_bridge, update_bridge, clone_agent, delete operations.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const requireOwnerRole = async (req, res, next) => {
+  try {
+    const role_name = req.role_name;
+    
+    // Check if role is 'owner' (has editor/administrative access)
+    if (role_name === 'viewer') {
+      return res.status(403).json({ 
+        success: false,
+        message: "You don't have access to use this route" 
+      });
+    }
+    
+    return next();
+  } catch (err) {
+    console.error("Error in requireOwnerRole:", err);
+    return res.status(403).json({ 
+      success: false,
+      message: "You don't have access to use this route" 
+    });
+  }
+};
+
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, loginAuth, checkAgentAccessMiddleware, getAgentAccessRole, requireOwnerRole };
