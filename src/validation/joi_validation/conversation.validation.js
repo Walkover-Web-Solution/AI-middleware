@@ -71,7 +71,7 @@ const getAllSubThreadsController = {
 
 const deleteBridges = {
     params: Joi.object().keys({
-        bridge_id: Joi.objectId().required(),
+        agent_id: Joi.objectId().required(),
     }).unknown(true),
     body: Joi.object().keys({
         org_id: Joi.objectId(),

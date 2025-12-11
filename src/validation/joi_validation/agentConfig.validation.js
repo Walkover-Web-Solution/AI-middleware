@@ -89,9 +89,9 @@ const updateBridgeSchema = Joi.object({
 }).unknown(true); // Allow additional fields
 
 const bridgeIdParamSchema = Joi.object({
-    bridgeId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-        'string.pattern.base': 'bridgeId must be a valid MongoDB ObjectId',
-        'any.required': 'bridgeId is required'
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+        'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+        'any.required': 'agent_id is required'
     }),
     version_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional()
 }).unknown(true);
@@ -103,9 +103,9 @@ const modelNameParamSchema = Joi.object({
 }).unknown(true);
 
 const cloneAgentSchema = Joi.object({
-    bridge_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-        'string.pattern.base': 'bridge_id must be a valid MongoDB ObjectId',
-        'any.required': 'bridge_id is required'
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+        'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+        'any.required': 'agent_id is required'
     }),
     to_shift_org_id: Joi.alternatives().try(
         Joi.string(),

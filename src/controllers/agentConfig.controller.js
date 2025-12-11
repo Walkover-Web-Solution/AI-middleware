@@ -497,10 +497,10 @@ const getAgentController = async (req, res, next) => {
             req.statusCode = 400;
             return next();
         }
-        const { bridgeId } = value;
+        const { agent_id } = value;
         const org_id = req.profile.org.id;
 
-        const agent = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id);
+        const agent = await ConfigurationServices.getAgentsWithTools(agent_id, org_id);
 
         if (!agent.bridges) {
             res.locals = { success: false, message: "Agent not found" };

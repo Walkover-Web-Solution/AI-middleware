@@ -8,14 +8,14 @@ const router = express.Router();
 
 router.get('/', middleware, agentConfigController.getAllAgentController);
 
-router.get('/:bridgeId', middleware, checkAgentAccessMiddleware, agentConfigController.getAgentController);
+router.get('/:agent_id', middleware, checkAgentAccessMiddleware, agentConfigController.getAgentController);
 
 router.post('/', middleware, requireAdminRole, agentConfigController.createAgentController);
 
-router.put('/:bridge_id', middleware, requireAdminRole, agentConfigController.updateAgentController);
+router.put('/:agent_id', middleware, requireAdminRole, agentConfigController.updateAgentController);
 
 router.post('/clone', middleware, requireAdminRole, agentConfigController.cloneAgentController);
 
-router.delete('/:bridge_id', middleware, requireAdminRole, validate(conversationValidation.deleteBridges), agentConfigController.deleteAgentController);
+router.delete('/:agent_id', middleware, requireAdminRole, validate(conversationValidation.deleteBridges), agentConfigController.deleteAgentController);
 
 export default router;

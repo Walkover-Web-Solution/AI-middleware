@@ -393,26 +393,26 @@ const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name
 /**
  * Middleware to check and update user's role_name based on agent-specific permissions.
  * Stores the result in req.access_role.
- * Reads bridge_id from req.params.bridgeId or req.params.bridge_id
- * 
+ * Reads agent_id from req.params.agent_id, req.params.bridgeId or req.params.bridge_id
+ *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
 const checkAgentAccessMiddleware = async (req, res, next) => {
   try {
-    const bridge_id = req.params.bridgeId || req.params.bridge_id;
-    if (!bridge_id) {
-      return res.status(400).json({ message: 'Bridge ID is required' });
+    const agent_id = req.params.agent_id || req.params.bridgeId || req.params.bridge_id;
+    if (!agent_id) {
+      return res.status(400).json({ message: 'Agent ID is required' });
     }
-    
+
     const user_id = req.user_id;
     const original_role_name = req.role_name;
     const org_id = req.org_id;
-    
-    const access_role = await getAgentAccessRole(user_id, org_id, bridge_id, original_role_name);
+
+    const access_role = await getAgentAccessRole(user_id, org_id, agent_id, original_role_name);
     req.access_role = access_role;
-    
+
     return next();
   } catch (err) {
     console.error("Error in checkAgentAccessMiddleware:", err);
