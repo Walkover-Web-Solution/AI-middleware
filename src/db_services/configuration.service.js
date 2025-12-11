@@ -1020,9 +1020,22 @@ const updateBridge = async (bridge_id, update_fields, version_id = null) => {
   const model = version_id ? versionModel : configurationModel;
   const id_to_use = version_id ? version_id : bridge_id;
   const result = await model.findOneAndUpdate({ _id: id_to_use }, { $set: update_fields }, { new: true });
+  
+  const keys_to_delete=[]
+   keys_to_delete.push(`${redis_keys.bridge_data_with_tools_}${version_id || bridge_id}`);
+   keys_to_delete.push(`${redis_keys.get_bridge_data_}${version_id || bridge_id}`);
+   keys_to_delete.push(`${redis_keys.ui_bridge_data_with_tools_}${version_id || bridge_id}`);
 
-  const cacheKey = `${version_id || bridge_id}`;
-  await deleteInCache(`${redis_keys.bridge_data_with_tools_}${cacheKey}`);
+   
+  
+   if (result && result.parent_id) {
+     keys_to_delete.push(`${redis_keys.ui_bridge_data_with_tools_}${result.parent_id}`);
+     keys_to_delete.push(`${redis_keys.bridge_data_with_tools_}${result.parent_id}`);
+     keys_to_delete.push(`${redis_keys.get_bridge_data_}${result.parent_id}`);
+   }
+   
+   await deleteInCache(keys_to_delete);
+
 
   return { result };
 };
@@ -1030,7 +1043,7 @@ const updateBridge = async (bridge_id, update_fields, version_id = null) => {
 
 const getBridgesWithTools = async (bridge_id, org_id, version_id = null) => {
   try {
-    const cacheKey = `${redis_keys.bridge_data_with_tools_}${version_id || bridge_id}`;
+    const cacheKey = `${redis_keys.ui_bridge_data_with_tools_}${version_id || bridge_id}`;
     const cachedData = await findInCache(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
