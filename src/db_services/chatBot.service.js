@@ -50,40 +50,8 @@ const getOne = async (botId) => {
   }
 };
 
-const getChatBotConfig = async (botId) => {
-  try {
-    const chatbot = await ChatBotModel.findById(botId).select({ 'config': 1, 'orgId': 1 });
-    if (!chatbot) {
-      return { success: false, error: "Chatbot not found" };
-    }
-    return chatbot;
-  } catch (error) {
-    console.log("Error in fetching chatbot config:", error);
-    return { success: false, error: "Failed to retrieve chatbot config" };
-  }
-};
-
-const updateChatbotConfig = async (botId, config) => {
-  try {
-    const chatBotData = await ChatBotModel.findByIdAndUpdate(
-      { _id: botId },
-      { $set: { config: config } },
-      { new: true }
-    );
-    if (!chatBotData) {
-      return { success: false, error: "Chatbot not found" };
-    }
-    return { success: true, chatbotData: chatBotData };
-  } catch (error) {
-    console.log("Error in updating chatbot config:", error);
-    return { success: false, error: error.message || "Failed to update chatbot config" };
-  }
-};
-
 export default {
   create,
   getAll,
-  getOne,
-  getChatBotConfig,
-  updateChatbotConfig
+  getOne
 };
