@@ -177,20 +177,25 @@ const updateAgentController = async (req, res, next) => {
     // Authorization check: Check users array from bridge configuration (not version data)
     // If version_id is present, check parent bridge's users array
     // If users array exists and user_id is not present, deny access
-    let usersArray = bridge.users;
-    if (version_id && parent_id) {
-        // Fetch only users array from parent bridge
-        usersArray = await ConfigurationServices.getBridgeUsers(parent_id, org_id);
-    }
+    // Admin role bypasses this check
+    const current_role = req.role_name;
     
-    if (usersArray && Array.isArray(usersArray)) {
-        const current_user_id = req.user_id;
-        if (current_user_id) {
-            const user_authorized = usersArray.some(u => String(u) === current_user_id);
-            if (!user_authorized) {
-                res.locals = { success: false, message: "you are not authorized to update the agent" };
-                req.statusCode = 403;
-                return next();
+    if (current_role !== 'admin') {
+        let usersArray = bridge.users;
+        if (version_id && parent_id) {
+            // Fetch only users array from parent bridge
+            usersArray = await ConfigurationServices.getBridgeUsers(parent_id, org_id);
+        }
+        
+        if (usersArray && Array.isArray(usersArray)) {
+            const current_user_id = req.user_id;
+            if (current_user_id) {
+                const user_authorized = usersArray.some(u => String(u) === current_user_id);
+                if (!user_authorized) {
+                    res.locals = { success: false, message: "you are not authorized to update the agent" };
+                    req.statusCode = 403;
+                    return next();
+                }
             }
         }
     }

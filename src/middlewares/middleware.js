@@ -13,17 +13,16 @@ const ROLE_PERMISSIONS = {
   viewer: [
     'get_agent'
   ],
-  member: [
+  editor: [
     'get_agent',
     'create_agent'
     // 'delete_agent',
     // 'update_agent'
   ],
-  owner: [
+  admin: [
     'get_agent',
     'create_agent',
-    'delete_agent',
-    'update_agent'
+    'clone_agent'
   ]
 };
 
@@ -31,13 +30,13 @@ const ROLE_PERMISSIONS = {
  * Determine user role based on their permissions.
  * 
  * Logic:
- * 1. Check if user has all permissions from 'owner' role -> return 'owner'
- * 2. Check if user has all permissions from 'member' role -> return 'member'
+ * 1. Check if user has all permissions from 'admin' role -> return 'admin'
+ * 2. Check if user has all permissions from 'editor' role -> return 'editor'
  * 3. Check if user has all permissions from 'viewer' role -> return 'viewer'
  * 4. If no match, return 'viewer' as default
  * 
  * @param {Array} userPermissions - List of permission strings from JWT token
- * @returns {string} Role name ('owner', 'member', or 'viewer')
+ * @returns {string} Role name ('admin', 'editor', or 'viewer')
  */
 const determineRoleFromPermissions = (userPermissions) => {
   if (!userPermissions || !Array.isArray(userPermissions)) {
@@ -47,16 +46,16 @@ const determineRoleFromPermissions = (userPermissions) => {
   // Convert to set for faster lookup
   const userPermsSet = new Set(userPermissions);
   
-  // Check owner first (highest privilege)
-  const ownerPermsSet = new Set(ROLE_PERMISSIONS.owner);
-  if ([...ownerPermsSet].every(perm => userPermsSet.has(perm))) {
-    return 'owner';
+  // Check admin first (highest privilege)
+  const adminPermsSet = new Set(ROLE_PERMISSIONS.admin);
+  if ([...adminPermsSet].every(perm => userPermsSet.has(perm))) {
+    return 'admin';
   }
   
-  // Check member
-  const memberPermsSet = new Set(ROLE_PERMISSIONS.member);
-  if ([...memberPermsSet].every(perm => userPermsSet.has(perm))) {
-    return 'member';
+  // Check editor
+  const editorPermsSet = new Set(ROLE_PERMISSIONS.editor);
+  if ([...editorPermsSet].every(perm => userPermsSet.has(perm))) {
+    return 'editor';
   }
   
   // Check viewer
@@ -316,8 +315,8 @@ const loginAuth = async (req, res, next) => {
  * Helper function to get access role for a specific bridge.
  * 
  * Logic:
- * 1. If original_role_name is 'owner' -> return 'owner' (no DB check needed)
- * 2. If 'users' array exists in configuration and contains user_id -> return 'member'
+ * 1. If original_role_name is 'admin' -> return 'admin' (no DB check needed)
+ * 2. If 'users' array exists in configuration and contains user_id -> return 'editor'
  * 3. If 'users' array doesn't exist -> return original_role_name
  * 4. If 'users' array exists but doesn't contain user_id -> return 'viewer'
  * 
@@ -325,13 +324,13 @@ const loginAuth = async (req, res, next) => {
  * @param {string} org_id - Organization ID
  * @param {string} bridge_id - Bridge ID
  * @param {string} original_role_name - Original role name from JWT
- * @returns {Promise<string>} The access role ('owner', 'member', 'viewer', or original_role_name)
+ * @returns {Promise<string>} The access role ('admin', 'editor', 'viewer', or original_role_name)
  */
 const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name = null) => {
   try {
-    // If user is owner, return 'owner' immediately without checking DB
-    if (original_role_name === 'owner') {
-      return 'owner';
+    // If user is admin, return 'admin' immediately without checking DB
+    if (original_role_name === 'admin') {
+      return 'admin';
     }
     
     if (!user_id) {
@@ -373,8 +372,8 @@ const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name
       const user_found = users_array.some(u => u.toString() === user_id_str);
       
       if (user_found) {
-        // User found in array, return 'member'
-        return 'member';
+        // User found in array, return 'editor'
+        return 'editor';
       } else {
         // User not found in array, return 'viewer'
         return 'viewer';
@@ -424,20 +423,20 @@ const checkAgentAccessMiddleware = async (req, res, next) => {
 };
 
 /**
- * Middleware to check if user has 'owner' role (editor access) for write operations.
- * Only allows 'owner' role to proceed, others get 403 error.
- * Note: The role system uses 'owner', 'member', 'viewer'. 'owner' role has permissions
+ * Middleware to check if user has 'admin' role (administrative access) for write operations.
+ * Only allows 'admin' role to proceed, others get 403 error.
+ * Note: The role system uses 'admin', 'editor', 'viewer'. 'admin' role has permissions
  * for create_bridge, update_bridge, clone_agent, delete operations.
  * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
-const requireOwnerRole = async (req, res, next) => {
+const requireAdminRole = async (req, res, next) => {
   try {
     const role_name = req.role_name;
     
-    // Check if role is 'owner' (has editor/administrative access)
+    // Check if role is 'admin' (has administrative access)
     if (role_name === 'viewer') {
       return res.status(403).json({ 
         success: false,
@@ -447,7 +446,7 @@ const requireOwnerRole = async (req, res, next) => {
     
     return next();
   } catch (err) {
-    console.error("Error in requireOwnerRole:", err);
+    console.error("Error in requireAdminRole:", err);
     return res.status(403).json({ 
       success: false,
       message: "You don't have access to use this route" 
@@ -455,4 +454,4 @@ const requireOwnerRole = async (req, res, next) => {
   }
 };
 
-export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, loginAuth, checkAgentAccessMiddleware, getAgentAccessRole, requireOwnerRole };
+export { middleware, combine_middleware, EmbeddecodeToken, InternalAuth, loginAuth, checkAgentAccessMiddleware, getAgentAccessRole, requireAdminRole };
