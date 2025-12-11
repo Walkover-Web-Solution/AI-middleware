@@ -27,7 +27,7 @@ const createVersion = async (req, res, next) => {
     const { version_id, version_description } = req.body;
     const org_id = req.profile.org.id;
 
-    const bridgeData = await ConfigurationServices.getBridgesWithoutTools(null, org_id, version_id);
+    const bridgeData = await ConfigurationServices.getAgentsWithoutTools(null, org_id, version_id);
 
     if (bridgeData.bridges && bridgeData.bridges.deletedAt) {
         res.locals = { success: false, message: "Cannot create version for a deleted bridge" };

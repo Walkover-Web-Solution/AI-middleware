@@ -10,7 +10,7 @@ const optimizePromptController = async (req, res, next) => {
         const { bridge_id } = req.params;
         const org_id = req.profile.org.id;
 
-        const result = await ConfigurationServices.getBridges(bridge_id, org_id, version_id);
+        const result = await ConfigurationServices.getAgents(bridge_id, org_id, version_id);
         const bridge = result.bridges;
         const prompt = bridge.configuration?.prompt || "";
 
@@ -50,7 +50,7 @@ const generateSummary = async (req, res, next) => {
         const { version_id } = req.body;
         const org_id = req.profile.org.id;
 
-        const result = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+        const result = await ConfigurationServices.getAgentsWithTools(null, org_id, version_id);
         const bridgeData = result.bridges;
 
         if (!bridgeData) {
@@ -134,7 +134,7 @@ const generateAdditionalTestCases = async (req, res, next) => {
         const { bridge_id } = req.params;
         const org_id = req.profile.org.id;
 
-        const result = await ConfigurationServices.getBridgesWithTools(bridge_id, org_id, version_id);
+        const result = await ConfigurationServices.getAgentsWithTools(bridge_id, org_id, version_id);
         const bridgeData = result.bridges;
 
         if (!bridgeData) {

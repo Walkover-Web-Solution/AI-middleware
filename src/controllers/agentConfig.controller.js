@@ -34,7 +34,7 @@ const createAgentController = async (req, res, next) => {
         const folder_id = req.folder_id || null;
         const folder_data = await folderDbService.getFolderData(folder_id);
         const user_id = req.profile.user.id;
-        const all_agent = await ConfigurationServices.getBridgesByUserId(org_id); // Assuming this returns all agents for org
+        const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
 
         let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
         let name = null;
@@ -123,7 +123,7 @@ const createAgentController = async (req, res, next) => {
         const agent_limit = agents.bridge_limit || 0;
         const agent_usage = agents.bridge_usage || 0;
 
-        const result = await ConfigurationServices.createBridge({
+        const result = await ConfigurationServices.createAgent({
             configuration: model_data,
             name: name,
             slugName: slugName,
@@ -142,7 +142,7 @@ const createAgentController = async (req, res, next) => {
 
         const create_version = await bridgeVersionDbService.createBridgeVersion(result.bridge);
         const update_fields = { versions: [create_version._id.toString()] };
-        const updated_agent_result = await ConfigurationServices.updateBridge(result.bridge._id.toString(), update_fields);
+        const updated_agent_result = await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
 
         res.locals = {
             success: true,
@@ -165,7 +165,7 @@ const updateAgentController = async (req, res, next) => {
     const body = req.body;
     const org_id = req.profile.org.id;
     const user_id = req.profile.user.id;
-    const agentData = await ConfigurationServices.getBridgesWithTools(agent_id, org_id, version_id);
+    const agentData = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
     if (!agentData.bridges) {
         res.locals = { success: false, message: "Agent not found" };
         req.statusCode = 404;
@@ -184,7 +184,7 @@ const updateAgentController = async (req, res, next) => {
         let usersArray = agent.users;
         if (version_id && parent_id) {
             // Fetch only users array from parent agent
-            usersArray = await ConfigurationServices.getBridgeUsers(parent_id, org_id);
+            usersArray = await ConfigurationServices.getAgentUsers(parent_id, org_id);
         }
         
         if (usersArray && Array.isArray(usersArray)) {
@@ -326,7 +326,7 @@ const updateAgentController = async (req, res, next) => {
                 if (!function_ids.includes(function_id)) {
                     function_ids.push(function_id);
                     update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
-                    await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 1);
+                    await ConfigurationServices.updateAgentIdsInApiCalls(function_id, target_id, 1);
                 }
             } else {
                 if (function_name && current_variables_path[function_name]) {
@@ -336,7 +336,7 @@ const updateAgentController = async (req, res, next) => {
                 if (function_ids.includes(function_id)) {
                     function_ids = function_ids.filter(fid => fid.toString() !== function_id);
                     update_fields.function_ids = function_ids.map(fid => new ObjectId(fid));
-                    await ConfigurationServices.updateBridgeIdsInApiCalls(function_id, target_id, 0);
+                    await ConfigurationServices.updateAgentIdsInApiCalls(function_id, target_id, 0);
                 }
             }
         }
@@ -347,7 +347,7 @@ const updateAgentController = async (req, res, next) => {
     if (body.user_id !== undefined && typeof body.add_user_id === 'boolean' && agent_id && !version_id) {
         try {
             // Get current agent to check if users array exists
-            const currentAgentData = await ConfigurationServices.getBridges(agent_id, org_id, null);
+            const currentAgentData = await ConfigurationServices.getAgents(agent_id, org_id, null);
             if (currentAgentData && currentAgentData.bridges) {
                 const user_id_to_update = body.user_id;
                 const add_user = body.add_user_id;
@@ -416,8 +416,8 @@ const updateAgentController = async (req, res, next) => {
         }
     }
 
-    await ConfigurationServices.updateBridge(agent_id, update_fields, version_id);
-    const updatedAgent = await ConfigurationServices.getBridgesWithTools(agent_id, org_id, version_id);
+    await ConfigurationServices.updateAgent(agent_id, update_fields, version_id);
+    const updatedAgent = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
 
     await addBulkUserEntries(user_history);
 
@@ -452,7 +452,7 @@ const getAgentsAndVersionsByModelController = async (req, res, next) => {
             return next();
         }
         const { modelName } = value;
-        const result = await ConfigurationServices.getBridgesAndVersionsByModel(modelName);
+        const result = await ConfigurationServices.getAgentsAndVersionsByModel(modelName);
         res.locals = {
             success: true,
             message: "Fetched models and agents they are used in successfully.",
@@ -500,7 +500,7 @@ const getAgentController = async (req, res, next) => {
         const { bridgeId } = value;
         const org_id = req.profile.org.id;
 
-        const agent = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id);
+        const agent = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id);
 
         if (!agent.bridges) {
             res.locals = { success: false, message: "Agent not found" };
@@ -555,7 +555,7 @@ const getAllAgentController = async (req, res, next) => {
         const user_id = req.profile.user.id || null;
         const isEmbedUser = req.embed;
 
-        const agents = await ConfigurationServices.getAllBridgesInOrg(org_id, folder_id, user_id, isEmbedUser);
+        const agents = await ConfigurationServices.getAllAgentsInOrg(org_id, folder_id, user_id, isEmbedUser);
 
         // Get role_name from middleware (first layer check)
         const role_name = req.role_name || null;
@@ -638,7 +638,7 @@ const deleteAgentController = async (req, res, next) => {
 
         if (restore) {
             // Restore the agent
-            result = await ConfigurationServices.restoreBridge(agent_id, org_id);
+            result = await ConfigurationServices.restoreAgent(agent_id, org_id);
 
             // Log restore operation for audit purposes
             if (result.success) {
@@ -646,7 +646,7 @@ const deleteAgentController = async (req, res, next) => {
             }
         } else {
             // Soft delete the agent
-            result = await ConfigurationServices.deleteBridge(agent_id, org_id);
+            result = await ConfigurationServices.deleteAgent(agent_id, org_id);
 
             // Log soft delete operation for audit purposes
             if (result.success) {

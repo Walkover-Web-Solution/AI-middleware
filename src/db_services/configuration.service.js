@@ -11,7 +11,7 @@ import { redis_keys } from "../configs/constant.js";
 import apikeyCredentialsModel from "../mongoModel/Api.model.js";
 import conversationService from "./conversation.service.js";
 
-const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = null, depth = 0) => {
+const cloneAgentToOrg = async (agent_id, to_shift_org_id, cloned_agents_map = null, depth = 0) => {
   try {
     // Initialize cloned_agents_map for tracking and prevent infinite loops
     if (cloned_agents_map === null) {
@@ -20,19 +20,19 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
 
     // Prevent infinite recursion
     if (depth > 10) {
-      console.warn(`Maximum recursion depth reached for bridge_id: ${bridge_id}`);
+      console.warn(`Maximum recursion depth reached for agent_id: ${agent_id}`);
       return null;
     }
 
     // Check if this agent was already cloned
-    if (bridge_id in cloned_agents_map) {
-      return cloned_agents_map[bridge_id];
+    if (agent_id in cloned_agents_map) {
+      return cloned_agents_map[agent_id];
     }
 
     // Step 1: Get the original configuration
-    const original_config = await configurationModel.findOne({ _id: new ObjectId(bridge_id) }).lean();
+    const original_config = await configurationModel.findOne({ _id: new ObjectId(agent_id) }).lean();
     if (!original_config) {
-      throw new Error("Bridge not found");
+      throw new Error("Agent not found");
     }
 
     // Step 2: Prepare new configuration data
@@ -45,12 +45,12 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
 
     // Step 3: Insert new configuration
     const new_config_result = await new configurationModel(new_config).save();
-    const new_bridge_id = new_config_result._id;
+    const new_agent_id = new_config_result._id;
 
     // Track this cloned agent to prevent infinite loops
-    cloned_agents_map[bridge_id] = {
-      new_bridge_id: new_bridge_id.toString(),
-      original_bridge_id: bridge_id
+    cloned_agents_map[agent_id] = {
+      new_bridge_id: new_agent_id.toString(),
+      original_bridge_id: agent_id
     };
 
     // Step 4: Clone all versions
@@ -64,7 +64,7 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
           delete new_version._id;
           delete new_version.apikey_object_id;
           new_version.org_id = to_shift_org_id;
-          new_version.parent_id = new_bridge_id.toString();
+          new_version.parent_id = new_agent_id.toString();
 
           const new_version_result = await new versionModel(new_version).save();
           const new_version_id = new_version_result._id.toString();
@@ -80,7 +80,7 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
       update_data.published_version_id = version_id_mapping[original_config.published_version_id];
     }
 
-    await configurationModel.updateOne({ _id: new_bridge_id }, { $set: update_data });
+    await configurationModel.updateOne({ _id: new_agent_id }, { $set: update_data });
 
     // Step 6: Clone related API calls (functions) using external API
     const cloned_function_ids = [];
@@ -114,7 +114,7 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
               delete new_api_call._id;
               new_api_call.org_id = to_shift_org_id;
               new_api_call.function_name = duplicate_data.data.id;
-              new_api_call.bridge_ids = [new_bridge_id.toString()];
+              new_api_call.bridge_ids = [new_agent_id.toString()];
               new_api_call.updated_at = new Date();
 
               const new_api_call_result = await new apiCallModel(new_api_call).save();
@@ -128,7 +128,7 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
             const new_api_call = { ...original_api_call };
             delete new_api_call._id;
             new_api_call.org_id = to_shift_org_id;
-            new_api_call.bridge_ids = [new_bridge_id.toString()];
+            new_api_call.bridge_ids = [new_agent_id.toString()];
             new_api_call.updated_at = new Date();
 
             const new_api_call_result = await new apiCallModel(new_api_call).save();
@@ -141,7 +141,7 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
     // Step 7: Update configuration and versions with cloned function IDs
     if (cloned_function_ids.length > 0) {
       await configurationModel.updateOne(
-        { _id: new_bridge_id },
+        { _id: new_agent_id },
         { $set: { function_ids: cloned_function_ids } }
       );
 
@@ -159,11 +159,11 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
 
     if (original_config.connected_agents) {
       for (const [agent_name, agent_info] of Object.entries(original_config.connected_agents)) {
-        const connected_bridge_id = agent_info.bridge_id;
-        if (connected_bridge_id) {
+        const connected_agent_id = agent_info.bridge_id;
+        if (connected_agent_id) {
           try {
             const connected_result = await cloneAgentToOrg(
-              connected_bridge_id,
+              connected_agent_id,
               to_shift_org_id,
               cloned_agents_map,
               depth + 1
@@ -175,12 +175,12 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
               };
               connected_agents_info.push({
                 agent_name: agent_name,
-                original_bridge_id: connected_bridge_id,
+                original_bridge_id: connected_agent_id,
                 new_bridge_id: connected_result.new_bridge_id
               });
             }
           } catch (e) {
-            console.error(`Error cloning connected agent ${agent_name} (bridge_id: ${connected_bridge_id}):`, e);
+            console.error(`Error cloning connected agent ${agent_name} (agent_id: ${connected_agent_id}):`, e);
           }
         }
       }
@@ -208,13 +208,13 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
 
     if (Object.keys(cloned_connected_agents).length > 0) {
       await configurationModel.updateOne(
-        { _id: new_bridge_id },
+        { _id: new_agent_id },
         { $set: { connected_agents: cloned_connected_agents } }
       );
     }
 
     // Step 9: Get the final cloned configuration
-    const cloned_config = await configurationModel.findOne({ _id: new_bridge_id }).lean();
+    const cloned_config = await configurationModel.findOne({ _id: new_agent_id }).lean();
     cloned_config._id = cloned_config._id.toString();
 
     if (cloned_config.function_ids) {
@@ -225,8 +225,8 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
       success: true,
       message: 'Agent cloned successfully',
       cloned_agent: cloned_config,
-      original_bridge_id: bridge_id,
-      new_bridge_id: new_bridge_id.toString(),
+      original_bridge_id: agent_id,
+      new_bridge_id: new_agent_id.toString(),
       cloned_versions: cloned_version_ids,
       cloned_functions: cloned_function_ids,
       connected_agents: connected_agents_info,
@@ -239,10 +239,10 @@ const cloneAgentToOrg = async (bridge_id, to_shift_org_id, cloned_agents_map = n
   }
 };
 
-const getBridgesWithSelectedData = async bridge_id => {
+const getAgentsWithSelectedData = async agent_id => {
   try {
-    const bridges = await configurationModel.findOne({
-      _id: bridge_id
+    const agents = await configurationModel.findOne({
+      _id: agent_id
     }, {
       "is_api_call": 0,
       "created_at": 0,
@@ -252,7 +252,7 @@ const getBridgesWithSelectedData = async bridge_id => {
     }).lean();
     return {
       success: true,
-      bridges: bridges
+      bridges: agents
     };
   } catch (error) {
     console.error("error:", error);
@@ -263,22 +263,22 @@ const getBridgesWithSelectedData = async bridge_id => {
   }
 };
 
-const deleteBridge = async (bridge_id, org_id) => {
+const deleteAgent = async (agent_id, org_id) => {
   try {
-    // First, find the bridge to get its data including versions
-    const bridge = await configurationModel.findOne({
-      _id: new ObjectId(bridge_id),
+    // First, find the agent to get its data including versions
+    const agent = await configurationModel.findOne({
+      _id: new ObjectId(agent_id),
       org_id: org_id
-      // Remove deletedAt filter to allow re-processing of already soft-deleted bridges
+      // Remove deletedAt filter to allow re-processing of already soft-deleted agents
     });
-    if (!bridge) {
+    if (!agent) {
       return {
         success: false,
-        error: "Bridge not found"
+        error: "Agent not found"
       };
     }
 
-    // Use aggregation pipeline to find connected bridges from both versions and configurations
+    // Use aggregation pipeline to find connected agents from both versions and configurations
     const [connectedFromVersions, connectedFromConfigurations] = await Promise.all([
       // Check versions for connected_agents
       versionModel.aggregate([
@@ -295,7 +295,7 @@ const deleteBridge = async (bridge_id, org_id) => {
                 $map: {
                   input: { $objectToArray: "$connected_agents" },
                   as: "agent",
-                  in: { $eq: ["$$agent.v.bridge_id", bridge_id] }
+                  in: { $eq: ["$$agent.v.bridge_id", agent_id] }
                 }
               }
             },
@@ -310,7 +310,7 @@ const deleteBridge = async (bridge_id, org_id) => {
         }
       ]),
 
-      // Check configurations (bridges) for connected_agents
+      // Check configurations (agents) for connected_agents
       configurationModel.aggregate([
         {
           $match: {
@@ -325,7 +325,7 @@ const deleteBridge = async (bridge_id, org_id) => {
                 $map: {
                   input: { $objectToArray: "$connected_agents" },
                   as: "agent",
-                  in: { $eq: ["$$agent.v.bridge_id", bridge_id] }
+                  in: { $eq: ["$$agent.v.bridge_id", agent_id] }
                 }
               }
             }
@@ -340,41 +340,41 @@ const deleteBridge = async (bridge_id, org_id) => {
       ])
     ]);
 
-    // Combine and get unique bridge IDs
-    const allConnectedBridgeIds = [
+    // Combine and get unique agent IDs
+    const allConnectedAgentIds = [
       ...connectedFromVersions.map(item => item._id),
       ...connectedFromConfigurations.map(item => item._id)
     ];
 
-    const uniqueBridgeIds = [...new Set(allConnectedBridgeIds.map(id => id.toString()))];
+    const uniqueAgentIds = [...new Set(allConnectedAgentIds.map(id => id.toString()))];
 
-    if (uniqueBridgeIds.length > 0) {
-      // Get bridge names for all connected bridges
-      const connectedBridges = await configurationModel.find({
-        _id: { $in: uniqueBridgeIds.map(id => new ObjectId(id)) },
+    if (uniqueAgentIds.length > 0) {
+      // Get agent names for all connected agents
+      const connectedAgents = await configurationModel.find({
+        _id: { $in: uniqueAgentIds.map(id => new ObjectId(id)) },
         org_id: org_id
       }).select({ _id: 1, name: 1 }).lean();
 
-      const bridgeNames = connectedBridges.map(bridge => bridge.name || `Bridge ${bridge._id}`);
+      const agentNames = connectedAgents.map(agent => agent.name || `Agent ${agent._id}`);
 
       return {
         success: false,
-        error: `Cannot delete bridge. It is connected to the following ${bridgeNames.length === 1 ? 'bridge' : 'bridges'}: ${bridgeNames.join(', ')}`
+        error: `Cannot delete agent. It is connected to the following ${agentNames.length === 1 ? 'agent' : 'agents'}: ${agentNames.join(', ')}`
       };
     }
 
     const currentDate = new Date();
-    let bridgeAlreadyDeleted = false;
+    let agentAlreadyDeleted = false;
 
-    // Check if bridge is already soft deleted
-    if (bridge.deletedAt) {
-      bridgeAlreadyDeleted = true;
+    // Check if agent is already soft deleted
+    if (agent.deletedAt) {
+      agentAlreadyDeleted = true;
     }
 
-    // Soft delete the main bridge by setting deletedAt (or update the deletedAt timestamp)
-    const deletedBridge = await configurationModel.findOneAndUpdate(
+    // Soft delete the main agent by setting deletedAt (or update the deletedAt timestamp)
+    const deletedAgent = await configurationModel.findOneAndUpdate(
       {
-        _id: bridge_id,
+        _id: agent_id,
         org_id: org_id
       },
       {
@@ -384,11 +384,11 @@ const deleteBridge = async (bridge_id, org_id) => {
       },
       { new: true }
     );
-    // Find and soft delete all versions associated with this bridge using versions array
+    // Find and soft delete all versions associated with this agent using versions array
     let deletedVersions = { modifiedCount: 0 };
 
-    // Use deletedBridge.versions as it contains the most up-to-date data
-    const versionsToDelete = deletedBridge.versions || bridge.versions;
+    // Use deletedAgent.versions as it contains the most up-to-date data
+    const versionsToDelete = deletedAgent.versions || agent.versions;
 
     if (versionsToDelete && versionsToDelete.length > 0) {
 
@@ -407,9 +407,9 @@ const deleteBridge = async (bridge_id, org_id) => {
         }
       );
     }
-    const statusMessage = bridgeAlreadyDeleted
-      ? `Bridge ID: ${bridge_id} was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
-      : `Bridge ID: ${bridge_id} and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
+    const statusMessage = agentAlreadyDeleted
+      ? `Agent ID: ${agent_id} was already soft deleted, updated timestamp. ${deletedVersions.modifiedCount} versions marked for deletion.`
+      : `Agent ID: ${agent_id} and ${deletedVersions.modifiedCount} versions marked for deletion. They will be permanently deleted after 30 days.`;
 
     return {
       success: true,
@@ -424,26 +424,26 @@ const deleteBridge = async (bridge_id, org_id) => {
   }
 };
 
-const restoreBridge = async (bridge_id, org_id) => {
+const restoreAgent = async (agent_id, org_id) => {
   try {
-    // First, find the soft-deleted bridge
-    const bridge = await configurationModel.findOne({
-      _id: bridge_id,
+    // First, find the soft-deleted agent
+    const agent = await configurationModel.findOne({
+      _id: agent_id,
       org_id: org_id,
-      deletedAt: { $ne: null } // Only find soft-deleted bridges
+      deletedAt: { $ne: null } // Only find soft-deleted agents
     });
 
-    if (!bridge) {
+    if (!agent) {
       return {
         success: false,
-        error: "Bridge not found or not deleted"
+        error: "Agent not found or not deleted"
       };
     }
 
-    // Restore the main bridge by removing deletedAt
-    const restoredBridge = await configurationModel.findOneAndUpdate(
+    // Restore the main agent by removing deletedAt
+    const restoredAgent = await configurationModel.findOneAndUpdate(
       {
-        _id: bridge_id,
+        _id: agent_id,
         org_id: org_id
       },
       {
@@ -454,11 +454,11 @@ const restoreBridge = async (bridge_id, org_id) => {
       { new: true }
     );
 
-    // Restore all versions associated with this bridge using versions array
+    // Restore all versions associated with this agent using versions array
     let restoredVersions = { modifiedCount: 0 };
 
-    // Use bridge.versions to find versions to restore
-    const versionsToRestore = bridge.versions;
+    // Use agent.versions to find versions to restore
+    const versionsToRestore = agent.versions;
 
     if (versionsToRestore && versionsToRestore.length > 0) {
       // Convert string IDs to ObjectIds if needed
@@ -479,12 +479,12 @@ const restoreBridge = async (bridge_id, org_id) => {
 
     return {
       success: true,
-      bridge: restoredBridge,
+      bridge: restoredAgent,
       restoredVersionsCount: restoredVersions.modifiedCount,
-      message: `Bridge and ${restoredVersions.modifiedCount} versions restored successfully.`
+      message: `Agent and ${restoredVersions.modifiedCount} versions restored successfully.`
     };
   } catch (error) {
-    console.error("restore bridge error:", error);
+    console.error("restore agent error:", error);
     return {
       success: false,
       error: "something went wrong!!"
@@ -507,10 +507,10 @@ const getApiCallById = async apiId => {
     };
   }
 };
-const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId) => {
+const addResponseIdinAgent = async (agentId, orgId, responseId, responseRefId) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({
-      _id: bridgeId
+    const agents = await configurationModel.findOneAndUpdate({
+      _id: agentId
     }, {
       $addToSet: {
         responseIds: responseId
@@ -523,7 +523,7 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
     });
     return {
       success: true,
-      bridges: bridges
+      bridges: agents
     };
   } catch (error) {
     console.log("error:", error);
@@ -534,39 +534,39 @@ const addResponseIdinBridge = async (bridgeId, orgId, responseId, responseRefId)
   }
 };
 
-// add action  or update the previous action in bridge
+// add action  or update the previous action in agent
 
-const addActionInBridge = async (bridgeId, actionId, actionJson, version_id) => {
+const addActionInAgent = async (agentId, actionId, actionJson, version_id) => {
   try {
     const model = version_id ? versionModel : configurationModel;
-    const id_to_use = version_id ? version_id : bridgeId;
+    const id_to_use = version_id ? version_id : agentId;
 
-    const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
+    const agents = await model.findOneAndUpdate({ _id: id_to_use }, {
       $set: {
         [`actions.${actionId}`]: actionJson,
         is_drafted: true
       }
     }, { new: true }).lean();
-    return bridges
+    return agents
 
   } catch (error) {
     throw new Error(error?.message)
   }
 }
 
-// remove action from bridge 
+// remove action from agent 
 
-const removeActionInBridge = async (bridgeId, actionId, version_id) => {
+const removeActionInAgent = async (agentId, actionId, version_id) => {
   try {
     const model = version_id ? versionModel : configurationModel;
-    const id_to_use = version_id ? version_id : bridgeId;
-    const bridges = await model.findOneAndUpdate({ _id: id_to_use }, {
+    const id_to_use = version_id ? version_id : agentId;
+    const agents = await model.findOneAndUpdate({ _id: id_to_use }, {
       $unset: {
         [`actions.${actionId}`]: "",
         is_drafted: true
       }
     }, { new: true }).lean()
-    return bridges
+    return agents
 
   } catch (error) {
     console.log(error)
@@ -574,16 +574,16 @@ const removeActionInBridge = async (bridgeId, actionId, version_id) => {
   }
 }
 
-// get bridge with slugname
+// get agent with slugname
 
-const getBridgeIdBySlugname = async (orgId, slugName) => {
+const getAgentIdBySlugname = async (orgId, slugName) => {
   return await configurationModel.findOne({
     slugName: slugName,
     org_id: orgId
   }).select({ _id: 1, slugName: 1, starterQuestion: 1, IsstarterQuestionEnable: 1 }).lean()
 
 }
-const getBridgeBySlugname = async (orgId, slugName, versionId) => {
+const getAgentBySlugname = async (orgId, slugName, versionId) => {
   try {
     const hello_id = await configurationModel.findOne({
       slugName: slugName,
@@ -610,7 +610,7 @@ const getBridgeBySlugname = async (orgId, slugName, versionId) => {
   }
 };
 
-const getBridgesByUserId = async (orgId, userId, agent_id) => {
+const getAgentsByUserId = async (orgId, userId, agent_id) => {
   try {
     const query = { org_id: orgId };
     if (userId) {
@@ -619,7 +619,7 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
     if (agent_id) {
       query._id = agent_id;
     }
-    const bridges = await configurationModel.find(query, {
+    const agents = await configurationModel.find(query, {
       "_id": 1,
       "name": 1,
       "service": 1,
@@ -630,21 +630,21 @@ const getBridgesByUserId = async (orgId, userId, agent_id) => {
       "variables_state": 1,
       "meta": 1
     });
-    return bridges.map(bridge => bridge._doc);
+    return agents.map(agent => agent._doc);
   } catch (error) {
-    console.error("Error fetching bridges:", error);
+    console.error("Error fetching agents:", error);
     return { success: false, error: "Agent not found!!" }
   }
 };
 
-const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
+const removeResponseIdinAgent = async (agentId, orgId, responseId) => {
   try {
-    const bridges = await configurationModel.findOneAndUpdate({ _id: bridgeId }, {
+    const agents = await configurationModel.findOneAndUpdate({ _id: agentId }, {
       $pull: {
         responseIds: responseId,
       }
     }, { new: true });
-    return { success: true, bridges: bridges };
+    return { success: true, bridges: agents };
   } catch (error) {
     console.log("error:", error);
     return { success: false, error: "something went wrong!!" }
@@ -652,15 +652,15 @@ const removeResponseIdinBridge = async (bridgeId, orgId, responseId) => {
 
 }
 
-const findChatbotOfBridge = async (orgId, bridgeId) => {
+const findChatbotOfAgent = async (orgId, agentId) => {
   try {
-    const bridges = await ChatBotModel.find({
+    const agents = await ChatBotModel.find({
       orgId: orgId,
-      bridge: bridgeId
+      bridge: agentId
     });
     return {
       success: true,
-      bridges: bridges
+      bridges: agents
     };
   } catch (error) {
     console.log("error:", error);
@@ -678,10 +678,10 @@ const gettemplateById = async template_id => {
     return null;
   }
 }
-const getBridges = async (bridge_id, org_id = null, version_id = null) => {
+const getAgents = async (agent_id, org_id = null, version_id = null) => {
   try {
     const model = version_id ? versionModel : configurationModel;
-    const id_to_use = version_id ? version_id : bridge_id;
+    const id_to_use = version_id ? version_id : agent_id;
 
     const pipeline = [
       {
@@ -720,7 +720,7 @@ const getBridges = async (bridge_id, org_id = null, version_id = null) => {
       bridges: result[0]
     };
   } catch (error) {
-    console.error(`Error in getBridges: ${error}`);
+    console.error(`Error in getAgents: ${error}`);
     return {
       success: false,
       error: "something went wrong!!"
@@ -728,23 +728,23 @@ const getBridges = async (bridge_id, org_id = null, version_id = null) => {
   }
 };
 
-const getBridgeNameById = async (bridge_id, org_id) => {
+const getAgentNameById = async (agent_id, org_id) => {
   try {
-    const bridge = await configurationModel.findOne(
-      { _id: bridge_id, org_id: org_id },
+    const agent = await configurationModel.findOne(
+      { _id: agent_id, org_id: org_id },
       { name: 1 }
     ).lean();
-    if (!bridge) {
+    if (!agent) {
       return "";
     }
-    return bridge.name
+    return agent.name
   } catch (error) {
-    console.error("Error fetching bridge name =>", error);
+    console.error("Error fetching agent name =>", error);
     return ""
   }
 };
 
-const getBridgeByUrlSlugname = async (url_slugName) => {
+const getAgentByUrlSlugname = async (url_slugName) => {
   try {
     const hello_id = await configurationModel.findOne({
       "page_config.url_slugname": url_slugName,
@@ -839,43 +839,43 @@ const getAgentsData = async (slugName, userEmail) => {
   });
 };
 
-const getBridgesAndVersionsByModel = async (model_name) => {
+const getAgentsAndVersionsByModel = async (model_name) => {
   try {
-    const bridges = await configurationModel.find(
+    const agents = await configurationModel.find(
       { "configuration.model": model_name },
       { org_id: 1, name: 1, _id: 1, versions: 1 }
     ).lean();
 
-    return bridges.map(bridge => {
-      const { _id, ...rest } = bridge;
+    return agents.map(agent => {
+      const { _id, ...rest } = agent;
       return {
         ...rest,
         bridge_id: _id.toString()
       };
     });
   } catch (error) {
-    console.error(`Error in get_bridges_and_versions_by_model: ${error}`);
+    console.error(`Error in get_agents_and_versions_by_model: ${error}`);
     throw error;
   }
 };
 
-const getBridgesWithoutTools = async (bridge_id, org_id, version_id = null) => {
+const getAgentsWithoutTools = async (agent_id, org_id, version_id = null) => {
   try {
     const model = version_id ? versionModel : configurationModel;
-    const id_to_use = version_id ? version_id : bridge_id;
+    const id_to_use = version_id ? version_id : agent_id;
 
-    const bridge = await model.findOne({ _id: new ObjectId(id_to_use) }).lean();
+    const agent = await model.findOne({ _id: new ObjectId(id_to_use) }).lean();
 
-    if (!bridge) {
-      throw new Error("No matching bridge found");
+    if (!agent) {
+      throw new Error("No matching agent found");
     }
 
     return {
       success: true,
-      bridges: bridge
+      bridges: agent
     };
   } catch (error) {
-    console.error(`Error in getBridgesWithoutTools: ${error}`);
+    console.error(`Error in getAgentsWithoutTools: ${error}`);
     throw error;
   }
 };
@@ -943,12 +943,12 @@ const updateAgents = async (version_id, agents, add = 1) => {
   return data;
 };
 
-const updateBridgeIdsInApiCalls = async (function_id, bridge_id, add = 1) => {
+const updateAgentIdsInApiCalls = async (function_id, agent_id, add = 1) => {
   const to_update = { $set: { status: 1 } };
   if (add === 1) {
-    to_update.$addToSet = { bridge_ids: new ObjectId(bridge_id) };
+    to_update.$addToSet = { bridge_ids: new ObjectId(agent_id) };
   } else {
-    to_update.$pull = { bridge_ids: new ObjectId(bridge_id) };
+    to_update.$pull = { bridge_ids: new ObjectId(agent_id) };
   }
 
   const data = await apiCallModel.findOneAndUpdate(
@@ -960,7 +960,7 @@ const updateBridgeIdsInApiCalls = async (function_id, bridge_id, add = 1) => {
   if (!data) {
     return {
       success: false,
-      error: 'No records updated or bridge not found'
+      error: 'No records updated or agent not found'
     };
   }
 
@@ -1011,37 +1011,37 @@ const updateApikeyCreds = async (version_id, apikey_object_ids) => {
 };
 
 
-const createBridge = async (data) => {
-  const bridge = new configurationModel(data);
-  const result = await bridge.save();
+const createAgent = async (data) => {
+  const agent = new configurationModel(data);
+  const result = await agent.save();
   return { bridge: result };
 };
 
-const updateBridge = async (bridge_id, update_fields, version_id = null) => {
+const updateAgent = async (agent_id, update_fields, version_id = null) => {
   const model = version_id ? versionModel : configurationModel;
-  const id_to_use = version_id ? version_id : bridge_id;
+  const id_to_use = version_id ? version_id : agent_id;
   const result = await model.findOneAndUpdate({ _id: id_to_use }, { $set: update_fields }, { new: true });
 
-  const cacheKey = `${version_id || bridge_id}`;
+  const cacheKey = `${version_id || agent_id}`;
   await deleteInCache(`${redis_keys.bridge_data_with_tools_}${cacheKey}`);
 
   return { result };
 };
 
 
-const getBridgesWithTools = async (bridge_id, org_id, version_id = null) => {
+const getAgentsWithTools = async (agent_id, org_id, version_id = null) => {
   try {
-    const cacheKey = `${redis_keys.bridge_data_with_tools_}${version_id || bridge_id}`;
+    const cacheKey = `${redis_keys.bridge_data_with_tools_}${version_id || agent_id}`;
     const cachedData = await findInCache(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
     }
 
     const model = version_id ? versionModel : configurationModel;
-    const id_to_use = version_id ? version_id : bridge_id;
+    const id_to_use = version_id ? version_id : agent_id;
 
     if (!ObjectId.isValid(id_to_use)) {
-      throw new Error("Invalid Bridge ID provided");
+      throw new Error("Invalid Agent ID provided");
     }
 
     const pipeline = [
@@ -1107,7 +1107,7 @@ const getBridgesWithTools = async (bridge_id, org_id, version_id = null) => {
     const result = await model.aggregate(pipeline);
 
     if (!result || result.length === 0) {
-      throw new Error("No matching bridge found");
+      throw new Error("No matching agent found");
     }
 
     const response = {
@@ -1118,20 +1118,20 @@ const getBridgesWithTools = async (bridge_id, org_id, version_id = null) => {
     await storeInCache(cacheKey, response);
     return response;
   } catch (error) {
-    console.error(`Error in getBridgesWithTools: ${error}`);
+    console.error(`Error in getAgentsWithTools: ${error}`);
     throw error;
   }
 };
 
-const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
-  console.log("getAllBridgesInOrg inputs:", { org_id, folder_id, user_id, isEmbedUser });
+const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
+  console.log("getAllAgentsInOrg inputs:", { org_id, folder_id, user_id, isEmbedUser });
   const query = { org_id: org_id };
   if (folder_id) {
     try {
       if (ObjectId.isValid(folder_id)) {
         query.folder_id = folder_id;
       } else {
-        console.warn("Invalid folder_id passed to getAllBridgesInOrg:", folder_id);
+        console.warn("Invalid folder_id passed to getAllAgentsInOrg:", folder_id);
         // Decide whether to ignore it or return empty
         // For now, let's ignore it to prevent crash if it was causing one (though find shouldn't crash)
       }
@@ -1141,7 +1141,7 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
   }
   if (user_id && isEmbedUser) query.user_id = user_id;
 
-  const bridges = await configurationModel.find(query).select({
+  const agents = await configurationModel.find(query).select({
     _id: 1,
     name: 1,
     service: 1,
@@ -1169,84 +1169,84 @@ const getAllBridgesInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     users: 1
   }).sort({ createdAt: -1 }).lean();
 
-  // Process bridges and fetch user details
-  const processedBridges = await Promise.all(bridges.map(async (bridge) => {
-    bridge._id = bridge._id.toString();
-    bridge.bridge_id = bridge._id; // Alias _id as bridge_id
-    if (bridge.function_ids) {
-      bridge.function_ids = bridge.function_ids.map(id => id.toString());
+  // Process agents and fetch user details
+  const processedAgents = await Promise.all(agents.map(async (agent) => {
+    agent._id = agent._id.toString();
+    agent.bridge_id = agent._id; // Alias _id as bridge_id
+    if (agent.function_ids) {
+      agent.function_ids = agent.function_ids.map(id => id.toString());
     }
-    if (bridge.published_version_id) {
-      bridge.published_version_id = bridge.published_version_id.toString();
+    if (agent.published_version_id) {
+      agent.published_version_id = agent.published_version_id.toString();
     }
 
     // Fetch user details if users array exists
-    if (bridge.users && Array.isArray(bridge.users) && bridge.users.length > 0) {
+    if (agent.users && Array.isArray(agent.users) && agent.users.length > 0) {
       try {
-        const userDetailsResponse = await conversationService.getUserUpdates(org_id, null, 1, 10, bridge.users);
+        const userDetailsResponse = await conversationService.getUserUpdates(org_id, null, 1, 10, agent.users);
         if (userDetailsResponse.success) {
-          bridge.users = userDetailsResponse.users;
+          agent.users = userDetailsResponse.users;
         }
       } catch (error) {
-        console.error('Error fetching user details for bridge:', bridge._id, error);
-        bridge.users = [];
+        console.error('Error fetching user details for agent:', agent._id, error);
+        agent.users = [];
       }
     } else {
-      bridge.users = [];
+      agent.users = [];
     }
 
-    return bridge;
+    return agent;
   }));
 
-  return processedBridges;
+  return processedAgents;
 };
 
-const getBridgeUsers = async (bridge_id, org_id) => {
+const getAgentUsers = async (agent_id, org_id) => {
   try {
-    const bridge = await configurationModel.findOne(
-      { _id: new ObjectId(bridge_id), org_id: org_id },
+    const agent = await configurationModel.findOne(
+      { _id: new ObjectId(agent_id), org_id: org_id },
       { users: 1 }
     ).lean();
     
-    return bridge ? bridge.users : null;
+    return agent ? agent.users : null;
   } catch (error) {
-    console.error(`Error fetching bridge users: ${error}`);
+    console.error(`Error fetching agent users: ${error}`);
     return null;
   }
 };
 
 export default {
-  deleteBridge,
-  restoreBridge,
+  deleteAgent,
+  restoreAgent,
   getApiCallById,
-  getBridgesWithSelectedData,
-  addResponseIdinBridge,
-  removeResponseIdinBridge,
-  getBridgeBySlugname,
-  findChatbotOfBridge,
-  getBridgeIdBySlugname,
+  getAgentsWithSelectedData,
+  addResponseIdinAgent,
+  removeResponseIdinAgent,
+  getAgentBySlugname,
+  findChatbotOfAgent,
+  getAgentIdBySlugname,
   gettemplateById,
-  addActionInBridge,
-  removeActionInBridge,
-  getBridges,
-  getBridgeNameById,
-  getBridgeByUrlSlugname,
+  addActionInAgent,
+  removeActionInAgent,
+  getAgents,
+  getAgentNameById,
+  getAgentByUrlSlugname,
   findIdsByModelAndService,
-  getBridgesByUserId,
+  getAgentsByUserId,
   getAllAgentsData,
   getAllAgentsData,
   getAgentsData,
-  getBridgesWithTools,
-  getAllBridgesInOrg,
-  createBridge,
-  updateBridge,
+  getAgentsWithTools,
+  getAllAgentsInOrg,
+  createAgent,
+  updateAgent,
   updateBuiltInTools,
   updateAgents,
-  updateBridgeIdsInApiCalls,
+  updateAgentIdsInApiCalls,
   getApikeyCreds,
   updateApikeyCreds,
-  getBridgesAndVersionsByModel,
-  getBridgesWithoutTools,
+  getAgentsAndVersionsByModel,
+  getAgentsWithoutTools,
   cloneAgentToOrg,
-  getBridgeUsers
+  getAgentUsers
 };

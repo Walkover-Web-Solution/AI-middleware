@@ -139,7 +139,7 @@ async function get_data_from_pg(org_ids) {
     // Resolve bridge names
     for (let i = 0; i < bridgeStats.length; i++) {
       const bId = bridgeStats[i].bridge_id;
-      const bridgeName = await configurationService.getBridgeNameById(bId, org_id);
+      const bridgeName = await configurationService.getAgentNameById(bId, org_id);
       bridgeStats[i].BridgeName = bridgeName;
     }
 
@@ -304,7 +304,7 @@ async function get_data_for_daily_report(org_ids) {
     const bridgeErrorReport = [];
     for (const [bridgeId, data] of bridgeErrorCounts.entries()) {
       // Get bridge name from MongoDB
-      const bridgeName = await configurationService.getBridgeNameById(bridgeId, org_id);
+      const bridgeName = await configurationService.getAgentNameById(bridgeId, org_id);
       
       bridgeErrorReport.push({
         bridge_id: bridgeId,
@@ -459,7 +459,7 @@ async function get_latency_report_data(org_ids, reportType) {
     const bridgeLatencyReport = [];
     for (const [bridgeId, stats] of bridgeLatencyStats.entries()) {
       // Get bridge name from service
-      const bridgeName = await configurationService.getBridgeNameById(bridgeId, org_id);
+      const bridgeName = await configurationService.getAgentNameById(bridgeId, org_id);
       
       bridgeLatencyReport.push({
         bridge_id: bridgeId,

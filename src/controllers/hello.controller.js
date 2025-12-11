@@ -23,11 +23,11 @@ export const subscribe = async (req, res, next) => {
         const { slugName, versionId } = value;
         let Hello_id = value.helloId
         const { org_id } = req.profile;
-        if (!Hello_id) data = (await ConfigurationServices.getBridgeBySlugname(org_id, slugName, versionId));
+        if (!Hello_id) data = (await ConfigurationServices.getAgentBySlugname(org_id, slugName, versionId));
     }
     else {
         const { slugName: url_slugName } = req.body;
-        data = (await ConfigurationServices.getBridgeByUrlSlugname(url_slugName));
+        data = (await ConfigurationServices.getAgentByUrlSlugname(url_slugName));
     }
     const model = data?.modelConfig?.model
     const service = data?.service;

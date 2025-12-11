@@ -159,7 +159,7 @@ const getEmbedDataByUserId = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const { agent_id } = req.query;
 
-    const data = await ConfigurationServices.getBridgesByUserId(org_id, user_id, agent_id);
+    const data = await ConfigurationServices.getAgentsByUserId(org_id, user_id, agent_id);
 
     res.locals = {
       success: true,

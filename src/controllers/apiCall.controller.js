@@ -127,7 +127,7 @@ const addPreTool = async (req, res, next) => {
         const { version_id, pre_tools: pre_tool_id, status } = req.body;
         const org_id = req.profile.org.id;
 
-        const model_config = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+        const model_config = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id, version_id);
 
         if (!model_config.success) {
             res.locals = { success: false, message: "bridge id is not found" };
@@ -138,10 +138,10 @@ const addPreTool = async (req, res, next) => {
         const data_to_update = {};
         data_to_update['pre_tools'] = status === "1" ? [pre_tool_id] : [];
 
-        await ConfigurationServices.updateBridge(bridgeId, data_to_update, version_id);
-        const result = await ConfigurationServices.getBridgesWithTools(bridgeId, org_id, version_id);
+        await ConfigurationServices.updateAgent(bridgeId, data_to_update, version_id);
+        const result = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id, version_id);
 
-        await ConfigurationServices.updateBridgeIdsInApiCalls(pre_tool_id, version_id || bridgeId, parseInt(status));
+        await ConfigurationServices.updateAgentIdsInApiCalls(pre_tool_id, version_id || bridgeId, parseInt(status));
 
         if (result.success) {
             const response = await Helper.responseMiddlewareForBridge(result.bridges.service, {

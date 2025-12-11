@@ -5,7 +5,7 @@ import token from "../../services/commonService/generateToken.js";
 const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {
   let RTLayer = false;
   let bridge;
-  const result = await configurationService.getBridges(bridge_id);
+  const result = await configurationService.getAgents(bridge_id);
   if (!result.success) {
     return {
       success: false,

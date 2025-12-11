@@ -1,3 +1,6 @@
+import ConfigurationServices from "../db_services/configuration.service.js";
+import testcaseDbservice from "../db_services/testcase.service.js";
+
 const collectionNames = {
   ApikeyCredentials: 'ApikeyCredentials',
   configuration: 'configuration',
@@ -79,7 +82,7 @@ export const AI_OPERATION_CONFIG = {
         prebuiltKey: 'optimze_prompt',
         getContext: async (req, org_id) => {
             const { version_id, bridge_id } = req.body;
-            const bridgeResult = await ConfigurationServices.getBridges(bridge_id, org_id, version_id);
+            const bridgeResult = await ConfigurationServices.getAgents(bridge_id, org_id, version_id);
             return { bridge: bridgeResult.bridges };
         },
         getPrompt: (context) => context.bridge.configuration?.prompt || "",
@@ -92,7 +95,7 @@ export const AI_OPERATION_CONFIG = {
         prebuiltKey: 'generate_summary',
         getContext: async (req, org_id) => {
             const { version_id } = req.body;
-            const bridgeResult = await ConfigurationServices.getBridgesWithTools(null, org_id, version_id);
+            const bridgeResult = await ConfigurationServices.getAgentsWithTools(null, org_id, version_id);
             if (!bridgeResult.bridges) throw new Error("Version data not found");
             return { bridgeData: bridgeResult.bridges };
         },
@@ -123,7 +126,7 @@ export const AI_OPERATION_CONFIG = {
         prebuiltKey: 'generate_test_cases',
         getContext: async (req, org_id) => {
             const { version_id, bridge_id } = req.body;
-            const bridgeResult = await ConfigurationServices.getBridgesWithTools(bridge_id, org_id, version_id);
+            const bridgeResult = await ConfigurationServices.getAgentsWithTools(bridge_id, org_id, version_id);
             if (!bridgeResult.bridges) throw new Error("Bridge data not found");
             return { bridgeData: bridgeResult.bridges };
         },

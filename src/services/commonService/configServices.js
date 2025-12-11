@@ -22,7 +22,7 @@ const getThreads = async (req, res, next) => {
   let bridge = {};
 
   if (bridge_slugName) {
-    bridge = req.chatBot?.ispublic ? await configurationService.getBridgeByUrlSlugname(bridge_slugName) : await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+    bridge = req.chatBot?.ispublic ? await configurationService.getAgentByUrlSlugname(bridge_slugName) : await configurationService.getAgentIdBySlugname(org_id, bridge_slugName);
     bridge_id = bridge?._id?.toString();
     starterQuestion = !bridge?.IsstarterQuestionEnable ? [] : bridge?.starterQuestion;
     org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
@@ -217,7 +217,7 @@ export const createEntry = async (req, res, next) => {
   } = req.body;
   const message_id = crypto.randomUUID();
   const org_id = req.profile.org.id
-  const result = (await configurationService.getBridges(bridge_id))?.bridges;
+  const result = (await configurationService.getAgents(bridge_id))?.bridges;
   const payload = {
     thread_id: thread_id,
     org_id: org_id,
@@ -256,7 +256,7 @@ const getThreadMessages = async (req, res, next) => {
   let bridge = {};
 
   if (bridge_slugName) {
-    bridge = await configurationService.getBridgeIdBySlugname(org_id, bridge_slugName);
+    bridge = await configurationService.getAgentIdBySlugname(org_id, bridge_slugName);
     bridge_id = bridge?._id?.toString();
   }
   await chatbotHistoryValidationSchema.validateAsync({ org_id, bridge_id, thread_id });
