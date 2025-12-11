@@ -1024,9 +1024,12 @@ const updateBridge = async (bridge_id, update_fields, version_id = null) => {
   const keys_to_delete=[]
    keys_to_delete.push(`${redis_keys.bridge_data_with_tools_}${version_id || bridge_id}`);
    keys_to_delete.push(`${redis_keys.get_bridge_data_}${version_id || bridge_id}`);
+   keys_to_delete.push(`${redis_keys.ui_bridge_data_with_tools_}${version_id || bridge_id}`);
+
    
   
    if (result && result.parent_id) {
+     keys_to_delete.push(`${redis_keys.ui_bridge_data_with_tools_}${result.parent_id}`);
      keys_to_delete.push(`${redis_keys.bridge_data_with_tools_}${result.parent_id}`);
      keys_to_delete.push(`${redis_keys.get_bridge_data_}${result.parent_id}`);
    }
