@@ -19,7 +19,31 @@ const getAllServiceModelsController = async (req, res, next) => {
         if (config.status !== 1) continue;
         const type = config.validationConfig?.type || 'chat';
         if (result[type]) {
-            result[type][model_name] = config;
+            // Transform config to desired format
+            const transformedConfig = {
+                configuration: {
+                    model: config.configuration?.model || {
+                        field: "drop",
+                        default: model_name,
+                        level: 1
+                    },
+                    additional_parameters: {}
+                },
+                validationConfig: config.validationConfig,
+                outputConfig: config.outputConfig,
+                org_id: null
+            };
+
+            // Move all other configuration fields to additional_parameters
+            if (config.configuration) {
+                for (const [key, value] of Object.entries(config.configuration)) {
+                    if (key !== 'model') {
+                        transformedConfig.configuration.additional_parameters[key] = value;
+                    }
+                }
+            }
+
+            result[type][model_name] = transformedConfig;
         }
     }
 
