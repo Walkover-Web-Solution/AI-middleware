@@ -57,7 +57,7 @@ const prebuilt_prompt_bridge_id = ['optimze_prompt', 'gpt_memory', 'structured_o
 const new_agent_service = {
   openai: "gpt-5-mini",
   anthropic: "claude-sonnet-4-20250514",
-  groq: "llama3-70b-8192",
+  groq: "openai/gpt-oss-120b",
   open_router: "openai/gpt-4o",
   mistral: "mistral-small-latest",
   gemini: "gemini-2.5-pro",
