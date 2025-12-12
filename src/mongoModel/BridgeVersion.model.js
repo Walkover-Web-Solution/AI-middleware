@@ -182,6 +182,10 @@ const version = new mongoose.Schema({
   deletedAt: {
     type: Date,
     default: null
+  },
+  IsstarterQuestionEnable: {
+    type: Boolean,
+    default: false
   }
 });
 
