@@ -1,10 +1,11 @@
 import { storeInCache } from "../cache_service/index.js";
 import { updateProxyDetails, getProxyDetails, removeClientUser } from "../services/proxy.service.js";
+import { reissueToken } from "../services/utils/token.utils.js";
 import axios from "axios";
 
 const userOrgLocalToken = async (req, res, next) => {
   const { user, org, exp, iat, ...extra } = req.profile;
-  
+
   // Call external API to generate auth token
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
   const response = await axios.get(apiUrl, 
@@ -16,7 +17,8 @@ const userOrgLocalToken = async (req, res, next) => {
     }
   );
   
-  const token = response.data.data.jwt;
+  const jwtToken = response.data.data.jwt;
+  const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
   return next();
@@ -30,7 +32,7 @@ const switchUserOrgLocal = async (req, res, next) => {
   const expiresInOptions = Number.isFinite(remainingLifetime)
     ? { expiresInSeconds: Math.max(remainingLifetime, 1) }
     : {};
-  
+
   // Call external API to generate auth token with new org
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
   const response = await axios.get(apiUrl,
@@ -42,7 +44,8 @@ const switchUserOrgLocal = async (req, res, next) => {
     }
   );
   
-  const token = response.data.data.jwt;
+  const jwtToken = response.data.data.jwt;
+  const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
   return next();

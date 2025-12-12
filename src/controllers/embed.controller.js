@@ -6,7 +6,9 @@ import { generateIdentifier } from "../services/utils/utility.service.js";
 import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
+import { reissueToken } from "../services/utils/token.utils.js";
 import axios from "axios";
+
 const embedLogin = async (req, res, next) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
   const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email, folder_id: req.Embed.folder_id };
@@ -30,6 +32,8 @@ const embedLogin = async (req, res, next) => {
   const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
   const config = folder?.config || {};
   const apikey_object_id = folder?.apikey_object_id
+  
+  // Call external API to generate auth token (JWT)
   const Proxytoken = await createProxyToken(embedDetails);
   
   // Call external API to generate auth token
@@ -43,7 +47,8 @@ const embedLogin = async (req, res, next) => {
     }
   );
   
-  const token = tokenResponse.data.data.jwt;
+  const jwtToken = tokenResponse.data.data.jwt;
+  const token = reissueToken(jwtToken);
   const response = {
     ...req?.Embed,
     user_id: req.Embed.user_id,
@@ -190,10 +195,10 @@ const getEmbedDataByUserId = async (req, res, next) => {
   }
 };
 export default {
-    embedLogin,
-    createEmbed,
-    getAllEmbed,
-    genrateToken,
-    updateEmbed,
-    getEmbedDataByUserId
+  embedLogin,
+  createEmbed,
+  getAllEmbed,
+  genrateToken,
+  updateEmbed,
+  getEmbedDataByUserId
 };

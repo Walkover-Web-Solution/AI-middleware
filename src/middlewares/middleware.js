@@ -142,7 +142,7 @@ const middleware = async (req, res, next) => {
       if (!token) {
         return res.status(401).json({ message: 'invalid token' });
       }
-      req.profile = jwt.verify(token, process.env.TEMP_SECRET);
+      req.profile = jwt.verify(token, process.env.SecretKey);
       
       // Determine role_name from permissions in JWT token
       const userPermissions = req.profile?.user?.permissions || [];
