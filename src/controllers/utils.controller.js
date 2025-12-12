@@ -40,7 +40,7 @@ const getRedisCache = async (req, res, next) => {
 };
 
 
-const callAi = async (req, res, next) => {
+const callGtwy = async (req, res, next) => {
     const { type } = req.body;
     const org_id = req.profile?.org?.id;
 
@@ -62,5 +62,5 @@ const callAi = async (req, res, next) => {
 export default {
     clearRedisCache,
     getRedisCache,
-    callAi
+    callGtwy
 };

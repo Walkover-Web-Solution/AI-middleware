@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.delete('/redis', validate(utilsValidation.clearRedisCache), utilsController.clearRedisCache);
 router.get('/redis/:id', validate(utilsValidation.getRedisCache), utilsController.getRedisCache);
-router.post('/call-ai', middleware, validate(utilsValidation.callAi), utilsController.callAi);
+router.post('/call-gtwy', middleware, validate(utilsValidation.callAi), utilsController.callGtwy);
 router.get('/getBridgesAndVersions/:modelName', agentConfigController.getAgentsAndVersionsByModelController);
 
 export default router;
