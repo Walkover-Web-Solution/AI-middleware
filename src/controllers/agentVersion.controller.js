@@ -67,7 +67,7 @@ const getVersion = async (req, res, next) => {
     res.locals = {
         success: true,
         message: "agent get successfully",
-        bridge: agent
+        agent: agent
     };
     req.statusCode = 200;
     return next();
