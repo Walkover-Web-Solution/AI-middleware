@@ -62,18 +62,20 @@ async function updateBridges(bridge_id, data, version_id = null) {
                 updateQuery,
                 { new: true }
             );
-            await deleteInCache(`${redis_keys.bridge_data_with_tools_}${version_id}`);
-            await deleteInCache(`${redis_keys.get_bridge_data_}${version_id}`);
         } else {
             result = await configurationModel.findOneAndUpdate(
                 { _id: bridge_id },
                 updateQuery,
                 { new: true }
             );
-            await deleteInCache(`${redis_keys.bridge_data_with_tools_}${bridge_id}`);
-            await deleteInCache(`${redis_keys.get_bridge_data_}${bridge_id}`);
         }
-        return result;
+
+       const cacheKeysToDelete = _buildCacheKeys(version_id,bridge_id || result.parent_id, { bridges: [], versions: [] },[])
+
+        if (cacheKeysToDelete.length > 0) {
+            await deleteInCache(cacheKeysToDelete);
+        }
+        return result; 
     } catch (error) {
         console.error("Error updating bridges:", error);
         throw error;
@@ -469,5 +471,6 @@ export default {
     publish,
     deleteBridgeVersion,
     makeQuestion,
-    getAllConnectedAgents
+    getAllConnectedAgents,
+    _buildCacheKeys
 };

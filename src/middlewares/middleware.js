@@ -153,8 +153,6 @@ const middleware = async (req, res, next) => {
         req.profile.user = {};
       }
       req.profile.user.role_name = determinedRole;
-      
-      console.log(`Role determined from permissions: ${determinedRole} for user ${req.profile?.user?.email || 'unknown'}`);
     }
     else if (req.headers.pauthkey || req.headers.pauthtoken) {
       req.profile = await makeDataIfPauthKeyGiven(req);
