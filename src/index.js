@@ -28,7 +28,7 @@ import modelsRoutes from './routes/modelConfig.routes.js'
 import embedRoutes from './routes/embed.routes.js'
 import historyRoutes from './routes/history.routes.js'
 import apiCallRoutes from './routes/apiCall.routes.js'
-import bridgeVersionRoutes from './routes/bridgeVersion.routes.js'
+import agentVersionRoutes from './routes/agentVersion.routes.js'
 import utilsRoutes from './routes/utils.routes.js'
 import prebuiltPromptRoutes from './routes/prebuiltPrompt.routes.js'
 import runAgentsRoutes from './routes/runAgents.routes.js'
@@ -77,7 +77,7 @@ app.use('/api/report', reportRoute);
 app.use('/api/models', modelsRoutes); 
 app.use('/api/auth', authRouter);
 app.use('/api/tools', apiCallRoutes)
-app.use('/api/versions', bridgeVersionRoutes)
+app.use('/api/versions', agentVersionRoutes)
 app.use('/api/utils', utilsRoutes)
 app.use('/api/prebuilt_prompt', prebuiltPromptRoutes)
 app.use('/api/runagents', runAgentsRoutes)

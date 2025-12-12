@@ -1,4 +1,4 @@
-import bridgeVersionDbService from "../db_services/bridgeVersion.service.js";
+import agentVersionDbService from "../db_services/agentVersion.service.js";
 import ConfigurationServices from "../db_services/configuration.service.js";
 import folderDbService from "../db_services/folder.service.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
@@ -27,22 +27,22 @@ const createVersion = async (req, res, next) => {
     const { version_id, version_description } = req.body;
     const org_id = req.profile.org.id;
 
-    const bridgeData = await ConfigurationServices.getAgentsWithoutTools(null, org_id, version_id);
+    const agentData = await ConfigurationServices.getAgentsWithoutTools(null, org_id, version_id);
 
-    if (bridgeData.bridges && bridgeData.bridges.deletedAt) {
-        res.locals = { success: false, message: "Cannot create version for a deleted bridge" };
+    if (agentData.bridges && agentData.bridges.deletedAt) {
+        res.locals = { success: false, message: "Cannot create version for a deleted agent" };
         req.statusCode = 400;
         return next();
     }
 
-    const parent_id = bridgeData.bridges.parent_id;
-    const bridgeVersionData = { ...bridgeData.bridges, version_description };
+    const parent_id = agentData.bridges.parent_id;
+    const agentVersionData = { ...agentData.bridges, version_description };
 
-    const newVersion = await bridgeVersionDbService.createBridgeVersion(bridgeVersionData);
+    const newVersion = await agentVersionDbService.createAgentVersion(agentVersionData);
     const create_new_version = newVersion._id.toString();
-    await bridgeVersionDbService.updateBridges(parent_id, { versions: [create_new_version] });
-    if (bridgeData.bridges.apikey_object_id) {
-        await ConfigurationServices.updateApikeyCreds(create_new_version, bridgeData.bridges.apikey_object_id);
+    await agentVersionDbService.updateAgents(parent_id, { versions: [create_new_version] });
+    if (agentData.bridges.apikey_object_id) {
+        await ConfigurationServices.updateApikeyCreds(create_new_version, agentData.bridges.apikey_object_id);
     }
 
     res.locals = {
@@ -56,18 +56,18 @@ const createVersion = async (req, res, next) => {
 
 const getVersion = async (req, res, next) => {
     const { version_id } = req.params;
-    const result = await bridgeVersionDbService.getVersionWithTools(version_id);
+    const result = await agentVersionDbService.getVersionWithTools(version_id);
     if (!result || !result.bridges) {
-        res.locals = { success: false, message: "Bridge version not found" };
+        res.locals = { success: false, message: "Agent version not found" };
         req.statusCode = 400;
         return next();
     }
 
-    const bridge = result.bridges;
+    const agent = result.bridges;
     res.locals = {
         success: true,
-        message: "bridge get successfully",
-        bridge: bridge
+        message: "agent get successfully",
+        bridge: agent
     };
     req.statusCode = 200;
     return next();
@@ -78,7 +78,7 @@ const publishVersion = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const user_id = req.profile.user.id;
 
-    await bridgeVersionDbService.publish(org_id, version_id, user_id);
+    await agentVersionDbService.publish(org_id, version_id, user_id);
 
     res.locals = {
         success: true,
@@ -93,7 +93,7 @@ const removeVersion = async (req, res, next) => {
     const { version_id } = req.params;
     const org_id = req.profile.org.id;
 
-    const result = await bridgeVersionDbService.deleteBridgeVersion(org_id, version_id);
+    const result = await agentVersionDbService.deleteAgentVersion(org_id, version_id);
     res.locals = result;
     req.statusCode = 200;
     return next();
@@ -108,7 +108,7 @@ const bulkPublishVersion = async (req, res, next) => {
 
     const results = await Promise.all(version_ids.map(async (vid) => {
         try {
-            await bridgeVersionDbService.publish(org_id, vid, user_id);
+            await agentVersionDbService.publish(org_id, vid, user_id);
             return { status: "success", version_id: vid };
         } catch (error) {
             return { status: "failed", version_id: vid, error: error.message };
@@ -130,18 +130,18 @@ const bulkPublishVersion = async (req, res, next) => {
 
 const discardVersion = async (req, res, next) => {
     const { version_id } = req.params;
-    const bridgeDataResult = await bridgeVersionDbService.getVersionWithTools(version_id);
-    if (!bridgeDataResult || !bridgeDataResult.bridges) {
-        res.locals = { success: false, message: "Bridge not found" };
+    const agentDataResult = await agentVersionDbService.getVersionWithTools(version_id);
+    if (!agentDataResult || !agentDataResult.bridges) {
+        res.locals = { success: false, message: "Agent not found" };
         req.statusCode = 400;
         return next();
     }
-    const bridgeData = bridgeDataResult.bridges;
+    const agentData = agentDataResult.bridges;
     const keysToRemove = ['name', 'slugName', 'bridgeType', '_id', 'versions', 'status', 'apiCalls', 'bridge_status'];
-    keysToRemove.forEach(key => delete bridgeData[key]);
+    keysToRemove.forEach(key => delete agentData[key]);
 
-    bridgeData.is_drafted = false;
-    await bridgeVersionDbService.updateBridges(null, bridgeData, version_id);
+    agentData.is_drafted = false;
+    await agentVersionDbService.updateAgents(null, agentData, version_id);
 
     res.locals = {
         success: true,
@@ -157,7 +157,7 @@ const suggestModel = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const folder_id = req.profile.user.folder_id;
 
-    const versionDataResult = await bridgeVersionDbService.getVersionWithTools(version_id);
+    const versionDataResult = await agentVersionDbService.getVersionWithTools(version_id);
     const versionData = versionDataResult?.bridges;
 
     if (!versionData) {
@@ -235,7 +235,7 @@ const getConnectedAgents = async (req, res, next) => {
     const { type } = req.query;
     const org_id = req.profile.org.id;
 
-    const result = await bridgeVersionDbService.getAllConnectedAgents(id, org_id, type);
+    const result = await agentVersionDbService.getAllConnectedAgents(id, org_id, type);
     res.locals = { success: true, data: result };
     req.statusCode = 200;
     return next();
@@ -251,3 +251,4 @@ export default {
     suggestModel,
     getConnectedAgents
 };
+

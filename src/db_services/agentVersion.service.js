@@ -24,25 +24,25 @@ async function getVersion(version_id) {
     }
 }
 
-async function createBridgeVersion(data) {
+async function createAgentVersion(data) {
     try {
-        const bridgeVersionData = data.toObject ? data.toObject() : { ...data };
+        const agentVersionData = data.toObject ? data.toObject() : { ...data };
         const keysToRemove = ['name', 'slugName', 'bridgeType', 'status'];
-        keysToRemove.forEach(key => delete bridgeVersionData[key]);
+        keysToRemove.forEach(key => delete agentVersionData[key]);
 
-        bridgeVersionData.is_drafted = true;
-        bridgeVersionData.parent_id = data.parent_id || data._id;
-        delete bridgeVersionData._id; // Let Mongoose generate a new ID
+        agentVersionData.is_drafted = true;
+        agentVersionData.parent_id = data.parent_id || data._id;
+        delete agentVersionData._id; // Let Mongoose generate a new ID
 
-        const newVersion = await bridgeVersionModel.create(bridgeVersionData);
+        const newVersion = await bridgeVersionModel.create(agentVersionData);
         return newVersion.toObject();
     } catch (error) {
-        console.error("Error creating bridge version:", error);
+        console.error("Error creating agent version:", error);
         throw error;
     }
 }
 
-async function updateBridges(bridge_id, data, version_id = null) {
+async function updateAgents(agent_id, data, version_id = null) {
     try {
         let result;
         const updateQuery = {};
@@ -64,20 +64,20 @@ async function updateBridges(bridge_id, data, version_id = null) {
             );
         } else {
             result = await configurationModel.findOneAndUpdate(
-                { _id: bridge_id },
+                { _id: agent_id },
                 updateQuery,
                 { new: true }
             );
         }
 
-       const cacheKeysToDelete = _buildCacheKeys(version_id,bridge_id || result.parent_id, { bridges: [], versions: [] },[])
+       const cacheKeysToDelete = _buildCacheKeys(version_id,agent_id || result.parent_id, { bridges: [], versions: [] },[])
 
         if (cacheKeysToDelete.length > 0) {
             await deleteInCache(cacheKeysToDelete);
         }
         return result; 
     } catch (error) {
-        console.error("Error updating bridges:", error);
+        console.error("Error updating agents:", error);
         throw error;
     }
 }
@@ -168,10 +168,10 @@ async function makeQuestion(parent_id, prompt, functions, save = false) {
 async function _cleanupConnectedAgents(version_id, org_id) {
     const affectedIds = { versions: new Set(), bridges: new Set() };
 
-    // Cleanup bridges
-    const bridges = await configurationModel.find({ org_id, connected_agents: { $exists: true } });
-    for (const bridge of bridges) {
-        const connectedAgents = bridge.connected_agents || {};
+    // Cleanup agents
+    const agents = await configurationModel.find({ org_id, connected_agents: { $exists: true } });
+    for (const agent of agents) {
+        const connectedAgents = agent.connected_agents || {};
         let modified = false;
         const newAgents = {};
 
@@ -184,8 +184,8 @@ async function _cleanupConnectedAgents(version_id, org_id) {
         }
 
         if (modified) {
-            await configurationModel.updateOne({ _id: bridge._id }, { $set: { connected_agents: newAgents } });
-            affectedIds.bridges.add(bridge._id.toString());
+            await configurationModel.updateOne({ _id: agent._id }, { $set: { connected_agents: newAgents } });
+            affectedIds.bridges.add(agent._id.toString());
         }
     }
 
@@ -292,7 +292,7 @@ function _buildCacheKeys(version_id, parent_id, impacted_ids, extra_keys) {
     return Array.from(cacheKeys);
 }
 
-async function deleteBridgeVersion(org_id, version_id) {
+async function deleteAgentVersion(org_id, version_id) {
     if (!version_id) throw new Error("Invalid version id provided");
 
     const versionDoc = await bridgeVersionModel.findOne({ _id: version_id, org_id }).lean();
@@ -393,7 +393,7 @@ async function publish(org_id, version_id, user_id) {
     await conversationDbService.addBulkUserEntries([{
         user_id,
         org_id,
-        bridge_id: parentId,
+        bridge_id: parentId, // Database column name, keeping as bridge_id for compatibility
         version_id,
         type: 'Version published'
     }]);
@@ -465,12 +465,16 @@ async function getAllConnectedAgents(id, org_id, type) {
 
 export default {
     getVersion,
-    createBridgeVersion,
-    updateBridges,
+    createAgentVersion,
+    createBridgeVersion: createAgentVersion, // Keep alias for backward compatibility
+    updateAgents,
+    updateBridges: updateAgents, // Keep alias for backward compatibility
     getVersionWithTools,
     publish,
-    deleteBridgeVersion,
+    deleteAgentVersion,
+    deleteBridgeVersion: deleteAgentVersion, // Keep alias for backward compatibility
     makeQuestion,
     getAllConnectedAgents,
     _buildCacheKeys
 };
+

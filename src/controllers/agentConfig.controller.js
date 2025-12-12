@@ -1,6 +1,6 @@
 import ConfigurationServices from "../db_services/configuration.service.js";
 import folderDbService from "../db_services/folder.service.js";
-import bridgeVersionDbService from "../db_services/bridgeVersion.service.js";
+import agentVersionDbService from "../db_services/agentVersion.service.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { bridge_ids, new_agent_service, redis_keys } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
@@ -140,7 +140,7 @@ const createAgentController = async (req, res, next) => {
             bridge_status: 1
         });
 
-        const create_version = await bridgeVersionDbService.createBridgeVersion(result.bridge);
+        const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
         const update_fields = { versions: [create_version._id.toString()] };
         const updated_agent_result = await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
 

@@ -10,7 +10,7 @@ import { findInCache, storeInCache, deleteInCache } from "../cache_service/index
 import { redis_keys } from "../configs/constant.js";
 import apikeyCredentialsModel from "../mongoModel/Api.model.js";
 import conversationService from "./conversation.service.js";
-import bridgeVersionService from "./bridgeVersion.service.js";
+import agentVersionService from "./agentVersion.service.js";
 
 const cloneAgentToOrg = async (agent_id, to_shift_org_id, cloned_agents_map = null, depth = 0) => {
   try {
@@ -1023,7 +1023,7 @@ const updateAgent = async (agent_id, update_fields, version_id = null) => {
   const id_to_use = version_id ? version_id : agent_id;
   const result = await model.findOneAndUpdate({ _id: id_to_use }, { $set: update_fields }, { new: true });
 
-  const cacheKeysToDelete = bridgeVersionService._buildCacheKeys(version_id, agent_id || result.parent_id, { bridges: [], versions: [] },[])
+  const cacheKeysToDelete = agentVersionService._buildCacheKeys(version_id, agent_id || result.parent_id, { bridges: [], versions: [] },[])
 
         if (cacheKeysToDelete.length > 0) {
             await deleteInCache(cacheKeysToDelete);
