@@ -2,10 +2,11 @@ import ConfigurationServices from "../db_services/configuration.service.js";
 import FolderModel from "../mongoModel/GtwyEmbed.model.js";
 import configurationModel from "../mongoModel/Configuration.model.js";
 import { createProxyToken, getOrganizationById, updateOrganizationData } from "../services/proxy.service.js";
-import { generateIdentifier, generateAuthToken } from "../services/utils/utility.service.js";
+import { generateIdentifier } from "../services/utils/utility.service.js";
 import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
+import axios from "axios";
 const embedLogin = async (req, res, next) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
   const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email, folder_id: req.Embed.folder_id };
@@ -29,11 +30,24 @@ const embedLogin = async (req, res, next) => {
   const folder = await FolderModel.findOne({ _id: req.Embed.folder_id });
   const config = folder?.config || {};
   const apikey_object_id = folder?.apikey_object_id
-  await createProxyToken(embedDetails);
+  const Proxytoken = await createProxyToken(embedDetails);
+  
+  // Call external API to generate auth token
+  const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
+  const tokenResponse = await axios.get(apiUrl, 
+    {
+      headers: {
+        'authkey': process.env.ADMIN_API_KEY,
+        'proxy_auth_token': Proxytoken
+      }
+    }
+  );
+  
+  const token = tokenResponse.data.data.jwt;
   const response = {
     ...req?.Embed,
     user_id: req.Embed.user_id,
-    token: generateAuthToken(Tokendata.user, Tokendata.org, { "extraDetails": Tokendata.extraDetails }),
+    token: token,
     config: { ...config, apikey_object_id }
   };
   res.locals = { data: response, message: 'logged in successfully' };
