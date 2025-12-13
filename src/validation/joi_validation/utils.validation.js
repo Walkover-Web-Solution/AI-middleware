@@ -29,7 +29,7 @@ const callAi = {
         ).required(),
         json_schema: Joi.alternatives().conditional('type', {
             is: 'structured_output',
-            then: Joi.alternatives().try(Joi.object(), Joi.string()).required(),
+            then: Joi.alternatives().try(Joi.object(), Joi.string().allow('').optional()).optional(),
             otherwise: Joi.forbidden()
         }),
         query: Joi.alternatives().conditional('type', {
@@ -76,7 +76,7 @@ const callAi = {
         }),
         example_json: Joi.alternatives().conditional('type', {
             is: 'generate_json',
-            then: Joi.string().required(),
+            then: Joi.alternatives().try(Joi.string(), Joi.object()).required(),
             otherwise: Joi.forbidden()
         })
     }).unknown(true),
