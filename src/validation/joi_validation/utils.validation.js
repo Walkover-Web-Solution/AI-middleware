@@ -82,8 +82,15 @@ const callAi = {
     }).unknown(true),
 };
 
+const generateToken = {
+    body: Joi.object().keys({
+        type: Joi.string().valid('rag', 'org', 'embed').required(),
+    }).unknown(true),
+};
+
 export default {
     clearRedisCache,
     getRedisCache,
-    callAi
+    callAi,
+    generateToken
 };

@@ -65,12 +65,6 @@ const callGtwy = async (req, res, next) => {
 const generateToken = async (req, res, next) => {
     const { type } = req.body;
 
-    if (!type) {
-        res.locals = { success: false, message: "Type parameter is required" };
-        req.statusCode = 400;
-        return next();
-    }
-
     // Route to appropriate token generation function based on type
     switch (type.toLowerCase()) {
         case 'rag':
@@ -83,7 +77,7 @@ const generateToken = async (req, res, next) => {
             return embedController.genrateToken(req, res, next);
         
         default:
-            res.locals = { success: false, message: `Invalid type: ${type}. Valid types are: knowledgebase, chatbot, embed` };
+            res.locals = { success: false, message: `Invalid type: ${type}. Valid types are: rag, org, embed` };
             req.statusCode = 400;
             return next();
     }
