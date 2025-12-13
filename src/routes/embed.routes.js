@@ -11,7 +11,6 @@ router.post('/login', GtwyEmbeddecodeToken, embedController.embedLogin);
 router.post('/', middleware, validate(embedValidation.createEmbed), embedController.createEmbed);
 router.get('/', middleware, embedController.getAllEmbed);
 router.put('/', middleware, validate(embedValidation.updateEmbed), embedController.updateEmbed);
-router.get('/getToken', middleware, embedController.genrateToken);
 router.get('/getAgents', GtwyEmbeddecodeToken, validate(embedValidation.getEmbedDataByUserId), embedController.getEmbedDataByUserId);
 
 export default router;

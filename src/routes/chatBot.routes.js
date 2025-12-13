@@ -2,7 +2,6 @@ import express from "express";
 import { getAllChatBots, updateChatBotConfig, loginUser } from "../controllers/chatBot.controller.js";
 import { subscribe } from '../controllers/hello.controller.js';
 import { middleware } from "../middlewares/middleware.js";
-import userOrgAccessCheck from "../middlewares/userOrgCheck.js";
 import { combinedAuthWithChatBotAndPublicChatbot, combinedAuthWithChatBotTokenDecodeAndPublicChatbot } from '../middlewares/interfaceMiddlewares.js';
 import validate from '../middlewares/validate.middleware.js';
 import chatBotValidation from '../validation/joi_validation/chatBot.validation.js';
@@ -20,5 +19,6 @@ router.post('/loginuser', combinedAuthWithChatBotTokenDecodeAndPublicChatbot, lo
 
 // Update chatbot config
 router.post('/:botId/updateconfig', middleware, validate(chatBotValidation.updateChatBotConfig), updateChatBotConfig);
+
 
 export default router;

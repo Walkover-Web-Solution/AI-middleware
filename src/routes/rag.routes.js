@@ -1,6 +1,6 @@
 import multer from 'multer';
 import express from "express";
-import { getAllDocuments, createVectors, deleteDoc, updateDoc, getKnowledgeBaseToken, getEmbedToken, ragEmbedUserLogin } from "../controllers/rag.controller.js";
+import { getAllDocuments, createVectors, deleteDoc, updateDoc, getEmbedToken, ragEmbedUserLogin } from "../controllers/rag.controller.js";
 import { EmbeddecodeToken, middleware } from "../middlewares/middleware.js";
 import bucketService from "../services/bucket.service.js";
 import validate from "../middlewares/validate.middleware.js";
@@ -17,7 +17,6 @@ routes.post('/', middleware, upload.single('file'), bucketService.handleFileUplo
 routes.get('/docs', middleware, getAllDocuments);
 routes.delete('/docs/:id', middleware, validate({ params: docIdSchema }), deleteDoc);
 routes.patch('/docs/:id', middleware, validate({ params: docIdSchema, body: updateDocSchema }), updateDoc);
-routes.get('/docs/token', middleware, getKnowledgeBaseToken);
 routes.get('/get-emebed-token', middleware, getEmbedToken);
 
 export default routes;

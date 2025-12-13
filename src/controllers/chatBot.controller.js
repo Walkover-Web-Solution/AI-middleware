@@ -129,4 +129,18 @@ const loginUser = async (req, res, next) => {
     }
 };
 
-export { getAllChatBots, updateChatBotConfig, loginUser };
+const createOrgToken = async (req, res, next) => {
+    const orgId = req.profile.org.id;
+    const { chatBot } = await responseTypeService.getAll(orgId);
+    if (chatBot?.orgAcessToken) {
+        res.locals = chatBot;
+        req.statusCode = 200;
+        return next();
+    }
+    const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14));
+    res.locals = org?.success ? org.orgData : { success: false, message: "Failed to create org token" };
+    req.statusCode = org?.success ? 200 : 404;
+    return next();
+};
+
+export { getAllChatBots, updateChatBotConfig, loginUser, createOrgToken };

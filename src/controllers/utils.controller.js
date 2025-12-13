@@ -1,6 +1,9 @@
 import { deleteInCache, findInCache, scanCacheKeys } from "../cache_service/index.js";
 import { AI_OPERATION_CONFIG } from "../configs/constant.js";
 import { executeAiOperation } from "../services/utils/utility.service.js";
+import { getKnowledgeBaseToken } from "./rag.controller.js";
+import { createOrgToken } from "./chatBot.controller.js";
+import embedController from "./embed.controller.js";
 
 const clearRedisCache = async (req, res, next) => {
     const { id, ids } = req.body;
@@ -59,8 +62,36 @@ const callGtwy = async (req, res, next) => {
     return next();
 };
 
+const generateToken = async (req, res, next) => {
+    const { type } = req.body;
+
+    if (!type) {
+        res.locals = { success: false, message: "Type parameter is required" };
+        req.statusCode = 400;
+        return next();
+    }
+
+    // Route to appropriate token generation function based on type
+    switch (type.toLowerCase()) {
+        case 'rag':
+            return getKnowledgeBaseToken(req, res, next);
+        
+        case 'org':
+            return createOrgToken(req, res, next);
+        
+        case 'embed':
+            return embedController.genrateToken(req, res, next);
+        
+        default:
+            res.locals = { success: false, message: `Invalid type: ${type}. Valid types are: knowledgebase, chatbot, embed` };
+            req.statusCode = 400;
+            return next();
+    }
+};
+
 export default {
     clearRedisCache,
     getRedisCache,
-    callGtwy
+    callGtwy,
+    generateToken
 };
