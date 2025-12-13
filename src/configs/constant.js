@@ -119,7 +119,12 @@ export const AI_OPERATION_CONFIG = {
     },
     generate_json: {
         bridgeIdConst: bridge_ids['function_agrs_using_ai'],
-        getMessage: (req) => `geneate the json using the example json data : ${req.body.example_json}`,
+        getMessage: (req) => {
+            const exampleJson = typeof req.body.example_json === 'object'
+                ? JSON.stringify(req.body.example_json)
+                : req.body.example_json;
+            return `geneate the json using the example json data : ${exampleJson}`;
+        },
         successMessage: "json generated successfully"
     },
     generate_test_cases: {
@@ -159,7 +164,7 @@ export const AI_OPERATION_CONFIG = {
     gpt_memory: {
         handler: async (req) => {
             const { bridge_id, thread_id, sub_thread_id, version_id } = req.body;
-            const { memoryId, memory } = await retrieveGptMemoryService(bridge_id, thread_id, sub_thread_id, version_id );
+            const { memoryId, memory } = await retrieveGptMemoryService(bridge_id, thread_id, sub_thread_id, version_id);
             return {
                 bridge_id,
                 thread_id,

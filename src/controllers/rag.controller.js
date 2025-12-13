@@ -153,9 +153,7 @@ export const getKnowledgeBaseToken = async (req, res, next) => {
         )
         auth_token = auth_token?.data?.company?.meta.auth_token
     }
-
-    const knowledgeBaseToken = token.generateToken({ payload: { org_id, user_id: req.profile.user.id, gtwyAIDocs: "true" }, accessKey: auth_token })
-    res.locals = { result: knowledgeBaseToken };
+    res.locals = {auth_token};
     req.statusCode = 200;
     return next();
 };

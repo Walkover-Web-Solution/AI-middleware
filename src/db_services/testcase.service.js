@@ -52,7 +52,7 @@ async function getMergedTestcasesAndHistoryByBridgeId(bridge_id) {
 async function parseAndSaveTestcases(testcasesData, bridge_id) {
     const savedTestcaseIds = [];
     try {
-        let testCases = testcasesData.test_cases || [];
+        let testCases = JSON.parse(testcasesData)?.test_cases || [];
         if (!testCases || testCases.length === 0) {
             return savedTestcaseIds;
         }
@@ -89,7 +89,7 @@ async function parseAndSaveTestcases(testcasesData, bridge_id) {
                     conversation: [{ role: "user", content: String(userInput) }],
                     type: "response",
                     expected: { response: String(expectedOutput) },
-                    matching_type: "contains"
+                    matching_type: "ai"
                 };
 
                 const result = await saveTestCase(testcaseData);
