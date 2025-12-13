@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { encode } from "gpt-tokenizer";
 import bridgeVersionModel from "../mongoModel/BridgeVersion.model.js";
 import configurationModel from "../mongoModel/Configuration.model.js";
 import apiCallModel from "../mongoModel/ApiCall.model.js";
@@ -292,6 +293,77 @@ function _buildCacheKeys(version_id, parent_id, impacted_ids, extra_keys) {
     return Array.from(cacheKeys);
 }
 
+function calculateTokens(text) {
+    try {
+        if (!text || typeof text !== 'string') return 0;
+        const tokens = encode(text);
+        return tokens.length;
+    } catch (error) {
+        console.error("Error calculating tokens:", error);
+        return 0;
+    }
+}
+
+async function calculateAndSavePromptTokens(parentId, prompt, tools) {
+    try {
+        let promptTokens = 0;
+        let toolsTokens = 0;
+        
+        // Calculate tokens for prompt
+        if (prompt) {
+            promptTokens = calculateTokens(String(prompt));
+        }
+        
+        // Calculate tokens for tools (handle both object, list and string formats)
+        if (tools) {
+            let toolsText = '';
+            if (typeof tools === 'object') {
+                // Convert object or array to JSON string for token counting
+                toolsText = JSON.stringify(tools);
+            } else if (typeof tools === 'string' && tools.trim()) {
+                toolsText = tools;
+            }
+            
+            if (toolsText) {
+                toolsTokens = calculateTokens(toolsText);
+            }
+        }
+        
+        // Calculate total tokens
+        const promptTotalTokens = promptTokens + toolsTokens;
+        
+        // Update the document in the configurationModel
+        await configurationModel.updateOne(
+            { _id: parentId },
+            { $set: { prompt_total_tokens: promptTotalTokens } }
+        );
+        
+        return promptTotalTokens;
+    } catch (error) {
+        console.error("Error calculating and saving prompt tokens:", error);
+        return null;
+    }
+}
+
+async function getPromptEnhancerPercentage(parentId, prompt) {
+    try {
+        if (!prompt) return null;
+        
+        const promptEnhancerResult = await callAiMiddleware(prompt, bridge_ids['prompt_checker']);
+        
+        // Update the document in the configurationModel
+        await configurationModel.updateOne(
+            { _id: parentId },
+            { $set: { prompt_enhancer_percentage: promptEnhancerResult } }
+        );
+        
+        return promptEnhancerResult;
+    } catch (error) {
+        console.error("Error getting prompt enhancer percentage:", error);
+        return null;
+    }
+}
+
 async function deleteAgentVersion(org_id, version_id) {
     if (!version_id) throw new Error("Invalid version id provided");
 
@@ -355,7 +427,12 @@ async function publish(org_id, version_id, user_id) {
     }
 
     // Background tasks
-    makeQuestion(parentId, updatedConfiguration.configuration?.prompt || "", getVersionData.apiCalls, true).catch(console.error);
+    const prompt = updatedConfiguration.configuration?.prompt || "";
+    const tools = getVersionData.apiCalls;
+    
+    makeQuestion(parentId, prompt, tools, true).catch(console.error);
+    getPromptEnhancerPercentage(parentId, prompt).catch(console.error);
+    calculateAndSavePromptTokens(parentId, prompt, tools).catch(console.error);
     // deleteCurrentTestcaseHistory(version_id).catch(console.error); // Implement if needed
 
     // Transaction
