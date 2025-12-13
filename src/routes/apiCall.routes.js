@@ -10,7 +10,7 @@ router.get('/', middleware, controller.getAllApiCalls);
 router.put('/:tool_id', middleware, validate(apiCallValidation.updateApiCalls), controller.updateApiCalls);
 router.delete('/', middleware, validate(apiCallValidation.deleteFunction), controller.deleteFunction);
 router.post('/', middleware, validate(apiCallValidation.createApi), controller.createApi);
-router.put('/:agent_id', middleware, validate(apiCallValidation.addPreTool), controller.addPreTool);
+router.put('pre_tool/:agent_id', middleware, validate(apiCallValidation.addPreTool), controller.addPreTool);
 router.get('/inbuilt', middleware, controller.getAllInBuiltToolsController);
 
 export default router;
