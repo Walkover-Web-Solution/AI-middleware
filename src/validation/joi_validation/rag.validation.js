@@ -14,8 +14,10 @@ const createVectorsSchema = Joi.object({
     description: Joi.string().required().messages({
         'any.required': 'description is required'
     }),
-    docType: Joi.string().required(),
-    fileFormat: Joi.string().valid('csv', 'txt', 'script', 'unknown').required(),
+    docType: Joi.string().optional(),
+    fileFormat: Joi.string().valid('csv', 'txt', 'script', 'unknown').optional().messages({
+        'any.required': 'fileFormat is required'
+    }),
     nestedCrawling: Joi.boolean().default(false)
 }).unknown(true);
 

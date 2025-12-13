@@ -146,8 +146,8 @@ const addPreTool = async (req, res, next) => {
         if (result.success) {
             const response = await Helper.responseMiddlewareForBridge(result.bridges.service, {
                 success: true,
-                message: "Bridge Updated successfully",
-                bridge: result.bridges
+                message: "Agent pre-tool updated successfully",
+                agent: result.bridges
             }, true);
 
             res.locals = response;

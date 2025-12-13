@@ -245,7 +245,7 @@ const updateAgentController = async (req, res, next) => {
         new_configuration.fine_tune_model = { current_model: null };
     }
 
-    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters'];
+    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters', 'status'];
 
     for (const field of simple_fields) {
         if (body[field] !== undefined) {
