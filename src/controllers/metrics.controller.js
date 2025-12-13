@@ -54,6 +54,38 @@ const getMetricsData = async (req, res, next) => {
   return next();
 };
 
+const getBridgeMetrics = async (req, res, next) => {
+  const org_id = req.profile?.org?.id;
+  const { start_date, end_date } = req.body;
+
+  let query = `SELECT bridge_id, SUM(total_token_count) as total_tokens 
+                   FROM daily_data 
+                   WHERE org_id = :org_id`;
+
+  const replacements = { org_id };
+
+  if (start_date && end_date) {
+    query += ` AND created_at BETWEEN :start_date AND :end_date`;
+    replacements.start_date = start_date;
+    replacements.end_date = end_date;
+  } else {
+    query += ` AND created_at >= NOW() - INTERVAL '24 hours'`;
+  }
+
+  query += ` GROUP BY bridge_id`;
+
+  const data = await metrics_sevice.find(query, replacements);
+
+  res.locals = {
+    statusCode: 200,
+    data,
+    message: 'Successfully retrieved bridge metrics'
+  };
+  req.statusCode = 200;
+  return next();
+};
+
 export default {
-  getMetricsData
+  getMetricsData,
+  getBridgeMetrics
 };
