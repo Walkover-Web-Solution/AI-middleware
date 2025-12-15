@@ -12,5 +12,6 @@ router.get('/redis/:id', validate(utilsValidation.getRedisCache), utilsControlle
 router.post('/call-gtwy', middleware, validate(utilsValidation.callAi), utilsController.callGtwy);
 router.get('/getBridgesAndVersions/:modelName', agentConfigController.getAgentsAndVersionsByModelController);
 router.post('/token', middleware, validate(utilsValidation.generateToken), utilsController.generateToken);
+router.get('/users-details', middleware, utilsController.getCurrentOrgUsers);
 
 export default router;

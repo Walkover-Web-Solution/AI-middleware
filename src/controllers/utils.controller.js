@@ -4,6 +4,7 @@ import { executeAiOperation } from "../services/utils/utility.service.js";
 import { getKnowledgeBaseToken } from "./rag.controller.js";
 import { createOrgToken } from "./chatBot.controller.js";
 import embedController from "./embed.controller.js";
+import { getUsers } from "../services/proxy.service.js";
 
 const clearRedisCache = async (req, res, next) => {
     const { id, ids } = req.body;
@@ -83,9 +84,48 @@ const generateToken = async (req, res, next) => {
     }
 };
 
+const getCurrentOrgUsers = async (req, res, next) => {
+    const org_id = req.profile?.org?.id;
+    
+    if (!org_id) {
+        res.locals = { success: false, message: "Organization ID not found" };
+        req.statusCode = 400;
+        return next();
+    }
+    
+    // Fetch all users from the organization
+    let allUsers = [];
+    let page = 1;
+    let hasMoreData = true;
+    
+    while (hasMoreData) {
+        const userResp = await getUsers(org_id, page, 50);
+        
+        if (userResp && Array.isArray(userResp.data)) {
+            allUsers = [...allUsers, ...userResp.data];
+            hasMoreData = userResp?.totalEntityCount > allUsers.length;
+        } else {
+            hasMoreData = false;
+        }
+        page++;
+    }
+    
+    // Extract only name, email, and user_id
+    const users = allUsers.map(user => ({
+        user_id: user.id || null,
+        name: user.name || null,
+        email: user.email || null
+    }));
+    
+    res.locals = { data: users, success: true };
+    req.statusCode = 200;
+    return next();
+};
+
 export default {
     clearRedisCache,
     getRedisCache,
     callGtwy,
-    generateToken
+    generateToken,
+    getCurrentOrgUsers
 };
