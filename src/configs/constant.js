@@ -56,7 +56,7 @@ const cost_types = {
 const prebuilt_prompt_bridge_id = ['optimze_prompt', 'gpt_memory', 'structured_output_optimizer', 'chatbot_suggestions', 'generate_summary', 'generate_test_cases'];
 
 const new_agent_service = {
-  openai: "gpt-5-mini",
+  openai: "gpt-5-nano",
   anthropic: "claude-sonnet-4-20250514",
   groq: "openai/gpt-oss-120b",
   open_router: "openai/gpt-4o",
