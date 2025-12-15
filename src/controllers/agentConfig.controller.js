@@ -174,31 +174,7 @@ const updateAgentController = async (req, res, next) => {
     const agent = agentData.bridges;
     const parent_id = agent.parent_id;
     
-    // Authorization check: Check users array from agent configuration (not version data)
-    // If version_id is present, check parent agent's users array
-    // If users array exists and user_id is not present, deny access
-    // Admin role bypasses this check
-    const current_role = req.role_name;
-    
-    if (current_role !== 'admin') {
-        let usersArray = agent.users;
-        if (version_id && parent_id) {
-            // Fetch only users array from parent agent
-            usersArray = await ConfigurationServices.getAgentUsers(parent_id, org_id);
-        }
-        
-        if (usersArray && Array.isArray(usersArray)) {
-            const current_user_id = req.user_id;
-            if (current_user_id) {
-                const user_authorized = usersArray.some(u => String(u) === current_user_id);
-                if (!user_authorized) {
-                    res.locals = { success: false, message: "you are not authorized to update the agent" };
-                    req.statusCode = 403;
-                    return next();
-                }
-            }
-        }
-    }
+    // Authorization check is now handled by requireAdminRole middleware
     const current_configuration = agent.configuration || {};
     let current_variables_path = agent.variables_path || {};
     let function_ids = agent.function_ids || [];

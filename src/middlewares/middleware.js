@@ -6,6 +6,8 @@ import { encryptString } from "../services/utils/utility.service.js";
 import { createOrGetUser } from "../utils/proxy.utils.js";
 import configurationModel from "../mongoModel/Configuration.model.js";
 import mongoose from "mongoose";
+import ConfigurationServices from "../db_services/configuration.service.js";
+import agentVersionDbService from "../db_services/agentVersion.service.js";
 dotenv.config();
 
 // Define role permissions
@@ -421,10 +423,17 @@ const checkAgentAccessMiddleware = async (req, res, next) => {
 };
 
 /**
- * Middleware to check if user has 'admin' role (administrative access) for write operations.
- * Only allows 'admin' role to proceed, others get 403 error.
- * Note: The role system uses 'admin', 'editor', 'viewer'. 'admin' role has permissions
- * for create_bridge, update_bridge, clone_agent, delete operations.
+ * Middleware to check if user has permission for write operations on agent.
+ * 
+ * Logic:
+ * 1. If role is 'admin' -> always allow (highest privilege)
+ * 2. If role is 'viewer' -> check if user_id is in agent's users array
+ *    - If yes -> allow
+ *    - If no -> deny
+ * 3. If role is 'editor' -> check if users array exists in agent
+ *    - If users array exists and user_id is in it -> allow
+ *    - If users array exists and user_id is NOT in it -> deny
+ *    - If users array doesn't exist -> allow
  * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -433,16 +442,96 @@ const checkAgentAccessMiddleware = async (req, res, next) => {
 const requireAdminRole = async (req, res, next) => {
   try {
     const role_name = req.role_name;
+    const user_id = req.user_id;
+    const org_id = req.org_id;
     
-    // Check if role is 'admin' (has administrative access)
-    if (role_name === 'viewer') {
+    // Admin always has access
+    if (role_name === 'admin') {
+      return next();
+    }
+    
+    // Get agent_id from request params
+    const agent_id = req.params.agent_id || req.params.bridgeId || req.params.bridge_id || req.params.version_id;
+    
+    // If no agent_id, check role (for create operations)
+    if (!agent_id) {
+      if (role_name === 'viewer') {
+        return res.status(403).json({ 
+          success: false,
+          message: "You don't have access to use this route" 
+        });
+      }
+      return next();
+    }
+    
+    // Query the agent to get users array
+    try {
+      let usersArray = null;
+      
+      // Check if it's a version_id or agent_id
+      if (req.params.version_id) {
+        // For version operations, get parent agent_id first
+        const version = await agentVersionDbService.getVersion(req.params.version_id);
+        if (version && version.parent_id) {
+          usersArray = await ConfigurationServices.getAgentUsers(version.parent_id, org_id);
+        }
+      } else {
+        // Direct agent operation
+        usersArray = await ConfigurationServices.getAgentUsers(agent_id, org_id);
+      }
+      
+      // Check if user_id is in the users array
+      const isUserInArray = usersArray && Array.isArray(usersArray) && 
+                           usersArray.some(u => String(u) === String(user_id));
+      
+      // Handle viewer role
+      if (role_name === 'viewer') {
+        if (isUserInArray) {
+          return next(); // Viewer has access if in users array
+        }
+        return res.status(403).json({ 
+          success: false,
+          message: "You don't have access to use this route" 
+        });
+      }
+      
+      // Handle editor role
+      if (role_name === 'editor') {
+        // If users array doesn't exist, allow editor
+        if (!usersArray || !Array.isArray(usersArray)) {
+          return next();
+        }
+        
+        // If users array exists, check if user is in it
+        if (isUserInArray) {
+          return next();
+        }
+        
+        // Users array exists but user is not in it
+        return res.status(403).json({ 
+          success: false,
+          message: "You don't have access to use this route" 
+        });
+      }
+      
+      // For any other role, deny by default
       return res.status(403).json({ 
         success: false,
         message: "You don't have access to use this route" 
       });
+      
+    } catch (dbError) {
+      console.error("Error querying agent users:", dbError);
+      // On DB error, fallback to role-based check
+      if (role_name === 'viewer') {
+        return res.status(403).json({ 
+          success: false,
+          message: "You don't have access to use this route" 
+        });
+      }
+      return next();
     }
     
-    return next();
   } catch (err) {
     console.error("Error in requireAdminRole:", err);
     return res.status(403).json({ 
