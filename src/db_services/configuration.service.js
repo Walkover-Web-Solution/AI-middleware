@@ -1128,7 +1128,6 @@ const getAgentsWithTools = async (agent_id, org_id, version_id = null) => {
 };
 
 const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
-  console.log("getAllAgentsInOrg inputs:", { org_id, folder_id, user_id, isEmbedUser });
   const query = { org_id: org_id };
   if (folder_id) {
     try {
@@ -1183,22 +1182,6 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     if (agent.published_version_id) {
       agent.published_version_id = agent.published_version_id.toString();
     }
-
-    // Fetch user details if users array exists
-    if (agent.users && Array.isArray(agent.users) && agent.users.length > 0) {
-      try {
-        const userDetailsResponse = await conversationService.getUserUpdates(org_id, null, 1, 10, agent.users);
-        if (userDetailsResponse.success) {
-          agent.users = userDetailsResponse.users;
-        }
-      } catch (error) {
-        console.error('Error fetching user details for agent:', agent._id, error);
-        agent.users = [];
-      }
-    } else {
-      agent.users = [];
-    }
-
     return agent;
   }));
 
