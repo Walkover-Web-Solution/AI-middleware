@@ -74,7 +74,7 @@ const deleteBridges = {
         agent_id: Joi.objectId().required(),
     }).unknown(true),
     body: Joi.object().keys({
-        org_id: Joi.string(),
+        org_id: Joi.any(),
         restore: Joi.boolean(),
     }).unknown(true),
 };
