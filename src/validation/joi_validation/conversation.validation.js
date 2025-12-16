@@ -14,7 +14,7 @@ const getThreads = {
         sub_thread_id: Joi.string(),
     }).unknown(true),
     body: Joi.object().keys({
-        org_id: Joi.objectId(),
+        org_id: Joi.string(),
     }).unknown(true),
 };
 
@@ -44,7 +44,7 @@ const getMessageHistory = {
         bridge_id: Joi.objectId().required(),
     }).unknown(true),
     body: Joi.object().keys({
-        org_id: Joi.objectId(),
+        org_id: Joi.string(),
     }).unknown(true),
     query: Joi.object().keys({
         pageNo: Joi.number().integer(),
@@ -74,7 +74,7 @@ const deleteBridges = {
         agent_id: Joi.objectId().required(),
     }).unknown(true),
     body: Joi.object().keys({
-        org_id: Joi.objectId(),
+        org_id: Joi.string(),
         restore: Joi.boolean(),
     }).unknown(true),
 };
