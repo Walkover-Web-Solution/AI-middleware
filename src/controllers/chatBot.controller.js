@@ -1,5 +1,6 @@
 import ChatbotDbService from "../db_services/chatBot.service.js";
 import responseTypeService from "../db_services/responseType.service.js";
+import configurationService from "../db_services/configuration.service.js";
 import token from "../services/commonService/generateToken.js";
 import { generateIdentifier } from "../services/utils/utility.service.js";
 import { generateToken } from "../services/utils/users.service.js";
@@ -143,4 +144,17 @@ const createOrgToken = async (req, res, next) => {
     return next();
 };
 
-export { getAllChatBots, updateChatBotConfig, loginUser, createOrgToken };
+const createOrRemoveAction = async (req, res) => {
+    const { agentId } = req.params;
+    const { type } = req.query;
+    const { actionJson, version_id } = req.body;
+    let { actionId } = req.body;
+    if (type !== "remove" && !actionId) // add for create and update the action 
+        actionId = generateIdentifier(12);
+    const response = type === 'add'
+        ? await configurationService.addActionInAgent(agentId, actionId, actionJson, version_id)
+        : await configurationService.removeActionInAgent(agentId, actionId, version_id);
+    // filterDataOfBridgeOnTheBaseOfUI({ bridges: response }, bridgeId, false);
+    return res.status(200).json({ success: true, data: response });
+};
+export { getAllChatBots, updateChatBotConfig, loginUser, createOrgToken, createOrRemoveAction };

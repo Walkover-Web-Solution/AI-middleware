@@ -37,15 +37,23 @@ const chatbotHistoryValidationSchema = Joi.object({
     thread_id: Joi.string().required(),
     bridge_id: Joi.objectId().required()
 }).unknown(true);
-
+const createOrRemoveActionValidationSchema = Joi.object({
+    agentId: Joi.objectId().required(),
+    type: Joi.string().valid('add', 'remove').required(),
+    actionJson: Joi.object().required(),
+    version_id: Joi.objectId().required(),
+    actionId: Joi.string().required()
+})
 export default {
     subscribe,
     getAllChatBots,
-    updateChatBotConfig
+    updateChatBotConfig,
+    createOrRemoveActionValidationSchema
 };
 
 // Named export for backward compatibility
 export {
-    chatbotHistoryValidationSchema
+    chatbotHistoryValidationSchema,
+    createOrRemoveActionValidationSchema
 };
 

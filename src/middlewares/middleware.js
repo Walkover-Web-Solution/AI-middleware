@@ -458,7 +458,7 @@ const requireAdminRole = async (req, res, next) => {
       if (role_name === 'viewer') {
         return res.status(403).json({ 
           success: false,
-          message: "You don't have access to use this route" 
+          message: "You don't have access to update this agent" 
         });
       }
       return next();
@@ -491,7 +491,7 @@ const requireAdminRole = async (req, res, next) => {
         }
         return res.status(403).json({ 
           success: false,
-          message: "You don't have access to use this route" 
+          message: "You don't have access to update this agent" 
         });
       }
       
@@ -510,14 +510,14 @@ const requireAdminRole = async (req, res, next) => {
         // Users array exists but user is not in it
         return res.status(403).json({ 
           success: false,
-          message: "You don't have access to use this route" 
+          message: "You don't have access to update this agent" 
         });
       }
       
       // For any other role, deny by default
       return res.status(403).json({ 
         success: false,
-        message: "You don't have access to use this route" 
+        message: "You don't have access to update this agent" 
       });
       
     } catch (dbError) {
@@ -526,7 +526,7 @@ const requireAdminRole = async (req, res, next) => {
       if (role_name === 'viewer') {
         return res.status(403).json({ 
           success: false,
-          message: "You don't have access to use this route" 
+          message: "You don't have access to update this agent" 
         });
       }
       return next();
@@ -536,7 +536,7 @@ const requireAdminRole = async (req, res, next) => {
     console.error("Error in requireAdminRole:", err);
     return res.status(403).json({ 
       success: false,
-      message: "You don't have access to use this route" 
+      message: "You don't have access to update this agent" 
     });
   }
 };
