@@ -38,8 +38,8 @@ const createAgentController = async (req, res, next) => {
 
         let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
         let name = null;
-        let service = "ai_ml";
-        let model = "gpt-oss-120b";
+        let service = "openai";
+        let model = "gpt-5-nano";
         let type = "chat";
 
         if (agents.templateId) {
@@ -137,7 +137,9 @@ const createAgentController = async (req, res, next) => {
             fall_back: fall_back,
             bridge_limit: agent_limit,
             bridge_usage: agent_usage,
-            bridge_status: 1
+            bridge_status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
         });
 
         const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
@@ -392,7 +394,16 @@ const updateAgentController = async (req, res, next) => {
         }
     }
 
+    // Update the updatedAt timestamp
+    update_fields.updatedAt = new Date();
+
     await ConfigurationServices.updateAgent(agent_id, update_fields, version_id);
+    
+    // If updating a version, also update the parent agent's updatedAt
+    if (version_id && parent_id) {
+        await ConfigurationServices.updateAgent(parent_id, { updatedAt: new Date() }, null);
+    }
+    
     const updatedAgent = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
 
     await addBulkUserEntries(user_history);

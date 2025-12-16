@@ -166,6 +166,14 @@ const configuration = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
   api_call: {
     type: Object,
     default: {}

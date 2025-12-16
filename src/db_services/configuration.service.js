@@ -1169,7 +1169,9 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     bridge_usage: 1,
     last_used: 1,
     variables_path: 1,
-    users: 1
+    users: 1,
+    createdAt: 1,
+    updatedAt: 1
   }).sort({ createdAt: -1 }).lean();
 
   // Process agents and fetch user details
@@ -1220,7 +1222,6 @@ export default {
   getAgentByUrlSlugname,
   findIdsByModelAndService,
   getAgentsByUserId,
-  getAllAgentsData,
   getAllAgentsData,
   getAgentsData,
   getAgentsWithTools,
