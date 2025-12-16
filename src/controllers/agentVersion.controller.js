@@ -209,7 +209,7 @@ const suggestModel = async (req, res, next) => {
         unavailable_models: JSON.stringify(unavailable_models)
     };
 
-    const ai_response = await callAiMiddleware(message, { bridge_id: bridge_ids['suggest_model'], variables: variables });
+    const ai_response = await callAiMiddleware(message, bridge_ids['suggest_model'], variables);
 
     const response = {
         available: {

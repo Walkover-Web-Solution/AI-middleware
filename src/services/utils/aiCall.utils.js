@@ -28,8 +28,7 @@ async function callAiMiddleware(user, bridge_id, variables = {}, configuration =
             {
                 headers: {
                     "pauthkey": process.env.GTWY_PAUTH_KEY,
-                    "Content-Type": "application/json",
-                    "Accept-Encoding": "gzip"
+                    "Content-Type": "application/json"
                 }
             }
         );
@@ -51,6 +50,7 @@ async function callAiMiddleware(user, bridge_id, variables = {}, configuration =
         return result;
 
     } catch (error) {
+        console.error('Error in callAiMiddleware:', error);
         throw new Error(error.response?.data?.message || error.message || 'Unknown error');
     }
 }
