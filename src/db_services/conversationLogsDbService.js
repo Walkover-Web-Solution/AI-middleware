@@ -479,4 +479,62 @@ async function updateStatus({ status, message_id }) {
     return { success: true, result: affectedRows };
 }
 
-export { sortThreadsByHits, updateStatus, getSubThreadsByError, getSubThreads, getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted, getHistoryByMessageId };
+/**
+ * Create a new conversation log entry
+ * @param {Object} payload - The conversation log data
+ * @returns {Object} - The created conversation log
+ */
+async function createConversationLog(payload) {
+  try {
+    // Transform the payload from old format to new format if needed
+    const transformedPayload = {
+      org_id: payload.org_id,
+      thread_id: payload.thread_id,
+      sub_thread_id: payload.sub_thread_id || payload.thread_id,
+      bridge_id: payload.bridge_id,
+      version_id: payload.version_id || null,
+      message_id: payload.message_id,
+      model: payload.model_name || null,
+      status: payload.status || false,
+      user_feedback: payload.user_feedback || 0,
+      tools_call_data: payload.tools_call_data || [],
+      user_urls: payload.user_urls || [],
+      llm_urls: payload.llm_urls || [],
+      AiConfig: payload.AiConfig || null,
+      fallback_model: payload.fallback_model || null,
+      tokens: payload.tokens || null,
+      variables: payload.variables || null,
+      latency: payload.latency || null,
+      error: payload.error || null,
+      firstAttemptError: payload.firstAttemptError || null,
+      finish_reason: payload.finish_reason || null,
+      parent_id: payload.parent_id || null,
+      child_id: payload.child_id || null
+    };
+
+    // Handle message fields based on message_by or type
+    if (payload.message_by === 'user' || payload.type === 'user') {
+      transformedPayload.user = payload.message || null;
+    } else if (payload.message_by === 'assistant' || payload.type === 'assistant') {
+      transformedPayload.llm_message = payload.message || null;
+      transformedPayload.chatbot_message = payload.chatbot_message || payload.message || null;
+      transformedPayload.updated_llm_message = payload.updated_message || null;
+    } else if (payload.message_by === 'tools_call' || payload.type === 'tools_call') {
+      transformedPayload.tools_call_data = payload.tools_call_data || payload.function || [];
+    } else {
+      // Default: if message_by is 'assistant' or not specified, treat as assistant
+      transformedPayload.chatbot_message = payload.message || null;
+    }
+
+    transformedPayload.prompt = payload.prompt || null;
+    transformedPayload.service = payload.service || null;
+
+    const result = await models.pg.conversation_logs.create(transformedPayload);
+    return result;
+  } catch (error) {
+    console.error("Error creating conversation log:", error);
+    throw error;
+  }
+}
+
+export { sortThreadsByHits, updateStatus, getSubThreadsByError, getSubThreads, getConversationLogs, getRecentThreads, searchConversationLogs, getThreadHistoryFormatted, getHistoryByMessageId, createConversationLog };

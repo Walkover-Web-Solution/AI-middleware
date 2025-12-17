@@ -1,11 +1,11 @@
-
+import crypto from 'crypto';
 import { createThreadHistory, getAllThreads, getAllThreadsUsingKeywordSearch, getThreadHistoryByMessageId, getThreadMessageHistory } from "../../controllers/conversationContoller.js";
 import configurationService from "../../db_services/ConfigurationServices.js";
 import { createThreadHistrorySchema} from "../../validation/joi_validation/bridge.js";
 import { BridgeStatusSchema, updateMessageSchema } from "../../validation/joi_validation/validation.js";
 import { convertToTimestamp} from "../../services/utils/getConfiguration.js";
 import conversationDbService from "../../db_services/conversationDbService.js";
-import { sortThreadsByHits, getSubThreadsByError, updateStatus } from "../../db_services/conversationLogsDbService.js";
+import { sortThreadsByHits, getSubThreadsByError, updateStatus, createConversationLog } from "../../db_services/conversationLogsDbService.js";
 import { generateIdForOpenAiFunctionCall } from "../utils/utilityService.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatbot.js";
@@ -402,7 +402,8 @@ export const createEntry = async (req, res,next) => {
         error: error.details
       });
     }
-    const threads = await createThreadHistory(payload);
+    // Use the new conversation_logs service instead of the old conversations table
+    const threads = await createConversationLog(payload);
     res.locals = threads;
     req.statusCode =200;
     return next();
