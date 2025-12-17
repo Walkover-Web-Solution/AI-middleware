@@ -489,6 +489,7 @@ async function createConversationLog(payload) {
     // Transform the payload from old format to new format if needed
     const transformedPayload = {
       org_id: payload.org_id,
+      llm_message: payload.message || null,
       thread_id: payload.thread_id,
       sub_thread_id: payload.sub_thread_id || payload.thread_id,
       bridge_id: payload.bridge_id,
@@ -511,20 +512,6 @@ async function createConversationLog(payload) {
       parent_id: payload.parent_id || null,
       child_id: payload.child_id || null
     };
-
-    // Handle message fields based on message_by or type
-    if (payload.message_by === 'user' || payload.type === 'user') {
-      transformedPayload.user = payload.message || null;
-    } else if (payload.message_by === 'assistant' || payload.type === 'assistant') {
-      transformedPayload.llm_message = payload.message || null;
-      transformedPayload.chatbot_message = payload.chatbot_message || payload.message || null;
-      transformedPayload.updated_llm_message = payload.updated_message || null;
-    } else if (payload.message_by === 'tools_call' || payload.type === 'tools_call') {
-      transformedPayload.tools_call_data = payload.tools_call_data || payload.function || [];
-    } else {
-      // Default: if message_by is 'assistant' or not specified, treat as assistant
-      transformedPayload.chatbot_message = payload.message || null;
-    }
 
     transformedPayload.prompt = payload.prompt || null;
     transformedPayload.service = payload.service || null;
