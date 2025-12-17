@@ -30,12 +30,6 @@ const version = new mongoose.Schema({
     type: String,
     default: ""
   },
-  bridgeType: {
-    type: String,
-    enum: ['api', 'chatbot'],
-    required: true,
-    default: 'chatbot'
-  },
   configuration: {
     type: Object,
     default: {}
@@ -123,10 +117,6 @@ const version = new mongoose.Schema({
       service: "",
       model: ""
     }
-  },
-  bridge_summary: {
-    type: String,
-    default: ""
   },
   built_in_tools: {
     type: Array,
