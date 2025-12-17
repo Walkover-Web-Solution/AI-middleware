@@ -1,4 +1,4 @@
-
+import crypto from 'crypto';
 import { createThreadHistory, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
 import configurationService from "../../db_services/configuration.service.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.validation.js";
@@ -8,7 +8,7 @@ import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.se
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatBot.validation.js";
 import { send_error_to_webhook } from "../sendErrorWebhook.service.js"
-import { findThreadHistoryFormatted } from "../../db_services/history.service.js";
+import { findThreadHistoryFormatted, updateStatus, createConversationLog } from "../../db_services/history.service.js";
 
 const getThreads = async (req, res, next) => {
 
@@ -197,7 +197,8 @@ const updateMessageStatus = async (req, res, next) => {
   if (status === "2") {
     sendError(bridge_id, org_id, error_message, "thumbsdown");
   }
-  const result = await conversationDbService.updateStatus({ status, message_id })
+  const result = await updateStatus({ status, message_id })
+
   res.locals = result;
   req.statusCode = result?.success ? 200 : 400;
   return next();
@@ -229,8 +230,16 @@ export const createEntry = async (req, res, next) => {
     message_id: message_id,
     sub_thread_id: thread_id
   }
-  await createThreadHistrorySchema.validateAsync(payload);
-  const threads = await createThreadHistory(payload);
+  try {
+    await createThreadHistrorySchema.validateAsync(payload);
+  } catch (error) {
+    return res.status(422).json({
+      success: false,
+      error: error.details
+    });
+  }
+  // Use the new conversation_logs service instead of the old conversations table
+  const threads = await createConversationLog(payload);
   res.locals = threads;
   req.statusCode = 200;
   return next();
