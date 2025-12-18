@@ -547,8 +547,10 @@ const getAllAgentController = async (req, res, next) => {
         // Get role_name from middleware (first layer check)
         const role_name = req.role_name || null;
         // Generate tokens
-        const viasocket_embed_user_id = user_id; // Assuming this is the user_id from the request
-        
+        let viasocket_embed_user_id = user_id; // Assuming this is the user_id from the request
+        if (user_id && isEmbedUser && folder_id) {
+            viasocket_embed_user_id = viasocket_embed_user_id + "_" + folder_id + "_" + user_id;
+        }
         const embed_token = Helper.generate_token(
             { 
                 "org_id": process.env.ORG_ID, 
@@ -557,7 +559,7 @@ const getAllAgentController = async (req, res, next) => {
             }, 
             process.env.ACCESS_KEY
         );
-        
+
         const alerting_embed_token = Helper.generate_token(
             { 
                 "org_id": process.env.ORG_ID, 
