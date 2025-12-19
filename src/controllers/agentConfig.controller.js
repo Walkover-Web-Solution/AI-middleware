@@ -2,7 +2,7 @@ import ConfigurationServices from "../db_services/configuration.service.js";
 import folderDbService from "../db_services/folder.service.js";
 import agentVersionDbService from "../db_services/agentVersion.service.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
-import { bridge_ids, new_agent_service, redis_keys } from "../configs/constant.js";
+import { bridge_ids, new_agent_service } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversation.service.js";
@@ -10,9 +10,9 @@ const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
+import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import {
     createBridgeSchema,
-    updateBridgeSchema,
     bridgeIdParamSchema,
     modelNameParamSchema,
     cloneAgentSchema
@@ -95,14 +95,49 @@ const createAgentController = async (req, res, next) => {
         const slugName = `${name}_${slug_next_count}`;
         name = `${name}_${name_next_count}`;
 
-        // Construct model data - simplified logic
-        const model_data = {
-            model: model,
-            type: type,
-            response_format: { type: "default", cred: {} },
-            is_rich_text: false,
-            prompt: prompt
+        // Construct model data based on model configuration
+        const keys_to_update = [
+            'model',
+            'creativity_level',
+            'max_tokens',
+            'probability_cutoff',
+            'log_probability',
+            'repetition_penalty',
+            'novelty_penalty',
+            'n',
+            'response_count',
+            'additional_stop_sequences',
+            'stream',
+            'stop',
+            'response_type',
+            'tool_choice',
+            'size',
+            'quality',
+            'style'
+        ];
+
+        const model_data = {};
+        
+        // Get model configuration if available
+        const serviceLower = service.toLowerCase();
+        if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
+            const modelObj = modelConfigDocument[serviceLower][model];
+            const configurations = modelObj.configuration || {};
+            
+            for (const key of keys_to_update) {
+                if (configurations[key]) {
+                    model_data[key] = key === 'model' ? configurations[key].default : 'default';
+                }
+            }
+        }
+        
+        model_data.type = type;
+        model_data.response_format = {
+            type: "default",
+            cred: {}
         };
+        model_data.is_rich_text = false;
+        model_data.prompt = prompt;
 
         const fall_back = {
             is_enable: true,
