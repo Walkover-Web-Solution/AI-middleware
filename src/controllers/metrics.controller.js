@@ -58,7 +58,10 @@ const getBridgeMetrics = async (req, res, next) => {
   const org_id = req.profile?.org?.id;
   const { start_date, end_date } = req.body;
 
-  let query = `SELECT bridge_id, SUM(total_token_count) as total_tokens 
+  let query = `SELECT bridge_id, 
+                      SUM(total_token_count) as total_tokens,
+                      SUM(cost_sum) as total_cost,
+                      MAX(created_at) as last_used_time
                    FROM daily_data 
                    WHERE org_id = :org_id`;
 
