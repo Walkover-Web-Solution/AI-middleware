@@ -11,23 +11,10 @@ import { getDefaultValuesController } from "../services/utils/getDefaultValue.js
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
-import {
-    createBridgeSchema,
-    bridgeIdParamSchema,
-    modelNameParamSchema,
-    cloneAgentSchema
-} from "../validation/joi_validation/agentConfig.validation.js";
 
 const createAgentController = async (req, res, next) => {
     try {
-        // Validate request body
-        const { error, value } = createBridgeSchema.validate(req.body);
-        if (error) {
-            res.locals = { success: false, message: error.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const agents = value;
+        const agents = req.body;
         const purpose = agents.purpose;
         const agentType = agents.bridgeType || 'api';
         const org_id = req.profile.org.id;
@@ -466,14 +453,7 @@ const updateAgentController = async (req, res, next) => {
 
 const getAgentsAndVersionsByModelController = async (req, res, next) => {
     try {
-        // Validate params
-        const { error, value } = modelNameParamSchema.validate(req.params);
-        if (error) {
-            res.locals = { success: false, message: error.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const { modelName } = value;
+        const { modelName } = req.params;
         const result = await ConfigurationServices.getAgentsAndVersionsByModel(modelName);
         res.locals = {
             success: true,
@@ -491,14 +471,7 @@ const getAgentsAndVersionsByModelController = async (req, res, next) => {
 
 const cloneAgentController = async (req, res, next) => {
     try {
-        // Validate request body
-        const { error, value } = cloneAgentSchema.validate(req.body);
-        if (error) {
-            res.locals = { success: false, message: error.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const { agent_id, to_shift_org_id } = value;
+        const { agent_id, to_shift_org_id } = req.body;
         const result = await ConfigurationServices.cloneAgentToOrg(agent_id, to_shift_org_id);
         res.locals = result;
         req.statusCode = result.success ? 200 : 400;
@@ -512,14 +485,7 @@ const cloneAgentController = async (req, res, next) => {
 
 const getAgentController = async (req, res, next) => {
     try {
-        // Validate params
-        const { error, value } = bridgeIdParamSchema.validate(req.params);
-        if (error) {
-            res.locals = { success: false, message: error.details[0].message };
-            req.statusCode = 400;
-            return next();
-        }
-        const { agent_id } = value;
+        const { agent_id } = req.params;
         const org_id = req.profile.org.id;
 
         const agent = await ConfigurationServices.getAgentsWithTools(agent_id, org_id);

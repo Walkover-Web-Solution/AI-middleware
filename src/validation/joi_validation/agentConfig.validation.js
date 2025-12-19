@@ -115,11 +115,36 @@ const cloneAgentSchema = Joi.object({
     })
 }).unknown(true);
 
+// Validation objects for use with validate middleware
+const createAgent = {
+    body: createBridgeSchema
+};
+
+const getAgentsByModel = {
+    params: modelNameParamSchema
+};
+
+const cloneAgent = {
+    body: cloneAgentSchema
+};
+
+const getAgent = {
+    params: bridgeIdParamSchema
+};
+
+// Export both the schemas and validation objects
 export {
     createBridgeSchema,
     updateBridgeSchema,
     bridgeIdParamSchema,
     modelNameParamSchema,
     cloneAgentSchema
+};
+
+export default {
+    createAgent,
+    getAgentsByModel,
+    cloneAgent,
+    getAgent
 };
 
