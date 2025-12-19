@@ -3,6 +3,7 @@ import versionModel from "../mongoModel/BridgeVersion.model.js";
 import apiCallModel from "../mongoModel/ApiCall.model.js";
 import ChatBotModel from "../mongoModel/ChatBot.model.js";
 import templateModel from "../mongoModel/Template.model.js";
+import models from "../../models/index.js";
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { ObjectId } from "mongodb";
@@ -1128,6 +1129,10 @@ const getAgentsWithTools = async (agent_id, org_id, version_id = null) => {
 };
 
 const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
+  // First, get all bridge_ids and their last publishers from PostgreSQL
+  const lastPublishersMap = await getAllAgentsWithLastPublishers(org_id);
+  
+  // Build MongoDB query
   const query = { org_id: org_id };
   if (folder_id) {
     try {
@@ -1135,8 +1140,6 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
         query.folder_id = folder_id;
       } else {
         console.warn("Invalid folder_id passed to getAllAgentsInOrg:", folder_id);
-        // Decide whether to ignore it or return empty
-        // For now, let's ignore it to prevent crash if it was causing one (though find shouldn't crash)
       }
     } catch (e) {
       console.error("Error validating folder_id:", e);
@@ -1144,11 +1147,13 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
   }
   if (user_id && isEmbedUser) query.user_id = user_id;
 
+  // Get agents from MongoDB
   const agents = await configurationModel.find(query).select({
     _id: 1,
     name: 1,
     service: 1,
     org_id: 1,
+    user_id: 1,
     "configuration.model": 1,
     "configuration.prompt": 1,
     bridgeType: 1,
@@ -1171,11 +1176,13 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     variables_path: 1,
     users: 1,
     createdAt: 1,
-    updatedAt: 1
+    updatedAt: 1,
+    prompt_total_tokens:1,
+    prompt_enhancer_percentage:1
   }).sort({ createdAt: -1 }).lean();
 
-  // Process agents and fetch user details
-  const processedAgents = await Promise.all(agents.map(async (agent) => {
+  // Process agents and assign last publisher data
+  const processedAgents = agents.map((agent) => {
     agent._id = agent._id.toString();
     agent.bridge_id = agent._id; // Alias _id as bridge_id
     if (agent.function_ids) {
@@ -1184,10 +1191,40 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     if (agent.published_version_id) {
       agent.published_version_id = agent.published_version_id.toString();
     }
+    
+    // Get the last publisher from the PostgreSQL result
+    if (lastPublishersMap[agent._id]) {
+      agent.last_publisher_id = lastPublishersMap[agent._id];
+    }
     return agent;
-  }));
+  });
 
   return processedAgents;
+};
+
+// Get all agents with their last publishers for an organization in a single query
+const getAllAgentsWithLastPublishers = async (org_id) => {
+    // Simple query to get all bridge_ids and their last publishers for the organization
+    const agentsWithPublishers = await models.pg.sequelize.query(`
+      SELECT DISTINCT ON (bridge_id) 
+             bridge_id, 
+             user_id as last_publisher_id
+      FROM user_bridge_config_history 
+      WHERE org_id = :org_id 
+        AND type = 'Version published'
+      ORDER BY bridge_id, time DESC
+    `, {
+      replacements: { org_id },
+      type: models.pg.sequelize.QueryTypes.SELECT
+    });
+   
+    // Create a map of bridge_id -> last_publisher_id
+    const publishersMap = {};
+    agentsWithPublishers.forEach(agent => {
+      publishersMap[agent.bridge_id] = agent.last_publisher_id;
+    });
+
+    return publishersMap;
 };
 
 const getAgentUsers = async (agent_id, org_id) => {
@@ -1215,6 +1252,7 @@ export default {
   findChatbotOfAgent,
   getAgentIdBySlugname,
   gettemplateById,
+  getAllAgentsWithLastPublishers,
   addActionInAgent,
   removeActionInAgent,
   getAgents,

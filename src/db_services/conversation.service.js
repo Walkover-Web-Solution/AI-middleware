@@ -577,7 +577,7 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
 async function addBulkUserEntries(entries) {
   try {
     if (!entries || entries.length === 0) return { success: true, message: "No entries to add" };
-
+    
     // Map entries to match the database schema if necessary
     // Assuming user_bridge_config_history model exists in models.pg
     const result = await models.pg.user_bridge_config_history.bulkCreate(entries);

@@ -62,9 +62,22 @@ async function getAllTestcases(req, res, next) {
     req.statusCode = 200;
     return next();
 }
+async function updateTestcases(req, res, next) {
+    const testcase_id = req.params.testcase_id 
+    const { agent_id, type, conversation, expected } = req.body;
+    const data = { agent_id, type, conversation, expected };
+    const result = await testcaseSevice.updateTestCaseById(testcase_id, data);
+    res.locals = {
+        success: true,
+        result
+    };
+    req.statusCode = 200;
+    return next();
+}
 
 export default {
     createTestcase,
     deleteTestcase,
-    getAllTestcases
+    getAllTestcases,
+    updateTestcases
 };
