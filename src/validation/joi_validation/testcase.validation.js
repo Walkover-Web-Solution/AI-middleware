@@ -10,7 +10,7 @@ const createTestcaseSchema = Joi.object({
     type: Joi.string().required().messages({
         'any.required': 'type is required'
     }),
-    expected: Joi.string().required().messages({
+    expected: Joi.object().required().messages({
         'any.required': 'expected is required'
     }),
     matching_type: Joi.string().required().messages({
@@ -30,8 +30,24 @@ const bridgeIdSchema = Joi.object({
     })
 }).unknown(true);
 
+const testcaseUpdateSchema = Joi.object({
+    conversation: Joi.array().required().messages({
+        'any.required': 'conversation is required'
+    }),
+    type: Joi.string().required().messages({
+        'any.required': 'type is required'
+    }),
+    expected: Joi.object().required().messages({
+        'any.required': 'expected is required'
+    }),
+    matching_type: Joi.string().required().messages({
+        'any.required': 'matching_type is required'
+    })
+}).unknown(true);
+
 export {
     createTestcaseSchema,
     testcaseIdSchema,
-    bridgeIdSchema
+    bridgeIdSchema,
+    testcaseUpdateSchema
 };
