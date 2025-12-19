@@ -548,7 +548,7 @@ const getAllAgentController = async (req, res, next) => {
         // Get role_name from middleware (first layer check)
         const role_name = req.role_name || null;
         // Generate tokens
-        let viasocket_embed_user_id = user_id; // Assuming this is the user_id from the request
+        let viasocket_embed_user_id = org_id.toString(); // Using org_id as the base user identifier
         if (user_id && isEmbedUser && folder_id) {
             viasocket_embed_user_id = viasocket_embed_user_id + "_" + folder_id + "_" + user_id;
         }

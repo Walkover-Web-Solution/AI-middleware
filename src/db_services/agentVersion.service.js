@@ -451,7 +451,7 @@ async function publish(org_id, version_id, user_id) {
             { session }
         );
 
-        if (previousPublishedVersionId) {
+        if (previousPublishedVersionId && previousPublishedVersionId.toString() !== publishedVersionId.toString()) {
             await bridgeVersionModel.updateOne(
                 { _id: previousPublishedVersionId },
                 { $set: { is_drafted: true } },
