@@ -170,6 +170,7 @@ const middleware = async (req, res, next) => {
     req.user_id = req.profile?.user?.id ? req.profile.user.id.toString() : null;
     req.role_name = req.profile?.user?.role_name || null;
     req.org_id = req.profile.org.id;
+    req.embed = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
     
     return next();
   } catch (err) {
