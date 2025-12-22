@@ -45,8 +45,8 @@ const switchUserOrgLocal = async (req, res, next) => {
   );
   
   const jwtToken = response.data.data.jwt;
-  const token = reissueToken(jwtToken);
-  res.locals = { data: { token }, success: true };
+  // const token = reissueToken(jwtToken);
+  res.locals = { data: { jwtToken }, success: true };
   req.statusCode = 200;
   return next();
 }

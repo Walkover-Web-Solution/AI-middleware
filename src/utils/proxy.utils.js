@@ -33,7 +33,7 @@ const createOrGetUser = async (checkToken, decodedToken, orgTokenFromDb) => {
         feature_id: process.env.PROXY_USER_REFERENCE_ID,
         Cuser: userDetails,
         company: orgDetials,
-        role_id: 2
+        role_id: process.env.PROXY_USER_ROLE_ID
     };
     const proxyResponse = await createOrFindUserAndCompany(proxyObject); // proxy api call
     return {proxyResponse, name: userDetails.name, email: userDetails.email}
