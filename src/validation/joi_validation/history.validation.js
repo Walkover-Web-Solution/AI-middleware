@@ -62,41 +62,36 @@ const getRecentThreads = {
       'number.min': 'Limit must be at least 1',
       'number.max': 'Limit must be at most 100'
     }),
-    user_feedback: Joi.string().optional().default('all'),
-    error: Joi.string().optional().default('false')
-  }).unknown(true)
-};
-
-/**
- * Schema for GET /search/:agent_id - searchConversationLogs
- * Validates URL params and query params
- */
-const searchConversationLogs = {
-  params: Joi.object().keys({
-    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
-      'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
-      'any.required': 'agent_id is required'
-    })
-  }).unknown(true),
-  query: Joi.object().keys({
-    keyword: Joi.string().required().messages({
-      'string.empty': 'keyword is required',
-      'any.required': 'keyword is required'
+    user_feedback: Joi.string().valid('all', '0', '1', '2').optional().default('all').messages({
+      'string.base': 'user_feedback must be a string',
+      'any.only': 'user_feedback must be one of: all, 0, 1, 2'
     }),
-    time_range: Joi.object().keys({
-      start: Joi.string().isoDate().optional().messages({
-        'string.isoDate': 'time_range.start must be a valid ISO date string'
-      }),
-      end: Joi.string().isoDate().optional().messages({
-        'string.isoDate': 'time_range.end must be a valid ISO date string'
-      })
-    }).unknown(true).optional()
+    error: Joi.string().valid('true', 'false').optional().default('false').messages({
+      'string.base': 'error must be a string',
+      'any.only': 'error must be either "true" or "false"'
+    }),
+    version_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional().messages({
+      'string.pattern.base': 'version_id must be a valid MongoDB ObjectId'
+    }),
+    keyword: Joi.string().min(1).max(500).optional().messages({
+      'string.base': 'keyword must be a string',
+      'string.min': 'keyword must be at least 1 character long',
+      'string.max': 'keyword must be at most 500 characters long'
+    }),
+    start_date: Joi.date().iso().optional().messages({
+      'date.base': 'start_date must be a valid date',
+      'date.format': 'start_date must be in ISO format'
+    }),
+    end_date: Joi.date().iso().min(Joi.ref('start_date')).optional().messages({
+      'date.base': 'end_date must be a valid date',
+      'date.format': 'end_date must be in ISO format',
+      'date.min': 'end_date must be after start_date'
+    })
   }).unknown(true)
 };
 
 export default {
   getConversationLogs,
-  getRecentThreads,
-  searchConversationLogs
+  getRecentThreads
 };
 

@@ -12,10 +12,10 @@ import Sequelize from "sequelize";
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_thread_id, page = 1, limit = 30) {
+async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_thread_id, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
-    
+
     // Build where conditions - all parameters are required
     const whereConditions = {
       org_id: org_id,
@@ -24,6 +24,10 @@ async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_threa
       sub_thread_id: sub_thread_id
     };
 
+    if (version_id) {
+      whereConditions.version_id = version_id;
+    }
+
     // Get paginated data
     const logs = await models.pg.conversation_logs.findAll({
       where: whereConditions,
@@ -31,10 +35,10 @@ async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_threa
       limit: limit,
       offset: offset
     });
-    
+
     // Reverse the conversation logs array
     const reversedLogs = logs.reverse();
-    
+
     return {
       success: true,
       data: reversedLogs
@@ -53,26 +57,65 @@ async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_threa
  * Get recent threads by bridge_id, ordered by updated_at
  * @param {string} org_id - Organization ID
  * @param {string} bridge_id - Bridge ID
+ * @param {Object} filters - Search filters
+ * @param {string} filters.keyword - Keyword to search (optional)
+ * @param {Object} filters.time_range - Time range filter (optional)
+ * @param {string} user_feedback - Filter by user feedback
+ * @param {string} error - Filter by error
  * @param {number} page - Page number (default: 1)
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function findRecentThreadsByBridgeId(org_id, bridge_id, user_feedback, error, page = 1, limit = 30) {
+async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feedback, error, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
-    
+
     // Build where conditions
     const whereConditions = {
       org_id: org_id,
       bridge_id: bridge_id
     };
 
-    if (user_feedback !== 'all' || user_feedback !== 'undefined') {
-      whereConditions.user_feedback = user_feedback === "all" ?  0 : user_feedback;
+    if (user_feedback !== 'all' && user_feedback !== 'undefined') {
+      whereConditions.user_feedback = user_feedback === "all" ? 0 : user_feedback;
     }
 
     if (error !== 'false') {
       whereConditions.error = error;
+    }
+
+    if (version_id) {
+      whereConditions.version_id = version_id;
+    }
+
+    // Add time range filter
+    if (filters.time_range) {
+      const timeConditions = {};
+      if (filters.time_range.start) {
+        timeConditions[Sequelize.Op.gte] = new Date(filters.time_range.start);
+      }
+      if (filters.time_range.end) {
+        timeConditions[Sequelize.Op.lte] = new Date(filters.time_range.end);
+      }
+      if (timeConditions) {
+        whereConditions.created_at = timeConditions;
+      }
+    }
+
+    // Add keyword search across recommended columns
+    if (filters?.keyword?.length > 0 && filters?.keyword !== "") {
+      const keywordConditions = {
+        [Sequelize.Op.or]: [
+          { message_id: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { thread_id: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { sub_thread_id: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { llm_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { user: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { chatbot_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
+          { updated_llm_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } }
+        ]
+      };
+      whereConditions[Sequelize.Op.and] = [keywordConditions];
     }
 
     // Get recent threads with distinct thread_id, ordered by updated_at
@@ -96,6 +139,61 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, user_feedback, err
       updated_at: thread.dataValues.updated_at
     }));
 
+    // If keyword search is active, fetch matching messages for the found threads
+    if (filters?.keyword && formattedThreads?.length > 0) {
+      const threadIds = formattedThreads.map(t => t.thread_id);
+
+      const messagesWhere = {
+        ...whereConditions,
+        thread_id: { [Sequelize.Op.in]: threadIds }
+      };
+
+      const matchedMessages = await models.pg.conversation_logs.findAll({
+        where: messagesWhere,
+        order: [['created_at', 'DESC']]
+      });
+
+      // Attach matching messages to threads
+      formattedThreads.forEach(thread => {
+        const threadMessages = matchedMessages.filter(m => m.thread_id === thread.thread_id);
+
+        thread.message = threadMessages.map(msg => {
+          // Determine the content to display
+          let content = '';
+          if (msg.user && msg.user.toLowerCase().includes(filters.keyword.toLowerCase())) {
+            content = msg.user;
+          } else if ((msg.llm_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+            content = msg.llm_message;
+          } else if ((msg.chatbot_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+            content = msg.chatbot_message;
+          } else if ((msg.updated_llm_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+            content = msg.updated_llm_message;
+          } else {
+            // Fallback if match query matched ID or something else
+            content = msg.user || msg.llm_message || msg.chatbot_message || "Match found in ID or metadata";
+          }
+
+          return {
+            message_id: msg.message_id,
+            message: content,
+            created_at: msg.created_at
+          };
+        });
+
+        const distinctSubThreads = [...new Set(threadMessages.map(m => m.sub_thread_id).filter(Boolean))];
+        if (distinctSubThreads.length > 0) {
+          thread.sub_thread = distinctSubThreads.map(stId => ({
+            sub_thread_id: stId,
+            display_name: stId,
+            messages: threadMessages.filter(m => m.sub_thread_id === stId).map(msg => ({
+              message_id: msg.message_id,
+              message: msg.user || msg.llm_message || "Match found" // Simplify for subthread view
+            }))
+          }));
+        }
+      });
+    }
+
     // Get total count of all user_feedback values across all threads
     const totalFeedbackCount = await models.pg.conversation_logs.findOne({
       attributes: [
@@ -105,7 +203,7 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, user_feedback, err
       ],
       where: whereConditions
     });
-    
+
     return {
       success: true,
       data: formattedThreads,
@@ -271,10 +369,10 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status, formatted data with pagination
  */
-async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
+async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
-    
+
     // Build where conditions
     const whereConditions = {
       org_id: org_id,
@@ -282,6 +380,10 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
       bridge_id: bridge_id,
       sub_thread_id: sub_thread_id ? sub_thread_id : thread_id
     };
+
+    if (version_id) {
+      whereConditions.version_id = version_id;
+    }
 
     // Get total count
     const totalCount = await models.pg.conversation_logs.count({
@@ -301,7 +403,7 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
 
     // Format data: split each entry into user and assistant messages
     const formattedData = [];
-    
+
     reversedLogs.forEach(log => {
       // Create user message entry
       if (log.user) {
@@ -431,5 +533,4 @@ async function createConversationLog(payload) {
   }
 }
 
-export { findConversationLogsByIds, updateStatus,  findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId, createConversationLog };
-
+export { findConversationLogsByIds, updateStatus, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId, createConversationLog };
