@@ -71,21 +71,30 @@ const createOrRemoveAction = {
             'any.required': 'agentId is mandatory'
         })
     }).unknown(true),
+    query: Joi.object().keys({
+        type: Joi.string().valid('add', 'remove').optional().messages({
+            'string.base': 'type must be a string',
+            'any.only': 'type must be either "add" or "remove"'
+        })
+    }).unknown(true),
     body: Joi.object().keys({
-        type: Joi.string().valid('add', 'remove').required(),
-        actionJson: Joi.object().required(),
-        version_id: Joi.objectId().required(),
-        actionId: Joi.string().required()
+        type: Joi.string().valid('sendDataToFrontend', 'reply').optional().messages({
+            'string.base': 'type must be a string',
+            'any.only': 'type must be either "sendDataToFrontend" or "reply"'
+        }),
+        actionJson: Joi.object().required().messages({
+            'object.base': 'actionJson must be an object',
+            'any.required': 'actionJson is mandatory'
+        }),
+        version_id: Joi.objectId().required().messages({
+            'string.base': 'version_id must be a valid ObjectId',
+            'any.required': 'version_id is mandatory'
+        }),
+        actionId: Joi.string().optional().messages({
+            'string.base': 'actionId must be a string'
+        })
     }).unknown(true)
 };
-
-const createOrRemoveActionValidationSchema = Joi.object({
-    agentId: Joi.objectId().required(),
-    type: Joi.string().valid('add', 'remove').required(),
-    actionJson: Joi.object().required(),
-    version_id: Joi.objectId().required(),
-    actionId: Joi.string().required()
-})
 
 export default {
     subscribe,
@@ -94,12 +103,10 @@ export default {
     updateChatBotConfig,
     addOrRemoveBridgeInChatBot,
     createOrRemoveAction,
-    createOrRemoveActionValidationSchema
 };
 
 // Named export for backward compatibility
 export {
     chatbotHistoryValidationSchema,
-    createOrRemoveActionValidationSchema
 };
 
