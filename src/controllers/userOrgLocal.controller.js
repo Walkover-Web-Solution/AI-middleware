@@ -17,7 +17,7 @@ const userOrgLocalToken = async (req, res, next) => {
     }
   );
   
-  const jwtToken = response.data.data.jwt;
+  const token = response.data.data.jwt;
   // const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
@@ -44,7 +44,7 @@ const switchUserOrgLocal = async (req, res, next) => {
     }
   );
   
-  const jwtToken = response.data.data.jwt;
+  const token = response.data.data.jwt;
   // const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
