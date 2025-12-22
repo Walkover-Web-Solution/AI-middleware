@@ -162,6 +162,14 @@ const configuration = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  prompt_total_tokens: {
+    type: Number,
+    default: 0
+  },
+  prompt_enhancer_percentage: {
+    type: Number,
+    default: 0
+  },
   created_at: {
     type: Date,
     default: Date.now
