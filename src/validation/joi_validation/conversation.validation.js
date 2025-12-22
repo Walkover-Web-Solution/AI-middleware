@@ -112,7 +112,7 @@ const updateMessageStatus = {
     }).unknown(true),
     body: Joi.object().keys({
         message_id: Joi.string().required(),
-        agent_id: Joi.objectId().required(),
+        agent_id: Joi.objectId(),
     }).unknown(true),
 };
 
