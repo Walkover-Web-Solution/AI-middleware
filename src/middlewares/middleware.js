@@ -32,15 +32,22 @@ const ROLE_PERMISSIONS = {
  * Determine user role based on their permissions.
  * 
  * Logic:
- * 1. Check if user has all permissions from 'admin' role -> return 'admin'
- * 2. Check if user has all permissions from 'editor' role -> return 'editor'
- * 3. Check if user has all permissions from 'viewer' role -> return 'viewer'
- * 4. If no match, return 'viewer' as default
+ * 1. Check if isEmbed is true -> return 'editor' (embed users get editor role)
+ * 2. Check if user has all permissions from 'admin' role -> return 'admin'
+ * 3. Check if user has all permissions from 'editor' role -> return 'editor'
+ * 4. Check if user has all permissions from 'viewer' role -> return 'viewer'
+ * 5. If no match, return 'viewer' as default
  * 
  * @param {Array} userPermissions - List of permission strings from JWT token
+ * @param {Boolean} isEmbed - Boolean indicating if user is an embed user
  * @returns {string} Role name ('admin', 'editor', or 'viewer')
  */
-const determineRoleFromPermissions = (userPermissions) => {
+const determineRoleFromPermissions = (userPermissions, isEmbed = false) => {
+  // Check if user is an embed user first
+  if (isEmbed) {
+    return 'editor';
+  }
+  
   if (!userPermissions || !Array.isArray(userPermissions)) {
     return 'viewer';
   }
@@ -148,7 +155,9 @@ const middleware = async (req, res, next) => {
       
       // Determine role_name from permissions in JWT token
       const userPermissions = req.profile?.user?.permissions || [];
-      const determinedRole = determineRoleFromPermissions(userPermissions);
+      // Check if user is embed user using the same logic as line 184
+      const isEmbed = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
+      const determinedRole = determineRoleFromPermissions(userPermissions, isEmbed);
       
       // Set role_name in user object for consistency
       if (!req.profile.user) {
@@ -170,7 +179,7 @@ const middleware = async (req, res, next) => {
     req.user_id = req.profile?.user?.id ? req.profile.user.id.toString() : null;
     req.role_name = req.profile?.user?.role_name || null;
     req.org_id = req.profile.org.id;
-    req.embed = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
+    req.embed = isEmbed;
     
     return next();
   } catch (err) {
