@@ -155,7 +155,7 @@ const middleware = async (req, res, next) => {
       
       // Determine role_name from permissions in JWT token
       const userPermissions = req.profile?.user?.permissions || [];
-      // Check if user is embed user using the same logic as line 184
+      // Check if user is embed user
       const isEmbed = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
       const determinedRole = determineRoleFromPermissions(userPermissions, isEmbed);
       
@@ -179,7 +179,7 @@ const middleware = async (req, res, next) => {
     req.user_id = req.profile?.user?.id ? req.profile.user.id.toString() : null;
     req.role_name = req.profile?.user?.role_name || null;
     req.org_id = req.profile.org.id;
-    req.embed = isEmbed;
+    req.embed = req.profile?.extraDetails?.type === 'embed' || req.profile?.extraDetails?.tokenType || false;
     
     return next();
   } catch (err) {
