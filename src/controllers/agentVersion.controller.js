@@ -187,15 +187,15 @@ const suggestModel = async (req, res, next) => {
     for (const service in modelConfigDocument) {
         if (available_services.includes(service)) {
             for (const model in modelConfigDocument[service]) {
-                if (modelFeatures[model]) {
-                    available_models.push({ [model]: modelFeatures[model] });
-                }
+                const modelConfig = modelConfigDocument[service][model];
+                const features = modelFeatures[model] || modelConfig?.validationConfig?.specification || {};
+                available_models.push({ [model]: features });
             }
         } else {
             for (const model in modelConfigDocument[service]) {
-                if (modelFeatures[model]) {
-                    unavailable_models.push({ [model]: modelFeatures[model] });
-                }
+                const modelConfig = modelConfigDocument[service][model];
+                const features = modelFeatures[model] || modelConfig?.validationConfig?.specification || {};
+                unavailable_models.push({ [model]: features });
             }
         }
     }
