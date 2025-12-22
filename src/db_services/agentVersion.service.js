@@ -483,13 +483,23 @@ async function getAllConnectedAgents(id, org_id, type) {
     const visited = new Set();
 
     async function fetchDocument(docId, docType) {
-        if (docType === 'bridge') {
-            return { doc: await configurationModel.findOne({ _id: docId, org_id }).lean(), type: 'bridge' };
-        } else if (docType === 'version') {
-            return { doc: await bridgeVersionModel.findOne({ _id: docId, org_id }).lean(), type: 'version' };
-        } else {
-            const doc = await configurationModel.findOne({ _id: docId, org_id }).lean();
-            return { doc, type: 'bridge' };
+        try {
+            let doc, actualType;
+            if (docType === 'bridge') {
+                doc = await configurationModel.findOne({ _id: docId, org_id }).lean();
+                actualType = 'bridge';
+            } else if (docType === 'version') {
+                doc = await bridgeVersionModel.findOne({ _id: docId, org_id }).lean();
+                actualType = 'version';
+            } else {
+                // Default to bridge if type is not specified
+                doc = await configurationModel.findOne({ _id: docId, org_id }).lean();
+                actualType = 'bridge';
+            }
+            
+            return { doc, type: actualType };
+        } catch {
+            return { doc: null, type: docType };
         }
     }
 
@@ -507,7 +517,10 @@ async function getAllConnectedAgents(id, org_id, type) {
 
         visited.add(agentId);
         const { doc, type: actualType } = await fetchDocument(agentId, docType);
-        if (!doc) return;
+        
+        if (!doc) {
+            return;
+        }
 
         const agentName = doc.name || `Agent_${agentId}`;
         const connectedAgentDetails = doc.connected_agent_details || {};
@@ -518,13 +531,18 @@ async function getAllConnectedAgents(id, org_id, type) {
             agent_name: agentName,
             parentAgents: parentIds || [],
             childAgents: [],
-            thread_id: threadId
+            thread_id: threadId,
+            document_type: actualType
         };
         if (description) agentsMap[agentId].description = description;
 
         const connectedAgents = doc.connected_agents || {};
-        for (const [key, info] of Object.entries(connectedAgents)) {
-            if (!info) continue;
+        
+        for (const [, info] of Object.entries(connectedAgents)) {
+            if (!info) {
+                continue;
+            }
+            
             const childId = info.version_id || info.bridge_id;
             if (childId) {
                 if (!agentsMap[agentId].childAgents.includes(childId)) {
@@ -537,6 +555,7 @@ async function getAllConnectedAgents(id, org_id, type) {
     }
 
     await processAgent(id, null, type);
+    
     return agentsMap;
 }
 
