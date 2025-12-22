@@ -3,18 +3,12 @@ import joiObjectId from 'joi-objectid';
 Joi.objectId = joiObjectId(Joi);
 
 const subscribe = {
-    // No validation needed - uses combinedAuthWithChatBotAndPublicChatbot middleware
+    body: Joi.object().keys({
+        // Add any required fields for subscription
+    }).unknown(true)
 };
 
-const getAllChatBots = {
-    params: Joi.object().keys({
-        orgId: Joi.number().required().messages({
-            'number.base': 'orgId must be a number',
-            'any.required': 'orgId is mandatory'
-        })
-    }).unknown(true)
-    // userId comes from req.profile.user.id (from middleware)
-};
+
 
 const updateChatBotConfig = {
     params: Joi.object().keys({
@@ -37,23 +31,82 @@ const chatbotHistoryValidationSchema = Joi.object({
     thread_id: Joi.string().required(),
     bridge_id: Joi.objectId().required()
 }).unknown(true);
-const createOrRemoveActionValidationSchema = Joi.object({
-    agentId: Joi.objectId().required(),
-    type: Joi.string().valid('add', 'remove').required(),
-    actionJson: Joi.object().required(),
-    version_id: Joi.objectId().required(),
-    actionId: Joi.string().required()
-})
+const getOneChatBot = {
+    params: Joi.object().keys({
+        botId: Joi.objectId().required().messages({
+            'string.base': 'botId must be a valid ObjectId',
+            'any.required': 'botId is mandatory'
+        })
+    }).unknown(true)
+};
+
+const loginUser = {
+    body: Joi.object().keys({
+        // Add required fields for login
+    }).unknown(true)
+};
+
+const addOrRemoveBridgeInChatBot = {
+    body: Joi.object().keys({
+        botId: Joi.objectId().required().messages({
+            'string.base': 'botId must be a valid ObjectId',
+            'any.required': 'botId is mandatory'
+        }),
+        agentId: Joi.objectId().required().messages({
+            'string.base': 'agentId must be a valid ObjectId',
+            'any.required': 'agentId is mandatory'
+        }),
+        action: Joi.string().valid('add', 'remove').required().messages({
+            'string.base': 'action must be a string',
+            'any.only': 'action must be either "add" or "remove"',
+            'any.required': 'action is mandatory'
+        })
+    }).unknown(true)
+};
+
+const createOrRemoveAction = {
+    params: Joi.object().keys({
+        agentId: Joi.objectId().required().messages({
+            'string.base': 'agentId must be a valid ObjectId',
+            'any.required': 'agentId is mandatory'
+        })
+    }).unknown(true),
+    query: Joi.object().keys({
+        type: Joi.string().valid('add', 'remove').optional().messages({
+            'string.base': 'type must be a string',
+            'any.only': 'type must be either "add" or "remove"'
+        })
+    }).unknown(true),
+    body: Joi.object().keys({
+        type: Joi.string().valid('sendDataToFrontend', 'reply').optional().messages({
+            'string.base': 'type must be a string',
+            'any.only': 'type must be either "sendDataToFrontend" or "reply"'
+        }),
+        actionJson: Joi.object().required().messages({
+            'object.base': 'actionJson must be an object',
+            'any.required': 'actionJson is mandatory'
+        }),
+        version_id: Joi.objectId().required().messages({
+            'string.base': 'version_id must be a valid ObjectId',
+            'any.required': 'version_id is mandatory'
+        }),
+        actionId: Joi.string().optional().messages({
+            'string.base': 'actionId must be a string'
+        })
+    }).unknown(true)
+};
+
 export default {
     subscribe,
-    getAllChatBots,
+    getOneChatBot,
+    loginUser,
     updateChatBotConfig,
-    createOrRemoveActionValidationSchema
+    addOrRemoveBridgeInChatBot,
+    createOrRemoveAction,
 };
 
 // Named export for backward compatibility
 export {
     chatbotHistoryValidationSchema,
-    createOrRemoveActionValidationSchema
 };
 
