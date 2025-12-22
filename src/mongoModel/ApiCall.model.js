@@ -37,6 +37,22 @@ const apiCall = new mongoose.Schema({
   api_description: {
     type: String
   },
+  fields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  required_params: {
+    type: [String],
+    default: []
+  },
+  description: {
+    type: String,
+    default: ""
+  },
+  title: {
+    type: String,
+    default: ""
+  },
   created_at: {
     type: Date,
     default: Date.now
