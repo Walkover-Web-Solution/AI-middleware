@@ -191,7 +191,7 @@ const updateThreadMessage = async (req, res, next) => {
 const updateMessageStatus = async (req, res, next) => {
   const status = req.params.status;
   const message_id = req.body.message_id;
-  const bridge_id = req.body.bridge_id;
+  const bridge_id = req.body.agent_id;
   const org_id = req.profile.org_id;
   let error_message = "User reacted thumbs down on response"
   if (status === "2") {
