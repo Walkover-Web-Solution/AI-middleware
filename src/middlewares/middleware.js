@@ -415,9 +415,6 @@ const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name
 const checkAgentAccessMiddleware = async (req, res, next) => {
   try {
     const agent_id = req.params.agent_id || req.params.bridgeId || req.params.bridge_id;
-    if (!agent_id) {
-      return res.status(400).json({ message: 'Agent ID is required' });
-    }
 
     const user_id = req.user_id;
     const original_role_name = req.role_name;
