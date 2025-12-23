@@ -231,11 +231,11 @@ const suggestModel = async (req, res, next) => {
 };
 
 const getConnectedAgents = async (req, res, next) => {
-    const { id } = req.params;
+    const { version_id } = req.params;  // Changed from 'id' to 'version_id'
     const { type } = req.query;
     const org_id = req.profile.org.id;
 
-    const result = await agentVersionDbService.getAllConnectedAgents(id, org_id, type);
+    const result = await agentVersionDbService.getAllConnectedAgents(version_id, org_id, type);
     res.locals = { success: true, data: result };
     req.statusCode = 200;
     return next();
