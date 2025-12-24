@@ -1,5 +1,5 @@
 import express from "express";
-import { middleware } from "../middlewares/middleware.js";
+import { middleware, checkAgentAccessMiddleware } from "../middlewares/middleware.js";
 import embedController from "../controllers/embed.controller.js";
 import { GtwyEmbeddecodeToken } from "../middlewares/gtwyEmbedMiddleware.js";
 import validate from '../middlewares/validate.middleware.js';
@@ -8,9 +8,9 @@ import embedValidation from '../validation/joi_validation/embed.validation.js';
 const router = express.Router();
 
 router.post('/login', GtwyEmbeddecodeToken, embedController.embedLogin);
-router.post('/', middleware, validate(embedValidation.createEmbed), embedController.createEmbed);
+router.post('/', middleware, checkAgentAccessMiddleware,  validate(embedValidation.createEmbed), embedController.createEmbed);
 router.get('/', middleware, embedController.getAllEmbed);
-router.put('/', middleware, validate(embedValidation.updateEmbed), embedController.updateEmbed);
+router.put('/', middleware, checkAgentAccessMiddleware,  validate(embedValidation.updateEmbed), embedController.updateEmbed);
 router.get('/getAgents', GtwyEmbeddecodeToken, validate(embedValidation.getEmbedDataByUserId), embedController.getEmbedDataByUserId);
 
 export default router;
