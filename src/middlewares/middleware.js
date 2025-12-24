@@ -421,6 +421,12 @@ const checkAgentAccessMiddleware = async (req, res, next) => {
     const org_id = req.org_id;
 
     const access_role = await getAgentAccessRole(user_id, org_id, agent_id, original_role_name);
+    if (access_role === 'viewer') {
+      return res.status(403).json({ 
+        success: false,
+        message: "You don't have access" 
+      });
+    }
     req.access_role = access_role;
 
     return next();
