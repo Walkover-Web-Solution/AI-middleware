@@ -1,5 +1,5 @@
 import express from 'express';
-import { middleware, checkAgentAccessMiddleware, requireAdminRole } from '../middlewares/middleware.js';
+import { middleware, requireAdminRole } from '../middlewares/middleware.js';
 import * as agentConfigController from '../controllers/agentConfig.controller.js';
 import validate from '../middlewares/validate.middleware.js';
 import conversationValidation from '../validation/joi_validation/conversation.validation.js';
@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/', middleware, agentConfigController.getAllAgentController);
 
-router.get('/:agent_id', middleware, checkAgentAccessMiddleware, validate(agentConfigValidation.getAgent), agentConfigController.getAgentController);
+router.get('/:agent_id', middleware, validate(agentConfigValidation.getAgent), agentConfigController.getAgentController);
 
 router.post('/', middleware, requireAdminRole, validate(agentConfigValidation.createAgent), agentConfigController.createAgentController);
 
