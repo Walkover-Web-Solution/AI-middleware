@@ -1144,6 +1144,9 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
     } catch (e) {
       console.error("Error validating folder_id:", e);
     }
+  } else {
+    // When folder_id is not provided, only get agents without a folder_id
+    query.folder_id = null;
   }
   if (user_id && isEmbedUser) query.user_id = user_id;
 
