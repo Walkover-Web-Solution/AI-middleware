@@ -592,7 +592,8 @@ const getAllAgentController = async (req, res, next) => {
             { 
                 "org_id": process.env.DOCSTAR_ORG_ID, 
                 "collection_id": process.env.DOCSTAR_COLLECTION_ID, 
-                "user_id": org_id 
+                "user_id": org_id ,
+                "read_only": role_name === 'viewer'
             }, 
             process.env.DOCSTAR_ACCESS_KEY
         );
