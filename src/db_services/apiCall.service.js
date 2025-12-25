@@ -166,7 +166,7 @@ async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = 
         org_id: org_id,
         function_name: function_name,
         fields: fields,
-        endpoint_name: endpoint_name,
+        title: title,
         status: 1
     };
 
