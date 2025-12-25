@@ -39,30 +39,9 @@ async function getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser) {
 
     let apiCalls = await apiCallModel.aggregate(pipeline);
 
-    apiCalls = apiCalls.map(apiData => {
-        const fields = apiData.fields || {};
-        let transformedData = {};
-
-        if (Object.keys(fields).length === 0) {
-            transformedData = {};
-        } else if (apiData.version !== "v2") {
-            transformedData = {};
-            for (const key in fields) {
-                const item = fields[key];
-                transformedData[item.variable_name] = {
-                    description: item.description,
-                    enum: (item.enum === '') ? [] : (item.enum || []),
-                    type: "string",
-                    parameter: {}
-                };
-            }
-        } else {
-            transformedData = fields;
-        }
-
-        return { ...apiData, fields: transformedData };
-    });
-
+    // All documents should now be in v2 format after migration
+    // Fields are already in the correct object format: { paramName: { description, type, enum, required_params, parameter } }
+    // No transformation needed
     return apiCalls || [];
 }
 
