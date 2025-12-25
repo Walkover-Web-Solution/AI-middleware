@@ -74,6 +74,10 @@ const configuration = new mongoose.Schema({
     type: String,
     default: null
   },
+  pre_tools: {
+    type: Array,
+    default: []
+  },
   is_drafted: {
     type: Boolean,
     default: false
