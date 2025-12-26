@@ -105,7 +105,7 @@ export const AI_OPERATION_CONFIG = {
             const tools = {};
             if (bridgeData.apiCalls) {
                 Object.values(bridgeData.apiCalls).forEach(tool => {
-                    tools[tool.endpoint_name] = tool.description;
+                    tools[tool.title] = tool.description;
                 });
             }
             let system_prompt = bridgeData.configuration?.prompt || "";

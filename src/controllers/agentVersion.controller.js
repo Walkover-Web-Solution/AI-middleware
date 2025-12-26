@@ -201,7 +201,7 @@ const suggestModel = async (req, res, next) => {
     }
 
     const prompt = versionData.configuration?.prompt;
-    const tool_calls = Object.values(versionData.apiCalls || {}).map(call => ({ [call.endpoint_name]: call.description }));
+    const tool_calls = Object.values(versionData.apiCalls || {}).map(call => ({ [call.title]: call.description }));
 
     const message = JSON.stringify({ prompt: prompt, tool_calls: tool_calls });
     const variables = {

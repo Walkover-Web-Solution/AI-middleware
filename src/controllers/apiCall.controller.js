@@ -48,9 +48,9 @@ const updateApiCalls = async (req, res, next) => {
 
 const deleteFunction = async (req, res, next) => {
     const org_id = req.profile?.org?.id;
-    const { function_name } = req.body;
+    const { script_id } = req.body;
 
-    const result = await service.deleteFunctionFromApicallsDb(org_id, function_name);
+    const result = await service.deleteFunctionFromApicallsDb(org_id, script_id);
     res.locals = result;
     req.statusCode = 200;
     return next();
@@ -58,7 +58,7 @@ const deleteFunction = async (req, res, next) => {
 
 const createApi = async (req, res, next) => {
     try {
-        const { id: function_name, payload, status, title: endpoint_name, desc } = req.body;
+        const { id: script_id, payload, status, title, desc } = req.body;
         const org_id = req.profile.org.id;
         const folder_id = req.folder_id || null;
         const user_id = req.profile.user.id;
@@ -68,8 +68,12 @@ const createApi = async (req, res, next) => {
             const body_content = payload ? payload.body : null;
             const traversed_body = Helper.traverseBody(body_content);
             const fields = traversed_body.fields || {};
-            const api_data = await service.getApiData(org_id, function_name, folder_id, user_id, isEmbedUser);
-            const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], function_name, fields, endpoint_name);
+            const api_data = await service.getApiData(org_id, script_id, folder_id, user_id, isEmbedUser);
+            
+            // Clean the title using makeFunctionName
+            const cleanedTitle = Helper.makeFunctionName(title || script_id || '');
+            
+            const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], script_id, fields, cleanedTitle);
 
             if (result.success) {
                 const responseData = result.api_data;
@@ -92,7 +96,7 @@ const createApi = async (req, res, next) => {
             }
 
         } else if (status === "delete" || status === "paused") {
-            const result = await service.deleteFunctionFromApicallsDb(org_id, function_name);
+            const result = await service.deleteFunctionFromApicallsDb(org_id, script_id);
             if (result.success) {
                 res.locals = {
                     message: "API deleted successfully",

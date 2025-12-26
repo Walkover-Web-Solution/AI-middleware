@@ -20,7 +20,7 @@ const apiCall = new mongoose.Schema({
     type: [String],
     default: []
   },
-  function_name: {
+  script_id: {
     type: String,
     required: true,
   },

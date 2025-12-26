@@ -19,8 +19,8 @@ const updateApiCalls = {
 
 const deleteFunction = {
     body: Joi.object().keys({
-        function_name: Joi.string().required().messages({
-            'any.required': 'function_name is required'
+        script_id: Joi.string().required().messages({
+            'any.required': 'script_id is required'
         })
     }).unknown(true)
 };
@@ -28,7 +28,7 @@ const deleteFunction = {
 const createApi = {
     body: Joi.object().keys({
         id: Joi.string().required().messages({
-            'any.required': 'id (function_name) is required'
+            'any.required': 'id (script_id) is required'
         }),
         title: Joi.string().optional(),
         desc: Joi.string().required().messages({

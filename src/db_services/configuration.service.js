@@ -89,7 +89,7 @@ const cloneAgentToOrg = async (agent_id, to_shift_org_id, cloned_agents_map = nu
     if (original_config.function_ids && original_config.function_ids.length > 0) {
       for (const function_id of original_config.function_ids) {
         const original_api_call = await apiCallModel.findOne({ _id: new ObjectId(function_id) }).lean();
-        if (original_api_call && original_api_call.function_name) {
+        if (original_api_call && original_api_call.script_id) {
           try {
             const payload = {
               org_id: process.env.ORG_ID,
@@ -98,7 +98,7 @@ const cloneAgentToOrg = async (agent_id, to_shift_org_id, cloned_agents_map = nu
             };
             const auth_token = jwt.sign(payload, process.env.ACCESS_KEY, { algorithm: 'HS256' });
 
-            const duplicate_url = `https://flow-api.viasocket.com/embed/duplicateflow/${original_api_call.function_name}`;
+            const duplicate_url = `https://flow-api.viasocket.com/embed/duplicateflow/${original_api_call.script_id}`;
             const headers = {
               'Authorization': auth_token,
               'Content-Type': 'application/json'
@@ -115,17 +115,17 @@ const cloneAgentToOrg = async (agent_id, to_shift_org_id, cloned_agents_map = nu
               const new_api_call = { ...original_api_call };
               delete new_api_call._id;
               new_api_call.org_id = to_shift_org_id;
-              new_api_call.function_name = duplicate_data.data.id;
+              new_api_call.script_id = duplicate_data.data.id;
               new_api_call.bridge_ids = [new_agent_id.toString()];
               new_api_call.updated_at = new Date();
 
               const new_api_call_result = await new apiCallModel(new_api_call).save();
               cloned_function_ids.push(new_api_call_result._id.toString());
             } else {
-              console.error(`Failed to duplicate function ${original_api_call.function_name}:`, duplicate_data);
+              console.error(`Failed to duplicate function ${original_api_call.script_id}:`, duplicate_data);
             }
           } catch (e) {
-            console.error(`Error duplicating function ${original_api_call.function_name || function_id}:`, e);
+            console.error(`Error duplicating function ${original_api_call.script_id || function_id}:`, e);
             // Fallback
             const new_api_call = { ...original_api_call };
             delete new_api_call._id;

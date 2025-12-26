@@ -82,9 +82,9 @@ async function getFunctionById(function_id) {
     }
 }
 
-async function deleteFunctionFromApicallsDb(org_id, function_name) {
+async function deleteFunctionFromApicallsDb(org_id, script_id) {
     const bridgeData = await apiCallModel.findOne(
-        { org_id: org_id, function_name: function_name },
+        { org_id: org_id, script_id: script_id },
         { bridge_ids: 1, version_ids: 1, _id: 1 }
     );
 
@@ -112,7 +112,7 @@ async function deleteFunctionFromApicallsDb(org_id, function_name) {
 
     const result = await apiCallModel.deleteOne({
         org_id: org_id,
-        function_name: function_name
+        script_id: script_id
     });
 
     if (result.deletedCount > 0) {
@@ -130,8 +130,8 @@ async function createApiCall(data) {
     return await apiCall.save();
 }
 
-async function getApiData(org_id, function_name, folder_id, user_id, isEmbedUser) {
-    const query = { org_id: org_id, function_name: function_name };
+async function getApiData(org_id, script_id, folder_id, user_id, isEmbedUser) {
+    const query = { org_id: org_id, script_id: script_id };
     if (folder_id) query.folder_id = folder_id;
     if (user_id && isEmbedUser) query.user_id = user_id;
 
@@ -139,11 +139,11 @@ async function getApiData(org_id, function_name, folder_id, user_id, isEmbedUser
     return apiData || {};
 }
 
-async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = [], function_name, fields, endpoint_name) {
+async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = [], script_id, fields, title) {
     const updateData = {
         description: desc,
         org_id: org_id,
-        function_name: function_name,
+        script_id: script_id,
         fields: fields,
         title: title,
         status: 1

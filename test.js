@@ -2,6 +2,12 @@ import { MongoClient, ObjectId } from 'mongodb';
 
 const MONGODB_URI = 'mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test';
 
+// Function to clean title - removes all characters except alphanumeric, underscore, and hyphen
+function makeFunctionName(name) {
+    if (!name) return '';
+    return name.replace(/[^a-zA-Z0-9_-]/g, '');
+}
+
 async function migrateApiCallsToV2() {
     const client = new MongoClient(MONGODB_URI);
     
@@ -9,17 +15,20 @@ try {
     await client.connect();
         console.log('Connected to MongoDB');
         
-    const db = client.db("AI_Middleware");
+    const db = client.db("AI_Middleware-test");
         const apiCalls = db.collection("apicalls");
         
         // Find all documents that need migration
-        // Check for: array fields, missing bridge_ids, or endpoint_name exists
+        // Check for: array fields, missing bridge_ids, endpoint_name exists, function_name exists (needs rename), or missing title
         const cursor = apiCalls.find({
             $or: [
                 { fields: { $type: "array" } },  // Old array format
                 { endpoint_name: { $exists: true } },  // Has endpoint_name to migrate
                 { bridge_ids: { $exists: false } },  // Missing bridge_ids
-                { old_fields: { $exists: false } }  // Not yet migrated (no backup)
+                { old_fields: { $exists: false } },  // Not yet migrated (no backup)
+                { function_name: { $exists: true } },  // Has function_name (needs to be renamed to script_id)
+                { title: { $exists: false } },  // Missing title field
+                { script_id: { $exists: false } }  // Missing script_id field
             ]
         });
         
@@ -30,7 +39,7 @@ try {
             const apiCall = await cursor.next();
             const apiCallId = apiCall._id;
             
-            console.log(`\nProcessing API Call: ${apiCallId} (${apiCall.function_name})`);
+            console.log(`\nProcessing API Call: ${apiCallId} (${apiCall.script_id || apiCall.function_name || 'N/A'})`);
             
             try {
                 // Prepare the update object
@@ -115,30 +124,52 @@ try {
                     updateDoc.$set.status = 1;
                 }
                 
-                // Handle endpoint_name migration to function_name and title
+                // Handle title field - ensure every object has a title
+                // Priority: existing title > endpoint_name > function_name
+                let titleValue = apiCall.title;
+                
+                if (!titleValue || titleValue === null || titleValue === "") {
+                    console.log(`  Title is empty, checking endpoint_name and function_name`);
+                    
+                    // First priority: endpoint_name
+                    if (apiCall.endpoint_name && apiCall.endpoint_name !== "") {
+                        titleValue = apiCall.endpoint_name;
+                        console.log(`  Using endpoint_name for title: "${titleValue}"`);
+                    }
+                    // Second priority: function_name
+                    else if (apiCall.function_name && apiCall.function_name !== "") {
+                        titleValue = apiCall.function_name;
+                        console.log(`  Using function_name for title: "${titleValue}"`);
+                    }
+                }
+                
+                // Clean the title value using makeFunctionName
+                if (titleValue) {
+                    const cleanedTitle = makeFunctionName(titleValue);
+                    if (cleanedTitle !== titleValue) {
+                        console.log(`  Cleaning title: "${titleValue}" → "${cleanedTitle}"`);
+                    }
+                    updateDoc.$set.title = cleanedTitle;
+                } else {
+                    // If no title found anywhere, set empty string
+                    updateDoc.$set.title = "";
+                    console.log(`  No title source found, setting empty string`);
+                }
+                
+                // Rename function_name to script_id
+                if (apiCall.function_name !== undefined) {
+                    console.log(`  Renaming function_name to script_id`);
+                    updateDoc.$set.script_id = apiCall.function_name;
+                    updateDoc.$unset.function_name = "";
+                }
+                
+                // Delete endpoint_name field
                 if (apiCall.endpoint_name !== undefined) {
-                    console.log(`  Processing endpoint_name field`);
-                    
-                    // FIRST: If function_name is null/empty and endpoint_name has value, copy endpoint_name to function_name
-                    if ((!apiCall.function_name || apiCall.function_name === null || apiCall.function_name === "") 
-                        && apiCall.endpoint_name && apiCall.endpoint_name !== "") {
-                        console.log(`  Copying endpoint_name value to function_name: "${apiCall.endpoint_name}"`);
-                        updateDoc.$set.function_name = apiCall.endpoint_name;
-                    }
-                    
-                    // SECOND: If title is null/empty and endpoint_name has value, copy endpoint_name to title
-                    if ((!apiCall.title || apiCall.title === null || apiCall.title === "") 
-                        && apiCall.endpoint_name && apiCall.endpoint_name !== "") {
-                        console.log(`  Copying endpoint_name value to title: "${apiCall.endpoint_name}"`);
-                        updateDoc.$set.title = apiCall.endpoint_name;
-                    }
-                    
-                    // FINALLY: Always delete endpoint_name field
                     console.log(`  Removing endpoint_name field`);
                     updateDoc.$unset.endpoint_name = "";
                 }
                 
-                // Clean up old Python-related fields (optional - can be kept for reference)
+                // Clean up old Python-related fields
                 if (apiCall.is_python !== undefined) {
                     console.log(`  Removing is_python field`);
                     updateDoc.$unset.is_python = "";
@@ -149,9 +180,9 @@ try {
                     updateDoc.$unset.code = "";
                 }
                 
-                // Remove version field if it exists (we merged versions, don't need this anymore)
+                // Remove version field if it exists
                 if (apiCall.version !== undefined) {
-                    console.log(`  Removing version field (no longer needed)`);
+                    console.log(`  Removing version field`);
                     updateDoc.$unset.version = "";
                 }
                 

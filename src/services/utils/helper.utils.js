@@ -146,5 +146,10 @@ class Helper {
     return jwt.sign(payload, accesskey);
   }
 
+  static makeFunctionName(name) {
+    if (!name) return '';
+    return name.replace(/[^a-zA-Z0-9_-]/g, '');
+  }
+
 }
 export default Helper;
