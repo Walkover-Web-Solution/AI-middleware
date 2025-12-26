@@ -62,7 +62,7 @@ const generateSummary = async (req, res, next) => {
         const tools = {};
         if (bridgeData.apiCalls) {
             Object.values(bridgeData.apiCalls).forEach(tool => {
-                tools[tool.endpoint_name] = tool.description;
+                tools[tool.title] = tool.description;
             });
         }
 

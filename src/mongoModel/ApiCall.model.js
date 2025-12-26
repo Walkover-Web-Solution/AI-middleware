@@ -8,6 +8,10 @@ const apiCall = new mongoose.Schema({
     type: String,
     default: ""
   },
+  bridge_ids: {
+    type: [mongoose.Schema.Types.ObjectId],
+    default: []
+  },
   activated: {
     type: Boolean,
     default: false
@@ -16,13 +20,12 @@ const apiCall = new mongoose.Schema({
     type: [String],
     default: []
   },
-  function_name: {
+  script_id: {
     type: String,
     required: true,
   },
   axios: {
     type: String,
-    // required: true,
     default: ''
   },
   optional_fields: {
@@ -30,14 +33,20 @@ const apiCall = new mongoose.Schema({
     default: []
   },
   endpoint: {
-    // COMPLETE IT
     type: String,
     default: ""
   },
   api_description: {
     type: String
   },
+  // v2 format: fields is an object where each key is a parameter name
+  // and value is { description, type, enum, required_params, parameter }
   fields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  // Backup of original fields before migration
+  old_fields: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
@@ -53,7 +62,15 @@ const apiCall = new mongoose.Schema({
     type: String,
     default: ""
   },
+  status: {
+    type: Number,
+    default: 1
+  },
   created_at: {
+    type: Date,
+    default: Date.now
+  },
+  updated_at: {
     type: Date,
     default: Date.now
   }

@@ -39,30 +39,9 @@ async function getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser) {
 
     let apiCalls = await apiCallModel.aggregate(pipeline);
 
-    apiCalls = apiCalls.map(apiData => {
-        const fields = apiData.fields || {};
-        let transformedData = {};
-
-        if (Object.keys(fields).length === 0) {
-            transformedData = {};
-        } else if (apiData.version !== "v2") {
-            transformedData = {};
-            for (const key in fields) {
-                const item = fields[key];
-                transformedData[item.variable_name] = {
-                    description: item.description,
-                    enum: (item.enum === '') ? [] : (item.enum || []),
-                    type: "string",
-                    parameter: {}
-                };
-            }
-        } else {
-            transformedData = fields;
-        }
-
-        return { ...apiData, fields: transformedData };
-    });
-
+    // All documents should now be in v2 format after migration
+    // Fields are already in the correct object format: { paramName: { description, type, enum, required_params, parameter } }
+    // No transformation needed
     return apiCalls || [];
 }
 
@@ -103,9 +82,9 @@ async function getFunctionById(function_id) {
     }
 }
 
-async function deleteFunctionFromApicallsDb(org_id, function_name) {
+async function deleteFunctionFromApicallsDb(org_id, script_id) {
     const bridgeData = await apiCallModel.findOne(
-        { org_id: org_id, function_name: function_name },
+        { org_id: org_id, script_id: script_id },
         { bridge_ids: 1, version_ids: 1, _id: 1 }
     );
 
@@ -133,7 +112,7 @@ async function deleteFunctionFromApicallsDb(org_id, function_name) {
 
     const result = await apiCallModel.deleteOne({
         org_id: org_id,
-        function_name: function_name
+        script_id: script_id
     });
 
     if (result.deletedCount > 0) {
@@ -151,8 +130,8 @@ async function createApiCall(data) {
     return await apiCall.save();
 }
 
-async function getApiData(org_id, function_name, folder_id, user_id, isEmbedUser) {
-    const query = { org_id: org_id, function_name: function_name };
+async function getApiData(org_id, script_id, folder_id, user_id, isEmbedUser) {
+    const query = { org_id: org_id, script_id: script_id };
     if (folder_id) query.folder_id = folder_id;
     if (user_id && isEmbedUser) query.user_id = user_id;
 
@@ -160,13 +139,13 @@ async function getApiData(org_id, function_name, folder_id, user_id, isEmbedUser
     return apiData || {};
 }
 
-async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = [], function_name, fields, endpoint_name) {
+async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = [], script_id, fields, title) {
     const updateData = {
         description: desc,
         org_id: org_id,
-        function_name: function_name,
+        script_id: script_id,
         fields: fields,
-        endpoint_name: endpoint_name,
+        title: title,
         status: 1
     };
 

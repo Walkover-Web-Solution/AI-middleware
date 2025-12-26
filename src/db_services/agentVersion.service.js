@@ -149,7 +149,7 @@ async function makeQuestion(parent_id, prompt, functions, save = false) {
     if (functions) {
         const filteredFunctions = {};
         for (const key in functions) {
-            filteredFunctions[functions[key].endpoint_name] = functions[key].description;
+            filteredFunctions[functions[key].title] = functions[key].description;
         }
         prompt += "\nFunctionalities available\n" + JSON.stringify(filteredFunctions);
     }

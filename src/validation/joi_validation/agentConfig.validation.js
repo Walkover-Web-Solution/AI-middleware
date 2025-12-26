@@ -83,7 +83,7 @@ const updateBridgeSchema = Joi.object({
     functionData: Joi.object({
         function_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
         function_operation: Joi.string().valid('0', '1').optional(),
-        function_name: Joi.string().optional()
+        script_id: Joi.string().optional()
     }).optional(),
     version_description: Joi.string().allow('').optional()
 }).unknown(true); // Allow additional fields
