@@ -66,10 +66,6 @@ const apiCall = new mongoose.Schema({
     type: Number,
     default: 1
   },
-  version: {
-    type: String,
-    default: "v2"
-  },
   created_at: {
     type: Date,
     default: Date.now

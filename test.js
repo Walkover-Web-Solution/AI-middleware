@@ -1,29 +1,32 @@
 import { MongoClient, ObjectId } from 'mongodb';
 
-const MONGODB_URI = 'mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test';
 
 async function migrateApiCallsToV2() {
     const client = new MongoClient(MONGODB_URI);
     
-    try {
-        await client.connect();
+try {
+    await client.connect();
         console.log('Connected to MongoDB');
         
-        const db = client.db("AI_Middleware");
+    const db = client.db("AI_Middleware");
         const apiCalls = db.collection("apicalls");
         
-        // Find all documents that don't have version field or have version !== "v2"
+        // Find all documents that need migration
+        // Check for: array fields, missing bridge_ids, or endpoint_name exists
         const cursor = apiCalls.find({
             $or: [
-                { version: { $exists: false } },
-                { version: { $ne: "v2" } }
+                { fields: { $type: "array" } },  // Old array format
+                { endpoint_name: { $exists: true } },  // Has endpoint_name to migrate
+                { bridge_ids: { $exists: false } },  // Missing bridge_ids
+                { old_fields: { $exists: false } }  // Not yet migrated (no backup)
             ]
         });
         
         let migratedCount = 0;
         let skippedCount = 0;
         
-        while (await cursor.hasNext()) {
+    while (await cursor.hasNext()) {
             const apiCall = await cursor.next();
             const apiCallId = apiCall._id;
             
@@ -33,7 +36,6 @@ async function migrateApiCallsToV2() {
                 // Prepare the update object
                 const updateDoc = {
                     $set: {
-                        version: "v2",
                         updated_at: new Date()
                     },
                     $unset: {}
@@ -113,19 +115,25 @@ async function migrateApiCallsToV2() {
                     updateDoc.$set.status = 1;
                 }
                 
-                // Handle endpoint_name and title migration
-                // Keep title, delete endpoint_name
+                // Handle endpoint_name migration to function_name and title
                 if (apiCall.endpoint_name !== undefined) {
                     console.log(`  Processing endpoint_name field`);
                     
-                    // If title is null/empty and endpoint_name has value, copy endpoint_name to title
+                    // FIRST: If function_name is null/empty and endpoint_name has value, copy endpoint_name to function_name
+                    if ((!apiCall.function_name || apiCall.function_name === null || apiCall.function_name === "") 
+                        && apiCall.endpoint_name && apiCall.endpoint_name !== "") {
+                        console.log(`  Copying endpoint_name value to function_name: "${apiCall.endpoint_name}"`);
+                        updateDoc.$set.function_name = apiCall.endpoint_name;
+                    }
+                    
+                    // SECOND: If title is null/empty and endpoint_name has value, copy endpoint_name to title
                     if ((!apiCall.title || apiCall.title === null || apiCall.title === "") 
                         && apiCall.endpoint_name && apiCall.endpoint_name !== "") {
                         console.log(`  Copying endpoint_name value to title: "${apiCall.endpoint_name}"`);
                         updateDoc.$set.title = apiCall.endpoint_name;
                     }
                     
-                    // Always delete endpoint_name field
+                    // FINALLY: Always delete endpoint_name field
                     console.log(`  Removing endpoint_name field`);
                     updateDoc.$unset.endpoint_name = "";
                 }
@@ -139,6 +147,12 @@ async function migrateApiCallsToV2() {
                 if (apiCall.code !== undefined) {
                     console.log(`  Removing code field`);
                     updateDoc.$unset.code = "";
+                }
+                
+                // Remove version field if it exists (we merged versions, don't need this anymore)
+                if (apiCall.version !== undefined) {
+                    console.log(`  Removing version field (no longer needed)`);
+                    updateDoc.$unset.version = "";
                 }
                 
                 // Remove $unset if empty
@@ -171,11 +185,11 @@ async function migrateApiCallsToV2() {
         console.log(`  Total skipped: ${skippedCount}`);
         console.log('='.repeat(60));
         
-    } catch (error) {
+} catch (error) {
         console.error("Migration failed:", error);
         throw error;
-    } finally {
-        await client.close();
+} finally {
+    await client.close();
         console.log('\nMongoDB connection closed');
     }
 }
