@@ -16,31 +16,10 @@ const apiCall = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  required_fields: {
-    type: [String],
-    default: []
-  },
   script_id: {
     type: String,
     required: true,
   },
-  axios: {
-    type: String,
-    default: ''
-  },
-  optional_fields: {
-    type: [String],
-    default: []
-  },
-  endpoint: {
-    type: String,
-    default: ""
-  },
-  api_description: {
-    type: String
-  },
-  // v2 format: fields is an object where each key is a parameter name
-  // and value is { description, type, enum, required_params, parameter }
   fields: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
