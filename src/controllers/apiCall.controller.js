@@ -32,8 +32,7 @@ const updateApiCalls = async (req, res, next) => {
 
     data_to_update = {
         ...data_to_update,
-        old_fields: old_fields,
-        version: "v2"
+        old_fields: old_fields
     };
 
     const updated_function = await service.updateApiCallByFunctionId(org_id, function_id, data_to_update);
