@@ -17,7 +17,7 @@ const getThreads = async (req, res, next) => {
   let { bridge_id } = req.params;
   const { thread_id, bridge_slugName } = req.params;
   const { sub_thread_id = thread_id } = req.query;
-  let { org_id } = req.body;
+  let org_id = req.profile.org.id;
   let starterQuestion = [];
   let bridge = {};
 
