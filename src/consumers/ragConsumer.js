@@ -1,18 +1,18 @@
-import producer from '../services/queue.js';
+import producer from '../services/queue.service.js';
 // import rtlayer from '../config/rtlayer';
 // import { EventSchema, VERSION } from '../type/rag';
 // import { delay } from '../utility';
 import { DocumentLoader } from '../services/document-loader/index.js';
 // import ResourceService from '../dbservices/resource';
-import rag_parent_data from '../db_services/rag_parent_data.js';
+import rag_parent_data from '../db_services/ragParentData.service.js';
 
-import { Doc, MongoStorage, OpenAiEncoder, PineconeStorage } from '../services/document.js';
+import { Doc, MongoStorage, OpenAiEncoder, PineconeStorage } from '../services/document.service.js';
 import logger from '../logger.js';
-import queue from '../services/queue.js';
-import { extractUniqueUrls, getChunkingType, getFileFormatByUrl, getNameAndDescByAI, getScriptId } from '../utils/ragUtils.js';
-import { sendAlert } from '../services/utils/utilityService.js';
-import { ResponseSender } from '../services/utils/customRes.js';
-import { sendRagUpdates } from '../services/alertingService.js';
+import queue from '../services/queue.service.js';
+import { extractUniqueUrls, getChunkingType, getFileFormatByUrl, getNameAndDescByAI, getScriptId } from '../utils/rag.utils.js';
+import { sendAlert } from '../services/utils/utility.service.js';
+import { ResponseSender } from '../services/utils/customResponse.utils.js';
+import { sendRagUpdates } from '../services/alerting.service.js';
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
 const rtLayer = new ResponseSender();

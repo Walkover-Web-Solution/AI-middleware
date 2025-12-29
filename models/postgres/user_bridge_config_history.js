@@ -18,6 +18,10 @@ export default ((sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    user_id: {
+      allowNull: false,
+      type: DataTypes.INTEGER
+    },
     time: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW

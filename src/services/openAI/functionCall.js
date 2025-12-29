@@ -1,10 +1,10 @@
 import { chats } from "./chat.js";
 import _ from 'lodash';
-import configurationService from "../../db_services/ConfigurationServices.js";
+import configurationService from "../../db_services/configuration.service.js";
 import axios from "axios";
-import { ResponseSender } from "../utils/customRes.js";
+import { ResponseSender } from "../utils/customResponse.utils.js";
 const responseSender = new ResponseSender();
-import { callDBdash } from "../../db_services/dbdash.js";
+import { callDBdash } from "../../db_services/dbDash.service.js";
 
 const functionCall= async (data)=>{
     try {

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { findInCache, scanCacheKeys, deleteInCache } from '../cache_service/index.js';
 import { cost_types } from '../configs/constant.js';
-import { cleanupCache } from '../services/utils/redisUtility.js';
+import { cleanupCache } from '../services/utils/redis.utils.js';
 async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping = {}) {
   // Get the model from mongoose models
   const Model = mongoose.models[modelName];

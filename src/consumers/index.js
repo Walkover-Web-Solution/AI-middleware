@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import logger from '../logger.js';
-import rabbitmqService from '../services/rabbitmq.js';
+import rabbitmqService from '../services/rabbitmq.service.js';
 import ragConsumer from './ragConsumer.js';
 
 dotenv.config();
@@ -56,7 +56,6 @@ console.log(CONSUMER_ENABLED, process.env.DB_NAME, "CONSUMER  ADSF ")
 if (CONSUMER_ENABLED) {
   (() => {
     CONSUMERS.forEach((consumer) => {
-      /* eslint-disable no-new */
       new Consumer(consumer);
     });
   })();

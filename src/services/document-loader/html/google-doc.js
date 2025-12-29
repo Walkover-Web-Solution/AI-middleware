@@ -1,12 +1,12 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { fetchAndProcessCSV, getFileFormatByUrl } from "../../../utils/ragUtils.js";
+import { fetchAndProcessCSV, getFileFormatByUrl } from "../../../utils/rag.utils.js";
 
 export class GoogleDocLoader  {
     static format = {
         'document' : 'txt',
         'spreadsheets' : 'csv'
     }
-    async getContent(url, options) {
+    async getContent(url) {
         const docId = url?.match(/\/d\/(.*?)\//)?.[1];
         const docType = url?.match(/https:\/\/docs\.google\.com\/([^/]+)\//)?.[1]
         const docFormat = getFileFormatByUrl(url);
