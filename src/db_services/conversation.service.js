@@ -359,7 +359,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
       'id',
       [Sequelize.literal('NULL'), 'is_reset'],
       'tools_call_data',
-      'llm_urls as image_urls'
+      ['llm_urls', 'image_urls']
     ],
     where: whereClause,
     order: [['id', 'DESC']],
