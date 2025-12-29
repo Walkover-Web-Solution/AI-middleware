@@ -12,7 +12,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
 
   // Build the WHERE clause for the SQL query
   let whereConditions = [
-    `conversations.org_id = '${org_id}'`,
+    `org_id = '${org_id}'`,
     `thread_id = '${thread_id}'`,
     `bridge_id = '${bridge_id}'`,
     `sub_thread_id = '${sub_thread_id}'`
@@ -30,7 +30,7 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
 
   // Add condition for error if error is true
   if (error) {
-    whereConditions.push(`raw_data.error != ''`);
+    whereConditions.push(`error IS NOT NULL AND error != ''`);
   }
 
   const whereClause = whereConditions.join(' AND ');
@@ -40,69 +40,80 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
   if (!isChatbot) {
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM conversations
-      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
-      WHERE conversations.org_id = '${org_id}'
+      FROM conversation_logs
+      WHERE org_id = '${org_id}'
         AND thread_id = '${thread_id}'
         AND bridge_id = '${bridge_id}'
         AND sub_thread_id = '${sub_thread_id}'
-        AND raw_data.error != ''
+        AND error IS NOT NULL AND error != ''
     `;
     countResult = await models.pg.sequelize.query(countQuery, { type: models.pg.sequelize.QueryTypes.SELECT });
   }
 
-  // Main query with JOIN to raw_data
+  // Main query from conversation_logs
   let query;
   if (isChatbot) {
     // Only select the required keys for chatbot
     query = `
       SELECT 
-        conversations.id as "Id",
-        conversations.message as content,
-        conversations.message_by as role,
-        conversations."createdAt",
-        conversations.chatbot_message,
-        conversations.tools_call_data,
-        conversations.user_feedback,
-        conversations.sub_thread_id,
-        conversations.image_urls,
-        conversations.urls,
-        conversations.message_id,
-        conversations.fallback_model,
-        raw_data.error,
-        raw_data."firstAttemptError"
-      FROM conversations
-      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+        id as "Id",
+        COALESCE(user, llm_message, chatbot_message) as content,
+        CASE 
+          WHEN user IS NOT NULL AND user != '' THEN 'user'
+          ELSE 'assistant'
+        END as role,
+        created_at as "createdAt",
+        chatbot_message,
+        tools_call_data,
+        user_feedback,
+        sub_thread_id,
+        llm_urls as image_urls,
+        user_urls as urls,
+        message_id,
+        fallback_model,
+        error,
+        "firstAttemptError"
+      FROM conversation_logs
       WHERE ${whereClause}
-      ORDER BY conversations.id DESC
+      ORDER BY id DESC
     `;
   } else {
     query = `
       SELECT 
-        conversations.message as content,
-        conversations.message_by as role,
-        conversations."createdAt",
-        conversations.id as "Id",
-        conversations.function,
-        conversations.is_reset,
-        conversations.chatbot_message,
-        conversations.updated_message,
-        conversations.tools_call_data,
-        conversations.message_id,
-        conversations.user_feedback,
-        conversations.sub_thread_id,
-        conversations.thread_id,
-        conversations.version_id,
-        conversations.image_urls,
-        conversations.urls,
-        conversations."AiConfig",
-        conversations.annotations,
-        conversations.fallback_model,
-        raw_data.*
-      FROM conversations
-      LEFT JOIN raw_data ON conversations.message_id = raw_data.message_id
+        COALESCE(user, llm_message, chatbot_message) as content,
+        CASE 
+          WHEN user IS NOT NULL AND user != '' THEN 'user'
+          ELSE 'assistant'
+        END as role,
+        created_at as "createdAt",
+        id as "Id",
+        NULL as function,
+        NULL as is_reset,
+        chatbot_message,
+        updated_llm_message as updated_message,
+        tools_call_data,
+        message_id,
+        user_feedback,
+        sub_thread_id,
+        thread_id,
+        version_id,
+        llm_urls as image_urls,
+        user_urls as urls,
+        "AiConfig",
+        NULL as annotations,
+        fallback_model,
+        error,
+        "firstAttemptError",
+        latency,
+        service,
+        status,
+        model,
+        tokens,
+        finish_reason,
+        variables
+      FROM conversation_logs
       WHERE ${whereClause}
-      ORDER BY conversations.id DESC
+      ORDER BY id DESC
     `;
   }
 
@@ -131,12 +142,15 @@ async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pa
 }
 
 async function deleteLastThread(org_id, thread_id, bridge_id) {
-  const recordsTodelete = await models.pg.conversations.findOne({
+  const recordsTodelete = await models.pg.conversation_logs.findOne({
     where: {
       org_id,
       thread_id,
       bridge_id,
-      message_by: "tool_calls"
+      // Find records where tools_call_data is not null/empty (indicates tool_calls)
+      tools_call_data: {
+        [Sequelize.Op.ne]: null
+      }
     },
     order: [['id', 'DESC']]
   });
@@ -172,39 +186,30 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
   let whereClause = {
     org_id,
     thread_id,
-    bridge_id
+    bridge_id,
+    [Sequelize.Op.or]: [
+      { error: '' },
+      { error: { [Sequelize.Op.is]: null } }
+    ]
   };
 
-  if (user_feedback_array.includes(0)) {
-    // If 0 is included, we want all data, so no need to filter by user_feedback
-  } else {
+  if (!user_feedback_array.includes(0)) {
+    // If 0 is not included, filter by user_feedback
     whereClause.user_feedback = {
       [Sequelize.Op.in]: user_feedback_array
     };
   }
 
-  let conversations = await models.pg.conversations.findAll({
+  let conversations = await models.pg.conversation_logs.findAll({
     attributes: [
-      ['message', 'content'],
-      ['message_by', 'role'],
-      'createdAt',
+      [Sequelize.literal(`COALESCE(user, llm_message, chatbot_message)`), 'content'],
+      [Sequelize.literal(`CASE WHEN user IS NOT NULL AND user != '' THEN 'user' ELSE 'assistant' END`), 'role'],
+      ['created_at', 'createdAt'],
       'id',
-      'function',
-      'updated_message',
-      [Sequelize.col('raw_data.error'), 'error']
+      [Sequelize.literal('NULL'), 'function'],
+      ['updated_llm_message', 'updated_message'],
+      'error'
     ],
-    include: [{
-      model: models.pg.raw_data,
-      as: 'raw_data',
-      attributes: [],
-      required: false,
-      where: {
-        [Sequelize.Op.or]: [
-          { error: '' },
-          { error: { [Sequelize.Op.is]: null } }
-        ]
-      }
-    }],
     where: whereClause,
     order: [['id', 'DESC']],
     raw: true
@@ -232,8 +237,8 @@ async function system_prompt_data(org_id, bridge_id) {
 async function updateMessage({ org_id, bridge_id, message, id }) {
   try {
 
-    const [affectedCount, affectedRows] = await models.pg.conversations.update(
-      { updated_message: message },
+    const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
+      { updated_llm_message: message },
       {
         where: {
           org_id,
@@ -251,15 +256,15 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       id: row.id,
       org_id: row.org_id,
       thread_id: row.thread_id,
-      model_name: row.model_name,
+      model_name: row.model,
       bridge_id: row.bridge_id,
-      content: row.message,
-      role: row.message_by,
-      function: row.function,
-      updated_message: row.updated_message,
-      type: row.type,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt
+      content: row.llm_message || row.user || row.chatbot_message,
+      role: row.user ? 'user' : 'assistant',
+      function: null,
+      updated_message: row.updated_llm_message,
+      type: null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }));
 
     return { success: true, result: result };
@@ -272,7 +277,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
 async function updateStatus({ status, message_id }) {
   try {
 
-    const [affectedCount, affectedRows] = await models.pg.conversations.update(
+    const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
       { user_feedback: status },
       {
         where: {
@@ -293,25 +298,43 @@ async function updateStatus({ status, message_id }) {
 }
 
 async function create(payload) {
-  return await models.pg.conversations.create(payload);
+  return await models.pg.conversation_logs.create(payload);
 }
 
-const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) => await models.pg.conversations.findOne({
+const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) => await models.pg.conversation_logs.findOne({
   where: {
     org_id,
     bridge_id,
     thread_id,
     message_id,
-    message_by: 'assistant'
+    // Find assistant messages (where llm_message or chatbot_message exists and user is null/empty)
+    [Sequelize.Op.or]: [
+      { llm_message: { [Sequelize.Op.ne]: null } },
+      { chatbot_message: { [Sequelize.Op.ne]: null } }
+    ]
   },
   raw: true,
   limit: 1
 });
 const addThreadId = async (message_id, thread_id, type) => {
-  return await models.pg.conversations.update(
-    { external_reference: thread_id },
+  // In conversation_logs, we don't have external_reference or message_by
+  // We'll add external_reference as a variable in the variables JSONB field
+  return await models.pg.conversation_logs.update(
+    { 
+      variables: Sequelize.fn(
+        'jsonb_set',
+        Sequelize.col('variables'),
+        '{external_reference}',
+        Sequelize.literal(`'"${thread_id}"'::jsonb`),
+        true
+      )
+    },
     {
-      where: { message_id, message_by: type },
+      where: { 
+        message_id,
+        // type was 'user' or 'assistant', map to appropriate conditions
+        ...(type === 'user' ? { user: { [Sequelize.Op.ne]: null } } : {})
+      },
       returning: true
     }
   );
@@ -328,15 +351,15 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
     sub_thread_id: sub_thread_id
   };
 
-  let conversations = await models.pg.conversations.findAll({
+  let conversations = await models.pg.conversation_logs.findAll({
     attributes: [
-      [Sequelize.literal(`CASE WHEN message IS NULL OR message = '' THEN chatbot_message ELSE message END`), 'content'],
-      ['message_by', 'role'],
-      'createdAt',
+      [Sequelize.literal(`CASE WHEN user IS NOT NULL AND user != '' THEN user WHEN llm_message IS NOT NULL AND llm_message != '' THEN llm_message ELSE chatbot_message END`), 'content'],
+      [Sequelize.literal(`CASE WHEN user IS NOT NULL AND user != '' THEN 'user' ELSE 'assistant' END`), 'role'],
+      ['created_at', 'createdAt'],
       'id',
-      'is_reset',
+      [Sequelize.literal('NULL'), 'is_reset'],
       'tools_call_data',
-      'image_urls'
+      'llm_urls as image_urls'
     ],
     where: whereClause,
     order: [['id', 'DESC']],
@@ -356,10 +379,10 @@ const getSubThreads = async (org_id, thread_id, bridge_id) => {
 async function sortThreadsByHits(threads) {
   const subThreadIds = [...new Set(threads.map(t => t.sub_thread_id).filter(Boolean))];
 
-  const latestEntries = await models.pg.conversations.findAll({
+  const latestEntries = await models.pg.conversation_logs.findAll({
     attributes: [
       'sub_thread_id',
-      [models.pg.sequelize.fn('MAX', models.pg.sequelize.col('createdAt')), 'latestCreatedAt']
+      [models.pg.sequelize.fn('MAX', models.pg.sequelize.col('created_at')), 'latestCreatedAt']
     ],
     where: { sub_thread_id: subThreadIds },
     group: ['sub_thread_id'],
@@ -471,38 +494,33 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10,users=
 
 async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError) {
   try {
-    let rawDataWhereClause = {};
-    let conversationsWhereClause = {
+    let whereClause = {
       org_id,
       thread_id,
       bridge_id
     };
 
-    // Apply version_id filter to the conversations table
+    // Apply version_id filter
     if (version_id) {
-      conversationsWhereClause.version_id = version_id;
+      whereClause.version_id = version_id;
     }
 
     if (isError) {
-      rawDataWhereClause.error = {
-        [models.pg.Sequelize.Op.ne]: ''
+      whereClause.error = {
+        [models.pg.Sequelize.Op.and]: [
+          { [models.pg.Sequelize.Op.ne]: '' },
+          { [models.pg.Sequelize.Op.ne]: null }
+        ]
       };
     }
 
-    const result = await models.pg.conversations.findAll({
+    const result = await models.pg.conversation_logs.findAll({
       attributes: [
         'sub_thread_id',
         'version_id',
-        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('raw_data.created_at')), 'latest_error']
+        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('created_at')), 'latest_error']
       ],
-      include: [{
-        model: models.pg.raw_data,
-        as: 'raw_data',
-        required: true,
-        attributes: [],
-        where: rawDataWhereClause
-      }],
-      where: conversationsWhereClause,
+      where: whereClause,
       group: ['sub_thread_id', 'version_id'],
       order: [[models.pg.Sequelize.literal('latest_error'), 'DESC']],
       raw: true
@@ -528,11 +546,11 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     }));
 
     // Query PostgreSQL to get latest conversation activity for each thread
-    const conversationActivity = await models.pg.conversations.findAll({
+    const conversationActivity = await models.pg.conversation_logs.findAll({
       attributes: [
         'thread_id',
         'sub_thread_id',
-        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('createdAt')), 'latest_activity']
+        [models.pg.Sequelize.fn('MAX', models.pg.Sequelize.col('created_at')), 'latest_activity']
       ],
       where: {
         org_id,
