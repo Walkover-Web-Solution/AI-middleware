@@ -91,5 +91,6 @@
     "globals": "^15.3.0",
     "husky": "^8.0.0",
     "sequelize-cli": "^6.6.2"
-  }
+  },
+  "description": ""
 }
