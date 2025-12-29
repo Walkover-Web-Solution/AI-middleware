@@ -144,10 +144,36 @@ async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = 
         description: desc,
         org_id: org_id,
         script_id: script_id,
-        fields: fields,
         title: title,
         status: 1
     };
+
+    // Helper function to check if a value is empty
+    const isEmpty = (value) => {
+        if (value === null || value === undefined || value === '') return true;
+        if (typeof value === 'object' && !Array.isArray(value)) {
+            return Object.keys(value).length === 0;
+        }
+        if (Array.isArray(value)) {
+            return value.length === 0;
+        }
+        return false;
+    };
+
+    // Only update fields if new value is not empty, or if there's no existing value
+    if (api_data && api_data._id) {
+        // For updates: preserve existing non-empty values when new values are empty
+        if (!isEmpty(fields)) {
+            updateData.fields = fields;
+        } else if (isEmpty(api_data.fields)) {
+            // Only set empty if existing is also empty
+            updateData.fields = fields;
+        }
+        // If fields is empty but api_data.fields is not empty, don't include fields in updateData
+    } else {
+        // For new records: always set fields
+        updateData.fields = fields;
+    }
 
     if (folder_id) updateData.folder_id = folder_id;
     if (user_id) updateData.user_id = user_id;
