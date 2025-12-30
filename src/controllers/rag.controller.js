@@ -4,7 +4,7 @@ import { genrateToken } from '../utils/rag.utils.js';
 import { sendRagUpdates } from '../services/alerting.service.js';
 import { generateAuthToken, generateIdentifier } from '../services/utils/utility.service.js';
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
-import token from "../services/commonService/generateToken.js";
+import axios from 'axios';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -225,3 +225,65 @@ export const getEmbedToken = async (req, res, next) => {
     req.statusCode = 200;
     return next();
 };
+
+export const searchRag = async (req, res, next) => {
+    try {
+        const { agent_id, query } = req.body;
+
+        // Get environment variables
+        const HIPPOCAMPUS_API_KEY = process.env.HIPPOCAMPUS_API_KEY;
+        const HIPPOCAMPUS_COLLECTION_ID = process.env.HIPPOCAMPUS_COLLECTION_ID;
+        const HIPPOCAMPUS_URL = process.env.HIPPOCAMPUS_URL || 'http://hippocampus.gtwy.ai/search';
+
+        if (!HIPPOCAMPUS_API_KEY) {
+            res.locals = {
+                "success": false,
+                "message": "HIPPOCAMPUS_API_KEY is not configured"
+            };
+            req.statusCode = 500;
+            return next();
+        }
+
+        if (!HIPPOCAMPUS_COLLECTION_ID) {
+            res.locals = {
+                "success": false,
+                "message": "HIPPOCAMPUS_COLLECTION_ID is not configured"
+            };
+            req.statusCode = 500;
+            return next();
+        }
+
+        // Make API call to hippocampus
+        const response = await axios.post(
+            HIPPOCAMPUS_URL,
+            {
+                query: query,
+                collectionId: HIPPOCAMPUS_COLLECTION_ID,
+                ownerId: agent_id
+            },
+            {
+                headers: {
+                    'x-api-key': HIPPOCAMPUS_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        res.locals = {
+            "success": true,
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+
+    } catch (error) {
+        console.error('Error in searchRag:', error);
+        res.locals = {
+            "success": false,
+            "message": error.response?.data?.message || error.message || "Failed to search RAG"
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+

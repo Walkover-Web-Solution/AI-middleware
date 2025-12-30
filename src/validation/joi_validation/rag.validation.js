@@ -32,8 +32,20 @@ const updateDocSchema = Joi.object({
     description: Joi.string().optional()
 }).unknown(true);
 
+const searchRagSchema = Joi.object({
+    agent_id: Joi.string().required().messages({
+        'any.required': 'agent_id is required',
+        'string.empty': 'agent_id cannot be empty'
+    }),
+    query: Joi.string().required().messages({
+        'any.required': 'query is required',
+        'string.empty': 'query cannot be empty'
+    })
+}).unknown(true);
+
 export {
     createVectorsSchema,
     docIdSchema,
-    updateDocSchema
+    updateDocSchema,
+    searchRagSchema
 };
