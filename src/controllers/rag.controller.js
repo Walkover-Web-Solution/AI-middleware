@@ -4,7 +4,8 @@ import { genrateToken } from '../utils/rag.utils.js';
 import { sendRagUpdates } from '../services/alerting.service.js';
 import { generateAuthToken, generateIdentifier } from '../services/utils/utility.service.js';
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
-import token from "../services/commonService/generateToken.js";
+import * as hippocampusService from '../services/hippocampus.service.js';
+import ragCollectionService from '../db_services/ragCollection.service.js';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -224,4 +225,285 @@ export const getEmbedToken = async (req, res, next) => {
     }
     req.statusCode = 200;
     return next();
+};
+
+export const createCollection = async (req, res, next) => {
+    const { org } = req.profile || {};
+    const { name, settings } = req.body;
+
+    try {
+        // Create collection in Hippocampus
+        const hippocampusResponse = await hippocampusService.createCollection({
+            name,
+            settings
+        });
+
+        // Save collection data in MongoDB
+        const collectionData = {
+            collection_id: hippocampusResponse._id,
+            name: hippocampusResponse.name,
+            org_id: org?.id,
+            resource_ids: [],
+            settings: hippocampusResponse.settings,
+            created_at: new Date(hippocampusResponse.createdAt),
+            updated_at: new Date(hippocampusResponse.updatedAt)
+        };
+
+        const savedCollection = await ragCollectionService.create(collectionData);
+
+        res.locals = {
+            success: true,
+            message: 'Collection created successfully',
+            data: {
+                ...hippocampusResponse,
+                mongo_id: savedCollection._id
+            }
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating collection:', error);
+        res.locals = {
+            success: false,
+            message: error.response?.data?.message || 'Failed to create collection',
+            error: error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const createResourceInCollection = async (req, res, next) => {
+    const { org } = req.profile || {};
+    const { collectionId, title, ownerId, content, settings } = req.body;
+
+    try {
+        // Check if collection exists in our DB
+        const collection = await ragCollectionService.getByCollectionId(collectionId);
+        if (!collection) {
+            res.locals = {
+                success: false,
+                message: 'Collection not found in database'
+            };
+            req.statusCode = 404;
+            return next();
+        }
+
+        // Verify collection belongs to the organization
+        if (collection.org_id !== org?.id) {
+            res.locals = {
+                success: false,
+                message: 'Unauthorized access to collection'
+            };
+            req.statusCode = 403;
+            return next();
+        }
+
+        // Create resource in Hippocampus
+        const hippocampusResponse = await hippocampusService.createResource({
+            collectionId,
+            title,
+            ownerId: ownerId || 'public',
+            content,
+            settings
+        });
+
+        // Add resource ID to collection in MongoDB
+        await ragCollectionService.addResourceId(collectionId, hippocampusResponse._id);
+
+        res.locals = {
+            success: true,
+            message: 'Resource created successfully',
+            data: hippocampusResponse
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating resource:', error);
+        res.locals = {
+            success: false,
+            message: error.response?.data?.message || 'Failed to create resource',
+            error: error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getAllCollections = async (req, res, next) => {
+    const { org } = req.profile || {};
+
+    try {
+        const collections = await ragCollectionService.getAllByOrgId(org?.id);
+        res.locals = {
+            success: true,
+            message: 'Collections fetched successfully',
+            data: collections
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collections:', error);
+        res.locals = {
+            success: false,
+            message: 'Failed to fetch collections',
+            error: error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+export const getCollectionById = async (req, res, next) => {
+    const { org } = req.profile || {};
+    const { collectionId } = req.params;
+
+    try {
+        const collection = await ragCollectionService.getByCollectionId(collectionId);
+        
+        if (!collection) {
+            res.locals = {
+                success: false,
+                message: 'Collection not found'
+            };
+            req.statusCode = 404;
+            return next();
+        }
+
+        // Verify collection belongs to the organization
+        if (collection.org_id !== org?.id) {
+            res.locals = {
+                success: false,
+                message: 'Unauthorized access to collection'
+            };
+            req.statusCode = 403;
+            return next();
+        }
+
+        res.locals = {
+            success: true,
+            message: 'Collection fetched successfully',
+            data: collection
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collection:', error);
+        res.locals = {
+            success: false,
+            message: 'Failed to fetch collection',
+            error: error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+export const deleteResourceFromCollection = async (req, res, next) => {
+    const { org } = req.profile || {};
+    const { id: resourceId } = req.params;
+
+    try {
+        // Find the collection that contains this resource
+        const collection = await ragCollectionService.getCollectionByResourceId(resourceId);
+        
+        if (!collection) {
+            res.locals = {
+                success: false,
+                message: 'Resource not found in any collection'
+            };
+            req.statusCode = 404;
+            return next();
+        }
+
+        // Verify collection belongs to the organization
+        if (collection.org_id !== org?.id) {
+            res.locals = {
+                success: false,
+                message: 'Unauthorized access to resource'
+            };
+            req.statusCode = 403;
+            return next();
+        }
+
+        // Delete resource from Hippocampus
+        const hippocampusResponse = await hippocampusService.deleteResource(resourceId);
+
+        // Remove resource ID from collection in MongoDB
+        await ragCollectionService.removeResourceId(collection.collection_id, resourceId);
+
+        res.locals = {
+            success: true,
+            message: 'Resource deleted successfully',
+            data: hippocampusResponse
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error deleting resource:', error);
+        res.locals = {
+            success: false,
+            message: error.response?.data?.message || 'Failed to delete resource',
+            error: error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const updateResourceInCollection = async (req, res, next) => {
+    const { org } = req.profile || {};
+    const { id: resourceId } = req.params;
+    const { title, description, content, url } = req.body;
+
+    try {
+        // Find the collection that contains this resource
+        const collection = await ragCollectionService.getCollectionByResourceId(resourceId);
+        
+        if (!collection) {
+            res.locals = {
+                success: false,
+                message: 'Resource not found in any collection'
+            };
+            req.statusCode = 404;
+            return next();
+        }
+
+        // Verify collection belongs to the organization
+        if (collection.org_id !== org?.id) {
+            res.locals = {
+                success: false,
+                message: 'Unauthorized access to resource'
+            };
+            req.statusCode = 403;
+            return next();
+        }
+
+        // Prepare update data
+        const updateData = {};
+        if (title) updateData.title = title;
+        if (description) updateData.description = description;
+        if (content) updateData.content = content;
+        if (url) updateData.url = url;
+
+        // Update resource in Hippocampus
+        const hippocampusResponse = await hippocampusService.updateResource(resourceId, updateData);
+
+        res.locals = {
+            success: true,
+            message: 'Resource updated successfully',
+            data: hippocampusResponse
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.locals = {
+            success: false,
+            message: error.response?.data?.message || 'Failed to update resource',
+            error: error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
 };
