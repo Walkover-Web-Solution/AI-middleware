@@ -6,6 +6,7 @@ import { generateAuthToken, generateIdentifier } from '../services/utils/utility
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import token from "../services/commonService/generateToken.js";
 import axios from 'axios';
+import ragCollectionService from '../db_services/ragCollection.service.js';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -231,6 +232,7 @@ export const searchKnowledge = async (req, res, next) => {
     try {
         const { query } = req.body;
         const ownerId = req.body.agent_id;
+        
         // Get environment variables
         const hippocampusUrl = 'http://hippocampus.gtwy.ai/search';
         const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
@@ -266,6 +268,275 @@ export const searchKnowledge = async (req, res, next) => {
             "error": error.response?.data || error.message
         };
         req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+// Collection Management
+export const createCollection = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        const { name, settings } = req.body;
+        
+        const collectionData = {
+            name,
+            org_id: org?.id,
+            settings: settings || {},
+            collection_id: generateIdentifier(24),
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+        
+        const collection = await ragCollectionService.create(collectionData);
+        
+        res.locals = {
+            "success": true,
+            "message": "Collection created successfully",
+            "data": collection
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+export const getAllCollections = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        const collections = await ragCollectionService.getAllByOrgId(org?.id);
+        
+        res.locals = {
+            "success": true,
+            "data": collections
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collections:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+export const getCollectionById = async (req, res, next) => {
+    try {
+        const { collectionId } = req.params;
+        const collection = await ragCollectionService.getByCollectionId(collectionId);
+        
+        if (!collection) {
+            res.locals = {
+                "success": false,
+                "message": "Collection not found"
+            };
+            req.statusCode = 404;
+            return next();
+        }
+        
+        res.locals = {
+            "success": true,
+            "data": collection
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+// Resource Management
+export const createResourceInCollection = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        const { collectionId, title, content, ownerId, settings } = req.body;
+        
+        // Create resource via Hippocampus API
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.post(`${hippocampusUrl}/resource`, {
+            collectionId,
+            title,
+            content,
+            ownerId: ownerId || 'public',
+            settings
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "message": "Resource created successfully",
+            "data": response.data
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const updateResourceInCollection = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { title, description, content, url } = req.body;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.put(`${hippocampusUrl}/resource/${id}`, {
+            title,
+            description,
+            content,
+            url
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "message": "Resource updated successfully",
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const deleteResourceFromCollection = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.delete(`${hippocampusUrl}/resource/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "message": "Resource deleted successfully",
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error deleting resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getResourceChunks = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.get(`${hippocampusUrl}/resource/${id}/chunks`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching resource chunks:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getAllResourcesByCollectionId = async (req, res, next) => {
+    try {
+        const { collectionId } = req.params;
+        
+        // Fetch collection from database
+        const collection = await ragCollectionService.getByCollectionId(collectionId);
+        
+        if (!collection) {
+            res.locals = {
+                "success": false,
+                "message": "Collection not found"
+            };
+            req.statusCode = 404;
+            return next();
+        }
+        
+        // Return resource IDs from collection
+        const resourceIds = collection.resource_ids || [];
+        
+        res.locals = {
+            "success": true,
+            "data": {
+                "collectionId": collectionId,
+                "resourceIds": resourceIds
+            }
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching resources by collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
         return next();
     }
 };
