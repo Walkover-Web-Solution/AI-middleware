@@ -262,6 +262,10 @@ const configuration = new mongoose.Schema({
   users: {
     type: [mongoose.Schema.Types.Mixed],
     default: undefined
+  },
+  chatbot_auto_answers: {
+    type: Boolean,
+    default: false
   }
 });
 
