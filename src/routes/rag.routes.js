@@ -1,6 +1,6 @@
 import multer from 'multer';
 import express from "express";
-import { getAllDocuments, createVectors, deleteDoc, updateDoc, getEmbedToken, ragEmbedUserLogin, createCollection, createResourceInCollection, getAllCollections, getCollectionById, deleteResourceFromCollection, updateResourceInCollection } from "../controllers/rag.controller.js";
+import { getAllDocuments, createVectors, deleteDoc, updateDoc, getEmbedToken, ragEmbedUserLogin, createCollection, createResourceInCollection, getAllCollections, getCollectionById, deleteResourceFromCollection, updateResourceInCollection, getResourceChunks } from "../controllers/rag.controller.js";
 import { EmbeddecodeToken, middleware, checkAgentAccessMiddleware } from "../middlewares/middleware.js";
 import bucketService from "../services/bucket.service.js";
 import validate from "../middlewares/validate.middleware.js";
@@ -28,5 +28,6 @@ routes.get('/collection/:collectionId', middleware, validate({ params: collectio
 routes.post('/resource', middleware, checkAgentAccessMiddleware, validate({ body: createResourceSchema }), createResourceInCollection);
 routes.put('/resource/:id', middleware, checkAgentAccessMiddleware, validate({ params: resourceIdSchema, body: updateResourceSchema }), updateResourceInCollection);
 routes.delete('/resource/:id', middleware, checkAgentAccessMiddleware, validate({ params: resourceIdSchema }), deleteResourceFromCollection);
+routes.get('/resource/:id/chunks', middleware, checkAgentAccessMiddleware, validate({ params: resourceIdSchema }), getResourceChunks);
 
 export default routes;

@@ -98,3 +98,24 @@ export const updateResource = async (resourceId, updateData) => {
   }
 };
 
+/**
+ * Get chunks for a resource from Hippocampus
+ * @param {String} resourceId - Resource ID to get chunks for
+ * @returns {Promise<Object>} - Chunks response from Hippocampus
+ */
+export const getResourceChunks = async (resourceId) => {
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}/chunks`,
+      headers: {
+        'x-api-key': HIPPOCAMPUS_API_KEY
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getting resource chunks from Hippocampus:", error.response?.data || error.message);
+    throw error;
+  }
+};
+

@@ -507,3 +507,29 @@ export const updateResourceInCollection = async (req, res, next) => {
         return next();
     }
 };
+
+export const getResourceChunks = async (req, res, next) => {
+    const { id: resourceId } = req.params;
+
+    try {
+        // Get chunks from Hippocampus
+        const hippocampusResponse = await hippocampusService.getResourceChunks(resourceId);
+
+        res.locals = {
+            success: true,
+            message: 'Resource chunks fetched successfully',
+            data: hippocampusResponse
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching resource chunks:', error);
+        res.locals = {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch resource chunks',
+            error: error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
