@@ -176,6 +176,10 @@ const version = new mongoose.Schema({
   IsstarterQuestionEnable: {
     type: Boolean,
     default: false
+  },
+  chatbot_auto_answers: {
+    type: Boolean,
+    default: false
   }
 });
 
