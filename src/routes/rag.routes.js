@@ -18,6 +18,6 @@ routes.get('/docs', middleware, getAllDocuments);
 routes.delete('/docs/:id', middleware, checkAgentAccessMiddleware, validate({ params: docIdSchema }), deleteDoc);
 routes.patch('/docs/:id', middleware, checkAgentAccessMiddleware, validate({ params: docIdSchema, body: updateDocSchema }), updateDoc);
 routes.get('/get-emebed-token', middleware, getEmbedToken);
-routes.post('/search', validate({ body: searchSchema }), searchKnowledge);
+routes.post('/chatbot/search', middleware, validate({ body: searchSchema }), searchKnowledge);
 
 export default routes;
