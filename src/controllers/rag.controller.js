@@ -278,21 +278,45 @@ export const createCollection = async (req, res, next) => {
         const { org } = req.profile || {};
         const { name, settings } = req.body;
         
+        // Prepare data for Hippocampus API
+        const hippocampusPayload = {
+            name,
+            settings: settings
+        };
+        
+        // Call Hippocampus API to create collection
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const hippocampusResponse = await axios.post(
+            'http://hippocampus.gtwy.ai/collection',
+            hippocampusPayload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${hippocampusApiKey}`
+                }
+            }
+        );
+        
+        // Prepare data for MongoDB
         const collectionData = {
             name,
             org_id: org?.id,
-            settings: settings || {},
+            settings: hippocampusPayload.settings,
             collection_id: generateIdentifier(24),
             created_at: new Date(),
             updated_at: new Date()
         };
         
+        // Save to MongoDB
         const collection = await ragCollectionService.create(collectionData);
         
         res.locals = {
             "success": true,
             "message": "Collection created successfully",
-            "data": collection
+            "data": {
+                ...collection.toObject(),
+                hippocampus_response: hippocampusResponse.data
+            }
         };
         req.statusCode = 201;
         return next();
@@ -300,9 +324,10 @@ export const createCollection = async (req, res, next) => {
         console.error('Error creating collection:', error);
         res.locals = {
             "success": false,
-            "error": error.message
+            "error": error.message,
+            "details": error.response?.data || error.message
         };
-        req.statusCode = 500;
+        req.statusCode = error.response?.status || 500;
         return next();
     }
 };
