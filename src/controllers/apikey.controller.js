@@ -2,7 +2,7 @@ import apikeyService from "../db_services/apikey.service.js";
 import Helper from "../services/utils/helper.utils.js";
 import {findInCache,deleteInCache} from "../cache_service/index.js"
 import { callOpenAIModelsApi, callGroqApi, callAnthropicApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi } from "../services/utils/aiServices.js"
-import { redis_keys,cost_types } from "../configs/constant.js";
+import { redis_keys, cost_types, new_agent_service } from "../configs/constant.js";
 import { cleanupCache } from "../services/utils/redis.utils.js";
 
 const saveApikey = async(req, res, next) => {
@@ -170,27 +170,29 @@ const deleteApikey = async(req, res, next) => {
 
 const checkApikey = async(apikey, service) => {
     let check;
+    const model = new_agent_service[service];
+    
     switch (service) {
         case 'openai':
             check = await callOpenAIModelsApi(apikey);
             break;
         case 'anthropic':
-            check = await callAnthropicApi(apikey);
+            check = await callAnthropicApi(apikey, model);
             break;
         case 'groq':
-            check = await callGroqApi(apikey);
+            check = await callGroqApi(apikey, model);
             break;
         case 'open_router':
             check = await callOpenRouterApi(apikey);
             break;
         case 'mistral':
-            check = await callMistralApi(apikey);
+            check = await callMistralApi(apikey, model);
             break;
         case 'gemini':
-            check = await callGeminiApi(apikey);
+            check = await callGeminiApi(apikey, model);
             break;
         case 'ai_ml':
-            check = await callAiMlApi(apikey);
+            check = await callAiMlApi(apikey, model);
             break;
         case 'grok':
             check = await callGrokApi(apikey);
