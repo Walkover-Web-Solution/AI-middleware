@@ -48,6 +48,7 @@ const createCollectionSchema = Joi.object({
     settings: Joi.object({
         denseModel: Joi.string().optional(),
         sparseModel: Joi.string().optional(),
+        chunkingType: Joi.string().optional(),
         chunkSize: Joi.number().integer().optional(),
         chunkOverlap: Joi.number().integer().optional(),
         rerankerModel: Joi.string().optional(),
@@ -63,9 +64,7 @@ const createResourceSchema = Joi.object({
         'any.required': 'title is required'
     }),
     ownerId: Joi.string().optional(),
-    content: Joi.string().required().messages({
-        'any.required': 'content is required'
-    }),
+    content: Joi.string().optional(),
     url: Joi.string().uri().optional(),
     settings: Joi.object({
         strategy: Joi.string().optional(),
@@ -74,6 +73,8 @@ const createResourceSchema = Joi.object({
         chunkSize: Joi.number().integer().optional(),
         chunkOverlap: Joi.number().integer().optional()
     }).optional()
+}).or('content', 'url').messages({
+    'object.missing': 'At least one of content or url is required'
 }).unknown(true);
 
 const collectionIdSchema = Joi.object({
@@ -90,11 +91,7 @@ const resourceIdSchema = Joi.object({
 
 const updateResourceSchema = Joi.object({
     title: Joi.string().optional(),
-    description: Joi.string().optional(),
-    content: Joi.string().optional(),
-    url: Joi.string().uri().optional()
-}).or('content', 'url').messages({
-    'object.missing': 'At least one of content or url is required'
+    content: Joi.string().optional()
 }).unknown(true);
 
 export {

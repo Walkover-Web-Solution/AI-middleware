@@ -302,7 +302,7 @@ export const createCollection = async (req, res, next) => {
             name,
             org_id: org?.id,
             settings: hippocampusPayload.settings,
-            collection_id: generateIdentifier(24),
+            collection_id: hippocampusResponse?.data?._id,
             created_at: new Date(),
             updated_at: new Date()
         };
