@@ -50,6 +50,7 @@ const createCollectionSchema = Joi.object({
         sparseModel: Joi.string().optional(),
         chunkSize: Joi.number().integer().optional(),
         chunkOverlap: Joi.number().integer().optional(),
+        rerankerModel: Joi.string().optional(),
         strategy: Joi.string().optional()
     }).optional()
 }).unknown(true);
@@ -65,9 +66,11 @@ const createResourceSchema = Joi.object({
     content: Joi.string().required().messages({
         'any.required': 'content is required'
     }),
+    url: Joi.string().uri().optional(),
     settings: Joi.object({
         strategy: Joi.string().optional(),
         chunkingUrl: Joi.string().uri().optional(),
+        chunkingType: Joi.string().optional(),
         chunkSize: Joi.number().integer().optional(),
         chunkOverlap: Joi.number().integer().optional()
     }).optional()

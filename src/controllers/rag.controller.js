@@ -292,7 +292,7 @@ export const createCollection = async (req, res, next) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${hippocampusApiKey}`
+                    'x-api-key': hippocampusApiKey
                 }
             }
         );
@@ -336,10 +336,16 @@ export const getAllCollections = async (req, res, next) => {
     try {
         const { org } = req.profile || {};
         const collections = await ragCollectionService.getAllByOrgId(org?.id);
-        
+
+        const formattedCollections = collections.map(col => {
+            const obj = col.toObject ? col.toObject() : col;
+            const { _id, ...rest } = obj;
+            return rest;
+        });
+
         res.locals = {
             "success": true,
-            "data": collections
+            "data": formattedCollections
         };
         req.statusCode = 200;
         return next();
@@ -389,7 +395,7 @@ export const getCollectionById = async (req, res, next) => {
 export const createResourceInCollection = async (req, res, next) => {
     try {
         const { org } = req.profile || {};
-        const { collectionId, title, content, ownerId, settings } = req.body;
+        const { collectionId, title, content, url, ownerId, settings } = req.body;
         
         // Create resource via Hippocampus API
         const hippocampusUrl = 'http://hippocampus.gtwy.ai';
@@ -399,6 +405,7 @@ export const createResourceInCollection = async (req, res, next) => {
             collectionId,
             title,
             content,
+            url,
             ownerId: ownerId || 'public',
             settings
         }, {
@@ -407,7 +414,13 @@ export const createResourceInCollection = async (req, res, next) => {
                 'x-api-key': hippocampusApiKey
             }
         });
-        
+
+
+        // Add resource ID to MongoDB collection's resource_ids array
+        if (response.data && response.data._id) {
+            await ragCollectionService.addResourceId(collectionId, response.data._id);
+        }
+
         res.locals = {
             "success": true,
             "message": "Resource created successfully",
@@ -530,28 +543,22 @@ export const getResourceChunks = async (req, res, next) => {
 export const getAllResourcesByCollectionId = async (req, res, next) => {
     try {
         const { collectionId } = req.params;
-        
-        // Fetch collection from database
-        const collection = await ragCollectionService.getByCollectionId(collectionId);
-        
-        if (!collection) {
-            res.locals = {
-                "success": false,
-                "message": "Collection not found"
-            };
-            req.statusCode = 404;
-            return next();
-        }
-        
-        // Return resource IDs from collection
-        const resourceIds = collection.resource_ids || [];
-        
+
+        // Fetch collection resources via Hippocampus API
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+
+        const response = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+
         res.locals = {
             "success": true,
-            "data": {
-                "collectionId": collectionId,
-                "resourceIds": resourceIds
-            }
+            "message": "Resources fetched successfully",
+            "data": response.data
         };
         req.statusCode = 200;
         return next();
@@ -559,9 +566,9 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
         console.error('Error fetching resources by collection:', error);
         res.locals = {
             "success": false,
-            "error": error.message
+            "error": error.response?.data || error.message
         };
-        req.statusCode = 500;
+        req.statusCode = error.response?.status || 500;
         return next();
     }
 };
