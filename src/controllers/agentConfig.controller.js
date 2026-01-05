@@ -104,20 +104,20 @@ const createAgentController = async (req, res, next) => {
         ];
 
         const model_data = {};
-        
+
         // Get model configuration if available
         const serviceLower = service.toLowerCase();
         if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
             const modelObj = modelConfigDocument[serviceLower][model];
             const configurations = modelObj.configuration || {};
-            
+
             for (const key of keys_to_update) {
                 if (configurations[key]) {
                     model_data[key] = key === 'model' ? configurations[key].default : 'default';
                 }
             }
         }
-        
+
         model_data.type = type;
         model_data.response_format = {
             type: "default",
@@ -197,7 +197,7 @@ const updateAgentController = async (req, res, next) => {
     }
     const agent = agentData.bridges;
     const parent_id = agent.parent_id;
-    
+
     // Authorization check is now handled by requireAdminRole middleware
     const current_configuration = agent.configuration || {};
     let current_variables_path = agent.variables_path || {};
@@ -210,6 +210,7 @@ const updateAgentController = async (req, res, next) => {
     const service = body.service;
     const page_config = body.page_config;
     const web_search_filter = body.web_search_filters;
+    const gtwy_web_search_filter = body.gtwy_web_search_filters;
 
     if (new_configuration) {
         const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
@@ -245,7 +246,7 @@ const updateAgentController = async (req, res, next) => {
         new_configuration.fine_tune_model = { current_model: null };
     }
 
-    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters', 'status'];
+    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters', 'gtwy_web_search_filters', 'status', 'chatbot_auto_answers'];
 
     for (const field of simple_fields) {
         if (body[field] !== undefined) {
@@ -257,7 +258,8 @@ const updateAgentController = async (req, res, next) => {
     if (body.bridge_usage !== undefined) update_fields.bridge_usage = body.bridge_usage;
 
     if (page_config) update_fields.page_config = page_config;
-    if (web_search_filter) update_fields.web_search_filters = web_search_filter;
+    if (web_search_filter !== undefined) update_fields.web_search_filters = web_search_filter;
+    if (gtwy_web_search_filter !== undefined) update_fields.gtwy_web_search_filters = gtwy_web_search_filter;
 
     if (service) {
         update_fields.service = service;
@@ -351,11 +353,11 @@ const updateAgentController = async (req, res, next) => {
             if (currentAgentData && currentAgentData.bridges) {
                 const user_id_to_update = body.user_id;
                 const add_user = body.add_user_id;
-                
+
                 if (user_id_to_update !== null && user_id_to_update !== undefined) {
                     // Get current users array
                     let current_users = currentAgentData.bridges.users;
-                    
+
                     // Initialize users array if it doesn't exist
                     if (current_users === null || current_users === undefined) {
                         current_users = [];
@@ -363,9 +365,9 @@ const updateAgentController = async (req, res, next) => {
                         // If users exists but is not a list, initialize as empty list
                         current_users = [];
                     }
-                    
+
                     const user_id_str = String(user_id_to_update);
-                    
+
                     if (add_user) {
                         // Add user_id to users array if not already present
                         const user_exists = current_users.some(u => String(u) === user_id_str);
@@ -420,12 +422,12 @@ const updateAgentController = async (req, res, next) => {
     update_fields.updatedAt = new Date();
 
     await ConfigurationServices.updateAgent(agent_id, update_fields, version_id);
-    
+
     // If updating a version, also update the parent agent's updatedAt
     if (version_id && parent_id) {
         await ConfigurationServices.updateAgent(parent_id, { updatedAt: new Date() }, null);
     }
-    
+
     const updatedAgent = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
 
     await addBulkUserEntries(user_history);
@@ -553,48 +555,48 @@ const getAllAgentController = async (req, res, next) => {
             viasocket_embed_user_id = viasocket_embed_user_id + "_" + folder_id + "_" + user_id;
         }
         const embed_token = Helper.generate_token(
-            { 
-                "org_id": process.env.ORG_ID, 
-                "project_id": process.env.PROJECT_ID, 
-                "user_id": viasocket_embed_user_id 
-            }, 
+            {
+                "org_id": process.env.ORG_ID,
+                "project_id": process.env.PROJECT_ID,
+                "user_id": viasocket_embed_user_id
+            },
             process.env.ACCESS_KEY
         );
 
         const alerting_embed_token = Helper.generate_token(
-            { 
-                "org_id": process.env.ORG_ID, 
-                "project_id": process.env.ALERTING_PROJECT_ID, 
-                "user_id": viasocket_embed_user_id 
-            }, 
+            {
+                "org_id": process.env.ORG_ID,
+                "project_id": process.env.ALERTING_PROJECT_ID,
+                "user_id": viasocket_embed_user_id
+            },
             process.env.ACCESS_KEY
         );
-        
+
         const trigger_embed_token = Helper.generate_token(
-            { 
-                "org_id": process.env.ORG_ID, 
-                "project_id": process.env.TRIGGER_PROJECT_ID, 
-                "user_id": viasocket_embed_user_id 
-            }, 
+            {
+                "org_id": process.env.ORG_ID,
+                "project_id": process.env.TRIGGER_PROJECT_ID,
+                "user_id": viasocket_embed_user_id
+            },
             process.env.ACCESS_KEY
         );
-        
+
         const history_page_chatbot_token = Helper.generate_token(
-            { 
-                "org_id": "11202", 
-                "chatbot_id": "67286d4083e482fd5b466b69", 
-                "user_id": org_id 
-            }, 
+            {
+                "org_id": "11202",
+                "chatbot_id": "67286d4083e482fd5b466b69",
+                "user_id": org_id
+            },
             process.env.CHATBOT_ACCESS_KEY
         );
-        
+
         const doctstar_embed_token = Helper.generate_token(
-            { 
-                "org_id": process.env.DOCSTAR_ORG_ID, 
-                "collection_id": process.env.DOCSTAR_COLLECTION_ID, 
-                "user_id": org_id ,
+            {
+                "org_id": process.env.DOCSTAR_ORG_ID,
+                "collection_id": process.env.DOCSTAR_COLLECTION_ID,
+                "user_id": org_id,
                 "read_only": role_name === 'viewer'
-            }, 
+            },
             process.env.DOCSTAR_ACCESS_KEY
         );
 

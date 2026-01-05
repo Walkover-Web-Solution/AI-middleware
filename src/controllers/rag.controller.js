@@ -5,6 +5,7 @@ import { sendRagUpdates } from '../services/alerting.service.js';
 import { generateAuthToken, generateIdentifier } from '../services/utils/utility.service.js';
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import token from "../services/commonService/generateToken.js";
+import axios from 'axios';
 
 
 const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
@@ -224,4 +225,47 @@ export const getEmbedToken = async (req, res, next) => {
     }
     req.statusCode = 200;
     return next();
+};
+
+export const searchKnowledge = async (req, res, next) => {
+    try {
+        const { query } = req.body;
+        const ownerId = req.body.agent_id;
+        // Get environment variables
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai/search';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const collectionId = process.env.HIPPOCAMPUS_COLLECTION_ID;
+
+        // Make the API call to Hippocampus
+        const response = await axios.post(hippocampusUrl, {
+            query,
+            collectionId,
+            ownerId
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+
+        // Extract only content from the result
+        const answers = response.data?.result?.map(item => item.payload?.content) || [];
+
+        res.locals = {
+            "success": true,
+            "data": {
+                "answers": answers
+            }
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error calling Hippocampus API:', error.message);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
 };

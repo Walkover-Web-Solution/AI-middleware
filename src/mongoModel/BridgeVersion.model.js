@@ -106,6 +106,14 @@ const version = new mongoose.Schema({
       guardrails_custom_prompt: ""
     }
   },
+  web_search_filters: {
+    type: [String],
+    default: []
+  },
+  gtwy_web_search_filters: {
+    type: [String],
+    default: []
+  },
   user_reference: {
     type: String,
     default: ""
@@ -174,6 +182,10 @@ const version = new mongoose.Schema({
     default: null
   },
   IsstarterQuestionEnable: {
+    type: Boolean,
+    default: false
+  },
+  chatbot_auto_answers: {
     type: Boolean,
     default: false
   }
