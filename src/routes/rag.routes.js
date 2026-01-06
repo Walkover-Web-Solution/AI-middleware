@@ -1,6 +1,6 @@
 import multer from 'multer';
 import express from "express";
-import { getAllDocuments, createVectors, deleteDoc, updateDoc, getEmbedToken, ragEmbedUserLogin, searchKnowledge, createCollection, getAllCollections, getCollectionById, createResourceInCollection, updateResourceInCollection, deleteResourceFromCollection, getResourceChunks, getAllResourcesByCollectionId } from "../controllers/rag.controller.js";
+import { getAllDocuments, createVectors, deleteDoc, updateDoc, getEmbedToken, ragEmbedUserLogin, searchKnowledge, createCollection, getAllCollections, getCollectionById, createResourceInCollection, updateResourceInCollection, deleteResourceFromCollection, getResourceChunks, getAllResourcesByCollectionId, getOrCreateDefaultCollections } from "../controllers/rag.controller.js";
 import { EmbeddecodeToken, middleware, checkAgentAccessMiddleware } from "../middlewares/middleware.js";
 import bucketService from "../services/bucket.service.js";
 import validate from "../middlewares/validate.middleware.js";
@@ -27,6 +27,7 @@ routes.get('/collection/:collectionId', middleware, validate({ params: collectio
 routes.get('/collection/:collectionId/resources', middleware, validate({ params: collectionIdSchema }), getAllResourcesByCollectionId);
 
 // Resource routes
+routes.get('/resource', middleware, getOrCreateDefaultCollections);
 routes.post('/resource', middleware, checkAgentAccessMiddleware, validate({ body: createResourceSchema }), createResourceInCollection);
 routes.put('/resource/:id', middleware, checkAgentAccessMiddleware, validate({ params: resourceIdSchema, body: updateResourceSchema }), updateResourceInCollection);
 routes.delete('/resource/:id', middleware, checkAgentAccessMiddleware, validate({ params: resourceIdSchema }), deleteResourceFromCollection);

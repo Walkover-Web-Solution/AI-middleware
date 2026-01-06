@@ -572,3 +572,134 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
         return next();
     }
 };
+
+export const getOrCreateDefaultCollections = async (req, res, next) => {
+    try {
+        const org_id = req.profile?.org?.id;
+
+        // Define the three default collections with their settings
+        const defaultCollections = [
+            {
+                name: "High Accuracy",
+                settings: {
+                    denseModel: "BAAI/bge-large-en-v1.5",
+                    sparseModel: "Qdrant/bm25",
+                    rerankerModel: "colbert-ir/colbertv2.0"
+                }
+            },
+            {
+                name: "Moderate",
+                settings: {
+                    denseModel: "BAAI/bge-large-en-v1.5"
+                }
+            },
+            {
+                name: "Fastest",
+                settings: {
+                    denseModel: "BAAI/bge-small-en-v1.5"
+                }
+            }
+        ];
+
+        // Fetch existing collections for this org
+        const existingCollections = await ragCollectionService.getAllByOrgId(org_id);
+        
+        // Helper function to check if a collection with specific settings exists
+        const findCollectionBySettings = (targetSettings) => {
+            return existingCollections.find(col => {
+                const colObj = col.toObject ? col.toObject() : col;
+                const colSettings = colObj.settings || {};
+                
+                // Check if all required models match
+                if (targetSettings.denseModel && colSettings.denseModel !== targetSettings.denseModel) {
+                    return false;
+                }
+                if (targetSettings.sparseModel && colSettings.sparseModel !== targetSettings.sparseModel) {
+                    return false;
+                }
+                if (targetSettings.rerankerModel && colSettings.rerankerModel !== targetSettings.rerankerModel) {
+                    return false;
+                }
+                
+                return true;
+            });
+        };
+
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+
+        // Create missing collections
+        const createdCollections = [];
+        const allCollectionResults = [];
+        
+        for (const defaultCol of defaultCollections) {
+            const existingCol = findCollectionBySettings(defaultCol.settings);
+            
+            if (existingCol) {
+                // Collection with these settings already exists
+                const colObj = existingCol.toObject ? existingCol.toObject() : existingCol;
+                const { _id, ...rest } = colObj;
+                allCollectionResults.push(rest);
+            } else {
+                // Create new collection with these settings
+                try {
+                    // Call Hippocampus API to create collection
+                    const hippocampusResponse = await axios.post(
+                        `${hippocampusUrl}/collection`,
+                        {
+                            name: defaultCol.name,
+                            settings: defaultCol.settings
+                        },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-api-key': hippocampusApiKey
+                            }
+                        }
+                    );
+
+                    // Save to MongoDB
+                    const collectionData = {
+                        name: defaultCol.name,
+                        org_id: org_id,
+                        settings: defaultCol.settings,
+                        collection_id: hippocampusResponse?.data?._id,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    };
+
+                    const newCollection = await ragCollectionService.create(collectionData);
+                    const newColObj = newCollection.toObject();
+                    createdCollections.push(newColObj);
+                    const { _id, ...rest } = newColObj;
+                    allCollectionResults.push(rest);
+                } catch (error) {
+                    console.error(`Error creating collection ${defaultCol.name}:`, error);
+                    // Continue with other collections even if one fails
+                }
+            }
+        }
+
+        // Prepare final response with all three collections
+        res.locals = {
+            "success": true,
+            "message": createdCollections.length > 0 
+                ? `${createdCollections.length} collection(s) created successfully` 
+                : "All collections already exist",
+            "data": {
+                collections: allCollectionResults,
+                created: createdCollections.length
+            }
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error in getOrCreateDefaultCollections:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
