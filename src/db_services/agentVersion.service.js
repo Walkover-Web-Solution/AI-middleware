@@ -416,11 +416,19 @@ async function publish(org_id, version_id, user_id) {
     const publishedVersionId = getVersionData._id.toString();
     const previousPublishedVersionId = parentConfiguration.published_version_id;
 
+    // Preserve chatbot_auto_answers value from parent before updating
+    const chatbotAutoAnswers = parentConfiguration.chatbot_auto_answers;
+
     // Prepare updated configuration
     const updatedConfiguration = { ...parentConfiguration, ...getVersionData };
     delete updatedConfiguration._id;
     updatedConfiguration.published_version_id = publishedVersionId;
     delete updatedConfiguration.apiCalls; // Remove looked-up data
+
+    // Restore the chatbot_auto_answers value from parent
+    if (chatbotAutoAnswers !== undefined) {
+        updatedConfiguration.chatbot_auto_answers = chatbotAutoAnswers;
+    }
 
     if (updatedConfiguration.function_ids) {
         updatedConfiguration.function_ids = updatedConfiguration.function_ids.map(fid => new ObjectId(fid));
