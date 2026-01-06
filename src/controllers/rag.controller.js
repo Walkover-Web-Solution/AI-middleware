@@ -395,8 +395,41 @@ export const getCollectionById = async (req, res, next) => {
 export const createResourceInCollection = async (req, res, next) => {
     try {
         const { org } = req.profile || {};
-        const { collectionId, title, content, url, ownerId, settings } = req.body;
-        
+        let { collection_details, title, content, url, ownerId, settings } = req.body;
+        let collectionId;
+        const existingCollections = await ragCollectionService.getAllByOrgId(org?.id);
+
+        // Helper function to filter out undefined values
+        const filterUndefined = (obj) => {
+            return Object.fromEntries(
+                Object.entries(obj || {}).filter(([_, value]) => value !== undefined)
+            );
+        };
+
+        if(collection_details == 'high_accuracy'){
+            const collection = existingCollections.find(col => col.name == 'high_accuracy');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+        else if(collection_details == 'moderate'){
+            const collection = existingCollections.find(col => col.name == 'moderate');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+        else{
+            const collection = existingCollections.find(col => col.name == 'fastest');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+
+        if(!collectionId){
+            res.locals = {
+                "success": false,
+                "message":"Collection not found"
+            }
+            req.statusCode = 400;
+            return next();
+        }
         // Create resource via Hippocampus API
         const hippocampusUrl = 'http://hippocampus.gtwy.ai';
         const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
@@ -576,11 +609,10 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
 export const getOrCreateDefaultCollections = async (req, res, next) => {
     try {
         const org_id = req.profile?.org?.id;
-
         // Define the three default collections with their settings
         const defaultCollections = [
             {
-                name: "High Accuracy",
+                name: "high_accuracy",
                 settings: {
                     denseModel: "BAAI/bge-large-en-v1.5",
                     sparseModel: "Qdrant/bm25",
@@ -588,13 +620,13 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
                 }
             },
             {
-                name: "Moderate",
+                name: "moderate",
                 settings: {
                     denseModel: "BAAI/bge-large-en-v1.5"
                 }
             },
             {
-                name: "Fastest",
+                name: "fastest",
                 settings: {
                     denseModel: "BAAI/bge-small-en-v1.5"
                 }
@@ -604,24 +636,31 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
         // Fetch existing collections for this org
         const existingCollections = await ragCollectionService.getAllByOrgId(org_id);
         
-        // Helper function to check if a collection with specific settings exists
-        const findCollectionBySettings = (targetSettings) => {
+        // Helper function to check if a collection with specific name and settings exists
+        const findCollectionByNameAndSettings = (targetName, targetSettings) => {
             return existingCollections.find(col => {
                 const colObj = col.toObject ? col.toObject() : col;
                 const colSettings = colObj.settings || {};
                 
-                // Check if all required models match
-                if (targetSettings.denseModel && colSettings.denseModel !== targetSettings.denseModel) {
-                    return false;
-                }
-                if (targetSettings.sparseModel && colSettings.sparseModel !== targetSettings.sparseModel) {
-                    return false;
-                }
-                if (targetSettings.rerankerModel && colSettings.rerankerModel !== targetSettings.rerankerModel) {
+                // First check if the name matches
+                if(colObj.name !== targetName) {
                     return false;
                 }
                 
-                return true;
+                // Then check if all required models match based on collection type
+                if(targetName === 'high_accuracy'){
+                    return colSettings.denseModel === targetSettings.denseModel && 
+                           colSettings.sparseModel === targetSettings.sparseModel && 
+                           colSettings.rerankerModel === targetSettings.rerankerModel;
+                }
+                else if(targetName === 'moderate'){
+                    return colSettings.denseModel === targetSettings.denseModel;
+                }
+                else if(targetName === 'fastest'){
+                    return colSettings.denseModel === targetSettings.denseModel;
+                }
+                
+                return false;
             });
         };
 
@@ -633,7 +672,7 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
         const allCollectionResults = [];
         
         for (const defaultCol of defaultCollections) {
-            const existingCol = findCollectionBySettings(defaultCol.settings);
+            const existingCol = findCollectionByNameAndSettings(defaultCol.name, defaultCol.settings);
             
             if (existingCol) {
                 // Collection with these settings already exists
@@ -680,14 +719,41 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
             }
         }
 
-        // Prepare final response with all three collections
+        // Fetch resources for each collection
+        const allResources = [];
+        
+        for (const collection of allCollectionResults) {
+            try {
+                // Fetch resources for this collection via Hippocampus API
+                const resourcesResponse = await axios.get(
+                    `${hippocampusUrl}/collection/${collection.collection_id}/resources?content=true`,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': hippocampusApiKey
+                        }
+                    }
+                );
+                
+                // Add collection info to each resource and flatten into allResources
+                const resourcesWithCollection = (resourcesResponse.data?.resources || []).map(resource => ({
+                    ...resource,
+                    }
+                ));
+                allResources.push(...resourcesWithCollection);
+            } catch (error) {
+                console.error(`Error fetching resources for collection ${collection.collection_id}:`, error);
+                // Continue with other collections even if one fails
+            }
+        }
+
         res.locals = {
             "success": true,
             "message": createdCollections.length > 0 
                 ? `${createdCollections.length} collection(s) created successfully` 
                 : "All collections already exist",
             "data": {
-                collections: allCollectionResults,
+                resources: allResources,
                 created: createdCollections.length
             }
         };

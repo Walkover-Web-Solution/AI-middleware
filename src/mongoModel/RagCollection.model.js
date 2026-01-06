@@ -23,7 +23,8 @@ const ragCollectionSchema = new mongoose.Schema({
     chunkSize: Number,
     chunkOverlap: Number,
     sparseModel: String,
-    strategy: String
+    strategy: String,
+    rerankerModel: String
   },
   created_at: {
     type: Date,

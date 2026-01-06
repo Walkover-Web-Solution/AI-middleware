@@ -57,7 +57,7 @@ const createCollectionSchema = Joi.object({
 }).unknown(true);
 
 const createResourceSchema = Joi.object({
-    collectionId: Joi.string().required().messages({
+    collection_details: Joi.string().required().messages({
         'any.required': 'collectionId is required'
     }),
     title: Joi.string().required().messages({
