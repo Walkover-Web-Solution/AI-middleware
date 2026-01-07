@@ -5,7 +5,7 @@ import Helper from "../services/utils/helper.utils.js";
 
 const getAllApiCalls = async (req, res, next) => {
     const org_id = req.profile?.org?.id;
-    const folder_id = req.profile?.user?.folder_id || null;
+    const folder_id = req.profile?.extraDetails?.folder_id || null;
     const user_id = req.profile?.user?.id;
     const isEmbedUser = req.IsEmbedUser;
 
