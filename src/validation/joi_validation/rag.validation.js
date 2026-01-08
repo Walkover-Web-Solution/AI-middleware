@@ -66,6 +66,9 @@ const createResourceSchema = Joi.object({
     ownerId: Joi.string().optional(),
     content: Joi.string().optional(),
     url: Joi.string().uri().optional(),
+    description: Joi.string().required().messages({
+        'any.required': 'description is required'
+    }),
     settings: Joi.object({
         strategy: Joi.string().optional(),
         chunkingUrl: Joi.string().uri().optional(),

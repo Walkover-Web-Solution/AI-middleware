@@ -395,7 +395,7 @@ export const getCollectionById = async (req, res, next) => {
 export const createResourceInCollection = async (req, res, next) => {
     try {
         const { org } = req.profile || {};
-        let { collection_details, title, content, url, settings } = req.body;
+        let { collection_details, title, content, url, settings, description} = req.body;
         let collectionId;
         const isEmbedUser = req.profile.IsEmbedUser;
         const folder_id = req.folder_id;
@@ -453,6 +453,7 @@ export const createResourceInCollection = async (req, res, next) => {
             title,
             content,
             url,
+            description,
             ownerId: ownerId || 'public',
             settings
         }, {
