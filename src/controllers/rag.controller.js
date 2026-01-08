@@ -395,8 +395,22 @@ export const getCollectionById = async (req, res, next) => {
 export const createResourceInCollection = async (req, res, next) => {
     try {
         const { org } = req.profile || {};
-        let { collection_details, title, content, url, ownerId, settings } = req.body;
+        let { collection_details, title, content, url, settings } = req.body;
         let collectionId;
+        const isEmbedUser = req.profile.IsEmbedUser;
+        const folder_id = req.folder_id;
+        const user_id = req.profile.user.id;
+        const org_id = req.profile.org.id;
+        let ownerId;
+        if(folder_id){
+            ownerId = org_id + "_" + folder_id + "_" + user_id;
+        }
+        else if(isEmbedUser){
+            ownerId = org_id + "_" + user_id;
+        }
+        else{
+            ownerId = org_id;
+        }
         const existingCollections = await ragCollectionService.getAllByOrgId(org?.id);
 
         // Helper function to filter out undefined values
@@ -580,8 +594,22 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
         // Fetch collection resources via Hippocampus API
         const hippocampusUrl = 'http://hippocampus.gtwy.ai';
         const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const isEmbedUser = req.profile.IsEmbedUser;
+        const folder_id = req.folder_id;
+        const user_id = req.profile.user.id;
+        const org_id = req.profile.org.id;
+        let ownerId;
+        if(folder_id){
+            ownerId = org_id + "_" + folder_id + "_" + user_id;
+        }
+        else if(isEmbedUser){
+            ownerId = org_id + "_" + user_id;
+        }
+        else{
+            ownerId = org_id;
+        }
 
-        const response = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true`, {
+        const response = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': hippocampusApiKey
