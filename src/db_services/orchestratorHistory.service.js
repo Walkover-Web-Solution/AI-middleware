@@ -65,7 +65,10 @@ async function findRecentOrchestratorThreads(org_id, agent_id, filters, page = 1
 
     // Build where conditions
     const whereConditions = {
-      org_id: org_id
+      org_id: org_id,
+      [Sequelize.Op.and]: [
+        Sequelize.literal(`bridge_id ? '${agent_id}'`)
+      ]
     };
 
     // Add time range filter
