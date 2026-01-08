@@ -1,11 +1,10 @@
 import dotenv from 'dotenv';
 import logger from '../logger.js';
 import rabbitmqService from '../services/rabbitmq.service.js';
-import ragConsumer from './ragConsumer.js';
 
 dotenv.config();
 const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED?.toLowerCase() === 'true';
-const CONSUMERS = [ragConsumer];
+const CONSUMERS = [];
 
 class Consumer {
   constructor(obj, connectionString) {

@@ -1,14 +1,9 @@
-import rag_parent_data from '../db_services/ragParentData.service.js';
-import queue from '../services/queue.service.js';
 import { genrateToken } from '../utils/rag.utils.js';
-import { sendRagUpdates } from '../services/alerting.service.js';
 import { generateAuthToken, generateIdentifier } from '../services/utils/utility.service.js';
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import token from "../services/commonService/generateToken.js";
 import axios from 'axios';
-
-
-const QUEUE_NAME = process.env.RAG_QUEUE || 'rag-queue';
+import ragCollectionService from '../db_services/ragCollection.service.js';
 
 export const ragEmbedUserLogin = async (req, res, next) => {
     const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
@@ -52,92 +47,6 @@ export const ragEmbedUserLogin = async (req, res, next) => {
     return next();
 };
 
-export const getAllDocuments = async (req, res, next) => {
-    const { org, user, IsEmbedUser } = req.profile || {};
-    const folder_id = req.profile.extraDetails?.folder_id;
-    const user_id = req.profile?.user?.id;
-
-    const embed = req.IsEmbedUser;
-    const query = { org_id: org?.id }
-    if (folder_id) {
-        query.folder_id = folder_id
-    } else {
-        query.$or = [
-            { folder_id: "" },
-            { folder_id: null },
-            { folder_id: { $exists: false } }
-        ]
-    }
-    if (embed || IsEmbedUser) query.user_id = embed ? (user.id || user_id) : null
-    const result = await rag_parent_data.getAll(query);
-    res.locals = {
-        "success": true,
-        "message": `Document fetched successfully`,
-        "data": result
-    };
-    req.statusCode = 200;
-    return next();
-};
-
-export const createVectors = async (req, res, next) => {
-    const { org, user } = req.profile || {};
-    const folder_id = req.profile.extraDetails?.folder_id;
-    const user_id = req.profile?.user?.id;
-    const embed = req.IsEmbedUser;
-    const {
-        url,
-        chunking_type = 'auto',
-        chunk_size = 512,
-        chunk_overlap = 70,
-        name,
-        description,
-        docType,
-        fileFormat,
-        nestedCrawling
-    } = req.body;
-
-    // Validation is now handled by middleware
-
-    const parentData = (await rag_parent_data.create({
-        source: {
-            type: 'url',
-            fileFormat,
-            scriptId: fileFormat === 'script' ? new URL(url).pathname.split('/').pop() : undefined,
-            data: {
-                url,
-                type: docType,
-            },
-            nesting: {
-                enabled: nestedCrawling
-            }
-        },
-        chunking_type,
-        chunk_size,
-        chunk_overlap,
-        name,
-        description,
-        user_id: embed ? (user.id || user_id) : null,
-        org_id: org?.id,
-        folder_id: folder_id,
-    })).toObject();
-    const payload = {
-        event: fileFormat === 'script' ? 'load_multiple' : 'load',
-        data: {
-            url: url,
-            resourceId: parentData._id,
-        }
-    }
-
-    await queue.publishToQueue(QUEUE_NAME, payload);
-    sendRagUpdates(org?.id, [parentData], 'create');
-
-    res.locals = {
-        success: true,
-        data: parentData
-    };
-    req.statusCode = 201;
-    return next();
-};
 
 export const getKnowledgeBaseToken = async (req, res, next) => {
     const org_id = req.profile.org.id
@@ -159,61 +68,6 @@ export const getKnowledgeBaseToken = async (req, res, next) => {
     return next();
 };
 
-export const deleteDoc = async (req, res, next) => {
-    const embed = req.Embed;
-    const orgId = embed ? embed.org_id : req.profile.org.id;
-    // const userId = req.profile.user.id;
-    const { id } = req.params;
-    const result = await rag_parent_data.deleteDocumentById(id);
-    const nestedDocs = await rag_parent_data.getDocumentsByQuery({ 'source.nesting.parentDocId': id });
-    await rag_parent_data.deleteDocumentsByQuery({ 'source.nesting.parentDocId': id });
-    for (const doc of [result, ...nestedDocs]) {
-        await queue.publishToQueue(QUEUE_NAME, { event: "delete", data: { resourceId: doc._id.toString(), orgId } });
-    }
-    sendRagUpdates(orgId, [result, ...nestedDocs], 'delete');
-    res.locals = {
-        "success": true,
-        "message": `Document deleted successfully`,
-        "data": result
-    }
-    req.statusCode = 200;
-    return next();
-};
-
-export const updateDoc = async (req, res, next) => {
-    // const userId = req.profile.user.id;
-    const { id } = req.params;
-    const { name, description } = req.body;
-    const orgId = req.Embed ? req.Embed.org_id : req.profile.org.id;
-    const result = await rag_parent_data.updateDocumentData(id, { name, description });
-    sendRagUpdates(orgId, [result], 'update');
-    res.locals = {
-        "success": true,
-        "message": `Document updated successfully`,
-        "data": result
-    }
-    req.statusCode = 200;
-    return next();
-};
-
-export const refreshDoc = async (req, res, next) => {
-    const { id: docId } = req.params;
-    const docData = await rag_parent_data.updateDocumentData(docId, { refreshedAt: new Date() });
-    res.locals = {
-        "success": true,
-        "message": `Document refreshed successfully`,
-        "data": docData
-    }
-    req.statusCode = 200;
-    await queue.publishToQueue(QUEUE_NAME, {
-        event: 'load',
-        data: {
-            url: docData.source.data.url,
-            resourceId: docId
-        }
-    });
-    return next();
-};
 
 export const getEmbedToken = async (req, res, next) => {
     const embed = req.Embed;
@@ -231,6 +85,7 @@ export const searchKnowledge = async (req, res, next) => {
     try {
         const { query } = req.body;
         const ownerId = req.body.agent_id;
+        
         // Get environment variables
         const hippocampusUrl = 'http://hippocampus.gtwy.ai/search';
         const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
@@ -266,6 +121,533 @@ export const searchKnowledge = async (req, res, next) => {
             "error": error.response?.data || error.message
         };
         req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+// Collection Management
+export const createCollection = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        const { name, settings } = req.body;
+        
+        // Prepare data for Hippocampus API
+        const hippocampusPayload = {
+            name,
+            settings: settings
+        };
+        
+        // Call Hippocampus API to create collection
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const hippocampusResponse = await axios.post(
+            'http://hippocampus.gtwy.ai/collection',
+            hippocampusPayload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': hippocampusApiKey
+                }
+            }
+        );
+        
+        // Prepare data for MongoDB
+        const collectionData = {
+            name,
+            org_id: org?.id,
+            settings: hippocampusPayload.settings,
+            collection_id: hippocampusResponse?.data?._id,
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+        
+        // Save to MongoDB
+        const collection = await ragCollectionService.create(collectionData);
+        
+        res.locals = {
+            "success": true,
+            "message": "Collection created successfully",
+            "data": {
+                ...collection.toObject(),
+                hippocampus_response: hippocampusResponse.data
+            }
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message,
+            "details": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getAllCollections = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        const collections = await ragCollectionService.getAllByOrgId(org?.id);
+
+        const formattedCollections = collections.map(col => {
+            const obj = col.toObject ? col.toObject() : col;
+            const { _id, ...rest } = obj;
+            return rest;
+        });
+
+        res.locals = {
+            "success": true,
+            "data": formattedCollections
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collections:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+export const getCollectionById = async (req, res, next) => {
+    try {
+        const { collectionId } = req.params;
+        const collection = await ragCollectionService.getByCollectionId(collectionId);
+        
+        if (!collection) {
+            res.locals = {
+                "success": false,
+                "message": "Collection not found"
+            };
+            req.statusCode = 404;
+            return next();
+        }
+        
+        res.locals = {
+            "success": true,
+            "data": collection
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
+        return next();
+    }
+};
+
+// Resource Management
+export const createResourceInCollection = async (req, res, next) => {
+    try {
+        const { org } = req.profile || {};
+        let { collection_details, title, content, url, settings, description} = req.body;
+        let collectionId;
+        const isEmbedUser = req.profile.IsEmbedUser;
+        const folder_id = req.folder_id;
+        const user_id = req.profile.user.id;
+        const org_id = req.profile.org.id;
+        let ownerId;
+        if(folder_id){
+            ownerId = org_id + "_" + folder_id + "_" + user_id;
+        }
+        else if(isEmbedUser){
+            ownerId = org_id + "_" + user_id;
+        }
+        else{
+            ownerId = org_id;
+        }
+        const existingCollections = await ragCollectionService.getAllByOrgId(org?.id);
+
+        // Helper function to filter out undefined values
+        const filterUndefined = (obj) => {
+            return Object.fromEntries(
+                Object.entries(obj || {}).filter(([_, value]) => value !== undefined)
+            );
+        };
+
+        if(collection_details == 'high_accuracy'){
+            const collection = existingCollections.find(col => col.name == 'high_accuracy');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+        else if(collection_details == 'moderate'){
+            const collection = existingCollections.find(col => col.name == 'moderate');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+        else{
+            const collection = existingCollections.find(col => col.name == 'fastest');
+            collectionId = collection?.collection_id;
+            settings = {...settings, ...filterUndefined(collection?.settings)};
+        }
+
+        if(!collectionId){
+            res.locals = {
+                "success": false,
+                "message":"Collection not found"
+            }
+            req.statusCode = 400;
+            return next();
+        }
+        // Create resource via Hippocampus API
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.post(`${hippocampusUrl}/resource`, {
+            collectionId,
+            title,
+            content,
+            url,
+            description,
+            ownerId: ownerId || 'public',
+            settings
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+
+
+        // Add resource ID to MongoDB collection's resource_ids array
+        if (response.data && response.data._id) {
+            await ragCollectionService.addResourceId(collectionId, response.data._id);
+        }
+
+        res.locals = {
+            "success": true,
+            "message": "Resource created successfully",
+            "data": response.data
+        };
+        req.statusCode = 201;
+        return next();
+    } catch (error) {
+        console.error('Error creating resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const updateResourceInCollection = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { title, description, content, url } = req.body;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.put(`${hippocampusUrl}/resource/${id}`, {
+            title,
+            description,
+            content,
+            url
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "message": "Resource updated successfully",
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const deleteResourceFromCollection = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.delete(`${hippocampusUrl}/resource/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "message": "Resource deleted successfully",
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error deleting resource:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getResourceChunks = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        
+        const response = await axios.get(`${hippocampusUrl}/resource/${id}/chunks`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+        
+        res.locals = {
+            "success": true,
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching resource chunks:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getAllResourcesByCollectionId = async (req, res, next) => {
+    try {
+        const { collectionId } = req.params;
+
+        // Fetch collection resources via Hippocampus API
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const isEmbedUser = req.profile.IsEmbedUser;
+        const folder_id = req.folder_id;
+        const user_id = req.profile.user.id;
+        const org_id = req.profile.org.id;
+        let ownerId;
+        if(folder_id){
+            ownerId = org_id + "_" + folder_id + "_" + user_id;
+        }
+        else if(isEmbedUser){
+            ownerId = org_id + "_" + user_id;
+        }
+        else{
+            ownerId = org_id;
+        }
+
+        const response = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': hippocampusApiKey
+            }
+        });
+
+        res.locals = {
+            "success": true,
+            "message": "Resources fetched successfully",
+            "data": response.data
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error fetching resources by collection:', error);
+        res.locals = {
+            "success": false,
+            "error": error.response?.data || error.message
+        };
+        req.statusCode = error.response?.status || 500;
+        return next();
+    }
+};
+
+export const getOrCreateDefaultCollections = async (req, res, next) => {
+    try {
+        const org_id = req.profile?.org?.id;
+        // Define the three default collections with their settings
+        const defaultCollections = [
+            {
+                name: "high_accuracy",
+                settings: {
+                    denseModel: "BAAI/bge-large-en-v1.5",
+                    sparseModel: "Qdrant/bm25",
+                    rerankerModel: "colbert-ir/colbertv2.0"
+                }
+            },
+            {
+                name: "moderate",
+                settings: {
+                    denseModel: "BAAI/bge-large-en-v1.5"
+                }
+            },
+            {
+                name: "fastest",
+                settings: {
+                    denseModel: "BAAI/bge-small-en-v1.5"
+                }
+            }
+        ];
+
+        // Fetch existing collections for this org
+        const existingCollections = await ragCollectionService.getAllByOrgId(org_id);
+        
+        // Helper function to check if a collection with specific name and settings exists
+        const findCollectionByNameAndSettings = (targetName, targetSettings) => {
+            return existingCollections.find(col => {
+                const colObj = col.toObject ? col.toObject() : col;
+                const colSettings = colObj.settings || {};
+                
+                // First check if the name matches
+                if(colObj.name !== targetName) {
+                    return false;
+                }
+                
+                // Then check if all required models match based on collection type
+                if(targetName === 'high_accuracy'){
+                    return colSettings.denseModel === targetSettings.denseModel && 
+                           colSettings.sparseModel === targetSettings.sparseModel && 
+                           colSettings.rerankerModel === targetSettings.rerankerModel;
+                }
+                else if(targetName === 'moderate'){
+                    return colSettings.denseModel === targetSettings.denseModel;
+                }
+                else if(targetName === 'fastest'){
+                    return colSettings.denseModel === targetSettings.denseModel;
+                }
+                
+                return false;
+            });
+        };
+
+        const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+        const hippocampusUrl = 'http://hippocampus.gtwy.ai';
+
+        // Create missing collections
+        const createdCollections = [];
+        const allCollectionResults = [];
+        
+        for (const defaultCol of defaultCollections) {
+            const existingCol = findCollectionByNameAndSettings(defaultCol.name, defaultCol.settings);
+            
+            if (existingCol) {
+                // Collection with these settings already exists
+                const colObj = existingCol.toObject ? existingCol.toObject() : existingCol;
+                const { _id, ...rest } = colObj;
+                allCollectionResults.push(rest);
+            } else {
+                // Create new collection with these settings
+                try {
+                    // Call Hippocampus API to create collection
+                    const hippocampusResponse = await axios.post(
+                        `${hippocampusUrl}/collection`,
+                        {
+                            name: defaultCol.name,
+                            settings: defaultCol.settings
+                        },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-api-key': hippocampusApiKey
+                            }
+                        }
+                    );
+
+                    // Save to MongoDB
+                    const collectionData = {
+                        name: defaultCol.name,
+                        org_id: org_id,
+                        settings: defaultCol.settings,
+                        collection_id: hippocampusResponse?.data?._id,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    };
+
+                    const newCollection = await ragCollectionService.create(collectionData);
+                    const newColObj = newCollection.toObject();
+                    createdCollections.push(newColObj);
+                    const { _id, ...rest } = newColObj;
+                    allCollectionResults.push(rest);
+                } catch (error) {
+                    console.error(`Error creating collection ${defaultCol.name}:`, error);
+                    // Continue with other collections even if one fails
+                }
+            }
+        }
+
+        // Fetch resources for each collection
+        const allResources = [];
+        
+        for (const collection of allCollectionResults) {
+            try {
+                // Fetch resources for this collection via Hippocampus API
+                const resourcesResponse = await axios.get(
+                    `${hippocampusUrl}/collection/${collection.collection_id}/resources?content=true`,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': hippocampusApiKey
+                        }
+                    }
+                );
+                
+                // Add collection info to each resource and flatten into allResources
+                const resourcesWithCollection = (resourcesResponse.data?.resources || []).map(resource => ({
+                    ...resource,
+                    }
+                ));
+                allResources.push(...resourcesWithCollection);
+            } catch (error) {
+                console.error(`Error fetching resources for collection ${collection.collection_id}:`, error);
+                // Continue with other collections even if one fails
+            }
+        }
+
+        res.locals = {
+            "success": true,
+            "message": createdCollections.length > 0 
+                ? `${createdCollections.length} collection(s) created successfully` 
+                : "All collections already exist",
+            "data": {
+                resources: allResources,
+                created: createdCollections.length
+            }
+        };
+        req.statusCode = 200;
+        return next();
+    } catch (error) {
+        console.error('Error in getOrCreateDefaultCollections:', error);
+        res.locals = {
+            "success": false,
+            "error": error.message
+        };
+        req.statusCode = 500;
         return next();
     }
 };
