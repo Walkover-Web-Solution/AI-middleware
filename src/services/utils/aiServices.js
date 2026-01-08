@@ -20,7 +20,7 @@ async function callOpenAIModelsApi(apiKey) {
     }
 }
 
-async function callAnthropicApi(apiKey) {
+async function callAnthropicApi(apiKey, model = "claude-3-7-sonnet-20250219") {
     const url = 'https://api.anthropic.com/v1/messages';
     const headers = {
       'x-api-key': apiKey,
@@ -29,7 +29,7 @@ async function callAnthropicApi(apiKey) {
     };
 
     const body = JSON.stringify({
-      model: "claude-3-7-sonnet-20250219",
+      model: model,
       max_tokens: 1,
       messages: [
         { role: "user", content: "Hello, world" }
@@ -50,7 +50,7 @@ async function callAnthropicApi(apiKey) {
     }
 }
 
-async function callGroqApi(apiKey) {
+async function callGroqApi(apiKey, model = "llama-3.3-70b-versatile") {
     const url = 'https://api.groq.com/openai/v1/chat/completions';
     const headers = {
       'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ async function callGroqApi(apiKey) {
     };
 
     const body = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: model,
       messages: [
         { role: "user", content: "hii" }
       ]
@@ -99,7 +99,7 @@ async function callOpenRouterApi(apiKey) {
   }
 }
 
-async function callMistralApi(apiKey) {
+async function callMistralApi(apiKey, model = 'mistral-small-latest') {
   try {
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
@@ -109,7 +109,7 @@ async function callMistralApi(apiKey) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'mistral-small-latest',
+        model: model,
         messages: [
           {
             role: 'user',
@@ -130,9 +130,9 @@ async function callMistralApi(apiKey) {
   }
 }
 
-async function callGeminiApi(apiKey) {
+async function callGeminiApi(apiKey, model = 'gemini-2.5-flash') {
   try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ async function callGeminiApi(apiKey) {
   }
 }
 
-async function callAiMlApi(apiKey) {
+async function callAiMlApi(apiKey, model = 'llama-3.1-8b-instruct') {
   try {
     const response = await fetch('https://backend.ai.ml/openai/chat/completions', {
       method: 'POST',
@@ -172,7 +172,7 @@ async function callAiMlApi(apiKey) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instruct',
+        model: model,
         messages: [
           {
             role: 'user',

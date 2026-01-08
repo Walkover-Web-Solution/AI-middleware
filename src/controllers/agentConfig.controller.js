@@ -210,6 +210,7 @@ const updateAgentController = async (req, res, next) => {
     const service = body.service;
     const page_config = body.page_config;
     const web_search_filter = body.web_search_filters;
+    const gtwy_web_search_filter = body.gtwy_web_search_filters;
 
     if (new_configuration) {
         const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
@@ -245,7 +246,7 @@ const updateAgentController = async (req, res, next) => {
         new_configuration.fine_tune_model = { current_model: null };
     }
 
-    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', '', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters', 'status', 'chatbot_auto_answers', 'doc_ids'];
+    const simple_fields = ['bridge_status', 'bridge_summary', 'expected_qna', 'slugName', 'tool_call_count', 'user_reference', 'gpt_memory', 'gpt_memory_context', 'doc_ids', 'variables_state', 'IsstarterQuestionEnable', 'name', 'bridgeType', 'meta', 'fall_back', 'guardrails', 'web_search_filters', 'gtwy_web_search_filters', 'status', 'chatbot_auto_answers'];
 
     for (const field of simple_fields) {
         if (body[field] !== undefined) {
@@ -257,7 +258,8 @@ const updateAgentController = async (req, res, next) => {
     if (body.bridge_usage !== undefined) update_fields.bridge_usage = body.bridge_usage;
 
     if (page_config) update_fields.page_config = page_config;
-    if (web_search_filter) update_fields.web_search_filters = web_search_filter;
+    if (web_search_filter !== undefined) update_fields.web_search_filters = web_search_filter;
+    if (gtwy_web_search_filter !== undefined) update_fields.gtwy_web_search_filters = gtwy_web_search_filter;
 
     if (service) {
         update_fields.service = service;

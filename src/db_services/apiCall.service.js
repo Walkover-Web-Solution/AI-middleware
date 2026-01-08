@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 async function getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser) {
     let query = { org_id: org_id };
     if (folder_id) query.folder_id = folder_id;
-    if (user_id && isEmbedUser) query.user_id = user_id;
+    if (user_id && isEmbedUser) query.user_id = user_id.toString();
 
     const pipeline = [
         { $match: query },
