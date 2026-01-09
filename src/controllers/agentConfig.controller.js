@@ -6,7 +6,7 @@ import { bridge_ids, new_agent_service } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversation.service.js";
-const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
+const { storeSystemPrompt, addBulkUserEntries, getUserUpdates } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
@@ -441,7 +441,21 @@ const updateAgentController = async (req, res, next) => {
     if (service) {
         updatedAgent.bridges.service = service;
     }
-
+    // Enhance users array with name and email details
+    if (updatedAgent.bridges && updatedAgent.bridges.users && 
+        Array.isArray(updatedAgent.bridges.users) && updatedAgent.bridges.users.length > 0) {
+        try {
+            const userDetailsResponse = await getUserUpdates(org_id, null, 1, 10, updatedAgent.bridges.users);
+            if (userDetailsResponse.success) {
+                updatedAgent.bridges.users = userDetailsResponse.users;
+            }
+        } catch (error) {
+            console.error('Error fetching user details for agent:', updatedAgent.bridges._id, error);
+            updatedAgent.bridges.users = [];
+        }
+    } else if (updatedAgent.bridges) {
+        updatedAgent.bridges.users = [];
+    }
     const response = await Helper.responseMiddlewareForBridge(updatedAgent.bridges.service, {
         success: true,
         message: "Agent Updated successfully",
@@ -517,6 +531,22 @@ const getAgentController = async (req, res, next) => {
 
         const all_variables = [...variables, ...path_variables];
         agent.bridges.all_varaibles = all_variables;
+
+        // Enhance users array with name and email details
+        if (agent.bridges && agent.bridges.users && 
+            Array.isArray(agent.bridges.users) && agent.bridges.users.length > 0) {
+            try {
+                const userDetailsResponse = await getUserUpdates(org_id, null, 1, 10, agent.bridges.users);
+                if (userDetailsResponse.success) {
+                    agent.bridges.users = userDetailsResponse.users;
+                }
+            } catch (error) {
+                console.error('Error fetching user details for bridge:', agent.bridges._id, error);
+                agent.bridges.users = [];
+            }
+        } else if (agent.bridges) {
+            agent.bridges.users = [];
+        }
 
         // Get access role from middleware (second layer check)
         const access_role = req.access_role || req.role_name || null;
