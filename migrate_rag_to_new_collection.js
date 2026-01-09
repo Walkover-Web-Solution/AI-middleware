@@ -3,7 +3,12 @@ import axios from 'axios';
 
 const MONGODB_URI = 'mongodb+srv://admin:Uc0sjm9jpLMsSGn5@cluster0.awdsppv.mongodb.net/AI_Middleware-test';
 const HIPPOCAMPUS_URL = 'http://hippocampus.gtwy.ai';
-const HIPPOCAMPUS_API_KEY = process.env.HIPPOCAMPUS_API_KEY;
+const HIPPOCAMPUS_API_KEY = 'IDUfK3NqTdp2T5dlscfg3YH2tos3gzi0';
+
+console.log('✓ Configuration loaded');
+console.log(`✓ Using Hippocampus URL: ${HIPPOCAMPUS_URL}`);
+console.log(`✓ API Key: ${HIPPOCAMPUS_API_KEY.substring(0, 10)}...`);
+
 
 // Default collection settings
 const DEFAULT_COLLECTIONS = {
@@ -161,7 +166,7 @@ async function createResource(collectionId, docData, ownerId) {
         // Priority 1: Use content if present
         if (docData.content !== undefined && docData.content !== null && docData.content !== '') {
             resourcePayload.content = docData.content;
-            resourcePayload.url = ''; // Set empty URL when using content
+            // Don't send url parameter when using content
             console.log(`  → Using content from document (content length: ${typeof docData.content === 'string' ? docData.content.length : 'N/A'})`);
         } 
         // Priority 2: Use URL if content is not available
@@ -250,7 +255,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
                     if (typeof docId === 'object' && docId.collection_id) {
                         return docId;
                     }
-                    // Keep string IDs that don't match
+                    // Keep string IDs that don't match (these might be other doc_ids not being migrated yet)
                     return docId;
                 });
                 
@@ -344,22 +349,43 @@ async function migrateRagToNewCollection() {
         
         const db = client.db("AI_Middleware-test");
         const ragParentDatas = db.collection("rag_parent_datas");
+        const ragCollections = db.collection("rag_collections");
         
-        // Get all documents
-        const cursor = ragParentDatas.find({});
+        // Count total documents to migrate
+        const totalDocs = await ragParentDatas.countDocuments({});
+        console.log(`📊 Total documents to migrate: ${totalDocs}\n`);
+        
+        // Get all documents with batch size and no cursor timeout
+        // Process in batches to avoid cursor timeout
+        const batchSize = 100;
+        const cursor = ragParentDatas.find({}).batchSize(batchSize);
+        
+        console.log('🚀 Running full migration for all documents\n');
+        console.log(`⚙️  Batch size: ${batchSize}\n`);
         
         while (await cursor.hasNext()) {
             const doc = await cursor.next();
             migrationLog.totalProcessed++;
             
             console.log(`\n${'='.repeat(80)}`);
-            console.log(`Processing Document [${migrationLog.totalProcessed}]: ${doc._id}`);
+            console.log(`Processing Document [${migrationLog.totalProcessed}/${totalDocs}]: ${doc._id}`);
             console.log(`  Name: ${doc.name || 'N/A'}`);
             console.log(`  Org ID: ${doc.org_id}`);
             console.log(`  Chunking Type: ${doc.chunking_type}`);
             console.log(`${'='.repeat(80)}`);
             
             try {
+                // Check if this document has already been migrated by checking if resource exists in any collection
+                const existingResource = await ragCollections.findOne({
+                    resource_ids: doc._id.toString()
+                });
+                
+                if (existingResource) {
+                    console.log(`  ⏭️  Document already migrated (found in collection ${existingResource.collection_id}), skipping...`);
+                    migrationLog.successful++;
+                    continue;
+                }
+                
                 // Step 1: Ensure collection exists for org
                 console.log(`\nStep 1: Ensuring high_accuracy collection exists for org ${doc.org_id}...`);
                 const collectionId = await ensureCollectionExists(db, doc.org_id);
@@ -402,6 +428,19 @@ async function migrateRagToNewCollection() {
                 
                 migrationLog.successful++;
                 console.log(`\n✓ Successfully migrated document ${doc._id}`);
+                console.log(`📈 Progress: ${migrationLog.successful}/${migrationLog.totalProcessed} successful (${Math.round((migrationLog.successful / migrationLog.totalProcessed) * 100)}%)`);
+                
+                // Save progress every 10 successful migrations
+                if (migrationLog.successful % 10 === 0) {
+                    const fs = await import('fs');
+                    const progressLogPath = './migration_progress.json';
+                    fs.writeFileSync(progressLogPath, JSON.stringify({
+                        ...migrationLog,
+                        lastUpdated: new Date().toISOString(),
+                        progress: `${migrationLog.totalProcessed}/${totalDocs}`
+                    }, null, 2));
+                    console.log(`💾 Progress saved to ${progressLogPath}`);
+                }
                 
             } catch (error) {
                 console.error(`\n✗ Failed to migrate document ${doc._id}:`, error.message);
@@ -462,6 +501,18 @@ async function migrateRagToNewCollection() {
         
     } catch (error) {
         console.error('\n\nCRITICAL ERROR:', error);
+        
+        // Save progress even on failure
+        const fs = await import('fs');
+        const errorLogPath = './migration_errors.json';
+        fs.writeFileSync(errorLogPath, JSON.stringify({
+            ...migrationLog,
+            criticalError: error.message,
+            errorStack: error.stack,
+            lastUpdated: new Date().toISOString()
+        }, null, 2));
+        console.log(`\n💾 Progress and errors saved to: ${errorLogPath}`);
+        
         throw error;
     } finally {
         await client.close();
