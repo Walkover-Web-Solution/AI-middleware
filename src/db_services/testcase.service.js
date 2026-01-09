@@ -1,9 +1,5 @@
 import testcaseModel from "../mongoModel/Testcase.model.js";
 
-async function getAllTestCases(bridge_id) {
-    const testcases = await testcaseModel.find({ bridge_id }).lean();
-    return testcases.map(tc => ({ ...tc, _id: tc._id.toString() }));
-}
 
 async function saveTestCase(testcaseData) {
     const newTestCase = new testcaseModel(testcaseData);
@@ -39,9 +35,20 @@ async function getMergedTestcasesAndHistoryByBridgeId(bridge_id) {
         { $match: { bridge_id: bridge_id } },
         {
             $lookup: {
-                from: 'testcases_histories', // Assuming collection name is pluralized by Mongoose
-                localField: '_id',
-                foreignField: 'testcase_id',
+                from: 'testcases_history',
+                let: { testcase_id: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $or: [
+                                    { $eq: ['$testcase_id', '$$testcase_id'] },
+                                    { $eq: ['$testcase_id', { $toString: '$$testcase_id' }] }
+                                ]
+                            }
+                        }
+                    }
+                ],
                 as: 'history'
             }
         }
@@ -109,7 +116,6 @@ async function parseAndSaveTestcases(testcasesData, bridge_id) {
 }
 
 export default {
-    getAllTestCases,
     saveTestCase,
     deleteTestCaseById,
     updateTestCaseById,

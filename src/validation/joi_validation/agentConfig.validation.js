@@ -62,7 +62,14 @@ const updateBridgeSchema = Joi.object({
         model: Joi.string().optional()
     }).optional(),
     guardrails: Joi.object().optional(),
-    web_search_filters: Joi.object().optional(),
+    web_search_filters: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.object()
+    ).optional(),
+    gtwy_web_search_filters: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.object()
+    ).optional(),
     bridge_limit: Joi.number().min(0).optional(),
     bridge_usage: Joi.number().min(0).optional(),
     page_config: Joi.object().optional(),
@@ -147,4 +154,3 @@ export default {
     cloneAgent,
     getAgent
 };
-

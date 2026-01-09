@@ -52,6 +52,14 @@ const apiCall = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now
+  },
+  folder_id: {
+    type: String,
+    default: ""
+  },
+  user_id: {
+    type: String,
+    default: ""
   }
 });
 const apiCallModel = mongoose.model("apicall", apiCall);
