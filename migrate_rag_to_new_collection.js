@@ -347,7 +347,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
     
     try {
         // Update in bridgeversions collection
-        const bridgeVersions = db.collection("bridgeversions");
+        const bridgeVersions = db.collection("configuration_versions");
         const bridgeDocsToUpdate = await bridgeVersions.find({
             doc_ids: oldDocId
         }).toArray();
