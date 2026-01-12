@@ -277,9 +277,17 @@ async function createResource(collectionId, docData, ownerId) {
         
         // Priority 1: Use content if present
         if (docData.content !== undefined && docData.content !== null && docData.content !== '') {
-            resourcePayload.content = docData.content;
-            // Don't send url parameter when using content
-            console.log(`  → Using content from document (content length: ${typeof docData.content === 'string' ? docData.content.length : 'N/A'})`);
+            // Always convert content to string
+            if (typeof docData.content === 'string') {
+                resourcePayload.content = docData.content;
+            } else if (typeof docData.content === 'object') {
+                // If content is an object, stringify it
+                resourcePayload.content = JSON.stringify(docData.content);
+            } else {
+                // For any other type, convert to string
+                resourcePayload.content = String(docData.content);
+            }
+            console.log(`  → Using content from document (content length: ${resourcePayload.content.length}, original type: ${typeof docData.content})`);
         } 
         // Priority 2: Use URL if content is not available
         else {
