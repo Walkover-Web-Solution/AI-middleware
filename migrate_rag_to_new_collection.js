@@ -203,6 +203,40 @@ function generateCollectionId() {
 }
 
 /**
+ * Create or get rag_folder for a specific org and user
+ */
+async function ensureRagFolderExists(db, orgId, userId) {
+    try {
+        const ragFolders = db.collection("rag_folder");
+        
+        // Check if folder already exists for this org_id
+        const existingFolder = await ragFolders.findOne({ org_id: orgId });
+        
+        if (existingFolder) {
+            console.log(`  ✓ Found existing rag_folder: ${existingFolder._id} for org: ${orgId}`);
+            return existingFolder._id.toString();
+        }
+        
+        // Create new rag_folder
+        const newFolder = {
+            org_id: orgId,
+            name: 'rag',
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+        
+        const result = await ragFolders.insertOne(newFolder);
+        const folderId = result.insertedId.toString();
+        console.log(`  ✓ Created new rag_folder: ${folderId} for org: ${orgId}`);
+        
+        return folderId;
+    } catch (error) {
+        console.error(`  ✗ Error ensuring rag_folder exists for org ${orgId}:`, error.message);
+        throw error;
+    }
+}
+
+/**
  * Create or get collection for org
  */
 async function ensureCollectionExists(db, orgId) {
@@ -517,9 +551,12 @@ async function migrateRagToNewCollection() {
                 if (doc.folder_id && doc.user_id) {
                     ownerId = `${doc.org_id}_${doc.folder_id}_${doc.user_id}`;
                 } else if (doc.user_id && userIdStr && SPECIFIC_USER_IDS[userIdStr] && !doc.folder_id) {
-                    // If user_id is in the specific map AND there's no folder_id, use org_id + user_id
-                    ownerId = `${doc.org_id}_${doc.user_id}`;
-                    console.log(`  → Using org_id + user_id for specific user (${userIdStr}): ${ownerId}`);
+                    // If user_id is in the specific map AND there's no folder_id
+                    // Create/get rag_folder and use org_id + rag_folder_id + user_id
+                    console.log(`  → Found user ${userIdStr} in SPECIFIC_USER_IDS map, creating/getting rag_folder...`);
+                    const ragFolderId = await ensureRagFolderExists(db, doc.org_id, doc.user_id);
+                    ownerId = `${doc.org_id}_${ragFolderId}_${doc.user_id}`;
+                    console.log(`  → Using org_id + rag_folder_id + user_id: ${ownerId}`);
                 } else {
                     ownerId = doc.org_id;
                 }
