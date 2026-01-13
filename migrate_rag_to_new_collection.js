@@ -207,13 +207,13 @@ function generateCollectionId() {
  */
 async function ensureRagFolderExists(db, orgId, userId) {
     try {
-        const ragFolders = db.collection("rag_folder");
+        const Folders = db.collection("folders");
         
         // Check if folder already exists for this org_id
-        const existingFolder = await ragFolders.findOne({ org_id: orgId });
+        const existingFolder = await Folders.findOne({ org_id: orgId, type:"rag_embed" });
         
         if (existingFolder) {
-            console.log(`  ✓ Found existing rag_folder: ${existingFolder._id} for org: ${orgId}`);
+            console.log(`  ✓ Found existing rag_embed: ${existingFolder._id} for org: ${orgId}`);
             return existingFolder._id.toString();
         }
         
@@ -221,17 +221,18 @@ async function ensureRagFolderExists(db, orgId, userId) {
         const newFolder = {
             org_id: orgId,
             name: 'rag',
+            type: 'rag_embed',
             created_at: new Date(),
             updated_at: new Date()
         };
         
-        const result = await ragFolders.insertOne(newFolder);
+        const result = await Folders.insertOne(newFolder);
         const folderId = result.insertedId.toString();
-        console.log(`  ✓ Created new rag_folder: ${folderId} for org: ${orgId}`);
+        console.log(`  ✓ Created new rag_embed: ${folderId} for org: ${orgId}`);
         
         return folderId;
     } catch (error) {
-        console.error(`  ✗ Error ensuring rag_folder exists for org ${orgId}:`, error.message);
+        console.error(`  ✗ Error ensuring rag_embed exists for org ${orgId}:`, error.message);
         throw error;
     }
 }
