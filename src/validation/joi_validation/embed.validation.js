@@ -18,7 +18,8 @@ const createEmbed = {
             Joi.string(),
             Joi.string().pattern(/^[0-9a-fA-F]{24}$/)
         ).optional().default({}),
-        folder_limit: Joi.number().min(0).optional().default(0)
+        folder_limit: Joi.number().min(0).optional().default(0),
+        type: Joi.string().valid("embed", "rag_embed").optional().default("embed")
     }).unknown(true)
 };
 
