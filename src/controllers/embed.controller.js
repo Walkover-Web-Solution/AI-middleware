@@ -46,10 +46,10 @@ const embedLogin = async (req, res, next) => {
 
 const createEmbed = async (req, res, next) => {
   try {
-    const { name, config, apikey_object_id, folder_limit } = req.body;
+    const { name, config, apikey_object_id, folder_limit, type } = req.body;
     const org_id = req.profile.org.id;
-    const type = "embed";
-    const folder = await FolderModel.create({ name, org_id, type, config, apikey_object_id, folder_limit });
+    const folder_type = type ? type : "embed";
+    const folder = await FolderModel.create({ name, org_id, type:folder_type, config, apikey_object_id, folder_limit });
     res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
     req.statusCode = 200;
     return next();
