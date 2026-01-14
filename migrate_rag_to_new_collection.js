@@ -260,27 +260,63 @@ async function ensureCollectionExists(db, orgId) {
             return matchingCollection.collection_id;
         }
         
-        // Create new high_accuracy collection
-        const collectionId = generateCollectionId();
+        // Create new high_accuracy collection via Hippocampus API
+        console.log(`  → Creating new high_accuracy collection via Hippocampus API...`);
+        
+        const collectionPayload = {
+            name: 'high_accuracy',
+            settings: {
+                denseModel: highAccuracyConfig.settings.denseModel,
+                sparseModel: highAccuracyConfig.settings.sparseModel,
+                rerankerModel: highAccuracyConfig.settings.rerankerModel,
+                chunkSize: 1000,
+                chunkOverlap: 100
+            }
+        };
+        
+        const response = await axios.post(
+            `${HIPPOCAMPUS_URL}/collection`,
+            collectionPayload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': HIPPOCAMPUS_API_KEY
+                },
+                timeout: 30000 // 30 seconds timeout
+            }
+        );
+        
+        if (!response.data || !response.data._id) {
+            throw new Error('No collection ID returned from Hippocampus API');
+        }
+        
+        const collectionId = response.data._id;
+        console.log(`  ✓ Collection created via API with ID: ${collectionId}`);
+        
+        // Save collection to MongoDB
         const newCollection = {
             collection_id: collectionId,
-            name: 'high_accuracy',
+            name: response.data.name || 'high_accuracy',
             org_id: orgId,
             resource_ids: [],
-            settings: highAccuracyConfig.settings,
-            created_at: new Date(),
-            updated_at: new Date()
+            settings: response.data.settings || highAccuracyConfig.settings,
+            created_at: response.data.createdAt ? new Date(response.data.createdAt) : new Date(),
+            updated_at: response.data.updatedAt ? new Date(response.data.updatedAt) : new Date()
         };
         
         await ragCollections.insertOne(newCollection);
-        console.log(`  ✓ Created new high_accuracy collection: ${collectionId}`);
+        console.log(`  ✓ Collection saved to MongoDB: ${collectionId}`);
         
         return collectionId;
     } catch (error) {
         console.error(`  ✗ Error ensuring collection exists for org ${orgId}:`, error.message);
+        if (error.response) {
+            console.error(`  ✗ API Response:`, error.response.data);
+        }
         migrationLog.collectionCreationErrors.push({
             org_id: orgId,
-            error: error.message
+            error: error.message,
+            api_response: error.response?.data
         });
         throw error;
     }
@@ -390,7 +426,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
     
     try {
         // Update in bridgeversions collection
-        const bridgeVersions = db.collection("configuration_versions");
+        const bridgeVersions = db.collection("configuration_versions-rag");
         const bridgeDocsToUpdate = await bridgeVersions.find({
             doc_ids: oldDocId
         }).toArray();
@@ -411,7 +447,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
                         return docId;
                     }
                     // Keep string IDs that don't match (these might be other doc_ids not being migrated yet)
-                    return docId;
+                    return {};
                 });
                 
                 await bridgeVersions.updateOne(
@@ -436,7 +472,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
         }
         
         // Update in configurations collection
-        const configurations = db.collection("configurations");
+        const configurations = db.collection("configurations-rag");
         const configDocsToUpdate = await configurations.find({
             doc_ids: oldDocId
         }).toArray();
@@ -457,7 +493,7 @@ async function updateAgentDocIds(db, oldDocId, collectionId, resourceId, descrip
                         return docId;
                     }
                     // Keep string IDs that don't match
-                    return docId;
+                    return {};
                 });
                 
                 await configurations.updateOne(
@@ -531,15 +567,15 @@ async function migrateRagToNewCollection() {
             
             try {
                 // Check if this document has already been migrated by checking if resource exists in any collection
-                const existingResource = await ragCollections.findOne({
-                    resource_ids: doc._id.toString()
-                });
+                // const existingResource = await ragCollections.findOne({
+                //     resource_ids: doc._id.toString()
+                // });
                 
-                if (existingResource) {
-                    console.log(`  ⏭️  Document already migrated (found in collection ${existingResource.collection_id}), skipping...`);
-                    migrationLog.successful++;
-                    continue;
-                }
+                // if (existingResource) {
+                //     console.log(`  ⏭️  Document already migrated (found in collection ${existingResource.collection_id}), skipping...`);
+                //     migrationLog.successful++;
+                //     continue;
+                // }
                 
                 // Step 1: Ensure collection exists for org
                 console.log(`\nStep 1: Ensuring high_accuracy collection exists for org ${doc.org_id}...`);
