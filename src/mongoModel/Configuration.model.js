@@ -70,6 +70,10 @@ const configuration = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  gpt_memory_context: {
+    type: String,
+    default: null
+  },
   folder_id: {
     type: String,
     default: null
