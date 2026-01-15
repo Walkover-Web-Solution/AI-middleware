@@ -279,6 +279,7 @@ const EmbeddecodeToken = async (req, res, next) => {
             user_id: proxyResponse.data.user.id,
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,
+            folder_id : checkToken?.folder_id,
           };
           req.profile = {
             user: {
