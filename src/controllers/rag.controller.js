@@ -20,7 +20,8 @@ export const ragEmbedUserLogin = async (req, res, next) => {
 
         },
         "extraDetails": {
-            type: 'embed'
+            type: 'embed',
+            folder_id: req?.Embed?.folder_id,
         }
     }
     const embedDetails = !req.isGtwyUser ?
