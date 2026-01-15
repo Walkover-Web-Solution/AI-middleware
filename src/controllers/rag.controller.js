@@ -492,6 +492,7 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
 export const getOrCreateDefaultCollections = async (req, res, next) => {
     try {
         const org_id = req.profile?.org?.id;
+        const ownerId = req.ownerId;
         // Define the three default collections with their settings
         const defaultCollections = [
             {
@@ -609,7 +610,7 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
             try {
                 // Fetch resources for this collection via Hippocampus API
                 const resourcesResponse = await axios.get(
-                    `${hippocampusUrl}/collection/${collection.collection_id}/resources?content=true`,
+                    `${hippocampusUrl}/collection/${collection.collection_id}/resources?content=true&ownerId=${ownerId}`,
                     {
                         headers: {
                             'Content-Type': 'application/json',
