@@ -184,8 +184,11 @@ const middleware = async (req, res, next) => {
       req.folder_id = req.profile?.extraDetails?.folder_id || null;
     }
     let ownerId = req.org_id;
-    if(req.user_id && req.folder_id){
+    if(req.user_id && req.folder_id && req.IsEmbedUser){
       ownerId = req.org_id+ "_" + req.folder_id.toString() + "_" + req.user_id.toString();
+    }
+    else if( req.IsEmbedUser && !req.folder_id){
+      ownerId = null;
     }
     req.ownerId = ownerId;
     return next();
@@ -268,6 +271,9 @@ const EmbeddecodeToken = async (req, res, next) => {
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
+      if(!decodedToken.user_id || !decodedToken.folder_id || !decodedToken.org_id){
+        return res.status(401).json({ message: 'unauthorized user, user id, folder id or org id not provided' });
+      }
       // const orgTokenFromDb = await orgDbServices.find(decodedToken.org_id);
       const orgTokenFromDb = await getOrganizationById(decodedToken?.org_id);
       const orgToken = orgTokenFromDb?.meta?.auth_token;
