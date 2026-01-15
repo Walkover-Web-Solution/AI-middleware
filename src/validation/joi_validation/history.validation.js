@@ -90,8 +90,32 @@ const getRecentThreads = {
   }).unknown(true)
 };
 
-export default {
+/**
+ * Schema for GET /:agent_id/:thread_id/:message_id - getRecursiveAgentHistory
+ * Validates URL params for recursive agent history
+ */
+const getRecursiveAgentHistory = {
+  params: Joi.object().keys({
+    agent_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+      'string.pattern.base': 'agent_id must be a valid MongoDB ObjectId',
+      'any.required': 'agent_id is required'
+    }),
+    thread_id: Joi.string().required().messages({
+      'string.empty': 'thread_id is required',
+      'any.required': 'thread_id is required'
+    }),
+    message_id: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'message_id is required',
+      'any.required': 'message_id is required'
+    })
+  }).unknown(true)
+};
+
+export default {  
   getConversationLogs,
-  getRecentThreads
+  getRecentThreads,
+  getRecursiveAgentHistory
 };
 

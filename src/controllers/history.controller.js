@@ -1,4 +1,4 @@
-import { findConversationLogsByIds, findRecentThreadsByBridgeId } from "../db_services/history.service.js";
+import { findConversationLogsByIds, findRecentThreadsByBridgeId, findHistoryByMessageId } from "../db_services/history.service.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
@@ -91,9 +91,105 @@ const getRecentThreads = async (req, res, next) => {
   }
 };
 
+const getRecursiveAgentHistory = async (req, res, next) => {
+  try {
+    const org_id = req.profile.org.id;
+    const { agent_id, thread_id, message_id } = req.params;
+
+    if (!message_id) {
+      res.locals = { success: false, message: "Message ID is required" };
+      req.statusCode = 400;
+      return next();
+    }
+
+    const resolveMessage = async (msgId) => {
+      if (!msgId) return null;
+
+      const messageRecord = await findHistoryByMessageId(msgId);
+      if (!messageRecord) return null;
+
+      const message = messageRecord?.toJSON
+        ? messageRecord.toJSON()
+        : messageRecord;
+
+      if (!Array.isArray(message.tools_call_data)) {
+        return message;
+      }
+
+      for (let i = 0; i < message.tools_call_data.length; i++) {
+        const toolGroup = message.tools_call_data[i];
+
+        for (const key of Object.keys(toolGroup)) {
+          const tool = toolGroup[key];
+          const metadata = tool?.data?.metadata;
+
+          if (metadata?.type === "agent" && metadata?.message_id) {
+            const fullChildMessage = await resolveMessage(
+              metadata.message_id
+            );
+
+            if (fullChildMessage) {
+              fullChildMessage.name = tool?.name || null;
+              toolGroup[key] = fullChildMessage;
+            }
+          }
+        }
+      }
+
+      return message;
+    };
+
+    const rootMessage = await findHistoryByMessageId(message_id);
+
+    if (!rootMessage) {
+      res.locals = { success: false, message: "Message not found" };
+      req.statusCode = 404;
+      return next();
+    }
+
+    if (
+      rootMessage.org_id !== org_id ||
+      rootMessage.bridge_id !== agent_id
+    ) {
+      res.locals = { success: false, message: "Unauthorized access" };
+      req.statusCode = 403;
+      return next();
+    }
+
+    if (rootMessage.thread_id !== thread_id) {
+      res.locals = {
+        success: false,
+        message: "Message does not belong to the specified thread"
+      };
+      req.statusCode = 400;
+      return next();
+    }
+
+    const finalHistory = await resolveMessage(message_id);
+
+    res.locals = {
+      success: true,
+      data: finalHistory
+    };
+    req.statusCode = 200;
+    return next();
+
+  } catch (error) {
+    console.error("Recursive history error:", error);
+    res.locals = {
+      success: false,
+      message: "Failed to fetch recursive history",
+      error: error.message
+    };
+    req.statusCode = 500;
+    return next();
+  }
+};
+
+
 
 export default {
   getConversationLogs,
-  getRecentThreads
+  getRecentThreads,
+  getRecursiveAgentHistory
 };
-

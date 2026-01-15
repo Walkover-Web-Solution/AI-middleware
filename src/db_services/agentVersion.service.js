@@ -4,7 +4,7 @@ import bridgeVersionModel from "../mongoModel/BridgeVersion.model.js";
 import configurationModel from "../mongoModel/Configuration.model.js";
 import apiCallModel from "../mongoModel/ApiCall.model.js";
 import apikeyCredentialsModel from "../mongoModel/Api.model.js"; // Check if this is correct model for apikeycredentials
-import testcasesHistoryModel from "../mongoModel/Testcase.model.js"; // Check if this is correct
+import testcasesHistoryModel from "../mongoModel/TestcaseHistory.model.js";
 import conversationDbService from "./conversation.service.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";

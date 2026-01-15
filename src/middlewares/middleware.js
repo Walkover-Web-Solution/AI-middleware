@@ -183,7 +183,11 @@ const middleware = async (req, res, next) => {
     if (req.embed) {
       req.folder_id = req.profile?.extraDetails?.folder_id || null;
     }
-    
+    let ownerId = req.org_id;
+    if(req.user_id && req.folder_id){
+      ownerId = req.org_id+ "_" + req.folder_id.toString() + "_" + req.user_id.toString();
+    }
+    req.ownerId = ownerId;
     return next();
   } catch (err) {
     console.error("middleware error =>", err);
@@ -279,6 +283,7 @@ const EmbeddecodeToken = async (req, res, next) => {
             user_id: proxyResponse.data.user.id,
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,
+            folder_id : checkToken?.folder_id,
           };
           req.profile = {
             user: {

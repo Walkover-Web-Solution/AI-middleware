@@ -17,7 +17,7 @@ const getThreads = async (req, res, next) => {
   let { bridge_id } = req.params;
   const { thread_id, bridge_slugName } = req.params;
   const { sub_thread_id = thread_id } = req.query;
-  let org_id = req.profile.org.id;
+  let org_id = req?.profile?.org?.id || req?.profile?.org_id;
   let starterQuestion = [];
   let bridge = {};
 
@@ -175,7 +175,7 @@ const FineTuneData = async (req, res, next) => {
 const updateThreadMessage = async (req, res, next) => {
   const { bridge_id } = req.params;
   const { message, id } = req.body;
-  const org_id = req.profile?.org?.id;
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   await updateMessageSchema.validateAsync({
     bridge_id,
     message,
@@ -192,7 +192,7 @@ const updateMessageStatus = async (req, res, next) => {
   const status = req.params.status;
   const message_id = req.body.message_id;
   const bridge_id = req.body.agent_id;
-  const org_id = req.profile.org.id;
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   let error_message = "User reacted thumbs down on response"
   if (status === "2") {
     sendError(bridge_id, org_id, error_message, "thumbsdown");
@@ -217,7 +217,7 @@ export const createEntry = async (req, res, next) => {
     message
   } = req.body;
   const message_id = crypto.randomUUID();
-  const org_id = req.profile.org.id
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   const result = (await configurationService.getAgents(bridge_id))?.bridges;
   const payload = {
     thread_id: thread_id,
@@ -261,7 +261,7 @@ const getThreadMessages = async (req, res, next) => {
   let pageSize = parseInt(req.query.limit) || null;
   const { thread_id, bridge_slugName } = req.params;
   const { sub_thread_id = thread_id } = req.query;
-  const org_id = req.profile.org?.id || req.profile.org_id;
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   let bridge = {};
 
   if (bridge_slugName) {
@@ -279,7 +279,7 @@ const getAllSubThreadsController = async (req, res, next) => {
   const { thread_id } = req.params;
   const { bridge_id, error, version_id } = req.query;
   const isError = error === "false" ? false : true;
-  const org_id = req.profile.org.id
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
   if (isError || version_id) {
     const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
@@ -300,7 +300,7 @@ const getAllSubThreadsController = async (req, res, next) => {
 }
 const getAllUserUpdates = async (req, res, next) => {
   const { version_id } = req.params;
-  const org_id = req.profile.org.id
+  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   let page = parseInt(req.query.page) || null;
   let pageSize = parseInt(req.query.limit) || null;
   const userData = await conversationDbService.getUserUpdates(org_id, version_id, page, pageSize);
