@@ -35,6 +35,7 @@ import runAgentsRoutes from './routes/runAgents.routes.js'
 import templateRoute from './routes/template.routes.js'
 import serviceRoutes from './routes/service.routes.js'
 import converstaionRoutes from './routes/conversation.routes.js'
+import internalRoutes from './routes/internal.routes.js'
 const app = express();
 configDotenv();
 const PORT = process.env.PORT || 7072;
@@ -82,6 +83,7 @@ app.use('/api/utils', utilsRoutes)
 app.use('/api/prebuilt_prompt', prebuiltPromptRoutes)
 app.use('/api/runagents', runAgentsRoutes)
 app.use('/api/template', templateRoute)
+app.use('/api/internal', internalRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);

@@ -65,6 +65,15 @@ const updateResourceSchema = Joi.object({
     content: Joi.string().optional()
 }).unknown(true);
 
+const searchSchema = Joi.object({
+    query: Joi.string().required().messages({
+        'any.required': 'query is required'
+    }),
+    agent_id: Joi.string().required().messages({
+        'any.required': 'agent_id is required'
+    })
+}).unknown(true);
+
 export {
     searchSchema,
     createCollectionSchema,
