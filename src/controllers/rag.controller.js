@@ -3,6 +3,8 @@ import { generateAuthToken, generateIdentifier } from '../services/utils/utility
 import { createProxyToken, getOrganizationById, updateOrganizationData } from '../services/proxy.service.js';
 import axios from 'axios';
 import ragCollectionService from '../db_services/ragCollection.service.js';
+import configurationService from '../db_services/configuration.service.js';
+import agentVersionService from '../db_services/agentVersion.service.js';
 
 export const ragEmbedUserLogin = async (req, res, next) => {
     const { name: embeduser_name, email: embeduser_email } = req.isGtwyUser ? {} : req.Embed;
@@ -392,6 +394,20 @@ export const deleteResourceFromCollection = async (req, res, next) => {
             }
         });
         
+         // If external deletion was successful
+        if (response.status === 200) {
+            // Remove from configurations and versions
+            try {
+                await Promise.all([
+                    configurationService.removeResourceReference(id),
+                    agentVersionService.removeResourceReference(id)
+                ]);
+            } catch (cleanupError) {
+                console.error('Error cleaning up resource references:', cleanupError);
+                // We don't fail the request if cleanup fails, but we log it
+            }
+        }
+
         res.locals = {
             "success": true,
             "message": "Resource deleted successfully",
