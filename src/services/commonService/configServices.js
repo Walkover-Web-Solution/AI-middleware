@@ -194,11 +194,18 @@ const updateMessageStatus = async (req, res, next) => {
   const bridge_id = req.body.agent_id;
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   let error_message = "User reacted thumbs down on response"
+  
+  let result;
   if (status === "2") {
-    sendError(bridge_id, org_id, error_message, "thumbsdown");
+    // Run both operations in parallel since they don't depend on each other
+    [result] = await Promise.all([
+      updateStatus({ status, message_id }),
+      sendError(bridge_id, org_id, error_message, "thumbsdown")
+    ]);
+  } else {
+    result = await updateStatus({ status, message_id });
   }
-  const result = await updateStatus({ status, message_id })
-
+  
   res.locals = result;
   req.statusCode = result?.success ? 200 : 400;
   return next();
@@ -280,9 +287,14 @@ const getAllSubThreadsController = async (req, res, next) => {
   const { bridge_id, error, version_id } = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
-  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
+  
   if (isError || version_id) {
-    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
+    // Run both queries in parallel since they don't depend on each other
+    const [threads, sub_thread_ids] = await Promise.all([
+      conversationDbService.getSubThreads(org_id, thread_id, bridge_id),
+      conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError)
+    ]);
+    
     const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
       const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
       return {
@@ -292,6 +304,8 @@ const getAllSubThreadsController = async (req, res, next) => {
     });
     return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
   }
+  
+  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
   // sort the threads accroing to their hits in PG.
   const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };
