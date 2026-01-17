@@ -59,23 +59,31 @@ const createAgentController = async (req, res, next) => {
             }
         }
 
+        name = name || "untitled_agent";
+
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
+
         let name_next_count = 1;
         let slug_next_count = 1;
 
         for (const agent of all_agent) {
-            name = name || "untitled_agent";
-            if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-                const num = parseInt(agent.name.replace("untitled_agent_", ""));
-                if (num >= name_next_count) name_next_count = num + 1;
-            } else if (agent.name === name) {
-                name_next_count += 1;
+            // Check Name Collision
+            const nameMatch = agent.name.match(nameRegex);
+            if (nameMatch) {
+                const num = nameMatch[2] ? parseInt(nameMatch[2]) : 0;
+                if (num >= name_next_count) {
+                    name_next_count = num + 1;
+                }
             }
 
-            if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-                const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-                if (num >= slug_next_count) slug_next_count = num + 1;
-            } else if (agent.slugName === name) {
-                slug_next_count += 1;
+            // Check Slug Collision
+            const slugMatch = agent.slugName.match(nameRegex);
+            if (slugMatch) {
+                const num = slugMatch[2] ? parseInt(slugMatch[2]) : 0;
+                if (num >= slug_next_count) {
+                    slug_next_count = num + 1;
+                }
             }
         }
 
