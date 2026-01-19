@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios"; // Added for making HTTP requests
 import { getOrganizationById, validateCauthKey } from "../services/proxy.service.js";
-import { encryptString } from "../services/utils/utility.service.js";
+import { encryptString, reportLoginFailure } from "../services/utils/utility.service.js";
 import { createOrGetUser } from "../utils/proxy.utils.js";
 import configurationModel from "../mongoModel/Configuration.model.js";
 import mongoose from "mongoose";
@@ -263,6 +263,7 @@ const combine_middleware = async (req, res, next) => {
 const EmbeddecodeToken = async (req, res, next) => {
   const token = req?.get('Authorization');
   if (!token) {
+    reportLoginFailure('rag', null, 'missing token');
     return res.status(498).json({ message: 'invalid token' });
   }
   try {
@@ -298,6 +299,7 @@ const EmbeddecodeToken = async (req, res, next) => {
           req.IsEmbedUser = true
           return next();
         }
+        reportLoginFailure('rag', token, 'token verification failed');
         return res.status(404).json({ message: 'unauthorized user' });
       }
       else if (orgToken) {
@@ -311,10 +313,13 @@ const EmbeddecodeToken = async (req, res, next) => {
           return next();
         }
       }
+      reportLoginFailure('rag', token, 'invalid token');
       return res.status(404).json({ message: 'unauthorized user' });
     }
+    reportLoginFailure('rag', token, 'invalid token');
     return res.status(401).json({ message: 'unauthorized user ' });
   } catch (err) {
+    reportLoginFailure('rag', token, err?.message || 'token error');
     return res.status(401).json({ message: 'unauthorized user ', err });
   }
 };
