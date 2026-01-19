@@ -10,8 +10,8 @@ const GtwyEmbeddecodeToken = async (req, res, next) => {
     }
     try {
       const decodedToken = jwt.decode(token);
-      if(!decodedToken.user_id){
-        return res.status(401).json({ message: 'unauthorized user, user id not provided' });
+      if(!decodedToken.user_id || !decodedToken.folder_id || !decodedToken.org_id){
+        return res.status(401).json({ message: 'unauthorized user, user id, folder id or org id not provided' });
       }
       if (decodedToken) { 
         // const orgTokenFromDb = await orgDbServices.find(decodedToken.org_id);

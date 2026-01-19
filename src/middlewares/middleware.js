@@ -268,6 +268,9 @@ const EmbeddecodeToken = async (req, res, next) => {
   try {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
+      if(!decodedToken.user_id || !decodedToken.folder_id || !decodedToken.org_id){
+        return res.status(401).json({ message: 'unauthorized user, user id, folder id or org id not provided' });
+      }
       // const orgTokenFromDb = await orgDbServices.find(decodedToken.org_id);
       const orgTokenFromDb = await getOrganizationById(decodedToken?.org_id);
       const orgToken = orgTokenFromDb?.meta?.auth_token;
