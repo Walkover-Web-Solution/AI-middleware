@@ -6,25 +6,25 @@ const runModel = async (configuration, chat = true, apiKey) => {
     let response;
     if (chat) {
       response = await openAI.chat.completions.create({
-        ...configuration
+        ...configuration,
       });
       return {
         success: true,
-        response: response
+        response: response,
       };
     }
     response = await openAI.completions.create({
-      ...configuration
+      ...configuration,
     });
     return {
       success: true,
-      response: response
+      response: response,
     };
   } catch (error) {
     console.error("runmodel error=>", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -33,21 +33,18 @@ const createEmbeddings = async (configuration, apiKey) => {
     const OpenAIConfig = new OpenAIInitializer(apiKey);
     const openAI = OpenAIConfig.getOpenAIService();
     const response = await openAI.embeddings.create({
-      ...configuration
+      ...configuration,
     });
     return {
       success: true,
-      response: response
+      response: response,
     };
   } catch (error) {
     console.error("runmodel error=>", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
-export {
-  runModel,
-  createEmbeddings
-};
+export { runModel, createEmbeddings };

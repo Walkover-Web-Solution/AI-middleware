@@ -6,55 +6,68 @@ import { generateIdentifier } from "../services/utils/utility.service.js";
 import { cleanupCache } from "../services/utils/redis.utils.js";
 import { deleteInCache, findInCache } from "../cache_service/index.js";
 import { cost_types, redis_keys } from "../configs/constant.js";
-import { generateAuthToken } from '../services/utils/utility.service.js';
+import { generateAuthToken } from "../services/utils/utility.service.js";
 
-const embedLogin = async (req, res, next) => {
+const embedLogin = async (req, res) => {
   const { name: embeduser_name, email: embeduser_email } = req.Embed;
-    const embedDetails = { user_id: req.Embed.user_id, company_id: req?.Embed?.org_id, company_name: req.Embed.org_name, tokenType: 'embed', embeduser_name, embeduser_email,folder_id : req.Embed.folder_id };
-      const Tokendata = {
-        "user":{
-          id: req.Embed.user_id,
-          name: embeduser_name,
-          email: embeduser_email,
-          meta:{
-          type: 'embed'
-          }
-          
-        },
-        "org":{
-          id: req.Embed.org_id,
-          name: req.Embed.org_name,
-          
-        },
-        "extraDetails":{  
-          type: 'embed',
-          folder_id: req.Embed.folder_id,
-        }
-      }
-      
-      // Run DB query and token creation in parallel since they don't depend on each other
-      const [folder] = await Promise.all([
-        FolderModel.findOne({ _id: req.Embed.folder_id }),
-        createProxyToken(embedDetails)
-      ]);
-      
-      const config = folder?.config || {};
-      const apikey_object_id = folder?.apikey_object_id
-      const response = {
-        ...req?.Embed,
-        user_id: req.Embed.user_id,
-        token: generateAuthToken(Tokendata.user, Tokendata.org, {"extraDetails": Tokendata.extraDetails}),
-        config:{...config, apikey_object_id}
-      };
-      return res.status(200).json({ data: response, message: 'logged in successfully' });
-}
+  const embedDetails = {
+    user_id: req.Embed.user_id,
+    company_id: req?.Embed?.org_id,
+    company_name: req.Embed.org_name,
+    tokenType: "embed",
+    embeduser_name,
+    embeduser_email,
+    folder_id: req.Embed.folder_id,
+  };
+  const Tokendata = {
+    user: {
+      id: req.Embed.user_id,
+      name: embeduser_name,
+      email: embeduser_email,
+      meta: {
+        type: "embed",
+      },
+    },
+    org: {
+      id: req.Embed.org_id,
+      name: req.Embed.org_name,
+    },
+    extraDetails: {
+      type: "embed",
+      folder_id: req.Embed.folder_id,
+    },
+  };
+
+  // Run DB query and token creation in parallel since they don't depend on each other
+  const [folder] = await Promise.all([
+    FolderModel.findOne({ _id: req.Embed.folder_id }),
+    createProxyToken(embedDetails),
+  ]);
+
+  const config = folder?.config || {};
+  const apikey_object_id = folder?.apikey_object_id;
+  const response = {
+    ...req?.Embed,
+    user_id: req.Embed.user_id,
+    token: generateAuthToken(Tokendata.user, Tokendata.org, { extraDetails: Tokendata.extraDetails }),
+    config: { ...config, apikey_object_id },
+  };
+  return res.status(200).json({ data: response, message: "logged in successfully" });
+};
 
 const createEmbed = async (req, res, next) => {
   try {
     const { name, config, apikey_object_id, folder_limit, type } = req.body;
     const org_id = req.profile.org.id;
     const folder_type = type ? type : "embed";
-    const folder = await FolderModel.create({ name, org_id, type:folder_type, config, apikey_object_id, folder_limit });
+    const folder = await FolderModel.create({
+      name,
+      org_id,
+      type: folder_type,
+      config,
+      apikey_object_id,
+      folder_limit,
+    });
     res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
     req.statusCode = 200;
     return next();
@@ -63,32 +76,34 @@ const createEmbed = async (req, res, next) => {
     req.statusCode = 400;
     return next();
   }
-}
+};
 
 const getAllEmbed = async (req, res, next) => {
-  const org_id = req.profile.org.id
-  const data = await FolderModel.find({ org_id })
+  const org_id = req.profile.org.id;
+  const data = await FolderModel.find({ org_id });
 
-  const foldersWithUsage = await Promise.all(data.map(async (folder) => {
-    const folderObject = folder.toObject();
-    const folderId = folder._id.toString();
+  const foldersWithUsage = await Promise.all(
+    data.map(async (folder) => {
+      const folderObject = folder.toObject();
+      const folderId = folder._id.toString();
 
-    let folder_usage = folderObject.folder_usage;
-    const cacheKey = `${redis_keys.folderusedcost_}${folderId}`;
-    const cachedValue = await findInCache(cacheKey);
+      let folder_usage = folderObject.folder_usage;
+      const cacheKey = `${redis_keys.folderusedcost_}${folderId}`;
+      const cachedValue = await findInCache(cacheKey);
 
-    if (cachedValue) {
-      const parsed = JSON.parse(cachedValue);
-      folder_usage = parsed.usage_value;
-    }
+      if (cachedValue) {
+        const parsed = JSON.parse(cachedValue);
+        folder_usage = parsed.usage_value;
+      }
 
-    return { ...folderObject, folder_id: folder._id, folder_usage };
-  }));
+      return { ...folderObject, folder_id: folder._id, folder_usage };
+    })
+  );
 
   res.locals = { data: foldersWithUsage };
   req.statusCode = 200;
   return next();
-}
+};
 
 const updateEmbed = async (req, res, next) => {
   try {
@@ -97,7 +112,7 @@ const updateEmbed = async (req, res, next) => {
 
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
     if (!folder) {
-      res.locals = { success: false, message: 'Folder not found' };
+      res.locals = { success: false, message: "Folder not found" };
       req.statusCode = 404;
       return next();
     }
@@ -139,12 +154,11 @@ const updateEmbed = async (req, res, next) => {
     req.statusCode = 400;
     return next();
   }
-}
-
+};
 
 const genrateToken = async (req, res, next) => {
   let gtwyAccessToken;
-  const data = await getOrganizationById(req.profile.org.id)
+  const data = await getOrganizationById(req.profile.org.id);
   gtwyAccessToken = data?.meta?.gtwyAccessToken;
   if (!gtwyAccessToken) {
     gtwyAccessToken = generateIdentifier(32);
@@ -153,13 +167,12 @@ const genrateToken = async (req, res, next) => {
         ...data?.meta,
         gtwyAccessToken,
       },
-    },
-    );
+    });
   }
   res.locals = { gtwyAccessToken };
   req.statusCode = 200;
   return next();
-}
+};
 
 const getEmbedDataByUserId = async (req, res, next) => {
   try {
@@ -172,7 +185,7 @@ const getEmbedDataByUserId = async (req, res, next) => {
     res.locals = {
       success: true,
       message: "Get Agents data successfully",
-      data
+      data,
     };
 
     req.statusCode = 200;
@@ -189,5 +202,5 @@ export default {
   getAllEmbed,
   genrateToken,
   updateEmbed,
-  getEmbedDataByUserId
+  getEmbedDataByUserId,
 };

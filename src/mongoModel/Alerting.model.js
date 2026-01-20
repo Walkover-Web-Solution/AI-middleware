@@ -22,16 +22,16 @@ const alertSchema = new mongoose.Schema({
   },
   alertType: {
     type: [String],
-    enum: ['Error', 'Variable', 'metrix_limit_reached', 'retry_mechanism', 'knowledge_base', 'thumbsdown'],
+    enum: ["Error", "Variable", "metrix_limit_reached", "retry_mechanism", "knowledge_base", "thumbsdown"],
     default: [],
     required: true,
   },
   bridges: {
     type: [String],
-    default: ['all'],
+    default: ["all"],
   },
   limit: {
-    type: Number
+    type: Number,
   },
   createdAt: {
     type: Date,
@@ -45,14 +45,14 @@ const alertSchema = new mongoose.Schema({
 
 alertSchema.index({ org_id: 1, name: 1 }, { unique: true });
 
-alertSchema.pre('save', function(next) {
+alertSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   if (!this.bridges || this.bridges.length === 0) {
-    this.bridges = ['all'];
+    this.bridges = ["all"];
   }
   next();
 });
 
-const AlertModel = mongoose.model('Alert', alertSchema);
+const AlertModel = mongoose.model("Alert", alertSchema);
 
 export default AlertModel;

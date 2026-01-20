@@ -4,28 +4,28 @@ const timescaleServiceUrl = process.env.TIMESCALE_SERVICE_URL;
 export default {
   development: {
     url: timescaleServiceUrl,
-    dialect: 'postgres',
-    protocol: 'postgres',
+    dialect: "postgres",
+    protocol: "postgres",
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
-      }
-    }
+        rejectUnauthorized: false,
+      },
+    },
   },
   test: {
     url: "",
-    dialect: 'postgres'
+    dialect: "postgres",
   },
   production: {
     url: timescaleServiceUrl,
-    dialect: 'postgres',
-    protocol: 'postgres',
+    dialect: "postgres",
+    protocol: "postgres",
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
-      }
-    }
-  }
+        rejectUnauthorized: false,
+      },
+    },
+  },
 };

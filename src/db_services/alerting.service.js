@@ -1,114 +1,113 @@
 // const AlertingModel = require('../mongoModel/alertingModel');
-import AlertModel from '../mongoModel/Alerting.model.js';
+import AlertModel from "../mongoModel/Alerting.model.js";
 
-
-async function create(alertData){
-    return await new AlertModel({
-      ...alertData
-    }).save();
+async function create(alertData) {
+  return await new AlertModel({
+    ...alertData,
+  }).save();
 }
 
-async function getByQuery(query){
-  return (await AlertModel.find(query)).map(obj => obj.toObject());
+async function getByQuery(query) {
+  return (await AlertModel.find(query)).map((obj) => obj.toObject());
 }
 
-async function getAll(org_id){
- try {
+async function getAll(org_id) {
+  try {
     const alerts = await AlertModel.find({
-      org_id
-      });
+      org_id,
+    });
 
     if (!alerts.length) {
       return {
         success: false,
-        error: "No alerts found"
-     };
+        error: "No alerts found",
+      };
     }
     return {
       success: true,
-      data: alerts
+      data: alerts,
     };
- } catch (error) {
+  } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!"
+      error: "something went wrong!!",
     };
   }
- }
+}
 
- async function getById(id){
+async function getById(id) {
   try {
-     const data = await AlertModel.findById(id);
- 
-     if (!data) {
-       return {
-         success: false,
-         error: "No alerts found"
-      };
-     }
-     return {
-       success: true,
-       data: data
-     };
-  } catch (error) {
-     console.error("error:", error);
-     return {
-       success: false,
-       error: "something went wrong!!"
-     };
-   }
-  }
+    const data = await AlertModel.findById(id);
 
-async function deleteAlert(id){
+    if (!data) {
+      return {
+        success: false,
+        error: "No alerts found",
+      };
+    }
+    return {
+      success: true,
+      data: data,
+    };
+  } catch (error) {
+    console.error("error:", error);
+    return {
+      success: false,
+      error: "something went wrong!!",
+    };
+  }
+}
+
+async function deleteAlert(id) {
   try {
     const deletedAlert = await AlertModel.findByIdAndDelete(id);
     if (!deletedAlert) {
       return {
         success: false,
-        error: "No alert found for the given ID"
+        error: "No alert found for the given ID",
       };
     }
     return {
       success: true,
-      message: deletedAlert
+      message: deletedAlert,
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!"
+      error: "something went wrong!!",
     };
   }
 }
 
-async function updateAlert(id, data){
+async function updateAlert(id, data) {
   try {
     const updatedAlert = await AlertModel.findByIdAndUpdate(id, data, { new: true });
     if (!updatedAlert) {
       return {
         success: false,
-        error: "No alert found for the given ID"
+        error: "No alert found for the given ID",
       };
     }
     return {
       success: true,
-      data: updatedAlert
+      data: updatedAlert,
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!"
+      error: "something went wrong!!",
     };
   }
 }
 
-export default{
+export default {
   create,
   getAll,
   getById,
   deleteAlert,
-  updateAlert, 
-  getByQuery
-}
+  updateAlert,
+  getByQuery,
+};

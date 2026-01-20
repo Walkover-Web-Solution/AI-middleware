@@ -10,7 +10,7 @@ async function createAlert(req, res, next) {
     name,
     bridges,
     alertType,
-    limit
+    limit,
   });
   req.statusCode = 201;
   return next();
@@ -23,14 +23,14 @@ async function getAllAlerts(req, res, next) {
   if (alerts.success) {
     res.locals = {
       success: true,
-      data: alerts.data
+      data: alerts.data,
     };
     req.statusCode = 200;
     return next();
   } else {
     res.locals = {
       success: false,
-      message: alerts.error || "No alerts found"
+      message: alerts.error || "No alerts found",
     };
     req.statusCode = 404;
     return next();
@@ -45,15 +45,15 @@ async function deleteAlert(req, res, next) {
   if (!result.success) {
     res.locals = {
       success: false,
-      message: result.error || "Alert not found"
+      message: result.error || "Alert not found",
     };
     req.statusCode = 404;
     return next();
   }
-  
+
   res.locals = {
     success: true,
-    message: "Alert successfully deleted"
+    message: "Alert successfully deleted",
   };
   req.statusCode = 200;
   return next();
@@ -62,12 +62,12 @@ async function deleteAlert(req, res, next) {
 async function updateAlert(req, res, next) {
   const { id } = req.params;
   const { webhookConfiguration, bridges, name, alertType } = req.body;
-  
+
   const alertData = await alertingDbservices.getById(id);
   if (!alertData.success) {
     res.locals = {
       success: false,
-      message: 'Alert not found'
+      message: "Alert not found",
     };
     req.statusCode = 404;
     return next();
@@ -101,17 +101,16 @@ async function updateAlert(req, res, next) {
   } else {
     res.locals = {
       success: false,
-      message: updatedAlert.error || "Failed to update alert"
+      message: updatedAlert.error || "Failed to update alert",
     };
     req.statusCode = 400;
     return next();
   }
 }
 
-
 export default {
   createAlert,
   getAllAlerts,
   deleteAlert,
-  updateAlert
-}
+  updateAlert,
+};
