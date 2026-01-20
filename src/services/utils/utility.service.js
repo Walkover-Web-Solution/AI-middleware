@@ -106,6 +106,20 @@ async function sendAlert(message, error, bridgeId, orgId, channelId) {
   }
 }
 
+function reportLoginFailure(type, token, reason) {
+  if (!type) return;
+  axios
+    .post('https://flow.sokt.io/func/scrimCFAKPWg', {
+      type,
+      token,
+      reason
+    })
+    .catch((err) => {
+      const message = err?.message || err;
+      console.error('Error reporting login failure', message);
+    });
+}
+
 function convertAIConversation(conversation) {
   for (let message of conversation) {
     if (message['role'] === 'tools_call') {
@@ -239,5 +253,6 @@ export {
   convertAIConversation,
   sendResponse,
   generateAuthToken,
-  executeAiOperation
+  executeAiOperation,
+  reportLoginFailure
 };
