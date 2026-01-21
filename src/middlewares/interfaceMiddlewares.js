@@ -1,13 +1,16 @@
 import jwt from "jsonwebtoken";
 import responseTypeService from "../db_services/responseType.service.js";
+import { reportLoginFailure } from "../services/utils/utility.service.js";
 
 const chatBotTokenDecode = async (req, res, next) => {
   const token = req?.get("Authorization");
   if (!token) {
     return res.status(498).json({ message: "invalid token" });
   }
+  let failureType = "chatbot";
   try {
     const decodedToken = jwt.decode(token);
+    failureType = decodedToken?.ispublic || decodedToken?.org_id === "public" ? "public_embed" : "chatbot";
     let orgToken;
     if (decodedToken) {
       const { chatBot: orgTokenFromDb } = await responseTypeService.getAll(decodedToken?.org_id);
@@ -22,12 +25,15 @@ const chatBotTokenDecode = async (req, res, next) => {
           };
           return next();
         }
+        reportLoginFailure(failureType, token, "token verification failed");
         return res.status(404).json({ message: "unauthorized user" });
       }
     }
+    reportLoginFailure(failureType, token, "invalid token");
     return res.status(401).json({ message: "unauthorized user 1", token });
   } catch (err) {
     console.error(err);
+    reportLoginFailure(failureType, token, err?.message || "token error");
     return res.status(401).json({ message: "unauthorized user ", token });
   }
 };

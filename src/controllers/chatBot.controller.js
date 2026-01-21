@@ -149,7 +149,7 @@ const createOrgToken = async (req, res, next) => {
     req.statusCode = 200;
     return next();
   }
-  const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(14));
+  const org = await responseTypeService.createOrgToken(orgId, generateIdentifier(32));
   res.locals = org?.success ? org.orgData : { success: false, message: "Failed to create org token" };
   req.statusCode = org?.success ? 200 : 404;
   return next();

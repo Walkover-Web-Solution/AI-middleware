@@ -48,7 +48,7 @@ export const ragEmbedUserLogin = async (req, res, next) => {
 
 export const getKnowledgeBaseToken = async (req, res, next) => {
   const org_id = req.profile.org.id;
-  let auth_token = generateIdentifier(14);
+  let auth_token = generateIdentifier(32);
   const data = await getOrganizationById(org_id);
 
   if (!data?.meta?.accessKey) {
