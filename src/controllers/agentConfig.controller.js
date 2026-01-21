@@ -11,6 +11,7 @@ import { getDefaultValuesController } from "../services/utils/getDefaultValue.js
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
+import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
 
 const createAgentController = async (req, res, next) => {
     try {
@@ -174,6 +175,12 @@ const createAgentController = async (req, res, next) => {
             agent: updated_agent_result.result
         };
         req.statusCode = 200;
+
+        sendAgentCreatedWebhook(updated_agent_result.result, org_id)
+            .catch(err => {
+                console.error("Webhook failed:", err);
+            });
+
         return next();
 
     } catch (e) {
