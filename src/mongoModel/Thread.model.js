@@ -8,6 +8,7 @@ const threadSchema = new Schema({
   display_name: { type: String, required: true },
   org_id: { type: String, required: true },
   created_at: { type: Date },
+  type: { type: String },
 });
 
 // Create the model

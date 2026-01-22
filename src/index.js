@@ -27,6 +27,7 @@ import reportRoute from "./routes/report.routes.js";
 import modelsRoutes from "./routes/modelConfig.routes.js";
 import embedRoutes from "./routes/embed.routes.js";
 import historyRoutes from "./routes/history.routes.js";
+import orchestratorHistoryRoutes from "./routes/orchestratorHistory.routes.js";
 import apiCallRoutes from "./routes/apiCall.routes.js";
 import agentVersionRoutes from "./routes/agentVersion.routes.js";
 import utilsRoutes from "./routes/utils.routes.js";
@@ -63,6 +64,7 @@ app.get("/healthcheck", async (req, res) => {
 app.use("/api/v1/config", converstaionRoutes);
 app.use("/api/agent", configRoutes);
 app.use("/api/history", historyRoutes);
+app.use("/api/orchestrator-history", orchestratorHistoryRoutes);
 app.use("/api/apikeys", apikeyRoutes);
 app.use("/api/service", serviceRoutes);
 app.use("/api/chatbot", chatbotRoutes);

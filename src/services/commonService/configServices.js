@@ -272,14 +272,13 @@ const getThreadMessages = async (req, res, next) => {
 
 const getAllSubThreadsController = async (req, res, next) => {
   const { thread_id } = req.params;
-  const { bridge_id, error, version_id } = req.query;
-  const isError = error === "false" ? false : true;
-  const org_id = req?.profile?.org?.id || req?.profile?.org_id;
-
+  const { bridge_id, error, version_id, type } = req.query;
+  const isError = error;
+  const org_id = req.profile.org.id;
   if (isError || version_id) {
     // Run both queries in parallel since they don't depend on each other
     const [threads, sub_thread_ids] = await Promise.all([
-      conversationDbService.getSubThreads(org_id, thread_id, bridge_id),
+      conversationDbService.getSubThreads(org_id, thread_id, bridge_id, type),
       conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError),
     ]);
 
@@ -293,7 +292,7 @@ const getAllSubThreadsController = async (req, res, next) => {
     return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
   }
 
-  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
+  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id, type);
   // sort the threads accroing to their hits in PG.
   const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };

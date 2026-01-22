@@ -377,8 +377,15 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
   return { conversations };
 }
 
-const getSubThreads = async (org_id, thread_id, bridge_id) => {
-  return await Thread.find({ org_id, thread_id, bridge_id }).lean();
+const getSubThreads = async (org_id, thread_id, bridge_id, type = null) => {
+  const query = { org_id, thread_id, bridge_id };
+
+  // Add type filter if type is "orchestrator"
+  if (type === "orchestrator") {
+    query.type = "orchestrator";
+  }
+
+  return await Thread.find(query).lean();
 };
 
 async function sortThreadsByHits(threads) {
