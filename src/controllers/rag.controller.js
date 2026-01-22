@@ -570,7 +570,10 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
             `${hippocampusUrl}/collection`,
             {
               name: defaultCol.name,
-              settings: defaultCol.settings,
+              settings: {
+                ...defaultCol.settings,
+                keepDuplicate: true,
+              },
             },
             {
               headers: {
@@ -584,7 +587,10 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
           const collectionData = {
             name: defaultCol.name,
             org_id: org_id,
-            settings: defaultCol.settings,
+            settings: {
+              ...defaultCol.settings,
+              keepDuplicate: true,
+            },
             collection_id: hippocampusResponse?.data?._id,
             created_at: new Date(),
             updated_at: new Date(),
