@@ -278,7 +278,7 @@ const getThreadMessages = async (req, res, next) => {
 const getAllSubThreadsController = async (req, res, next) => {
   const { thread_id } = req.params;
   const { bridge_id, error, version_id, type } = req.query;
-  const isError = error === "false" ? false : true;
+  const isError = error 
   const org_id = req.profile.org.id
   const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id, type);
   if (isError || version_id) {
