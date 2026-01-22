@@ -64,12 +64,12 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.JSON,
       allowNull: true
     },
-    image_urls: {
+    user_urls: {
       type: DataTypes.JSON,
       allowNull: true,
       defaultValue: []
     },
-    urls: {
+    llm_urls: {
       type: DataTypes.JSON,
       allowNull: true,
       defaultValue: []
