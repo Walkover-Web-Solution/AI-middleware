@@ -26,9 +26,7 @@ const showCaseSchema = new mongoose.Schema({
   },
 });
 
-
 showCaseSchema.index({ name: 1 }, { unique: true });
-
 
 const showCaseModel = mongoose.model("showCaseModel", showCaseSchema);
 

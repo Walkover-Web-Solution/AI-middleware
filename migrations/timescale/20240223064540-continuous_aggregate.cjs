@@ -38,9 +38,8 @@ module.exports = {
     await queryInterface.sequelize.query(`
       SELECT set_chunk_time_interval('fifteen_min_data_aggregate', INTERVAL '1 day');
       `);
-
   },
-// eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
       DROP MATERIALIZED VIEW IF EXISTS fifteen_min_data_aggregate;

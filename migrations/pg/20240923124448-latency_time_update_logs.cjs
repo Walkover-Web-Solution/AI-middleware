@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -6,8 +6,8 @@ module.exports = {
     try {
       // Add a temporary column to hold the new JSONB data
       await queryInterface.addColumn(
-        'raw_data',
-        'latency_temp',
+        "raw_data",
+        "latency_temp",
         {
           type: Sequelize.JSONB,
         },
@@ -29,10 +29,10 @@ module.exports = {
       );
 
       // Remove the old 'latency' column
-      await queryInterface.removeColumn('raw_data', 'latency', { transaction });
+      await queryInterface.removeColumn("raw_data", "latency", { transaction });
 
       // Rename 'latency_temp' to 'latency'
-      await queryInterface.renameColumn('raw_data', 'latency_temp', 'latency', {
+      await queryInterface.renameColumn("raw_data", "latency_temp", "latency", {
         transaction,
       });
 
@@ -48,8 +48,8 @@ module.exports = {
     try {
       // Add a temporary column to hold the float data
       await queryInterface.addColumn(
-        'raw_data',
-        'latency_temp',
+        "raw_data",
+        "latency_temp",
         {
           type: Sequelize.FLOAT,
         },
@@ -67,10 +67,10 @@ module.exports = {
       );
 
       // Remove the JSONB 'latency' column
-      await queryInterface.removeColumn('raw_data', 'latency', { transaction });
+      await queryInterface.removeColumn("raw_data", "latency", { transaction });
 
       // Rename 'latency_temp' back to 'latency'
-      await queryInterface.renameColumn('raw_data', 'latency_temp', 'latency', {
+      await queryInterface.renameColumn("raw_data", "latency_temp", "latency", {
         transaction,
       });
 

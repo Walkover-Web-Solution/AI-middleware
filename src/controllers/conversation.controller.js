@@ -5,7 +5,7 @@ const getThread = async (thread_id, org_id, bridge_id) => {
     const chats = await conversationDbService.find(org_id, thread_id, bridge_id);
     return {
       success: true,
-      data: chats
+      data: chats,
     };
   } catch (error) {
     console.error("getThread error:", error);
@@ -13,12 +13,12 @@ const getThread = async (thread_id, org_id, bridge_id) => {
   }
 };
 
-const getChatData = async chat_id => {
+const getChatData = async (chat_id) => {
   try {
     const chat = await conversationDbService.findChat(chat_id);
     return {
       success: true,
-      data: chat
+      data: chat,
     };
   } catch (error) {
     console.error("getChatData error:", error);
@@ -26,14 +26,36 @@ const getChatData = async chat_id => {
   }
 };
 
-const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error }) => {
+const getThreadHistory = async ({
+  thread_id,
+  org_id,
+  bridge_id,
+  sub_thread_id,
+  page,
+  pageSize,
+  user_feedback,
+  version_id,
+  isChatbot,
+  error,
+}) => {
   try {
-    const chats = await conversationDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error);
+    const chats = await conversationDbService.findMessage(
+      org_id,
+      thread_id,
+      bridge_id,
+      sub_thread_id,
+      page,
+      pageSize,
+      user_feedback,
+      version_id,
+      isChatbot,
+      error
+    );
     return {
       success: true,
       data: chats?.conversations,
       totalPages: chats?.totalPages,
-      totalEnteries: chats?.totalEntries
+      totalEnteries: chats?.totalEntries,
     };
   } catch (error) {
     console.error("getThreadHistory error:", error);
@@ -61,7 +83,14 @@ const createThreadHistory = async (payload) => {
 
 const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize }) => {
   try {
-    const chats = await conversationDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
+    const chats = await conversationDbService.findThreadMessage(
+      org_id,
+      thread_id,
+      bridge_id,
+      sub_thread_id,
+      page,
+      pageSize
+    );
     return {
       success: true,
       data: chats?.conversations,
@@ -72,12 +101,11 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
   }
 };
 
-
 export {
   getThread,
   getChatData,
   getThreadHistory,
   getThreadHistoryByMessageId,
   createThreadHistory,
-  getThreadMessageHistory
+  getThreadMessageHistory,
 };

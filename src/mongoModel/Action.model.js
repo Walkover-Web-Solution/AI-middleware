@@ -1,48 +1,46 @@
 import mongoose from "mongoose";
-const {
-  Schema
-} = mongoose;
+const { Schema } = mongoose;
 
 // Define the schema for individual actions
 const ActionDetailSchema = new Schema({
   type: {
-    type: String
+    type: String,
   },
   scriptId: {
-    type: String
+    type: String,
   },
   eventType: {
-    type: String
+    type: String,
   },
   apiKey: {
-    type: String
+    type: String,
   },
   prompt: {
-    type: String
+    type: String,
   },
   url: {
-    type: String
-  }
+    type: String,
+  },
   // You can add more fields here if needed
 });
 
 const ActionSchema = new Schema({
   chatBotId: {
     type: String,
-    required: true
+    required: true,
   },
   componentId: {
-    type: String
+    type: String,
   },
   gridId: {
-    type: String
+    type: String,
   },
   type: {
-    type: String
+    type: String,
   },
-  actionsArr: [ActionDetailSchema] // Array of action details
+  actionsArr: [ActionDetailSchema], // Array of action details
 });
 
 // Create the model from the schema
-const ActionModel = mongoose.model('Actions', ActionSchema);
+const ActionModel = mongoose.model("Actions", ActionSchema);
 export default ActionModel;
