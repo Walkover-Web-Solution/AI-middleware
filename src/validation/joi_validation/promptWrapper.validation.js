@@ -13,13 +13,11 @@ const createPromptWrapperSchema = Joi.object({
   template: Joi.string().required().messages({
     "any.required": "template is required",
   }),
-  variables: Joi.array().items(Joi.string()).default([]),
 }).unknown(true);
 
 const updatePromptWrapperSchema = Joi.object({
   name: Joi.string().trim(),
   template: Joi.string(),
-  variables: Joi.array().items(Joi.string()),
 })
   .min(1)
   .messages({

@@ -13,11 +13,7 @@ const getPromptWrapperById = async (wrapperId, org_id) => {
 };
 
 const updatePromptWrapperById = async (wrapperId, org_id, updateData) => {
-  return PromptWrapperModel.findOneAndUpdate(
-    { _id: wrapperId, org_id },
-    { $set: { ...updateData, updated_at: new Date() } },
-    { new: true }
-  );
+  return PromptWrapperModel.findOneAndUpdate({ _id: wrapperId, org_id }, { $set: updateData }, { new: true });
 };
 
 const deletePromptWrapperById = async (wrapperId, org_id) => {
