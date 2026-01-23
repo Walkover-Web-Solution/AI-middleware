@@ -6,12 +6,14 @@ import { bridge_ids, new_agent_service } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversation.service.js";
+import { getUniqueNameAndSlug, normalizeFunctionIds, cloneFunctionsForAgent } from "../utils/agentConfig.utils.js";
 const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
+
 
 const createAgentController = async (req, res, next) => {
   try {
@@ -24,65 +26,62 @@ const createAgentController = async (req, res, next) => {
     const user_id = req.profile.user.id;
     const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
 
-    let prompt =
+        let template_content = null;
+     let prompt =
       "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
     let name = null;
     let service = "openai";
     let model = "gpt-5-nano";
     let type = "chat";
 
-    if (agents.templateId) {
-      const template_id = agents.templateId;
-      const template_data = await ConfigurationServices.gettemplateById(template_id);
-      if (!template_data) {
-        res.locals = { success: false, message: "Template not found" };
-        req.statusCode = 404;
-        return next();
-      }
-      prompt = template_data.prompt || prompt;
-    }
+        if (agents.templateId) {
+            const template_id = agents.templateId;
+            const template_data = await ConfigurationServices.gettemplateById(template_id);
+            if (!template_data) {
+                res.locals = { success: false, message: "Template not found" };
+                req.statusCode = 404;
+                return next();
+            }
+            template_content = JSON.parse(template_data.template);
+
+            if (template_data.templateName) {
+                name = template_data.templateName;
+            }
+            if (template_content?.configuration?.prompt) {
+                prompt = template_content.configuration.prompt;
+            }
+            if (template_content?.service) service = template_content.service;
+            if (template_content?.configuration?.model) model = template_content.configuration.model;
+            if (template_content?.configuration?.type) type = template_content.configuration.type;
+        }
 
     const all_agent_name = all_agent.map((agent) => agent.name);
 
-    if (purpose) {
-      const variables = {
-        purpose: purpose,
-        all_bridge_names: all_agent_name,
-      };
-      const user = "Generate Agent Configuration accroding to the given user purpose.";
-      const agent_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
-      // Assuming agent_data is parsed JSON from callAiMiddleware
-      if (typeof agent_data === "object") {
-        model = agent_data.model || model;
-        service = agent_data.service || service;
-        name = agent_data.name;
-        prompt = agent_data.system_prompt || prompt;
-        type = agent_data.type || type;
-      }
-    }
+        if (purpose && !template_content) {
+            const variables = {
+                "purpose": purpose,
+                "all_bridge_names": all_agent_name
+            };
+            const user = "Generate Agent Configuration accroding to the given user purpose.";
+            const agent_data = await callAiMiddleware(user, bridge_ids['create_bridge_using_ai'], variables);
+            // Assuming agent_data is parsed JSON from callAiMiddleware
+            if (typeof agent_data === 'object') {
+                model = agent_data.model || model;
+                service = agent_data.service || service;
+                name = agent_data.name;
+                prompt = agent_data.system_prompt || prompt;
+                type = agent_data.type || type;
+            }
+        }
 
-    let name_next_count = 1;
-    let slug_next_count = 1;
-
-    for (const agent of all_agent) {
-      name = name || "untitled_agent";
-      if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.name.replace("untitled_agent_", ""));
-        if (num >= name_next_count) name_next_count = num + 1;
-      } else if (agent.name === name) {
-        name_next_count += 1;
-      }
-
-      if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-        if (num >= slug_next_count) slug_next_count = num + 1;
-      } else if (agent.slugName === name) {
-        slug_next_count += 1;
-      }
-    }
-
-    const slugName = `${name}_${slug_next_count}`;
-    name = `${name}_${name_next_count}`;
+        let slugName = null;
+        if (template_content && name) {
+            slugName = name;
+        } else {
+            const nameSlugData = getUniqueNameAndSlug(name, all_agent);
+            slugName = nameSlugData.slugName;
+            name = nameSlugData.name;
+        }
 
     // Construct model data based on model configuration
     const keys_to_update = [
@@ -105,34 +104,39 @@ const createAgentController = async (req, res, next) => {
       "style",
     ];
 
-    const model_data = {};
+        let model_data = {};
 
-    // Get model configuration if available
-    const serviceLower = service.toLowerCase();
-    if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
-      const modelObj = modelConfigDocument[serviceLower][model];
-      const configurations = modelObj.configuration || {};
+        if (template_content?.configuration) {
+            model_data = { ...template_content.configuration };
+        } else {
+            const serviceLower = service.toLowerCase();
+            if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
+                const modelObj = modelConfigDocument[serviceLower][model];
+                const configurations = modelObj.configuration || {};
 
-      for (const key of keys_to_update) {
-        if (configurations[key]) {
-          model_data[key] = key === "model" ? configurations[key].default : "default";
+                for (const key of keys_to_update) {
+                    if (configurations[key]) {
+                        model_data[key] = key === 'model' ? configurations[key].default : 'default';
+                    }
+                }
+            }
         }
-      }
-    }
 
-    model_data.type = type;
-    model_data.response_format = {
-      type: "default",
-      cred: {},
-    };
-    model_data.is_rich_text = false;
-    model_data.prompt = prompt;
+        model_data.type = model_data.type || type;
+        model_data.response_format = model_data.response_format || {
+            type: "default",
+            cred: {}
+        };
+        if (model_data.is_rich_text === undefined) {
+            model_data.is_rich_text = false;
+        }
+        model_data.prompt = model_data.prompt || prompt;
 
-    const fall_back = {
-      is_enable: true,
-      service: "ai_ml",
-      model: "gpt-oss-120b",
-    };
+        const fall_back = template_content?.fall_back || {
+            is_enable: true,
+            service: "ai_ml",
+            model: "gpt-oss-120b"
+        };
 
     if (folder_data) {
       const api_key_object_ids = folder_data.apikey_object_id || {};
@@ -144,38 +148,148 @@ const createAgentController = async (req, res, next) => {
       }
     }
 
-    const agent_limit = agents.bridge_limit || 0;
-    const agent_usage = agents.bridge_usage || 0;
+        const agent_limit = agents.bridge_limit || 0;
+        const agent_usage = agents.bridge_usage || 0;
 
-    const result = await ConfigurationServices.createAgent({
-      configuration: model_data,
-      name: name,
-      slugName: slugName,
-      service: service,
-      bridgeType: agentType,
-      org_id: org_id,
-      status: 1,
-      gpt_memory: true,
-      folder_id: folder_id,
-      user_id: user_id,
-      fall_back: fall_back,
-      bridge_limit: agent_limit,
-      bridge_usage: agent_usage,
-      bridge_status: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+        const template_fields = ['variables_state', 'built_in_tools', 'gpt_memory_context', 'user_reference', 'bridge_summary', 'agent_variables'];
+        const template_values = {};
+        if (template_content) {
+            for (const field of template_fields) {
+                if (template_content[field] !== undefined) {
+                    template_values[field] = template_content[field];
+                }
+            }
+        }
 
-    const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
-    const update_fields = { versions: [create_version._id.toString()] };
-    const updated_agent_result = await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
+        const result = await ConfigurationServices.createAgent({
+            configuration: model_data,
+            name: name,
+            slugName: slugName,
+            service: service,
+            bridgeType: template_content?.bridgeType || agentType,
+            org_id: org_id,
+            status: 1,
+            gpt_memory: true,
+            folder_id: folder_id,
+            user_id: user_id,
+            fall_back: fall_back,
+            bridge_limit: agent_limit,
+            bridge_usage: agent_usage,
+            bridge_status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            ...template_values
+        });
 
-    res.locals = {
-      success: true,
-      message: "Agent created successfully",
-      agent: updated_agent_result.result,
-    };
-    req.statusCode = 200;
+        const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
+        const update_fields = { versions: [create_version._id.toString()] };
+        await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
+
+        all_agent.push({ name, slugName });
+
+        const parent_function_ids = normalizeFunctionIds(template_content?.function_ids);
+        if (parent_function_ids.length > 0) {
+            const cloned_function_ids = await cloneFunctionsForAgent(parent_function_ids, org_id, result.bridge._id.toString());
+            if (cloned_function_ids.length > 0) {
+                const functionObjectIds = cloned_function_ids.map(fid => new ObjectId(fid));
+                await ConfigurationServices.updateAgent(result.bridge._id.toString(), { function_ids: functionObjectIds });
+                await ConfigurationServices.updateAgent(null, { function_ids: functionObjectIds }, create_version._id.toString());
+            }
+        }
+
+        if (template_content?.child_agents && Object.keys(template_content.child_agents).length > 0) {
+            const connected_agents = {};
+
+            for (const [agent_name, child_agent] of Object.entries(template_content.child_agents)) {
+                const child_details = child_agent?.bridge_details;
+                if (!child_details) continue;
+
+                const childNameSlug = getUniqueNameAndSlug(agent_name, all_agent);
+                const child_model_data = { ...(child_details.configuration || {}) };
+                child_model_data.type = child_model_data.type || type;
+                child_model_data.response_format = child_model_data.response_format || {
+                    type: "default",
+                    cred: {}
+                };
+                if (child_model_data.is_rich_text === undefined) {
+                    child_model_data.is_rich_text = false;
+                }
+                child_model_data.prompt = child_model_data.prompt || prompt;
+
+                let child_service = child_details.service || service;
+                if (folder_data) {
+                    const api_key_object_ids = folder_data.apikey_object_id || {};
+                    if (Object.keys(api_key_object_ids).length > 0) {
+                        child_service = Object.keys(api_key_object_ids)[0];
+                        if (new_agent_service[child_service]) {
+                            child_model_data.model = new_agent_service[child_service];
+                        }
+                    }
+                }
+
+                const child_template_values = {};
+                for (const field of template_fields) {
+                    if (child_details[field] !== undefined) {
+                        child_template_values[field] = child_details[field];
+                    }
+                }
+
+                const child_result = await ConfigurationServices.createAgent({
+                    configuration: child_model_data,
+                    name: childNameSlug.name,
+                    slugName: childNameSlug.slugName,
+                    service: child_service,
+                    bridgeType: child_details.bridgeType || agentType,
+                    org_id: org_id,
+                    status: 1,
+                    gpt_memory: true,
+                    folder_id: folder_id,
+                    user_id: user_id,
+                    fall_back: fall_back,
+                    bridge_limit: agent_limit,
+                    bridge_usage: agent_usage,
+                    bridge_status: 1,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    ...child_template_values
+                });
+
+                const child_version = await agentVersionDbService.createAgentVersion(child_result.bridge);
+                await ConfigurationServices.updateAgent(child_result.bridge._id.toString(), { versions: [child_version._id.toString()] });
+
+                all_agent.push({ name: childNameSlug.name, slugName: childNameSlug.slugName });
+
+                const child_function_ids = normalizeFunctionIds(child_details.function_ids);
+                if (child_function_ids.length > 0) {
+                    const cloned_function_ids = await cloneFunctionsForAgent(child_function_ids, org_id, child_result.bridge._id.toString());
+                    if (cloned_function_ids.length > 0) {
+                        const functionObjectIds = cloned_function_ids.map(fid => new ObjectId(fid));
+                        await ConfigurationServices.updateAgent(child_result.bridge._id.toString(), { function_ids: functionObjectIds });
+                        await ConfigurationServices.updateAgent(null, { function_ids: functionObjectIds }, child_version._id.toString());
+                    }
+                }
+
+                connected_agents[agent_name] = {
+                    description: child_agent?.description,
+                    variables: child_agent?.variables || {},
+                    bridge_id: child_result.bridge._id.toString()
+                };
+            }
+
+            if (Object.keys(connected_agents).length > 0) {
+                await ConfigurationServices.updateAgent(result.bridge._id.toString(), { connected_agents });
+                await ConfigurationServices.updateAgent(null, { connected_agents }, create_version._id.toString());
+            }
+        }
+
+        const updated_agent_result = await ConfigurationServices.getAgentsWithTools(result.bridge._id.toString(), org_id);
+
+        res.locals = {
+            success: true,
+            message: "Agent created successfully",
+            agent: updated_agent_result.bridges
+        };
+        req.statusCode = 200;
 
     sendAgentCreatedWebhook(updated_agent_result.result, org_id).catch((err) => {
       console.error("Webhook failed:", err);
