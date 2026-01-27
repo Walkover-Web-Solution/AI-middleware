@@ -941,6 +941,7 @@ const updateAgents = async (version_id, agents, add = 1) => {
     // Add or update the connected agents
     const setFields = {};
     for (const [agent_name, agent_info] of Object.entries(agents)) {
+      agent_info.thread_id = true;
       setFields[`connected_agents.${agent_name}`] = agent_info;
     }
     to_update = { $set: setFields };
