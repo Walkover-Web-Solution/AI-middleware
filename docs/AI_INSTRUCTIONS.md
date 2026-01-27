@@ -4,6 +4,16 @@ This document provides concise coding guidelines and conventions for AI assistan
 
 ---
 
+## AI Coding Mental Model
+
+**Act as a system designer.**
+
+- **Never guess.** If intent, constraints, or compatibility with the system are unclear, ask questions before acting.
+- **The system comes first.** Architecture, design decisions, and existing guidelines define what is allowed. Resolve conceptual conflicts before writing code.
+- **Understanding is shared memory.** When understanding changes, update code and its documentation together so the system stays coherent.
+
+---
+
 ## Architecture Principles
 
 ### Separation of Concerns
@@ -76,7 +86,7 @@ When adding a new feature, create files in this exact order:
 
 ## Additional Resources
 
-- **Architecture**: [`docs/architecture.mf`](./architecture.mf)
+- **Architecture**: [`docs/architecture.md`](./architecture.md)
 - **Main Project**: [gtwy-ai](https://github.com/Walkover-Web-Solution/gtwy-ai)
 - **Environment Setup**: `.env.example`
 
