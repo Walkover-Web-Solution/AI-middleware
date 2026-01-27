@@ -60,7 +60,7 @@ module.exports = {
           // Build the query conditions for PostgreSQL
           let whereCondition = {
             org_id,
-            thread_id,
+            thread_id
           };
 
           // Add bridge_id to condition if it exists
@@ -87,7 +87,7 @@ module.exports = {
           // Check if corresponding record exists in PostgreSQL conversations table
           const pgResult = await queryInterface.sequelize.query(sqlQuery, {
             replacements: whereCondition,
-            type: Sequelize.QueryTypes.SELECT,
+            type: Sequelize.QueryTypes.SELECT
           });
 
           const recordExists = pgResult[0].count > 0;
@@ -112,9 +112,7 @@ module.exports = {
         }
       }
 
-      console.log(
-        `Migration completed. Deleted: ${deletedCount}, Kept: ${keptCount}, Skipped: ${skippedCount}, Errors: ${errorCount}`
-      );
+      console.log(`Migration completed. Deleted: ${deletedCount}, Kept: ${keptCount}, Skipped: ${skippedCount}, Errors: ${errorCount}`);
     } catch (error) {
       console.error("Error during migration:", error);
       throw error; // Rethrow to fail the migration
@@ -130,5 +128,5 @@ module.exports = {
      * If needed, a backup should be created before running this migration.
      */
     console.log("Down migration not implemented - deleted MongoDB threads cannot be restored without backup.");
-  },
+  }
 };

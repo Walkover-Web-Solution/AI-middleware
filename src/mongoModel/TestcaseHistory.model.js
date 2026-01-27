@@ -4,37 +4,37 @@ const testcaseHistorySchema = new mongoose.Schema(
   {
     testcase_id: {
       type: String,
-      required: true,
+      required: true
     },
     bridge_id: {
       type: String,
-      required: true,
+      required: true
     },
     version_id: {
       type: String,
-      required: true,
+      required: true
     },
     score: {
       type: Number,
       required: true,
-      default: 0,
+      default: 0
     },
     model_output: {
       type: String,
-      required: true,
+      required: true
     },
     metadata: {
       type: Object,
-      default: {},
+      default: {}
     },
     created_at: {
       type: String,
-      required: true,
-    },
+      required: true
+    }
   },
   {
     timestamps: false,
-    strict: false,
+    strict: false
   }
 );
 

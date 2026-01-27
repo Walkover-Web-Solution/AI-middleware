@@ -25,5 +25,5 @@ export default {
   getPromptWrappersByOrg,
   getPromptWrapperById,
   updatePromptWrapperById,
-  deletePromptWrapperById,
+  deletePromptWrapperById
 };

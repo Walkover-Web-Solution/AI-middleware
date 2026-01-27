@@ -12,30 +12,30 @@ module.exports = {
             allowNull: false,
             autoIncrement: true,
             primaryKey: true,
-            type: Sequelize.INTEGER,
+            type: Sequelize.INTEGER
           },
           created_at: {
             allowNull: false,
             type: Sequelize.DATE,
-            defaultValue: Sequelize.fn("NOW"),
+            defaultValue: Sequelize.fn("NOW")
           },
           updated_at: {
             allowNull: false,
             type: Sequelize.DATE,
-            defaultValue: Sequelize.fn("NOW"),
+            defaultValue: Sequelize.fn("NOW")
           },
           system_prompt: {
             allowNull: false,
-            type: Sequelize.TEXT,
+            type: Sequelize.TEXT
           },
           bridge_id: {
             allowNull: false,
-            type: Sequelize.STRING,
+            type: Sequelize.STRING
           },
           org_id: {
             allowNull: false,
-            type: Sequelize.STRING,
-          },
+            type: Sequelize.STRING
+          }
         },
         { transaction }
       );
@@ -56,5 +56,5 @@ module.exports = {
       await transaction.rollback();
       throw error;
     }
-  },
+  }
 };

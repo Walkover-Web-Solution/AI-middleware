@@ -103,11 +103,7 @@ async function updateModelConfigs(model_name, service, updates) {
     return { error: "not found" };
   }
 
-  const result = await ModelsConfigModel.updateOne(
-    { model_name, service },
-    { $set: existingKeyUpdates },
-    { strict: false }
-  );
+  const result = await ModelsConfigModel.updateOne({ model_name, service }, { $set: existingKeyUpdates }, { strict: false });
 
   return result.modifiedCount > 0;
 }
@@ -121,5 +117,5 @@ export default {
   checkModelConfigExists,
   getModelConfigsByNameAndService,
   checkModel,
-  updateModelConfigs,
+  updateModelConfigs
 };

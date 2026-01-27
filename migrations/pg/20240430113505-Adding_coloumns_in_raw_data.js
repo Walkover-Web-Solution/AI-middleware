@@ -9,19 +9,19 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: {
           model: "conversations",
-          key: "id",
+          key: "id"
         },
-        transaction,
+        transaction
       });
 
       await queryInterface.addColumn("raw_data", "variables", {
         type: Sequelize.JSON,
-        transaction,
+        transaction
       });
 
       await queryInterface.addColumn("raw_data", "is_present", {
         type: Sequelize.BOOLEAN,
-        transaction,
+        transaction
       });
 
       await queryInterface.addConstraint("raw_data", {
@@ -29,13 +29,13 @@ module.exports = {
         type: "foreign key",
         references: {
           table: "conversations",
-          field: "id",
+          field: "id"
         },
         name: "raw_data_chat_id_fk",
         where: {
-          message_by: "user",
+          message_by: "user"
         },
-        transaction,
+        transaction
       });
 
       await transaction.commit();
@@ -58,5 +58,5 @@ module.exports = {
       await transaction.rollback();
       throw error;
     }
-  },
+  }
 };

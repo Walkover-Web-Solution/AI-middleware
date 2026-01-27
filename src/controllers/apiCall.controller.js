@@ -15,7 +15,7 @@ const getAllApiCalls = async (req, res, next) => {
     success: true,
     message: "Get all functions of a org successfully",
     data: functions,
-    org_id: org_id,
+    org_id: org_id
   };
   req.statusCode = 200;
   return next();
@@ -32,14 +32,14 @@ const updateApiCalls = async (req, res, next) => {
 
   data_to_update = {
     ...data_to_update,
-    old_fields: old_fields,
+    old_fields: old_fields
   };
 
   const updated_function = await service.updateApiCallByFunctionId(org_id, function_id, data_to_update);
 
   res.locals = {
     success: true,
-    data: updated_function.data,
+    data: updated_function.data
   };
   req.statusCode = 200;
   return next();
@@ -72,17 +72,7 @@ const createApi = async (req, res, next) => {
       // Clean the title using makeFunctionName
       const cleanedTitle = Helper.makeFunctionName(title || script_id || "");
 
-      const result = await service.saveApi(
-        desc,
-        org_id,
-        folder_id,
-        user_id,
-        api_data,
-        [],
-        script_id,
-        fields,
-        cleanedTitle
-      );
+      const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], script_id, fields, cleanedTitle);
 
       if (result.success) {
         const responseData = result.api_data;
@@ -95,7 +85,7 @@ const createApi = async (req, res, next) => {
           message: "API saved successfully",
           success: true,
           activated: true,
-          data: responseData,
+          data: responseData
         };
         req.statusCode = 200;
         return next();
@@ -111,7 +101,7 @@ const createApi = async (req, res, next) => {
           message: "API deleted successfully",
           success: true,
           deleted: true,
-          data: result,
+          data: result
         };
         req.statusCode = 200;
         return next();
@@ -161,7 +151,7 @@ const addPreTool = async (req, res, next) => {
         {
           success: true,
           message: "Agent pre-tool updated successfully",
-          agent: result.bridges,
+          agent: result.bridges
         },
         true
       );
@@ -191,15 +181,15 @@ const getAllInBuiltToolsController = async (req, res, next) => {
         id: "1",
         name: "Web Search",
         description: "Allow models to search the web for the latest information before generating a response.",
-        value: "web_search",
+        value: "web_search"
       },
       {
         id: "2",
         name: "image generation",
         description: "Allow models to generate images based on the user's input.",
-        value: "image_generation",
-      },
-    ],
+        value: "image_generation"
+      }
+    ]
   };
   req.statusCode = 200;
   return next();
@@ -211,5 +201,5 @@ export default {
   deleteFunction,
   createApi,
   addPreTool,
-  getAllInBuiltToolsController,
+  getAllInBuiltToolsController
 };

@@ -67,5 +67,5 @@ const uploadDoc = async (file, folder = "uploads", realTime = false, contentType
 };
 
 export default {
-  uploadDoc,
+  uploadDoc
 };

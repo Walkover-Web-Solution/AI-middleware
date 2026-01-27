@@ -17,7 +17,7 @@ const embedLogin = async (req, res) => {
     tokenType: "embed",
     embeduser_name,
     embeduser_email,
-    folder_id: req.Embed.folder_id,
+    folder_id: req.Embed.folder_id
   };
   const Tokendata = {
     user: {
@@ -25,24 +25,21 @@ const embedLogin = async (req, res) => {
       name: embeduser_name,
       email: embeduser_email,
       meta: {
-        type: "embed",
-      },
+        type: "embed"
+      }
     },
     org: {
       id: req.Embed.org_id,
-      name: req.Embed.org_name,
+      name: req.Embed.org_name
     },
     extraDetails: {
       type: "embed",
-      folder_id: req.Embed.folder_id,
-    },
+      folder_id: req.Embed.folder_id
+    }
   };
 
   // Run DB query and token creation in parallel since they don't depend on each other
-  const [folder] = await Promise.all([
-    FolderModel.findOne({ _id: req.Embed.folder_id }),
-    createProxyToken(embedDetails),
-  ]);
+  const [folder] = await Promise.all([FolderModel.findOne({ _id: req.Embed.folder_id }), createProxyToken(embedDetails)]);
 
   const config = folder?.config || {};
   const apikey_object_id = folder?.apikey_object_id;
@@ -50,7 +47,7 @@ const embedLogin = async (req, res) => {
     ...req?.Embed,
     user_id: req.Embed.user_id,
     token: generateAuthToken(Tokendata.user, Tokendata.org, { extraDetails: Tokendata.extraDetails }),
-    config: { ...config, apikey_object_id },
+    config: { ...config, apikey_object_id }
   };
   return res.status(200).json({ data: response, message: "logged in successfully" });
 };
@@ -66,7 +63,7 @@ const createEmbed = async (req, res, next) => {
       type: folder_type,
       config,
       apikey_object_id,
-      folder_limit,
+      folder_limit
     });
     res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
     req.statusCode = 200;
@@ -165,8 +162,8 @@ const genrateToken = async (req, res, next) => {
     await updateOrganizationData(req.profile.org.id, {
       meta: {
         ...data?.meta,
-        gtwyAccessToken,
-      },
+        gtwyAccessToken
+      }
     });
   }
   res.locals = { gtwyAccessToken };
@@ -185,7 +182,7 @@ const getEmbedDataByUserId = async (req, res, next) => {
     res.locals = {
       success: true,
       message: "Get Agents data successfully",
-      data,
+      data
     };
 
     req.statusCode = 200;
@@ -202,5 +199,5 @@ export default {
   getAllEmbed,
   genrateToken,
   updateEmbed,
-  getEmbedDataByUserId,
+  getEmbedDataByUserId
 };

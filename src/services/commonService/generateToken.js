@@ -8,5 +8,5 @@ const generateToken = ({ payload, accessKey }) => {
   }
 };
 export default {
-  generateToken,
+  generateToken
 };

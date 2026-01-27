@@ -8,47 +8,47 @@ module.exports = {
         allowNull: false,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
+        primaryKey: true
       },
       org_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       authkey_name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       latency: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT
       },
       service: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       model: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       status: {
-        type: Sequelize.BOOLEAN,
+        type: Sequelize.BOOLEAN
       },
       error: {
         type: Sequelize.TEXT,
-        default: "none",
+        default: "none"
       },
       input_tokens: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT
       },
       output_tokens: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT
       },
       expected_cost: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT
       },
       created_at: {
         allowNull: false,
-        type: Sequelize.DATE,
-      },
+        type: Sequelize.DATE
+      }
     });
   },
   // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("raw_data");
-  },
+  }
 };

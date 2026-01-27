@@ -2,18 +2,11 @@ import axios from "axios";
 import { configDotenv } from "dotenv";
 configDotenv();
 
-async function callAiMiddleware(
-  user,
-  bridge_id,
-  variables = {},
-  configuration = null,
-  response_type = null,
-  thread_id = null
-) {
+async function callAiMiddleware(user, bridge_id, variables = {}, configuration = null, response_type = null, thread_id = null) {
   const requestBody = {
     user: user,
     bridge_id: bridge_id,
-    variables: variables,
+    variables: variables
   };
 
   if (response_type !== null) {
@@ -32,8 +25,8 @@ async function callAiMiddleware(
     const response = await axios.post("https://api.gtwy.ai/api/v2/model/chat/completion", requestBody, {
       headers: {
         pauthkey: process.env.GTWY_PAUTH_KEY,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
 
     if (!response.data.success) {
@@ -63,8 +56,8 @@ async function getAiMiddlewareAgentData(bridge_id) {
       headers: {
         pauthkey: process.env.AI_MIDDLEWARE_PAUTH_KEY,
         "Content-Type": "application/json",
-        "Accept-Encoding": "gzip",
-      },
+        "Accept-Encoding": "gzip"
+      }
     });
 
     if (!response.data.success) {
@@ -73,9 +66,7 @@ async function getAiMiddlewareAgentData(bridge_id) {
 
     return response.data;
   } catch (error) {
-    throw new Error(
-      `Failed to fetch bridge data: ${error.response?.data?.message || error.message || "Unknown error"}`
-    );
+    throw new Error(`Failed to fetch bridge data: ${error.response?.data?.message || error.message || "Unknown error"}`);
   }
 }
 

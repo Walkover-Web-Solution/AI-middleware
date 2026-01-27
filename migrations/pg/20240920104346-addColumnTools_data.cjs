@@ -11,7 +11,7 @@ const up = async (queryInterface) => {
       "tools_call_data",
       {
         type: Sequelize.ARRAY(Sequelize.JSON),
-        allowNull: true,
+        allowNull: true
       },
       { transaction }
     );

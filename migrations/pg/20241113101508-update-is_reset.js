@@ -13,7 +13,7 @@ module.exports = {
         {
           type: Sequelize.INTEGER, // Column type
           allowNull: true, // Allow null values, adjust as needed
-          defaultValue: 0, // Default value
+          defaultValue: 0 // Default value
         },
         { transaction }
       );
@@ -33,5 +33,5 @@ module.exports = {
       await transaction.rollback();
       throw err;
     }
-  },
+  }
 };

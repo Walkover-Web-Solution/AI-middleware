@@ -15,12 +15,12 @@ export const createCollection = async (collectionData) => {
       url: `${HIPPOCAMPUS_BASE_URL}/collection`,
       headers: {
         "x-api-key": HIPPOCAMPUS_API_KEY,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: {
         ...collectionData,
-        apikey: HIPPOCAMPUS_API_KEY,
-      },
+        apikey: HIPPOCAMPUS_API_KEY
+      }
     });
     return response.data;
   } catch (error) {
@@ -41,9 +41,9 @@ export const createResource = async (resourceData) => {
       url: `${HIPPOCAMPUS_BASE_URL}/resource`,
       headers: {
         "x-api-key": HIPPOCAMPUS_API_KEY,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      data: resourceData,
+      data: resourceData
     });
     return response.data;
   } catch (error) {
@@ -64,8 +64,8 @@ export const deleteResource = async (resourceId) => {
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}`,
       headers: {
         "x-api-key": HIPPOCAMPUS_API_KEY,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
     return response.data;
   } catch (error) {
@@ -87,9 +87,9 @@ export const updateResource = async (resourceId, updateData) => {
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}`,
       headers: {
         "x-api-key": HIPPOCAMPUS_API_KEY,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      data: updateData,
+      data: updateData
     });
     return response.data;
   } catch (error) {
@@ -109,8 +109,8 @@ export const getResourceChunks = async (resourceId) => {
       method: "GET",
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}/chunks`,
       headers: {
-        "x-api-key": HIPPOCAMPUS_API_KEY,
-      },
+        "x-api-key": HIPPOCAMPUS_API_KEY
+      }
     });
     return response.data;
   } catch (error) {

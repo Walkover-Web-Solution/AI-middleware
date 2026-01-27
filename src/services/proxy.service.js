@@ -9,19 +9,16 @@ export async function getUserOrgMapping(userId, orgId) {
     const cache_key = `userOrgMapping-${userId}-${orgId}`;
     const data = await findInCache(cache_key);
     if (data) return JSON.parse(data);
-    const response = await axios.get(
-      `${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getDetails`,
-      {
-        params: {
-          company_id: orgId,
-          user_id: userId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN,
-        },
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getDetails`, {
+      params: {
+        company_id: orgId,
+        user_id: userId
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Authkey: process.env.PROXY_ADMIN_TOKEN
       }
-    );
+    });
     // eslint-disable-next-line no-constant-binary-expression
     const result = parseInt(response?.data?.data?.totalEntityCount, 10) === 1 ?? false;
     storeInCache(cache_key, result);
@@ -35,25 +32,22 @@ export async function getUserOrgMapping(userId, orgId) {
 export const switchOrganization = async (data, proxyToken) => {
   const organization = await axios.post(`${process.env.PROXY_BASE_URL}/c/switchCompany`, data, {
     headers: {
-      Proxy_auth_token: proxyToken,
-    },
+      Proxy_auth_token: proxyToken
+    }
   });
   return organization;
 };
 
 export async function getOrganizationById(orgId) {
   try {
-    const response = await axios.get(
-      `${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getCompanies?id=${orgId}`,
-      {
-        // TODO not provided by proxy
-        headers: {
-          "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN,
-        },
-        // You can include credentials if required (e.g., 'withCredentials': true)
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getCompanies?id=${orgId}`, {
+      // TODO not provided by proxy
+      headers: {
+        "Content-Type": "application/json",
+        Authkey: process.env.PROXY_ADMIN_TOKEN
       }
-    );
+      // You can include credentials if required (e.g., 'withCredentials': true)
+    });
 
     const data = response?.data?.data?.data?.[0];
     return data; // data.org kardena if giving undefined.
@@ -68,8 +62,8 @@ export async function createOrFindUserAndCompany(userOrgObject) {
     const response = await axios.post(`${process.env.PROXY_BASE_URL}/createCUsers`, userOrgObject, {
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN,
-      },
+        Authkey: process.env.PROXY_ADMIN_TOKEN
+      }
     });
 
     const data = response?.data;
@@ -83,20 +77,16 @@ export async function createOrFindUserAndCompany(userOrgObject) {
 export async function updateOrganizationData(orgId, orgDetails) {
   const updateObject = {
     company_id: orgId,
-    company: orgDetails,
+    company: orgDetails
   };
   try {
-    const response = await axios.put(
-      `${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/updateDetails`,
-      updateObject,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN,
-        },
-        // You can include credentials if required (e.g., 'withCredentials': true)
+    const response = await axios.put(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/updateDetails`, updateObject, {
+      headers: {
+        "Content-Type": "application/json",
+        Authkey: process.env.PROXY_ADMIN_TOKEN
       }
-    );
+      // You can include credentials if required (e.g., 'withCredentials': true)
+    });
 
     const data = response?.data;
     return data;
@@ -109,17 +99,14 @@ export async function updateOrganizationData(orgId, orgDetails) {
 export async function createProxyToken(token_data) {
   try {
     const queryData = objectToQueryParams(token_data);
-    const response = await axios.get(
-      `${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getAuthToken?${queryData}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN,
-          // Add any other headers if needed
-        },
-        // You can include credentials if required (e.g., 'withCredentials': true)
+    const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getAuthToken?${queryData}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authkey: process.env.PROXY_ADMIN_TOKEN
+        // Add any other headers if needed
       }
-    );
+      // You can include credentials if required (e.g., 'withCredentials': true)
+    });
 
     const data = response?.data;
     return data?.data?.proxy_auth_token;
@@ -135,11 +122,11 @@ export async function getUsers(org_id, page = 1, pageSize = 10) {
       params: {
         company_id: org_id,
         pageNo: page,
-        itemsPerPage: pageSize,
+        itemsPerPage: pageSize
       },
       headers: {
-        authkey: process.env.PROXY_ADMIN_TOKEN,
-      },
+        authkey: process.env.PROXY_ADMIN_TOKEN
+      }
     });
     return response?.data?.data;
   } catch (error) {
@@ -153,12 +140,12 @@ export async function validateCauthKey(pauthkey) {
     const response = await axios.post(
       "https://routes.msg91.com/api/validateCauthKey",
       {
-        cAuthKey: pauthkey,
+        cAuthKey: pauthkey
       },
       {
         headers: {
-          authkey: process.env.PROXY_ADMIN_TOKEN,
-        },
+          authkey: process.env.PROXY_ADMIN_TOKEN
+        }
       }
     );
     return response?.data;
@@ -178,8 +165,8 @@ export async function updateProxyDetails(updateObject) {
     const response = await axios.put(apiUrl, updateObject, {
       headers: {
         Authkey: process.env.PROXY_ADMIN_TOKEN,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
     return response.data;
   } catch (error) {
@@ -193,8 +180,8 @@ export async function getProxyDetails(params) {
     const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
       params,
       headers: {
-        authkey: process.env.PROXY_ADMIN_TOKEN,
-      },
+        authkey: process.env.PROXY_ADMIN_TOKEN
+      }
     });
     return response.data;
   } catch (error) {
@@ -211,8 +198,8 @@ export async function removeClientUser(userId, companyId, featureId) {
       {
         headers: {
           "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN,
-        },
+          Authkey: process.env.PROXY_ADMIN_TOKEN
+        }
       }
     );
     return response.data;

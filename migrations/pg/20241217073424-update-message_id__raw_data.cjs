@@ -11,7 +11,7 @@ module.exports = {
         "message_id",
         {
           type: Sequelize.UUID,
-          allowNull: true,
+          allowNull: true
         },
         { transaction }
       );
@@ -43,5 +43,5 @@ module.exports = {
       await transaction.rollback();
       throw error;
     }
-  },
+  }
 };

@@ -5,12 +5,12 @@ const embeddings = async (configuration, apikey) => {
     if (!success) {
       return {
         success: false,
-        error: error,
+        error: error
       };
     }
     return {
       success: true,
-      modelResponse: response,
+      modelResponse: response
     };
   } catch (error) {
     console.error("common error=>", error);

@@ -6,8 +6,8 @@ async function sendAgentCreatedWebhook(agent, org_id) {
       {
         _id: { $oid: agent._id.toString() },
         name: agent.name,
-        org_id: org_id.toString(),
-      },
+        org_id: org_id.toString()
+      }
     ]);
     return true;
   } catch (error) {

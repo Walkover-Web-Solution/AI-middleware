@@ -8,10 +8,10 @@ const defaultResponseJson = {
         props: {
           variant: "bold",
           children: "I'm a text component.",
-          textAlign: "left",
-        },
-      },
-    },
+          textAlign: "left"
+        }
+      }
+    }
   },
   Response2: {
     description: "textfield",
@@ -25,10 +25,10 @@ const defaultResponseJson = {
           size: "medium",
           defaultValue: "",
           placeholder: "write text here",
-          type: "text",
-        },
-      },
-    },
+          type: "text"
+        }
+      }
+    }
   },
   Response3: {
     description: "When user asks for button",
@@ -40,10 +40,10 @@ const defaultResponseJson = {
           variant: "outlined",
           color: "error",
           label: "button",
-          type: "submit",
-        },
-      },
-    },
+          type: "submit"
+        }
+      }
+    }
   },
   Response4: {
     description: "When user asks for any Table related data",
@@ -57,27 +57,27 @@ const defaultResponseJson = {
             {
               id: 1,
               name: "John",
-              age: 30,
+              age: 30
             },
             {
               id: 2,
               name: "Alice",
-              age: 25,
+              age: 25
             },
             {
               id: 3,
               name: "Bob",
-              age: 55,
+              age: 55
             },
             {
               id: 4,
               name: "Bosb",
-              age: 45,
-            },
-          ],
-        },
-      },
-    },
+              age: 45
+            }
+          ]
+        }
+      }
+    }
   },
   Response5: {
     description: "When user asks for any options/Radio",
@@ -89,10 +89,10 @@ const defaultResponseJson = {
           color: "primary",
           name: "Radio",
           defaultValue: "Hello",
-          options: ["Hello", "Okk", "Bye"],
-        },
-      },
-    },
+          options: ["Hello", "Okk", "Bye"]
+        }
+      }
+    }
   },
   Response6: {
     description: "when user asks to choose multiple fields/Checkboxses",
@@ -103,10 +103,10 @@ const defaultResponseJson = {
         props: {
           color: "primary",
           defaultChecked: false,
-          label: "Checkbox",
-        },
-      },
-    },
+          label: "Checkbox"
+        }
+      }
+    }
   },
   Response7: {
     description: "when user want any Icon or image",
@@ -116,10 +116,10 @@ const defaultResponseJson = {
         key: "Icon",
         props: {
           variant: "square",
-          src: "https://cdn2.hubspot.net/hubfs/53/image8-2.jpg",
-        },
-      },
-    },
-  },
+          src: "https://cdn2.hubspot.net/hubfs/53/image8-2.jpg"
+        }
+      }
+    }
+  }
 };
 export default defaultResponseJson;

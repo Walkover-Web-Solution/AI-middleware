@@ -13,7 +13,7 @@ export const subscribe = async (req, res, next) => {
     if (error) {
       return res.status(400).json({
         error: "Validation failed",
-        details: error.details.map((detail) => detail.message),
+        details: error.details.map((detail) => detail.message)
       });
     }
     const { slugName, versionId } = value;
@@ -44,7 +44,7 @@ export const subscribe = async (req, res, next) => {
       console.error("Error in one of the promises:", {
         widgetInfoError: widgetInfo.error,
         socketJwtError: socketJwt.error,
-        ChannelListError: ChannelList.error,
+        ChannelListError: ChannelList.error
       });
       throw new Error("Error in one of the promises");
     }
@@ -54,11 +54,11 @@ export const subscribe = async (req, res, next) => {
       Jwt: socketJwt,
       ChannelList,
       mode,
-      files,
+      files
     };
   } else {
     res.locals = {
-      mode,
+      mode
     };
   }
   res.locals["supportedServices"] = services;

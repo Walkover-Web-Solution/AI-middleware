@@ -8,18 +8,7 @@ import { callDBdash } from "../../db_services/dbDash.service.js";
 
 const functionCall = async (data) => {
   try {
-    let {
-      configuration,
-      apikey,
-      bridge,
-      tools_call,
-      outputConfig,
-      l = 0,
-      rtlLayer = false,
-      body = {},
-      playground = false,
-      tools = {},
-    } = data;
+    let { configuration, apikey, bridge, tools_call, outputConfig, l = 0, rtlLayer = false, body = {}, playground = false, tools = {} } = data;
     const apiEndpoints = new Set(bridge.api_endpoints);
     const apiName = tools_call?.function?.name;
     //("apiEndpoints",apiEndpoints,"bridge",bridge.api_endpoints);
@@ -33,7 +22,7 @@ const functionCall = async (data) => {
         tool_call_id: tools_call.id,
         role: "tool",
         name: apiName,
-        content: JSON.stringify(apiResponse),
+        content: JSON.stringify(apiResponse)
       };
       tools[apiName] = JSON.stringify(apiResponse);
       configuration["messages"].push({ role: "assistant", content: null, tool_calls: [tools_call] });
@@ -44,7 +33,7 @@ const functionCall = async (data) => {
           rtlLayer,
           data: { function_call: false, success: true, message: "Going to GPT" },
           reqBody: body,
-          headers: {},
+          headers: {}
         });
       }
 
@@ -63,7 +52,7 @@ const functionCall = async (data) => {
             rtlLayer,
             data: { function_call: true, success: true, message: "sending the next fuction call" },
             reqBody: body,
-            headers: {},
+            headers: {}
           });
         }
 

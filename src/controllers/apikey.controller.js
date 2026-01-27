@@ -9,7 +9,7 @@ import {
   callMistralApi,
   callGeminiApi,
   callAiMlApi,
-  callGrokApi,
+  callGrokApi
 } from "../services/utils/aiServices.js";
 import { redis_keys, cost_types, new_agent_service } from "../configs/constant.js";
 import { cleanupCache } from "../services/utils/redis.utils.js";
@@ -34,7 +34,7 @@ const saveApikey = async (req, res, next) => {
     comment,
     folder_id,
     user_id,
-    apikey_limit,
+    apikey_limit
   });
 
   // Mask API key for response
@@ -49,7 +49,7 @@ const saveApikey = async (req, res, next) => {
   } else {
     res.locals = {
       success: false,
-      error: result.error,
+      error: result.error
     };
     req.statusCode = 400;
     return next();
@@ -82,7 +82,7 @@ const getAllApikeys = async (req, res, next) => {
         // Create the final object with all properties
         const processedObj = {
           ...plainObj,
-          apikey: maskedApiKey,
+          apikey: maskedApiKey
         };
 
         // Only add last_used if cache data exists
@@ -107,7 +107,7 @@ const getAllApikeys = async (req, res, next) => {
   } else {
     res.locals = {
       success: false,
-      error: result.error,
+      error: result.error
     };
     req.statusCode = 400;
     return next();
@@ -125,15 +125,7 @@ const updateApikey = async (req, res, next) => {
     apikey = await Helper.encrypt(apikey);
   }
 
-  const result = await apikeyService.updateApikeyRecord(
-    apikey_object_id,
-    apikey,
-    name,
-    service,
-    comment,
-    apikey_limit,
-    apikey_usage
-  );
+  const result = await apikeyService.updateApikeyRecord(apikey_object_id, apikey, name, service, comment, apikey_limit, apikey_usage);
 
   // Mask API key for response if updated
   let decryptedApiKey, maskedApiKey;
@@ -152,14 +144,14 @@ const updateApikey = async (req, res, next) => {
     res.locals = {
       success: true,
       message: "Apikey updated successfully",
-      apikey: result?.apikey,
+      apikey: result?.apikey
     };
     req.statusCode = 200;
     return next();
   } else {
     res.locals = {
       success: false,
-      message: "No records updated or bridge not found",
+      message: "No records updated or bridge not found"
     };
     req.statusCode = 400;
     return next();
@@ -180,14 +172,14 @@ const deleteApikey = async (req, res, next) => {
     await cleanupCache(cost_types.apikey, apikey_object_id);
     res.locals = {
       success: true,
-      message: "Apikey deleted successfully",
+      message: "Apikey deleted successfully"
     };
     req.statusCode = 200;
     return next();
   } else {
     res.locals = {
       success: false,
-      message: result.error,
+      message: result.error
     };
     req.statusCode = 400;
     return next();
@@ -241,5 +233,5 @@ export default {
   saveApikey,
   getAllApikeys,
   deleteApikey,
-  updateApikey,
+  updateApikey
 };

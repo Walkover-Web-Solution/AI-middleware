@@ -11,8 +11,8 @@ async function createTestcase(req, res, next) {
     success: true,
     data: {
       _id: result.id,
-      message: "Testcase created successfully",
-    },
+      message: "Testcase created successfully"
+    }
   };
   req.statusCode = 200;
   return next();
@@ -30,7 +30,7 @@ async function deleteTestcase(req, res, next) {
 
   res.locals = {
     success: true,
-    message: "Testcase deleted successfully",
+    message: "Testcase deleted successfully"
   };
   req.statusCode = 200;
   return next();
@@ -57,7 +57,7 @@ async function getAllTestcases(req, res, next) {
 
   res.locals = {
     success: true,
-    data: mergedTestcases,
+    data: mergedTestcases
   };
   req.statusCode = 200;
   return next();
@@ -69,7 +69,7 @@ async function updateTestcases(req, res, next) {
   const result = await testcaseSevice.updateTestCaseById(testcase_id, data);
   res.locals = {
     success: true,
-    result,
+    result
   };
   req.statusCode = 200;
   return next();
@@ -79,5 +79,5 @@ export default {
   createTestcase,
   deleteTestcase,
   getAllTestcases,
-  updateTestcases,
+  updateTestcases
 };

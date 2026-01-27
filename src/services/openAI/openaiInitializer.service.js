@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 class OpenAIInitializer {
   constructor(apiKey) {
     this.openai = new OpenAI({
-      apiKey: apiKey,
+      apiKey: apiKey
     });
   }
   getOpenAIService = () => {

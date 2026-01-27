@@ -3,7 +3,7 @@ import AlertModel from "../mongoModel/Alerting.model.js";
 
 async function create(alertData) {
   return await new AlertModel({
-    ...alertData,
+    ...alertData
   }).save();
 }
 
@@ -14,24 +14,24 @@ async function getByQuery(query) {
 async function getAll(org_id) {
   try {
     const alerts = await AlertModel.find({
-      org_id,
+      org_id
     });
 
     if (!alerts.length) {
       return {
         success: false,
-        error: "No alerts found",
+        error: "No alerts found"
       };
     }
     return {
       success: true,
-      data: alerts,
+      data: alerts
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!",
+      error: "something went wrong!!"
     };
   }
 }
@@ -43,18 +43,18 @@ async function getById(id) {
     if (!data) {
       return {
         success: false,
-        error: "No alerts found",
+        error: "No alerts found"
       };
     }
     return {
       success: true,
-      data: data,
+      data: data
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!",
+      error: "something went wrong!!"
     };
   }
 }
@@ -65,18 +65,18 @@ async function deleteAlert(id) {
     if (!deletedAlert) {
       return {
         success: false,
-        error: "No alert found for the given ID",
+        error: "No alert found for the given ID"
       };
     }
     return {
       success: true,
-      message: deletedAlert,
+      message: deletedAlert
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!",
+      error: "something went wrong!!"
     };
   }
 }
@@ -87,18 +87,18 @@ async function updateAlert(id, data) {
     if (!updatedAlert) {
       return {
         success: false,
-        error: "No alert found for the given ID",
+        error: "No alert found for the given ID"
       };
     }
     return {
       success: true,
-      data: updatedAlert,
+      data: updatedAlert
     };
   } catch (error) {
     console.error("error:", error);
     return {
       success: false,
-      error: "something went wrong!!",
+      error: "something went wrong!!"
     };
   }
 }
@@ -109,5 +109,5 @@ export default {
   getById,
   deleteAlert,
   updateAlert,
-  getByQuery,
+  getByQuery
 };

@@ -8,26 +8,9 @@ import embedValidation from "../validation/joi_validation/embed.validation.js";
 const router = express.Router();
 
 router.post("/login", GtwyEmbeddecodeToken, embedController.embedLogin);
-router.post(
-  "/",
-  middleware,
-  checkAgentAccessMiddleware,
-  validate(embedValidation.createEmbed),
-  embedController.createEmbed
-);
+router.post("/", middleware, checkAgentAccessMiddleware, validate(embedValidation.createEmbed), embedController.createEmbed);
 router.get("/", middleware, embedController.getAllEmbed);
-router.put(
-  "/",
-  middleware,
-  checkAgentAccessMiddleware,
-  validate(embedValidation.updateEmbed),
-  embedController.updateEmbed
-);
-router.get(
-  "/getAgents",
-  GtwyEmbeddecodeToken,
-  validate(embedValidation.getEmbedDataByUserId),
-  embedController.getEmbedDataByUserId
-);
+router.put("/", middleware, checkAgentAccessMiddleware, validate(embedValidation.updateEmbed), embedController.updateEmbed);
+router.get("/getAgents", GtwyEmbeddecodeToken, validate(embedValidation.getEmbedDataByUserId), embedController.getEmbedDataByUserId);
 
 export default router;

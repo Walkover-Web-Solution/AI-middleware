@@ -1,8 +1,4 @@
-import {
-  findConversationLogsByIds,
-  findRecentThreadsByBridgeId,
-  findHistoryByMessageId,
-} from "../db_services/history.service.js";
+import { findConversationLogsByIds, findRecentThreadsByBridgeId, findHistoryByMessageId } from "../db_services/history.service.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
@@ -20,14 +16,14 @@ const getConversationLogs = async (req, res, next) => {
   if (result.success) {
     res.locals = {
       data: result.data,
-      success: true,
+      success: true
     };
     req.statusCode = 200;
     return next();
   } else {
     res.locals = {
       message: result.message,
-      success: false,
+      success: false
     };
     req.statusCode = 500;
     return next();
@@ -56,35 +52,26 @@ const getRecentThreads = async (req, res, next) => {
       req.query.start_date || req.query.end_date
         ? {
             start: req.query.start_date,
-            end: req.query.end_date,
+            end: req.query.end_date
           }
-        : undefined,
+        : undefined
   };
 
   // Get recent threads with search functionality built-in
-  const result = await findRecentThreadsByBridgeId(
-    org_id,
-    agent_id,
-    filters,
-    user_feedback,
-    error,
-    pageNum,
-    limitNum,
-    version_id
-  );
+  const result = await findRecentThreadsByBridgeId(org_id, agent_id, filters, user_feedback, error, pageNum, limitNum, version_id);
 
   if (result.success) {
     res.locals = {
       data: result.data,
       total_user_feedback_count: result.total_user_feedback_count,
-      success: true,
+      success: true
     };
     req.statusCode = 200;
     return next();
   } else {
     res.locals = {
       message: result.message,
-      success: false,
+      success: false
     };
     req.statusCode = 500;
     return next();
@@ -152,7 +139,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
     if (rootMessage.thread_id !== thread_id) {
       res.locals = {
         success: false,
-        message: "Message does not belong to the specified thread",
+        message: "Message does not belong to the specified thread"
       };
       req.statusCode = 400;
       return next();
@@ -162,7 +149,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
 
     res.locals = {
       success: true,
-      data: finalHistory,
+      data: finalHistory
     };
     req.statusCode = 200;
     return next();
@@ -171,7 +158,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
     res.locals = {
       success: false,
       message: "Failed to fetch recursive history",
-      error: error.message,
+      error: error.message
     };
     req.statusCode = 500;
     return next();
@@ -181,5 +168,5 @@ const getRecursiveAgentHistory = async (req, res, next) => {
 export default {
   getConversationLogs,
   getRecentThreads,
-  getRecursiveAgentHistory,
+  getRecursiveAgentHistory
 };

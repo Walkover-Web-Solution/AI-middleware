@@ -3,8 +3,8 @@ import { createClient } from "redis";
 const client = createClient({
   url: process.env.REDIS_URI,
   socket: {
-    reconnectStrategy: (retries) => retries * 1000,
-  },
+    reconnectStrategy: (retries) => retries * 1000
+  }
 });
 
 client.on("error", (error) => {

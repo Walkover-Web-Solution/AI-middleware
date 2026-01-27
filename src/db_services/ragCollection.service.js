@@ -48,7 +48,7 @@ const addResourceId = async (collectionId, resourceId) => {
       { collection_id: collectionId },
       {
         $addToSet: { resource_ids: resourceId },
-        $set: { updated_at: new Date() },
+        $set: { updated_at: new Date() }
       },
       { new: true }
     );
@@ -68,7 +68,7 @@ const removeResourceId = async (collectionId, resourceId) => {
       { collection_id: collectionId },
       {
         $pull: { resource_ids: resourceId },
-        $set: { updated_at: new Date() },
+        $set: { updated_at: new Date() }
       },
       { new: true }
     );
@@ -112,5 +112,5 @@ export default {
   addResourceId,
   removeResourceId,
   deleteByCollectionId,
-  getCollectionByResourceId,
+  getCollectionByResourceId
 };

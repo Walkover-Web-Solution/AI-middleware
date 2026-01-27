@@ -21,7 +21,7 @@ const chatBotTokenDecode = async (req, res, next) => {
           req.chatBot = checkToken;
           req.chatBot = {
             ...req.chatBot,
-            ispublic: false,
+            ispublic: false
           };
           return next();
         }
@@ -54,18 +54,18 @@ const chatBotAuth = async (req, res, next) => {
         req.profile = {
           org: {
             id: checkToken.org_id,
-            name: "",
+            name: ""
           },
           user: {
             id: checkToken.user_id,
-            name: "",
-          },
+            name: ""
+          }
         };
         req.body.org_id = checkToken?.org_id?.toString();
         req.isChatbot = true;
         req.chatBot = {
           ...req.chatBot,
-          ispublic: false,
+          ispublic: false
         };
         if (!checkToken.user) req.profile.viewOnly = true;
         return next();
@@ -89,7 +89,7 @@ const publicChatbotAuth = async (req, res, next) => {
         req.chatBot = checkToken;
         req.chatBot = {
           ...req.chatBot,
-          ispublic: true,
+          ispublic: true
         };
         req.isChatbot = true;
         req.chatBot.limiter_key = checkToken.user_id;
@@ -154,5 +154,5 @@ export {
   chatBotAuth,
   publicChatbotAuth,
   combinedAuthWithChatBotAndPublicChatbot,
-  combinedAuthWithChatBotTokenDecodeAndPublicChatbot,
+  combinedAuthWithChatBotTokenDecodeAndPublicChatbot
 };

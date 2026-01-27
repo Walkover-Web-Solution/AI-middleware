@@ -4,7 +4,7 @@ async function createThread(data) {
   const existingThread = await Thread.findOne({
     thread_id: data.thread_id,
     sub_thread_id: data.sub_thread_id,
-    org_id: data?.org_id,
+    org_id: data?.org_id
   });
 
   if (!existingThread) {

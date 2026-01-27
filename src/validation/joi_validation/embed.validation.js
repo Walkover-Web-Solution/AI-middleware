@@ -12,7 +12,7 @@ const createEmbed = {
     .keys({
       name: Joi.string().required().messages({
         "string.empty": "name is required",
-        "any.required": "name is required",
+        "any.required": "name is required"
       }),
       config: Joi.object().optional().default({}),
       apikey_object_id: Joi.object()
@@ -20,9 +20,9 @@ const createEmbed = {
         .optional()
         .default({}),
       folder_limit: Joi.number().min(0).optional().default(0),
-      type: Joi.string().valid("embed", "rag_embed").optional().default("embed"),
+      type: Joi.string().valid("embed", "rag_embed").optional().default("embed")
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getAllEmbed = {
@@ -37,16 +37,16 @@ const updateEmbed = {
         .required()
         .messages({
           "string.pattern.base": "folder_id must be a valid MongoDB ObjectId",
-          "any.required": "folder_id is required",
+          "any.required": "folder_id is required"
         }),
       config: Joi.object().optional(),
       apikey_object_id: Joi.object()
         .pattern(Joi.string(), Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
         .optional(),
       folder_limit: Joi.number().min(0).optional(),
-      folder_usage: Joi.number().min(0).optional(),
+      folder_usage: Joi.number().min(0).optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const genrateToken = {
@@ -60,10 +60,10 @@ const getEmbedDataByUserId = {
         .pattern(/^[0-9a-fA-F]{24}$/)
         .optional()
         .messages({
-          "string.pattern.base": "agent_id must be a valid MongoDB ObjectId",
-        }),
+          "string.pattern.base": "agent_id must be a valid MongoDB ObjectId"
+        })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
@@ -72,5 +72,5 @@ export default {
   getAllEmbed,
   updateEmbed,
   genrateToken,
-  getEmbedDataByUserId,
+  getEmbedDataByUserId
 };

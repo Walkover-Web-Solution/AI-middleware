@@ -54,5 +54,5 @@ FROM timescaledb_information.jobs where proc_name like 'insert_into_daily_data';
         SELECT delete_job(${jobId});
       `);
     }
-  },
+  }
 };

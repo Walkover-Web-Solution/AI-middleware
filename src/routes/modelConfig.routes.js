@@ -4,17 +4,12 @@ import { saveUserModelConfiguration, deleteUserModelConfiguration } from "../con
 import validate from "../middlewares/validate.middleware.js";
 import {
   saveUserModelConfigurationBodySchema,
-  deleteUserModelConfigurationQuerySchema,
+  deleteUserModelConfigurationQuerySchema
 } from "../validation/joi_validation/modelConfig.validation.js";
 
 const router = express.Router();
 
 router.post("/", middleware, validate({ body: saveUserModelConfigurationBodySchema }), saveUserModelConfiguration);
-router.delete(
-  "/",
-  middleware,
-  validate({ query: deleteUserModelConfigurationQuerySchema }),
-  deleteUserModelConfiguration
-);
+router.delete("/", middleware, validate({ query: deleteUserModelConfigurationQuerySchema }), deleteUserModelConfiguration);
 
 export default router;

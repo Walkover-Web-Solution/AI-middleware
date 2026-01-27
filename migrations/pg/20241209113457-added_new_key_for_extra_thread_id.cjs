@@ -5,11 +5,11 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.addColumn("conversations", "external_reference", {
       type: Sequelize.STRING,
-      allowNull: true,
+      allowNull: true
     });
   },
 
   async down(queryInterface) {
     await queryInterface.removeColumn("conversations", "external_reference");
-  },
+  }
 };

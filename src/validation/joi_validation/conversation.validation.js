@@ -7,61 +7,61 @@ const getThreads = {
   params: Joi.object()
     .keys({
       thread_id: Joi.string().required(),
-      bridge_id: Joi.string().required(), // Can be slug or objectId
+      bridge_id: Joi.string().required() // Can be slug or objectId
     })
     .unknown(true),
   query: Joi.object()
     .keys({
       pageNo: Joi.number().integer(),
       limit: Joi.number().integer(),
-      sub_thread_id: Joi.string(),
+      sub_thread_id: Joi.string()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
-      org_id: Joi.string(),
+      org_id: Joi.string()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const createEntry = {
   params: Joi.object()
     .keys({
       thread_id: Joi.string().required(),
-      bridge_id: Joi.string().required(),
+      bridge_id: Joi.string().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
-      message: Joi.string().required(),
+      message: Joi.string().required()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const userFeedbackCount = {
   params: Joi.object()
     .keys({
-      bridge_id: Joi.objectId().required(),
+      bridge_id: Joi.objectId().required()
     })
     .unknown(true),
   query: Joi.object()
     .keys({
       startDate: Joi.string(),
       endDate: Joi.string(),
-      user_feedback: Joi.string(),
+      user_feedback: Joi.string()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getMessageHistory = {
   params: Joi.object()
     .keys({
-      bridge_id: Joi.objectId().required(),
+      bridge_id: Joi.objectId().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
-      org_id: Joi.string(),
+      org_id: Joi.string()
     })
     .unknown(true),
   query: Joi.object()
@@ -73,132 +73,132 @@ const getMessageHistory = {
       endTime: Joi.string(),
       version_id: Joi.objectId(),
       user_feedback: Joi.string(),
-      error: Joi.string(),
+      error: Joi.string()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getAllSubThreadsController = {
   params: Joi.object()
     .keys({
-      thread_id: Joi.string().required(),
+      thread_id: Joi.string().required()
     })
     .unknown(true),
   query: Joi.object()
     .keys({
       bridge_id: Joi.objectId(),
       error: Joi.string(),
-      version_id: Joi.objectId(),
+      version_id: Joi.objectId()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const deleteBridges = {
   params: Joi.object()
     .keys({
-      agent_id: Joi.objectId().required(),
+      agent_id: Joi.objectId().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
       org_id: Joi.string(),
-      restore: Joi.boolean(),
+      restore: Joi.boolean()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getSystemPromptHistory = {
   params: Joi.object()
     .keys({
       bridge_id: Joi.objectId().required(),
-      timestamp: Joi.string().required(),
+      timestamp: Joi.string().required()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const FineTuneData = {
   params: Joi.object()
     .keys({
-      bridge_id: Joi.objectId().required(),
+      bridge_id: Joi.objectId().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
       thread_ids: Joi.array().items(Joi.string()).required(),
-      user_feedback: Joi.string(),
+      user_feedback: Joi.string()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const updateThreadMessage = {
   params: Joi.object()
     .keys({
-      bridge_id: Joi.objectId().required(),
+      bridge_id: Joi.objectId().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
       message: Joi.string().required(),
-      id: Joi.number().required(),
+      id: Joi.number().required()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const updateMessageStatus = {
   params: Joi.object()
     .keys({
-      status: Joi.string().required(),
+      status: Joi.string().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
       message_id: Joi.string().required(),
-      agent_id: Joi.objectId(),
+      agent_id: Joi.objectId()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getThreadMessages = {
   params: Joi.object()
     .keys({
       thread_id: Joi.string().required(),
-      bridge_id: Joi.string().required(),
+      bridge_id: Joi.string().required()
     })
     .unknown(true),
   query: Joi.object()
     .keys({
       pageNo: Joi.number().integer(),
       limit: Joi.number().integer(),
-      sub_thread_id: Joi.string(),
+      sub_thread_id: Joi.string()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const bridgeArchive = {
   params: Joi.object()
     .keys({
-      bridge_id: Joi.objectId().required(),
+      bridge_id: Joi.objectId().required()
     })
     .unknown(true),
   body: Joi.object()
     .keys({
-      status: Joi.number().valid(0, 1).required(),
+      status: Joi.number().valid(0, 1).required()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getAllUserUpdates = {
   params: Joi.object()
     .keys({
-      version_id: Joi.objectId().required(),
+      version_id: Joi.objectId().required()
     })
     .unknown(true),
   query: Joi.object()
     .keys({
       page: Joi.number().integer(),
-      limit: Joi.number().integer(),
+      limit: Joi.number().integer()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
@@ -214,5 +214,5 @@ export default {
   updateMessageStatus,
   getThreadMessages,
   bridgeArchive,
-  getAllUserUpdates,
+  getAllUserUpdates
 };

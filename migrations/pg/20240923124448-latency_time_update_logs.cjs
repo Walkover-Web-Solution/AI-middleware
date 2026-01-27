@@ -9,7 +9,7 @@ module.exports = {
         "raw_data",
         "latency_temp",
         {
-          type: Sequelize.JSONB,
+          type: Sequelize.JSONB
         },
         { transaction }
       );
@@ -33,7 +33,7 @@ module.exports = {
 
       // Rename 'latency_temp' to 'latency'
       await queryInterface.renameColumn("raw_data", "latency_temp", "latency", {
-        transaction,
+        transaction
       });
 
       await transaction.commit();
@@ -51,7 +51,7 @@ module.exports = {
         "raw_data",
         "latency_temp",
         {
-          type: Sequelize.FLOAT,
+          type: Sequelize.FLOAT
         },
         { transaction }
       );
@@ -71,7 +71,7 @@ module.exports = {
 
       // Rename 'latency_temp' back to 'latency'
       await queryInterface.renameColumn("raw_data", "latency_temp", "latency", {
-        transaction,
+        transaction
       });
 
       // Commit the transaction
@@ -81,5 +81,5 @@ module.exports = {
       await transaction.rollback();
       throw err;
     }
-  },
+  }
 };

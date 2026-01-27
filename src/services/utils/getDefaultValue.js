@@ -9,7 +9,7 @@ const service_name = {
   mistral: "mistral",
   gemini: "gemini",
   ai_ml: "ai_ml",
-  openai_completion: "openai_completion",
+  openai_completion: "openai_completion"
 };
 
 const validateFallBack = (fall_back_data) => {
@@ -91,11 +91,7 @@ const getDefaultValuesController = async (service, model, current_configuration,
             const min_value = value.min;
             const max_value = value.max;
             if (min_value !== undefined && max_value !== undefined) {
-              if (
-                current_value !== undefined &&
-                current_value !== null &&
-                !(min_value <= current_value && current_value <= max_value)
-              ) {
+              if (current_value !== undefined && current_value !== null && !(min_value <= current_value && current_value <= max_value)) {
                 default_values[key] = value.default || null;
               } else {
                 if (current_value === undefined || current_value === null) {

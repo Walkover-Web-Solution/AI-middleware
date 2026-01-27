@@ -17,16 +17,16 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER
       },
       org_id: DataTypes.STRING,
       bridge_id: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
       version_id: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
       thread_id: DataTypes.STRING,
       model: DataTypes.STRING,
@@ -36,21 +36,21 @@ export default (sequelize, DataTypes) => {
       total_tokens: DataTypes.FLOAT,
       apikey_id: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
       created_at: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: fn("now"),
+        defaultValue: fn("now")
       },
       latency: DataTypes.FLOAT,
       success: DataTypes.BOOLEAN,
-      cost: DataTypes.FLOAT,
+      cost: DataTypes.FLOAT
     },
     {
       sequelize,
       modelName: "raw_data",
-      timestamps: false,
+      timestamps: false
     }
   );
   return raw_data;

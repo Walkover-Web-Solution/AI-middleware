@@ -15,12 +15,12 @@ const saveApikeyRecord = async (data) => {
     folder_id,
     user_id,
     version_ids,
-    apikey_limit,
+    apikey_limit
   }).save();
 
   return {
     success: true,
-    api: result,
+    api: result
   };
 };
 
@@ -28,18 +28,18 @@ const findApikeyByName = async (name, org_id) => {
   try {
     const result = await ApikeyCredential.findOne({
       org_id: org_id,
-      name: name,
+      name: name
     });
 
     return {
       success: true,
-      result: result,
+      result: result
     };
   } catch (error) {
     console.error("Error getting API: ", error);
     return {
       success: false,
-      error: error.message,
+      error: error.message
     };
   }
 };
@@ -57,26 +57,18 @@ const findAllApikeys = async (org_id, folder_id, user_id, isEmbedUser) => {
     const result = await ApikeyCredential.find(query);
     return {
       success: true,
-      result: result,
+      result: result
     };
   } catch (error) {
     console.error("Error getting all API: ", error);
     return {
       success: false,
-      error: error.message,
+      error: error.message
     };
   }
 };
 
-async function updateApikeyRecord(
-  apikey_object_id,
-  apikey = null,
-  name = null,
-  service = null,
-  comment = null,
-  apikey_limit = 0,
-  apikey_usage = -1
-) {
+async function updateApikeyRecord(apikey_object_id, apikey = null, name = null, service = null, comment = null, apikey_limit = 0, apikey_usage = -1) {
   try {
     const updateFields = {};
 
@@ -102,30 +94,26 @@ async function updateApikeyRecord(
     let apikeyCredentialResult;
 
     if (Object.keys(updateFields).length > 0) {
-      apikeyCredentialResult = await ApikeyCredential.findOneAndUpdate(
-        { _id: apikey_object_id },
-        { $set: updateFields },
-        { new: true }
-      ).lean();
+      apikeyCredentialResult = await ApikeyCredential.findOneAndUpdate({ _id: apikey_object_id }, { $set: updateFields }, { new: true }).lean();
     }
 
     if (!apikeyCredentialResult) {
       return {
         success: false,
-        error: "No records updated or bridge not found",
+        error: "No records updated or bridge not found"
       };
     }
 
     return {
       success: true,
       apikey: apikey || updateFields.apikey,
-      updatedData: apikeyCredentialResult,
+      updatedData: apikeyCredentialResult
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      error: "Something went wrong!",
+      error: "Something went wrong!"
     };
   }
 }
@@ -140,7 +128,7 @@ async function removeApikeyFromEmbeds(apikey_object_id, org_id) {
     const service = apiKeyData.service;
     const query = {
       org_id: org_id,
-      [`apikey_object_id.${service}`]: apikey_object_id,
+      [`apikey_object_id.${service}`]: apikey_object_id
     };
 
     const updateResult = await FolderModel.updateMany(query, { $unset: { [`apikey_object_id.${service}`]: "" } });
@@ -148,13 +136,13 @@ async function removeApikeyFromEmbeds(apikey_object_id, org_id) {
     return {
       success: true,
       cleanedCount: updateResult.modifiedCount,
-      message: `Cleaned up API key reference from ${updateResult.modifiedCount} embed(s)`,
+      message: `Cleaned up API key reference from ${updateResult.modifiedCount} embed(s)`
     };
   } catch (error) {
     console.error(`Error cleaning up embeds: ${error}`);
     return {
       success: false,
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -169,14 +157,14 @@ async function removeApikeyById(apikey_object_id, org_id) {
     } else {
       return {
         success: false,
-        error: "API key not found",
+        error: "API key not found"
       };
     }
   } catch (error) {
     console.error(`Error: ${error}`);
     return {
       success: false,
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -190,7 +178,7 @@ async function findApikeyById(apikey_object_id) {
     console.error("Error getting API data: ", error);
     return {
       success: false,
-      error: error,
+      error: error
     };
   }
 }
@@ -199,7 +187,7 @@ async function findVersionsByIds(versionIds, service) {
   if (!versionIds?.length) {
     return {
       success: false,
-      message: "No version IDs provided",
+      message: "No version IDs provided"
     };
   }
 
@@ -214,20 +202,19 @@ async function findVersionsByIds(versionIds, service) {
     const versionResult = await processBulkUpdates(versionModel, versionIds, service);
 
     // Process parent documents using bulkWrite if any exist
-    const configResult =
-      parentIds.length > 0 ? await processBulkUpdates(configurationModel, parentIds, service) : { modifiedCount: 0 };
+    const configResult = parentIds.length > 0 ? await processBulkUpdates(configurationModel, parentIds, service) : { modifiedCount: 0 };
 
     return {
       success: true,
       modifiedCount: versionResult.modifiedCount + configResult.modifiedCount,
       versionModifiedCount: versionResult.modifiedCount,
-      parentModifiedCount: configResult.modifiedCount,
+      parentModifiedCount: configResult.modifiedCount
     };
   } catch (error) {
     console.error("Error updating versions and parents:", error);
     return {
       success: false,
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -247,8 +234,8 @@ async function processBulkUpdates(model, ids, service) {
     const bulkOps = ids.map((id) => ({
       updateOne: {
         filter: { _id: id },
-        update: { $unset: { [`apikey_object_id.${service}`]: "" } },
-      },
+        update: { $unset: { [`apikey_object_id.${service}`]: "" } }
+      }
     }));
 
     // Execute bulk operations
@@ -259,7 +246,7 @@ async function processBulkUpdates(model, ids, service) {
       `Bulk update results for ${model.modelName}:`,
       JSON.stringify({
         matchedCount: bulkResult.matchedCount,
-        modifiedCount: bulkResult.modifiedCount,
+        modifiedCount: bulkResult.modifiedCount
       })
     );
 
@@ -278,5 +265,5 @@ export default {
   removeApikeyById,
   findApikeyById,
   findVersionsByIds,
-  removeApikeyFromEmbeds,
+  removeApikeyFromEmbeds
 };

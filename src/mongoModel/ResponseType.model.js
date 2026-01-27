@@ -4,30 +4,30 @@ const Schema = mongoose.Schema;
 const ReponseMappingSchema = new Schema(
   {
     components: {
-      type: Object,
+      type: Object
     },
     coordinates: {
-      type: Object,
+      type: Object
     },
     description: {
-      type: String,
-    },
+      type: String
+    }
   },
   {
-    _id: false,
+    _id: false
   }
 );
 const ResponseTypeSchema = new Schema({
   responseTypes: {
     type: Map,
-    of: ReponseMappingSchema,
+    of: ReponseMappingSchema
   },
   orgId: {
     unique: true,
-    type: String,
+    type: String
   },
   orgAcessToken: {
-    type: String,
-  },
+    type: String
+  }
 });
 export default mongoose.model("ResponseType", ResponseTypeSchema);

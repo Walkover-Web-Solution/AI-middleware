@@ -8,47 +8,47 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER
       },
       org_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       bridge_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       model_name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       thread_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       message: {
-        type: Sequelize.TEXT,
+        type: Sequelize.TEXT
       },
       message_by: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING
       },
       type: {
         type: Sequelize.ENUM("chat", "completion", "embedding"),
         allowNull: false,
-        defaultValue: "chat",
+        defaultValue: "chat"
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.DATE
       },
       function: {
         allowNull: true,
-        type: Sequelize.JSON,
-      },
+        type: Sequelize.JSON
+      }
     });
   },
   // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("conversations");
-  },
+  }
 };

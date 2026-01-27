@@ -16,25 +16,25 @@ async function getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser) {
           $map: {
             input: "$bridge_ids",
             as: "bridge_id",
-            in: { $toString: "$$bridge_id" },
-          },
+            in: { $toString: "$$bridge_id" }
+          }
         },
         created_at: {
           $cond: {
             if: { $eq: [{ $type: "$created_at" }, "string"] },
             then: "$created_at",
-            else: { $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: "$created_at" } },
-          },
+            else: { $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: "$created_at" } }
+          }
         },
         updated_at: {
           $cond: {
             if: { $eq: [{ $type: "$updated_at" }, "string"] },
             then: "$updated_at",
-            else: { $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: "$updated_at" } },
-          },
-        },
-      },
-    },
+            else: { $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: "$updated_at" } }
+          }
+        }
+      }
+    }
   ];
 
   let apiCalls = await apiCallModel.aggregate(pipeline);
@@ -49,7 +49,7 @@ async function updateApiCallByFunctionId(org_id, function_id, data_to_update) {
   const updatedDocument = await apiCallModel.findOneAndUpdate(
     {
       _id: new mongoose.Types.ObjectId(function_id),
-      org_id: org_id,
+      org_id: org_id
     },
     { $set: data_to_update },
     { new: true }
@@ -66,7 +66,7 @@ async function updateApiCallByFunctionId(org_id, function_id, data_to_update) {
 
   return {
     success: true,
-    data: updatedDocument,
+    data: updatedDocument
   };
 }
 
@@ -83,10 +83,7 @@ async function getFunctionById(function_id) {
 }
 
 async function deleteFunctionFromApicallsDb(org_id, script_id) {
-  const bridgeData = await apiCallModel.findOne(
-    { org_id: org_id, script_id: script_id },
-    { bridge_ids: 1, version_ids: 1, _id: 1 }
-  );
+  const bridgeData = await apiCallModel.findOne({ org_id: org_id, script_id: script_id }, { bridge_ids: 1, version_ids: 1, _id: 1 });
 
   if (!bridgeData) {
     throw new Error("No matching function found to delete.");
@@ -106,13 +103,13 @@ async function deleteFunctionFromApicallsDb(org_id, script_id) {
 
   const result = await apiCallModel.deleteOne({
     org_id: org_id,
-    script_id: script_id,
+    script_id: script_id
   });
 
   if (result.deletedCount > 0) {
     return {
       success: true,
-      message: "Function deleted successfully.",
+      message: "Function deleted successfully."
     };
   } else {
     throw new Error("No matching function found to delete.");
@@ -139,7 +136,7 @@ async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = 
     org_id: org_id,
     script_id: script_id,
     title: title,
-    status: 1,
+    status: 1
   };
 
   // Helper function to check if a value is empty
@@ -174,9 +171,7 @@ async function saveApi(desc, org_id, folder_id, user_id, api_data, bridge_ids = 
 
   if (api_data && api_data._id) {
     // Update existing
-    const updatedApi = await apiCallModel
-      .findOneAndUpdate({ _id: api_data._id }, { $set: updateData }, { new: true, upsert: true })
-      .lean();
+    const updatedApi = await apiCallModel.findOneAndUpdate({ _id: api_data._id }, { $set: updateData }, { new: true, upsert: true }).lean();
     return { success: true, api_data: updatedApi };
   } else {
     // Create new
@@ -193,5 +188,5 @@ export default {
   deleteFunctionFromApicallsDb,
   createApiCall,
   getApiData,
-  saveApi,
+  saveApi
 };

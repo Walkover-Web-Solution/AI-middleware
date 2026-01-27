@@ -11,5 +11,5 @@ async function getFolderData(folder_id) {
 }
 
 export default {
-  getFolderData,
+  getFolderData
 };

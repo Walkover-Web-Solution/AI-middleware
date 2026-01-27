@@ -5,7 +5,7 @@ async function find(query, values) {
   try {
     const queryOptions = {
       type: Sequelize.QueryTypes.SELECT,
-      replacements: values,
+      replacements: values
     };
     const results = await timescale.sequelize.query(query, queryOptions);
     return results;
@@ -16,5 +16,5 @@ async function find(query, values) {
 }
 
 export default {
-  find,
+  find
 };

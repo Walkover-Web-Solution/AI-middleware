@@ -18,5 +18,5 @@ async function update(id, data) {
 export default {
   getAll,
   create,
-  update,
+  update
 };

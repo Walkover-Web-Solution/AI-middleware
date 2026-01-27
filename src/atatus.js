@@ -6,6 +6,6 @@ if (process.env.ENVIROMENT === "prod") {
     appName: `Node - GTWY - Backend - ${process.env.ENVIROMENT === "prod" ? "PROD" : "DEV"}`,
     analytics: true,
     analyticsCaptureOutgoing: true,
-    logBody: "all",
+    logBody: "all"
   });
 }

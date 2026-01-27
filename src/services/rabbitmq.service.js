@@ -85,5 +85,4 @@ class RabbitConnection extends EventEmitter {
   }
 }
 
-export default (connectionString) =>
-  RabbitConnection.getSingletonInstance(connectionString || RABBIT_CONNECTION_STRING);
+export default (connectionString) => RabbitConnection.getSingletonInstance(connectionString || RABBIT_CONNECTION_STRING);

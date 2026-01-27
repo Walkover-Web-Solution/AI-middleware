@@ -4,19 +4,19 @@ const ragCollectionSchema = new mongoose.Schema({
   collection_id: {
     type: String,
     required: true,
-    unique: true,
+    unique: true
   },
   name: {
     type: String,
-    required: true,
+    required: true
   },
   org_id: {
     type: String,
-    required: true,
+    required: true
   },
   resource_ids: {
     type: [String],
-    default: [],
+    default: []
   },
   settings: {
     denseModel: String,
@@ -24,16 +24,16 @@ const ragCollectionSchema = new mongoose.Schema({
     chunkOverlap: Number,
     sparseModel: String,
     strategy: String,
-    rerankerModel: String,
+    rerankerModel: String
   },
   created_at: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   updated_at: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 });
 
 ragCollectionSchema.index({ org_id: 1 });

@@ -6,7 +6,7 @@ module.exports = {
     // First, add a temporary column to store array of JSON data
     await queryInterface.addColumn("conversations", "image_url_temp", {
       type: Sequelize.ARRAY(Sequelize.JSON),
-      allowNull: true,
+      allowNull: true
     });
 
     // Convert existing text data to array of JSON format
@@ -31,7 +31,7 @@ module.exports = {
     // First, add a temporary column to store text data
     await queryInterface.addColumn("conversations", "image_url_temp", {
       type: Sequelize.TEXT,
-      allowNull: true,
+      allowNull: true
     });
 
     // Convert JSON array data back to text format (extract permanent_url from first element)
@@ -49,5 +49,5 @@ module.exports = {
 
     // Rename the temporary column back to the original name
     await queryInterface.renameColumn("conversations", "image_url_temp", "image_url");
-  },
+  }
 };

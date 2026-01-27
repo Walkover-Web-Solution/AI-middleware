@@ -20,11 +20,11 @@ async function createSubThreadController(req, res, next) {
     display_name: name || sub_thread_id,
     thread_id,
     org_id: org_id.toString(),
-    sub_thread_id,
+    sub_thread_id
   });
   res.locals = {
     thread,
-    success: true,
+    success: true
   };
   req.statusCode = 201;
   return next();
@@ -44,11 +44,10 @@ async function createSubThreadWithAiController(req, res, next) {
     display_name = await createSubThreadNameAI({ user });
   }
   if (botId) {
-    const channelId =
-      `${botId}${thread_id.trim() ? thread_id.trim() : user_id}${sub_thread_id.trim() ? sub_thread_id.trim() : user_id}`.replace(
-        " ",
-        "_"
-      );
+    const channelId = `${botId}${thread_id.trim() ? thread_id.trim() : user_id}${sub_thread_id.trim() ? sub_thread_id.trim() : user_id}`.replace(
+      " ",
+      "_"
+    );
     responseSender.sendResponse({
       rtlLayer: true,
       data: { display_name: display_name, threadId: thread_id, subThreadId: subThreadId, created_at: new Date() },
@@ -57,10 +56,10 @@ async function createSubThreadWithAiController(req, res, next) {
         rtlOptions: {
           channel: channelId,
           ttl: 1,
-          apikey: process.env.RTLAYER_AUTH,
-        },
+          apikey: process.env.RTLAYER_AUTH
+        }
       },
-      headers: {},
+      headers: {}
     });
   }
 
@@ -69,11 +68,11 @@ async function createSubThreadWithAiController(req, res, next) {
     thread_id,
     org_id: org_id.toString(),
     sub_thread_id,
-    created_at: Date.now(),
+    created_at: Date.now()
   });
   res.locals = {
     thread,
-    success: true,
+    success: true
   };
   req.statusCode = 201;
   return next();
@@ -105,13 +104,13 @@ async function createSubThreadNameAI({ user }) {
     method: "POST",
     headers: {
       pauthkey: "1b13a7a038ce616635899a239771044c",
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       user: `Generate thread Name for ${user}`,
       bridge_id: "6799c8413166c2fc4886669a",
-      response_type: "text",
-    }),
+      response_type: "text"
+    })
   });
 
   const data = await response.json();

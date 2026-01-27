@@ -14,8 +14,8 @@ const up = async (queryInterface) => {
         allowNull: true,
         defaultValue: 0,
         validate: {
-          isIn: [[0, 1, 2]],
-        },
+          isIn: [[0, 1, 2]]
+        }
       },
       { transaction }
     );
@@ -26,7 +26,7 @@ const up = async (queryInterface) => {
       {
         type: Sequelize.UUID,
         allowNull: true,
-        defaultValue: null,
+        defaultValue: null
       },
       { transaction }
     );

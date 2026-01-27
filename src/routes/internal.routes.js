@@ -13,7 +13,7 @@ router.get("/info", middleware, (req, res) => {
     user_id: req.profile?.user?.id || "",
     user_name: req.profile?.user?.name || "",
     user_email: req.profile?.user?.email || "",
-    user_role: req.profile?.user?.role || "",
+    user_role: req.profile?.user?.role || ""
   });
 });
 

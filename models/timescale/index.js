@@ -19,10 +19,10 @@ try {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false,
-      },
+        rejectUnauthorized: false
+      }
     },
-    logging: true,
+    logging: true
   });
 
   const dbservice = async () => {

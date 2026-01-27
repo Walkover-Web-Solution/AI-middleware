@@ -26,13 +26,13 @@ const optimizePromptController = async (req, res, next) => {
       configuration,
       thread_id,
       bridge_id: bridge_ids["optimze_prompt"],
-      response_type: "text",
+      response_type: "text"
     });
 
     res.locals = {
       success: true,
       message: "Prompt optimized successfully",
-      result: aiResult,
+      result: aiResult
     };
     req.statusCode = 200;
     return next();
@@ -83,13 +83,13 @@ const generateSummary = async (req, res, next) => {
       bridge_id: bridge_ids["generate_summary"],
       configuration,
       response_type: "text",
-      variables,
+      variables
     });
 
     res.locals = {
       success: true,
       message: "Summary generated successfully",
-      result: summary,
+      result: summary
     };
     req.statusCode = 200;
     return next();
@@ -107,13 +107,13 @@ const functionArgsUsingAi = async (req, res, next) => {
     const user = `geneate the json using the example json data : ${example_json}`;
 
     const json = await callAiMiddleware(user, {
-      bridge_id: bridge_ids["function_agrs_using_ai"],
+      bridge_id: bridge_ids["function_agrs_using_ai"]
     });
 
     res.locals = {
       success: true,
       message: "json generated successfully",
-      result: json,
+      result: json
     };
     req.statusCode = 200;
     return next();
@@ -155,7 +155,7 @@ const generateAdditionalTestCases = async (req, res, next) => {
     const testcases = await callAiMiddleware(user_message, {
       variables,
       configuration,
-      bridge_id: bridge_ids["generate_test_cases"],
+      bridge_id: bridge_ids["generate_test_cases"]
     });
 
     const savedTestcases = await testcaseDbservice.parseAndSaveTestcases(testcases, bridge_id);
@@ -164,7 +164,7 @@ const generateAdditionalTestCases = async (req, res, next) => {
       success: true,
       message: `Test cases generated and ${savedTestcases.length} saved successfully`,
       result: testcases,
-      saved_testcase_ids: savedTestcases,
+      saved_testcase_ids: savedTestcases
     };
     req.statusCode = 200;
     return next();
@@ -180,5 +180,5 @@ export default {
   optimizePromptController,
   generateSummary,
   functionArgsUsingAi,
-  generateAdditionalTestCases,
+  generateAdditionalTestCases
 };

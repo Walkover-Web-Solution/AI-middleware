@@ -9,13 +9,7 @@ import { updateBridgeSchema, bridgeIdParamSchema } from "../validation/joi_valid
 const router = express.Router();
 
 //create Version
-router.post(
-  "/",
-  middleware,
-  requireAdminRole,
-  validate(bridgeVersionValidation.createVersion),
-  agentVersionController.createVersion
-);
+router.post("/", middleware, requireAdminRole, validate(bridgeVersionValidation.createVersion), agentVersionController.createVersion);
 
 //bulk publish
 router.post(
@@ -39,13 +33,7 @@ router.post(
 );
 
 //delete Version
-router.delete(
-  "/:version_id",
-  middleware,
-  requireAdminRole,
-  validate(bridgeVersionValidation.removeVersion),
-  agentVersionController.removeVersion
-);
+router.delete("/:version_id", middleware, requireAdminRole, validate(bridgeVersionValidation.removeVersion), agentVersionController.removeVersion);
 
 //discard Version
 router.post(
@@ -57,12 +45,7 @@ router.post(
 );
 
 //suggest Model
-router.get(
-  "/suggest-model/:version_id",
-  middleware,
-  validate(bridgeVersionValidation.suggestModel),
-  agentVersionController.suggestModel
-);
+router.get("/suggest-model/:version_id", middleware, validate(bridgeVersionValidation.suggestModel), agentVersionController.suggestModel);
 
 //get Connected Agents
 router.get(
@@ -73,13 +56,6 @@ router.get(
 );
 
 //update Version
-router.put(
-  "/:version_id",
-  middleware,
-  requireAdminRole,
-  validate(bridgeIdParamSchema),
-  validate(updateBridgeSchema),
-  updateAgentController
-);
+router.put("/:version_id", middleware, requireAdminRole, validate(bridgeIdParamSchema), validate(updateBridgeSchema), updateAgentController);
 
 export default router;

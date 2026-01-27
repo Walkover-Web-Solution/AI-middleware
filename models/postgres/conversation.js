@@ -12,7 +12,7 @@ export default (sequelize, DataTypes) => {
       // define association here
       conversation.hasMany(models.raw_data, {
         foreignKey: "chat_id",
-        as: "raw_data",
+        as: "raw_data"
       });
     }
   }
@@ -30,19 +30,19 @@ export default (sequelize, DataTypes) => {
       type: {
         type: DataTypes.ENUM("chat", "completion", "embedding"),
         // Using ENUM for type field
-        allowNull: false,
+        allowNull: false
       },
       message_id: DataTypes.UUIDV4,
       user_feedback: DataTypes.INTEGER,
       is_reset: DataTypes.BOOLEAN,
       version_id: DataTypes.STRING,
       sub_thread_id: DataTypes.STRING,
-      external_reference: DataTypes.STRING,
+      external_reference: DataTypes.STRING
     },
     {
       sequelize,
       modelName: "conversations",
-      tableName: "conversations",
+      tableName: "conversations"
     }
   );
   return conversation;

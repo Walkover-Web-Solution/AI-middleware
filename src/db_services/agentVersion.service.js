@@ -63,12 +63,7 @@ async function updateAgents(agent_id, data, version_id = null) {
       result = await configurationModel.findOneAndUpdate({ _id: agent_id }, updateQuery, { new: true });
     }
 
-    const cacheKeysToDelete = _buildCacheKeys(
-      version_id,
-      agent_id || result.parent_id,
-      { bridges: [], versions: [] },
-      []
-    );
+    const cacheKeysToDelete = _buildCacheKeys(version_id, agent_id || result.parent_id, { bridges: [], versions: [] }, []);
 
     if (cacheKeysToDelete.length > 0) {
       await deleteInCache(cacheKeysToDelete);
@@ -89,8 +84,8 @@ async function getVersionWithTools(version_id) {
           from: "apicalls",
           localField: "function_ids",
           foreignField: "_id",
-          as: "apiCalls",
-        },
+          as: "apiCalls"
+        }
       },
       {
         $addFields: {
@@ -99,8 +94,8 @@ async function getVersionWithTools(version_id) {
             $map: {
               input: "$function_ids",
               as: "fid",
-              in: { $toString: "$$fid" },
-            },
+              in: { $toString: "$$fid" }
+            }
           },
           apiCalls: {
             $arrayToObject: {
@@ -118,18 +113,18 @@ async function getVersionWithTools(version_id) {
                           $map: {
                             input: "$$api_call.bridge_ids",
                             as: "bid",
-                            in: { $toString: "$$bid" },
-                          },
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+                            in: { $toString: "$$bid" }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     ];
 
     const result = await bridgeVersionModel.aggregate(pipeline);
@@ -154,10 +149,7 @@ async function makeQuestion(parent_id, prompt, functions, save = false) {
   const expectedQuestions = await callAiMiddleware(prompt, bridge_ids["make_question"]);
 
   if (save) {
-    await configurationModel.updateOne(
-      { _id: parent_id },
-      { $set: { starterQuestion: expectedQuestions.questions || [] } }
-    );
+    await configurationModel.updateOne({ _id: parent_id }, { $set: { starterQuestion: expectedQuestions.questions || [] } });
   }
   return expectedQuestions;
 }
@@ -260,10 +252,7 @@ function _mergeImpactedIds(...impacts) {
 }
 
 function _buildCacheKeys(version_id, parent_id, impacted_ids, extra_keys) {
-  const cacheKeys = new Set([
-    `${redis_keys.get_bridge_data_}${version_id}`,
-    `${redis_keys.bridge_data_with_tools_}${version_id}`,
-  ]);
+  const cacheKeys = new Set([`${redis_keys.get_bridge_data_}${version_id}`, `${redis_keys.bridge_data_with_tools_}${version_id}`]);
 
   if (parent_id) {
     cacheKeys.add(`${redis_keys.get_bridge_data_}${parent_id}`);
@@ -340,10 +329,7 @@ async function getPromptEnhancerPercentage(parentId, prompt) {
     const promptEnhancerResult = await callAiMiddleware(prompt, bridge_ids["prompt_checker"]);
 
     // Update the document in the configurationModel
-    await configurationModel.updateOne(
-      { _id: parentId },
-      { $set: { prompt_enhancer_percentage: promptEnhancerResult } }
-    );
+    await configurationModel.updateOne({ _id: parentId }, { $set: { prompt_enhancer_percentage: promptEnhancerResult } });
 
     return promptEnhancerResult;
   } catch (error) {
@@ -440,11 +426,7 @@ async function publish(org_id, version_id, user_id) {
     await bridgeVersionModel.updateOne({ _id: publishedVersionId }, { $set: { is_drafted: false } }, { session });
 
     if (previousPublishedVersionId && previousPublishedVersionId.toString() !== publishedVersionId.toString()) {
-      await bridgeVersionModel.updateOne(
-        { _id: previousPublishedVersionId },
-        { $set: { is_drafted: true } },
-        { session }
-      );
+      await bridgeVersionModel.updateOne({ _id: previousPublishedVersionId }, { $set: { is_drafted: true } }, { session });
     }
 
     await session.commitTransaction();
@@ -461,8 +443,8 @@ async function publish(org_id, version_id, user_id) {
       org_id,
       bridge_id: parentId, // Database column name, keeping as bridge_id for compatibility
       version_id,
-      type: "Version published",
-    },
+      type: "Version published"
+    }
   ]);
 
   return { success: true, message: "Configuration updated successfully" };
@@ -522,7 +504,7 @@ async function getAllConnectedAgents(id, org_id, type) {
       parentAgents: parentIds || [],
       childAgents: [],
       thread_id: threadId,
-      document_type: actualType,
+      document_type: actualType
     };
     if (description) agentsMap[agentId].description = description;
 
@@ -561,5 +543,5 @@ export default {
   deleteBridgeVersion: deleteAgentVersion, // Keep alias for backward compatibility
   makeQuestion,
   getAllConnectedAgents,
-  _buildCacheKeys,
+  _buildCacheKeys
 };

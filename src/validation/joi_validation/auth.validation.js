@@ -8,14 +8,14 @@ const saveAuthTokenInDb = {
   body: Joi.object()
     .keys({
       name: Joi.string().required().messages({
-        "any.required": "name is required",
+        "any.required": "name is required"
       }),
       redirection_url: Joi.string().uri().required().messages({
         "any.required": "redirection_url is required",
-        "string.uri": "redirection_url must be a valid URI",
-      }),
+        "string.uri": "redirection_url must be a valid URI"
+      })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getAuthTokenInDb = {
@@ -26,27 +26,27 @@ const verifyAuthToken = {
   body: Joi.object()
     .keys({
       client_id: Joi.string().required().messages({
-        "any.required": "client_id is required",
+        "any.required": "client_id is required"
       }),
       redirection_url: Joi.string().uri().required().messages({
         "any.required": "redirection_url is required",
-        "string.uri": "redirection_url must be a valid URI",
+        "string.uri": "redirection_url must be a valid URI"
       }),
       state: Joi.string().required().messages({
-        "any.required": "state is required",
-      }),
+        "any.required": "state is required"
+      })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getClientInfo = {
   query: Joi.object()
     .keys({
       client_id: Joi.string().required().messages({
-        "any.required": "client_id is required",
-      }),
+        "any.required": "client_id is required"
+      })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 // Named exports for backward compatibility (used in routes)
@@ -59,7 +59,7 @@ export default {
   saveAuthTokenInDb,
   getAuthTokenInDb,
   verifyAuthToken,
-  getClientInfo,
+  getClientInfo
 };
 
 export { saveAuthTokenSchema, verifyAuthTokenSchema, getClientInfoSchema };
