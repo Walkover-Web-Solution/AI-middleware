@@ -8,6 +8,7 @@ import configurationModel from "../mongoModel/Configuration.model.js";
 import mongoose from "mongoose";
 import ConfigurationServices from "../db_services/configuration.service.js";
 import agentVersionDbService from "../db_services/agentVersion.service.js";
+
 dotenv.config();
 import { findInCache } from "../cache_service/index.js";
 
@@ -147,14 +148,12 @@ const middleware = async (req, res, next) => {
         return res.status(401).json({ message: "invalid token" });
       }
 
-      const blacklistEntry = await findInCache(`blacklist:${token}`);
-      if (blacklistEntry && blacklistEntry !== "false") {
+      const isBlacklisted = await findInCache(`blacklist:${token}`);
+      if (isBlacklisted) {
         return res.status(401).json({ message: "token revoked" });
       }
 
-      console.log("✅✅✅✅✅✅✅✅hduydedshdhsgdyugwydgwdwdesdkjhsjdhksjhd");
       req.profile = jwt.verify(token, process.env.SecretKey);
-      console.log("✅✅✅✅✅✅✅✅");
       // Determine role_name from permissions in JWT token
       const userPermissions = req.profile?.user?.permissions || [];
       // Check if user is embed user

@@ -25,8 +25,10 @@ const clearRedisCache = async (req, res, next) => {
     // Clear all keys with prefix
     // scanCacheKeys('*') returns keys without prefix
     const keys = await scanCacheKeys("*");
-    if (keys && keys.length > 0) {
-      await deleteInCache(keys);
+    const keysToDelete = keys.filter((key) => !key.startsWith("blacklist:"));
+
+    if (keysToDelete && keysToDelete.length > 0) {
+      await deleteInCache(keysToDelete);
     }
 
     res.locals = { message: "Redis cleared successfully" };
