@@ -1,10 +1,10 @@
-import logger from '../logger.js';
-import EventEmitter from 'events';
-import amqp from 'amqplib';
-import { configDotenv } from 'dotenv';
+import logger from "../logger.js";
+import EventEmitter from "events";
+import amqp from "amqplib";
+import { configDotenv } from "dotenv";
 
 configDotenv();
-const RABBIT_CONNECTION_STRING = process.env.QUEUE_CONNECTIONURL || '';
+const RABBIT_CONNECTION_STRING = process.env.QUEUE_CONNECTIONURL || "";
 const RETRY_INTERVAL = 5000; // in millis
 
 export function delay(time = 1000) {
@@ -24,7 +24,7 @@ class RabbitConnection extends EventEmitter {
 
   constructor(connectionString) {
     super();
-    if (!connectionString) throw new Error('connectionString is required');
+    if (!connectionString) throw new Error("connectionString is required");
     this.connectionString = connectionString;
     this.setupConnection();
   }
@@ -46,8 +46,8 @@ class RabbitConnection extends EventEmitter {
       this.initEventListeners();
       return this.connection;
     } catch (err) {
-      logger.error('[RABBIT](setupConnection)', err);
-      this.emit('retry');
+      logger.error("[RABBIT](setupConnection)", err);
+      this.emit("retry");
       await delay(RETRY_INTERVAL);
       return this.setupConnection();
     }
@@ -56,20 +56,20 @@ class RabbitConnection extends EventEmitter {
   initEventListeners() {
     if (!this.connection) return;
     logger.info(`[RABBIT](onConnectionReady) Connection established to ${this.connectionString}`);
-    this.emit('connect', this.connection);
+    this.emit("connect", this.connection);
 
-    this.connection.on('close', (error) => {
+    this.connection.on("close", (error) => {
       this.connection = undefined;
 
       if (this.gracefulClose) {
-        logger.info('[RABBIT](onConnectionClosed) Gracefully');
-        this.emit('gracefulClose');
+        logger.info("[RABBIT](onConnectionClosed) Gracefully");
+        this.emit("gracefulClose");
       } else {
-        logger.error('[RABBIT](onConnectionClosed) Abruptly', error);
+        logger.error("[RABBIT](onConnectionClosed) Abruptly", error);
         try {
-          this.emit('error', error);
+          this.emit("error", error);
         } catch (error) {
-          console.log('error in emitting error', error);
+          console.log("error in emitting error", error);
         }
       }
       if (!this.gracefulClose) this.setupConnection();
@@ -79,10 +79,11 @@ class RabbitConnection extends EventEmitter {
   closeConnection() {
     if (this.connection) {
       this.gracefulClose = true;
-      logger.info('[RABBIT](closeConnection) Closing connection...');
+      logger.info("[RABBIT](closeConnection) Closing connection...");
       this.connection.close();
     }
   }
 }
 
-export default (connectionString) => RabbitConnection.getSingletonInstance(connectionString || RABBIT_CONNECTION_STRING);
+export default (connectionString) =>
+  RabbitConnection.getSingletonInstance(connectionString || RABBIT_CONNECTION_STRING);

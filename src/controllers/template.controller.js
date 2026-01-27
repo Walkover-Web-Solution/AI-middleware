@@ -11,5 +11,5 @@ const allTemplates = async (req, res, next) => {
 };
 
 export default {
-  allTemplates
+  allTemplates,
 };

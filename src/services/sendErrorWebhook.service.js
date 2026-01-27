@@ -1,6 +1,6 @@
-import { get_webhook_data } from '../db_services/webhookAlert.service.js'
-import { sendResponse } from './utils/utility.service.js'
-import logger from '../logger.js';
+import { get_webhook_data } from "../db_services/webhookAlert.service.js";
+import { sendResponse } from "./utils/utility.service.js";
+import logger from "../logger.js";
 
 async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
   try {
@@ -13,9 +13,9 @@ async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
     let webhook_data = result.webhook_data;
 
     let details_payload;
-    
+
     if (error_type !== "thumbsdown") {
-        throw new Error("Invalid error type")
+      throw new Error("Invalid error type");
     }
     details_payload = thumbs_down_error(error_log);
 
@@ -52,18 +52,14 @@ function thumbs_down_error(details) {
   };
 }
 
-
 function create_response_format(url, headers) {
-    return {
-        type: "webhook",
-        cred: {
-            url: url,
-            headers: headers
-        }
-    };
+  return {
+    type: "webhook",
+    cred: {
+      url: url,
+      headers: headers,
+    },
+  };
 }
 
-
-export {
-    send_error_to_webhook
-}
+export { send_error_to_webhook };

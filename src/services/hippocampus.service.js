@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const HIPPOCAMPUS_BASE_URL = process.env.HIPPOCAMPUS_BASE_URL || 'http://hippocampus.gtwy.ai';
+const HIPPOCAMPUS_BASE_URL = process.env.HIPPOCAMPUS_BASE_URL || "http://hippocampus.gtwy.ai";
 const HIPPOCAMPUS_API_KEY = process.env.HIPPOCAMPUS_API_KEY;
 
 /**
@@ -11,16 +11,16 @@ const HIPPOCAMPUS_API_KEY = process.env.HIPPOCAMPUS_API_KEY;
 export const createCollection = async (collectionData) => {
   try {
     const response = await axios({
-      method: 'POST',
+      method: "POST",
       url: `${HIPPOCAMPUS_BASE_URL}/collection`,
       headers: {
-        'x-api-key': HIPPOCAMPUS_API_KEY,
-        'Content-Type': 'application/json'
+        "x-api-key": HIPPOCAMPUS_API_KEY,
+        "Content-Type": "application/json",
       },
       data: {
         ...collectionData,
-        apikey: HIPPOCAMPUS_API_KEY
-      }
+        apikey: HIPPOCAMPUS_API_KEY,
+      },
     });
     return response.data;
   } catch (error) {
@@ -37,13 +37,13 @@ export const createCollection = async (collectionData) => {
 export const createResource = async (resourceData) => {
   try {
     const response = await axios({
-      method: 'POST',
+      method: "POST",
       url: `${HIPPOCAMPUS_BASE_URL}/resource`,
       headers: {
-        'x-api-key': HIPPOCAMPUS_API_KEY,
-        'Content-Type': 'application/json'
+        "x-api-key": HIPPOCAMPUS_API_KEY,
+        "Content-Type": "application/json",
       },
-      data: resourceData
+      data: resourceData,
     });
     return response.data;
   } catch (error) {
@@ -60,12 +60,12 @@ export const createResource = async (resourceData) => {
 export const deleteResource = async (resourceId) => {
   try {
     const response = await axios({
-      method: 'DELETE',
+      method: "DELETE",
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}`,
       headers: {
-        'x-api-key': HIPPOCAMPUS_API_KEY,
-        'Content-Type': 'application/json'
-      }
+        "x-api-key": HIPPOCAMPUS_API_KEY,
+        "Content-Type": "application/json",
+      },
     });
     return response.data;
   } catch (error) {
@@ -83,13 +83,13 @@ export const deleteResource = async (resourceId) => {
 export const updateResource = async (resourceId, updateData) => {
   try {
     const response = await axios({
-      method: 'PUT',
+      method: "PUT",
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}`,
       headers: {
-        'x-api-key': HIPPOCAMPUS_API_KEY,
-        'Content-Type': 'application/json'
+        "x-api-key": HIPPOCAMPUS_API_KEY,
+        "Content-Type": "application/json",
       },
-      data: updateData
+      data: updateData,
     });
     return response.data;
   } catch (error) {
@@ -106,11 +106,11 @@ export const updateResource = async (resourceId, updateData) => {
 export const getResourceChunks = async (resourceId) => {
   try {
     const response = await axios({
-      method: 'GET',
+      method: "GET",
       url: `${HIPPOCAMPUS_BASE_URL}/resource/${resourceId}/chunks`,
       headers: {
-        'x-api-key': HIPPOCAMPUS_API_KEY
-      }
+        "x-api-key": HIPPOCAMPUS_API_KEY,
+      },
     });
     return response.data;
   } catch (error) {
@@ -118,4 +118,3 @@ export const getResourceChunks = async (resourceId) => {
     throw error;
   }
 };
-
