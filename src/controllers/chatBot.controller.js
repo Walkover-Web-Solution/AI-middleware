@@ -9,42 +9,41 @@ const getAllChatBots = async (req, res, next) => {
     const org_id = req.profile.org.id;
     const userId = req.profile.user.id;
 
-    const chatbots = await ChatbotDbService.getAll(org_id);
-    
+    let chatbots = await ChatbotDbService.getAll(org_id);
+
     let defaultChatbot = chatbots.find(chatbot => chatbot.type === 'default');
-    if (chatbots.length === 1 && defaultChatbot) {
-        const defaultChatbotData = {
+
+    if (!defaultChatbot) {
+        defaultChatbot = await ChatbotDbService.create({
+            orgId: org_id,
+            title: "Default Chatbot",
+            type: "default",
+            createdBy: userId,
+            updatedBy: userId,
+        });
+        await ChatbotDbService.create({
             orgId: org_id,
             title: req.params.name || 'chatbot1',
+            type: "chatbot",
             createdBy: userId,
             updatedBy: userId,
-        };
-        await ChatbotDbService.create(defaultChatbotData);
+        });
     }
-    
-    let accessKey;
-    if (!defaultChatbot) {
-        const defaultChatbotData = {
-            orgId: org_id,
-            title: 'Default Chatbot',
-            type: 'default',
-            createdBy: userId,
-            updatedBy: userId,
-        };
-        defaultChatbot = await ChatbotDbService.create(defaultChatbotData);
-    }
-    
+
+    chatbots = await ChatbotDbService.getAll(org_id);
     const { chatBot } = await responseTypeService.getAll(org_id);
+
+    let accessKey;
     if (chatBot?.orgAcessToken) {
         accessKey = chatBot?.orgAcessToken;
     } else {
         const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(14));
         accessKey = org.orgData.orgAcessToken;
     }
-    
-    const chatbot_token = token.generateToken({ 
-        payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id }, 
-        accessKey: accessKey 
+
+    const chatbot_token = token.generateToken({
+        payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id },
+        accessKey: accessKey
     });
 
     // Filter out the default chatbot from the chatbots array
