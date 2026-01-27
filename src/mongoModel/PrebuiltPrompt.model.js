@@ -4,13 +4,13 @@ const prebuiltPromptSchema = new mongoose.Schema(
   {
     org_id: {
       type: String,
-      required: true,
+      required: true
     },
     prebuilt_prompts: {
       type: Map,
       of: String,
-      default: {},
-    },
+      default: {}
+    }
   },
   { strict: false }
 );

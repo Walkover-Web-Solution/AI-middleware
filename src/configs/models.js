@@ -18,7 +18,7 @@ const services = {
       "text-embedding-3-large",
       "text-embedding-3-small",
       "text-embedding-ada-002",
-      "gpt-3.5-turbo-instruct",
+      "gpt-3.5-turbo-instruct"
     ]),
     completion: new Set(["gpt-3.5-turbo-instruct"]),
     chat: new Set([
@@ -35,35 +35,19 @@ const services = {
       "gpt-4-1106-preview",
       "gpt-4-turbo-preview",
       "gpt-4-0125-preview",
-      "gpt-4-turbo-2024-04-09",
+      "gpt-4-turbo-2024-04-09"
     ]),
-    embedding: new Set(["text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"]),
+    embedding: new Set(["text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"])
   },
   google: {
     models: new Set(["gemini-pro", "gemini-1.5-pro", "gemini-1.0-pro-vision", "gemini-1.0-pro", "gemini-1.5-Flash"]),
     chat: new Set(["gemini-pro", "gemini-1.5-pro", "gemini-1.0-pro-vision", "gemini-1.0-pro", "gemini-1.5-Flash"]),
-    completion: new Set([
-      "gemini-pro",
-      "gemini-1.5-pro",
-      "gemini-1.0-pro-vision",
-      "gemini-1.0-pro",
-      "gemini-1.5-Flash",
-    ]),
-    embedding: new Set(["embedding-001"]),
+    completion: new Set(["gemini-pro", "gemini-1.5-pro", "gemini-1.0-pro-vision", "gemini-1.0-pro", "gemini-1.5-Flash"]),
+    embedding: new Set(["embedding-001"])
   },
   anthropic: {
-    models: new Set([
-      "claude-3-5-sonnet-20240620",
-      "claude-3-opus-20240229",
-      "claude-3-sonnet-20240229",
-      "claude-3-haiku-20240307",
-    ]),
-    chat: new Set([
-      "claude-3-5-sonnet-20240620",
-      "claude-3-opus-20240229",
-      "claude-3-sonnet-20240229",
-      "claude-3-haiku-20240307",
-    ]),
+    models: new Set(["claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"]),
+    chat: new Set(["claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"])
   },
   groq: {
     models: new Set([
@@ -77,7 +61,7 @@ const services = {
       "mixtral-8x7b-32768",
       "gemma-7b-it",
       "gemma2-9b-it",
-      "whisper-large-v3",
+      "whisper-large-v3"
     ]),
     chat: new Set([
       "llama-3.1-405b-reasoning",
@@ -90,13 +74,13 @@ const services = {
       "mixtral-8x7b-32768",
       "gemma-7b-it",
       "gemma2-9b-it",
-      "whisper-large-v3",
-    ]),
-  },
+      "whisper-large-v3"
+    ])
+  }
 };
 const messageRoles = {
   chat: ["system", "user"],
   completion: ["prompt"],
-  embedding: ["input"],
+  embedding: ["input"]
 };
 export { services, messageRoles };

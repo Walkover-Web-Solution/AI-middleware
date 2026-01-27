@@ -32,5 +32,5 @@ module.exports = {
     await queryInterface.sequelize.query(`
     SELECT remove_retention_policy('daily_data_aggregate');
    `);
-  },
+  }
 };

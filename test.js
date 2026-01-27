@@ -28,8 +28,8 @@ async function migrateApiCallsToV2() {
         { old_fields: { $exists: false } }, // Not yet migrated (no backup)
         { function_name: { $exists: true } }, // Has function_name (needs to be renamed to script_id)
         { title: { $exists: false } }, // Missing title field
-        { script_id: { $exists: false } }, // Missing script_id field
-      ],
+        { script_id: { $exists: false } } // Missing script_id field
+      ]
     });
 
     let migratedCount = 0;
@@ -45,9 +45,9 @@ async function migrateApiCallsToV2() {
         // Prepare the update object
         const updateDoc = {
           $set: {
-            updated_at: new Date(),
+            updated_at: new Date()
           },
-          $unset: {},
+          $unset: {}
         };
 
         // Convert fields from array format to object format if needed
@@ -63,7 +63,7 @@ async function migrateApiCallsToV2() {
                 type: field.type || "string",
                 enum: Array.isArray(field.enum) ? field.enum : field.enum === "" || !field.enum ? [] : [field.enum],
                 required_params: field.required_params || [],
-                parameter: field.parameter || {},
+                parameter: field.parameter || {}
               };
             }
           });
@@ -85,7 +85,7 @@ async function migrateApiCallsToV2() {
               type: value.type || "string",
               enum: Array.isArray(value.enum) ? value.enum : value.enum === "" || !value.enum ? [] : [value.enum],
               required_params: value.required_params || [],
-              parameter: value.parameter || {},
+              parameter: value.parameter || {}
             };
           }
 
@@ -108,9 +108,7 @@ async function migrateApiCallsToV2() {
         // Convert bridge_id to bridge_ids array if it exists and bridge_ids is empty
         if (apiCall.bridge_id && (!apiCall.bridge_ids || apiCall.bridge_ids.length === 0)) {
           console.log(`  Migrating bridge_id to bridge_ids array`);
-          const bridgeObjectId = ObjectId.isValid(apiCall.bridge_id)
-            ? new ObjectId(apiCall.bridge_id)
-            : apiCall.bridge_id;
+          const bridgeObjectId = ObjectId.isValid(apiCall.bridge_id) ? new ObjectId(apiCall.bridge_id) : apiCall.bridge_id;
           updateDoc.$set.bridge_ids = [bridgeObjectId];
         }
 

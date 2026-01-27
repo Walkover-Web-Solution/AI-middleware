@@ -10,7 +10,7 @@ const createBridgeSchema = Joi.object({
     .optional(),
   bridgeType: Joi.string().valid("api", "chatbot").optional().default("api"),
   bridge_limit: Joi.number().min(0).optional(),
-  bridge_usage: Joi.number().min(0).optional(),
+  bridge_usage: Joi.number().min(0).optional()
 }).unknown(true); // Allow additional fields that might be added dynamically
 
 const updateBridgeSchema = Joi.object({
@@ -36,13 +36,11 @@ const updateBridgeSchema = Joi.object({
     input: Joi.string().allow("").optional(),
     RTLayer: Joi.boolean().allow(null).optional(),
     webhook: Joi.string().allow("").optional(),
-    encoded_prompt: Joi.string().optional(),
+    encoded_prompt: Joi.string().optional()
   })
     .unknown(true)
     .optional(),
-  service: Joi.string()
-    .valid("openai", "anthropic", "groq", "open_router", "mistral", "gemini", "ai_ml", "grok")
-    .optional(),
+  service: Joi.string().valid("openai", "anthropic", "groq", "open_router", "mistral", "gemini", "ai_ml", "grok").optional(),
   apikey_object_id: Joi.object()
     .pattern(Joi.string(), Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
     .optional(),
@@ -64,7 +62,7 @@ const updateBridgeSchema = Joi.object({
   fall_back: Joi.object({
     is_enable: Joi.boolean().optional(),
     service: Joi.string().optional(),
-    model: Joi.string().optional(),
+    model: Joi.string().optional()
   }).optional(),
   guardrails: Joi.object().optional(),
   web_search_filters: Joi.alternatives().try(Joi.array().items(Joi.string()), Joi.object()).optional(),
@@ -75,7 +73,7 @@ const updateBridgeSchema = Joi.object({
   variables_path: Joi.object().optional(),
   built_in_tools_data: Joi.object({
     built_in_tools: Joi.array().items(Joi.string()).optional(),
-    built_in_tools_operation: Joi.string().valid("0", "1").optional(),
+    built_in_tools_operation: Joi.string().valid("0", "1").optional()
   }).optional(),
   agents: Joi.object({
     connected_agents: Joi.object()
@@ -84,20 +82,20 @@ const updateBridgeSchema = Joi.object({
         Joi.object({
           bridge_id: Joi.string()
             .pattern(/^[0-9a-fA-F]{24}$/)
-            .optional(),
+            .optional()
         })
       )
       .optional(),
-    agent_status: Joi.string().valid("0", "1").optional(),
+    agent_status: Joi.string().valid("0", "1").optional()
   }).optional(),
   functionData: Joi.object({
     function_id: Joi.string()
       .pattern(/^[0-9a-fA-F]{24}$/)
       .optional(),
     function_operation: Joi.string().valid("0", "1").optional(),
-    script_id: Joi.string().optional(),
+    script_id: Joi.string().optional()
   }).optional(),
-  version_description: Joi.string().allow("").optional(),
+  version_description: Joi.string().allow("").optional()
 }).unknown(true); // Allow additional fields
 
 const bridgeIdParamSchema = Joi.object({
@@ -106,17 +104,17 @@ const bridgeIdParamSchema = Joi.object({
     .required()
     .messages({
       "string.pattern.base": "agent_id must be a valid MongoDB ObjectId",
-      "any.required": "agent_id is required",
+      "any.required": "agent_id is required"
     }),
   version_id: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
-    .optional(),
+    .optional()
 }).unknown(true);
 
 const modelNameParamSchema = Joi.object({
   modelName: Joi.string().required().messages({
-    "any.required": "modelName is required",
-  }),
+    "any.required": "modelName is required"
+  })
 }).unknown(true);
 
 const cloneAgentSchema = Joi.object({
@@ -125,28 +123,28 @@ const cloneAgentSchema = Joi.object({
     .required()
     .messages({
       "string.pattern.base": "agent_id must be a valid MongoDB ObjectId",
-      "any.required": "agent_id is required",
+      "any.required": "agent_id is required"
     }),
   to_shift_org_id: Joi.alternatives().try(Joi.string(), Joi.number()).required().messages({
-    "any.required": "to_shift_org_id is required",
-  }),
+    "any.required": "to_shift_org_id is required"
+  })
 }).unknown(true);
 
 // Validation objects for use with validate middleware
 const createAgent = {
-  body: createBridgeSchema,
+  body: createBridgeSchema
 };
 
 const getAgentsByModel = {
-  params: modelNameParamSchema,
+  params: modelNameParamSchema
 };
 
 const cloneAgent = {
-  body: cloneAgentSchema,
+  body: cloneAgentSchema
 };
 
 const getAgent = {
-  params: bridgeIdParamSchema,
+  params: bridgeIdParamSchema
 };
 
 // Export both the schemas and validation objects
@@ -156,5 +154,5 @@ export default {
   createAgent,
   getAgentsByModel,
   cloneAgent,
-  getAgent,
+  getAgent
 };

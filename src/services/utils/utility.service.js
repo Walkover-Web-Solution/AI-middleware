@@ -92,7 +92,7 @@ function encryptString(input) {
     "?": "Z",
     "<": "AA",
     ">": "AAA",
-    "|": "LLL",
+    "|": "LLL"
   };
   const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const specialChars = Object.keys(specialCharMap).map(escapeRegExp).join("");
@@ -113,11 +113,11 @@ async function sendAlert(message, error, bridgeId, orgId, channelId) {
       error: {
         details: {
           alert: message,
-          error_message: error.toString(),
+          error_message: error.toString()
         },
         bridge_id: bridgeId,
-        org_id: orgId,
-      },
+        org_id: orgId
+      }
     });
     return true;
   } catch (err) {
@@ -132,7 +132,7 @@ function reportLoginFailure(type, token, reason) {
     .post("https://flow.sokt.io/func/scrimCFAKPWg", {
       type,
       token,
-      reason,
+      reason
     })
     .catch((err) => {
       const message = err?.message || err;
@@ -152,7 +152,7 @@ function convertAIConversation(conversation) {
 
 async function sendResponse(response_format, data, variables = {}) {
   const data_to_send = {
-    response: data,
+    response: data
   };
 
   switch (response_format.type) {
@@ -175,12 +175,12 @@ async function sendMessage(cred, data) {
     const response = await fetch(`https://api.rtlayer.com/message?apiKey=${cred.apikey}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         ...cred,
-        message: JSON.stringify(data),
-      }),
+        message: JSON.stringify(data)
+      })
     });
     return response;
   } catch (error) {
@@ -194,7 +194,7 @@ async function sendRequest(url, data, method, headers) {
     const response = await fetch(url, {
       method: method,
       headers: headers,
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
     return response.json();
   } catch (error) {
@@ -212,7 +212,7 @@ function generateAuthToken(user, org, extraDetails = {}, options = {}) {
     {
       user,
       org,
-      ...safeExtraDetails,
+      ...safeExtraDetails
     },
     process.env.SecretKey,
     signOptions
@@ -238,14 +238,7 @@ const executeAiOperation = async (req, org_id, config) => {
   const userMessage = config.getMessage ? config.getMessage(req, context) : prompt;
   const thread_id = req.body.thread_id;
 
-  const aiResult = await callAiMiddleware(
-    userMessage,
-    config.bridgeIdConst,
-    variables,
-    configuration,
-    "text",
-    thread_id
-  );
+  const aiResult = await callAiMiddleware(userMessage, config.bridgeIdConst, variables, configuration, "text", thread_id);
 
   if (config.postProcess) {
     return await config.postProcess(aiResult, req, context);
@@ -254,7 +247,7 @@ const executeAiOperation = async (req, org_id, config) => {
   return {
     success: true,
     message: config.successMessage,
-    result: aiResult,
+    result: aiResult
   };
 };
 
@@ -270,5 +263,5 @@ export {
   sendResponse,
   generateAuthToken,
   executeAiOperation,
-  reportLoginFailure,
+  reportLoginFailure
 };

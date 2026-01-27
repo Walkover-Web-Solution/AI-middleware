@@ -11,7 +11,7 @@ export default (sequelize, DataTypes) => {
       // define association here
       raw_data.belongsTo(models.conversations, {
         foreignKey: "chat_id",
-        as: "conversation",
+        as: "conversation"
       });
     }
   }
@@ -21,7 +21,7 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.UUID,
         primaryKey: true,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: DataTypes.UUIDV4
       },
       org_id: DataTypes.STRING,
       authkey_name: DataTypes.STRING,
@@ -29,11 +29,11 @@ export default (sequelize, DataTypes) => {
       service: DataTypes.STRING,
       status: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: false
       },
       error: {
         type: DataTypes.TEXT,
-        defaultValue: "none",
+        defaultValue: "none"
       },
       model: DataTypes.STRING,
       input_tokens: DataTypes.FLOAT,
@@ -45,19 +45,19 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         references: {
           model: "conversations",
-          key: "id",
-        },
+          key: "id"
+        }
       },
       variables: DataTypes.JSON,
       is_present: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
+        defaultValue: false
+      }
     },
     {
       sequelize,
       modelName: "raw_data",
-      timestamps: false,
+      timestamps: false
     }
   );
   return raw_data;

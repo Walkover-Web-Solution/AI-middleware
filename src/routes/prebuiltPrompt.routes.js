@@ -7,18 +7,8 @@ import prebuiltPromptValidation from "../validation/joi_validation/prebuiltPromp
 const router = express.Router();
 
 router.get("/", middleware, prebuiltPromptController.getPrebuiltPrompts);
-router.put(
-  "/",
-  middleware,
-  validate(prebuiltPromptValidation.updatePrebuiltPrompt),
-  prebuiltPromptController.updatePrebuiltPrompt
-);
-router.post(
-  "/reset",
-  middleware,
-  validate(prebuiltPromptValidation.resetPrebuiltPrompts),
-  prebuiltPromptController.resetPrebuiltPrompts
-);
+router.put("/", middleware, validate(prebuiltPromptValidation.updatePrebuiltPrompt), prebuiltPromptController.updatePrebuiltPrompt);
+router.post("/reset", middleware, validate(prebuiltPromptValidation.resetPrebuiltPrompts), prebuiltPromptController.resetPrebuiltPrompts);
 router.get(
   "/:prompt_key",
   middleware,
