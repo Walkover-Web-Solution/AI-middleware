@@ -1,8 +1,8 @@
 import ChatBotModel from "../mongoModel/ChatBot.model.js";
 
-const create = async (chatBotData) => {
+const create = async (chatBotData, session = null) => {
   const newChatBot = new ChatBotModel(chatBotData);
-  const savedChatBot = await newChatBot.save();
+  const savedChatBot = await newChatBot.save({ session });
   return savedChatBot;
 };
 
