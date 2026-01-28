@@ -151,12 +151,12 @@ const discardVersion = async (req, res, next) => {
     return next();
   }
 
-  const bridgeData = { ...bridgeDataResult.bridges };
+  const agentData = { ...bridgeDataResult.bridges };
   const keysToRemove = ["name", "slugName", "bridgeType", "_id", "versions", "status", "apiCalls", "bridge_status"];
-  keysToRemove.forEach((key) => delete bridgeData[key]);
+  keysToRemove.forEach((key) => delete agentData[key]);
 
-  bridgeData.is_drafted = false;
-  await agentVersionDbService.updateAgents(null, bridgeData, version_id);
+  agentData.is_drafted = false;
+  await agentVersionDbService.updateAgents(null, agentData, version_id);
 
   res.locals = {
     success: true,
