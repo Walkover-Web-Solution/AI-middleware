@@ -131,13 +131,26 @@ const bulkPublishVersion = async (req, res, next) => {
 
 const discardVersion = async (req, res, next) => {
     const { version_id } = req.params;
-    const agentDataResult = await agentVersionDbService.getVersionWithTools(version_id);
-    if (!agentDataResult || !agentDataResult.bridges) {
-        res.locals = { success: false, message: "Agent not found" };
+    const { bridge_id } = req.body;
+    const org_id = req.profile.org.id;
+
+    // Verify version exists
+    const versionDataResult = await agentVersionDbService.getVersionWithTools(version_id);
+    if (!versionDataResult || !versionDataResult.bridges) {
+        res.locals = { success: false, message: "Version not found" };
         req.statusCode = 400;
         return next();
     }
-    const agentData = agentDataResult.bridges;
+
+    // Fetch bridge/agent data using bridge_id
+    const bridgeDataResult = await ConfigurationServices.getAgentsWithoutTools(bridge_id, org_id);
+    if (!bridgeDataResult || !bridgeDataResult.bridges) {
+        res.locals = { success: false, message: "Bridge not found" };
+        req.statusCode = 400;
+        return next();
+    }
+
+    const agentData = { ...bridgeDataResult.bridges };
     const keysToRemove = ['name', 'slugName', 'bridgeType', '_id', 'versions', 'status', 'apiCalls', 'bridge_status'];
     keysToRemove.forEach(key => delete agentData[key]);
 
