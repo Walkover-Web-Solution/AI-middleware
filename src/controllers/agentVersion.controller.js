@@ -130,27 +130,40 @@ const bulkPublishVersion = async (req, res, next) => {
 };
 
 const discardVersion = async (req, res, next) => {
-    const { version_id } = req.params;
-    const agentDataResult = await agentVersionDbService.getVersionWithTools(version_id);
-    if (!agentDataResult || !agentDataResult.bridges) {
-        res.locals = { success: false, message: "Agent not found" };
-        req.statusCode = 400;
-        return next();
-    }
-    const agentData = agentDataResult.bridges;
-    const keysToRemove = ['name', 'slugName', 'bridgeType', '_id', 'versions', 'status', 'apiCalls', 'bridge_status'];
-    keysToRemove.forEach(key => delete agentData[key]);
+  const { version_id } = req.params;
+  const { bridge_id } = req.body;
+  const org_id = req.profile.org.id;
 
-    agentData.is_drafted = false;
-    await agentVersionDbService.updateAgents(null, agentData, version_id);
-
-    res.locals = {
-        success: true,
-        message: "version changes discarded successfully",
-        version_id: version_id
-    };
-    req.statusCode = 200;
+  // Verify version exists
+  const versionDataResult = await agentVersionDbService.getVersionWithTools(version_id);
+  if (!versionDataResult || !versionDataResult.bridges) {
+    res.locals = { success: false, message: "Version not found" };
+    req.statusCode = 400;
     return next();
+  }
+
+  // Fetch bridge/agent data using bridge_id
+  const bridgeDataResult = await ConfigurationServices.getAgentsWithoutTools(bridge_id, org_id);
+  if (!bridgeDataResult || !bridgeDataResult.bridges) {
+    res.locals = { success: false, message: "Bridge not found" };
+    req.statusCode = 400;
+    return next();
+  }
+
+  const agentData = { ...bridgeDataResult.bridges };
+  const keysToRemove = ["name", "slugName", "bridgeType", "_id", "versions", "status", "apiCalls", "bridge_status"];
+  keysToRemove.forEach((key) => delete agentData[key]);
+
+  agentData.is_drafted = false;
+  await agentVersionDbService.updateAgents(null, agentData, version_id);
+
+  res.locals = {
+    success: true,
+    message: "version changes discarded successfully",
+    version_id: version_id,
+  };
+  req.statusCode = 200;
+  return next();
 };
 
 const suggestModel = async (req, res, next) => {
