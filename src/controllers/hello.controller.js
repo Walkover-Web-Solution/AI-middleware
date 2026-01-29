@@ -3,7 +3,6 @@ import { subscribeSchema } from "../validation/joi_validation/bridge.validation.
 import modelConfigService from "../db_services/modelConfig.service.js";
 
 export const subscribe = async (req, res, next) => {
-  // Validate request body
   const { ispublic } = req.chatBot;
   let data = {};
 
@@ -22,6 +21,7 @@ export const subscribe = async (req, res, next) => {
     const { slugName: url_slugName } = req.body;
     data = await ConfigurationServices.getAgentByUrlSlugname(url_slugName);
   }
+
   const model = data?.modelConfig?.model;
   const service = data?.service;
   const modelConfig = await modelConfigService.getModelConfigsByNameAndService(model, service);
