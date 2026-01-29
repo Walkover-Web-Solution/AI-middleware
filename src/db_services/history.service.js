@@ -560,6 +560,56 @@ async function createConversationLog(payload) {
   }
 }
 
+/**
+ * Get chatbot thread history with pagination (raw data without formatting)
+ * @param {string} org_id - Organization ID
+ * @param {string} thread_id - Thread ID
+ * @param {string} bridge_id - Bridge ID
+ * @param {string} sub_thread_id - Sub Thread ID
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 30)
+ * @returns {Object} - Success status, raw data with pagination
+ */
+async function findChatbotThreadHistory(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
+  const offset = (page - 1) * limit;
+  const whereConditions = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+    sub_thread_id: sub_thread_id,
+  };
+  const logs = await models.pg.conversation_logs.findAll({
+    where: whereConditions,
+    attributes: [
+      "id",
+      "llm_message",
+      "user",
+      "chatbot_message",
+      "error",
+      "user_feedback",
+      "message_id",
+      "sub_thread_id",
+      "thread_id",
+      "version_id",
+      "bridge_id",
+      "user_urls",
+      "llm_urls",
+      "created_at",
+      "updated_at",
+    ],
+    order: [["created_at", "DESC"]],
+    limit: limit,
+    offset: offset,
+  });
+
+  const reversedLogs = logs.reverse();
+
+  return {
+    success: true,
+    data: reversedLogs,
+  };
+}
+
 export {
   findConversationLogsByIds,
   updateStatus,
@@ -569,4 +619,5 @@ export {
   findHistoryByMessageId,
   findHistoryByMessageId as getHistoryByMessageId,
   createConversationLog,
+  findChatbotThreadHistory,
 };
