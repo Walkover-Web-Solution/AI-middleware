@@ -42,22 +42,22 @@ const createAgentController = async (req, res, next) => {
 
         const all_agent_name = all_agent.map(agent => agent.name);
 
-        if (purpose) {
-            const variables = {
+    if (purpose) {
+      const variables = {
                 "purpose": purpose,
                 "all_bridge_names": all_agent_name
-            };
-            const user = "Generate Agent Configuration accroding to the given user purpose.";
+      };
+      const user = "Generate Agent Configuration accroding to the given user purpose.";
             const agent_data = await callAiMiddleware(user, bridge_ids['create_bridge_using_ai'], variables);
-            // Assuming agent_data is parsed JSON from callAiMiddleware
+      // Assuming agent_data is parsed JSON from callAiMiddleware
             if (typeof agent_data === 'object') {
-                model = agent_data.model || model;
-                service = agent_data.service || service;
-                name = agent_data.name;
-                prompt = agent_data.system_prompt || prompt;
-                type = agent_data.type || type;
-            }
-        }
+        model = agent_data.model || model;
+        service = agent_data.service || service;
+        name = name || agent_data.name;
+        prompt = agent_data.system_prompt || prompt;
+        type = agent_data.type || type;
+      }
+    }
 
         let name_next_count = 1;
         let slug_next_count = 1;
