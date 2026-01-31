@@ -55,7 +55,7 @@ const createAgentController = async (req, res, next) => {
       if (typeof agent_data === "object") {
         model = agent_data.model || model;
         service = agent_data.service || service;
-        name = agent_data.name;
+        name = name || agent_data.name;
         prompt = agent_data.system_prompt || prompt;
         type = agent_data.type || type;
       }
