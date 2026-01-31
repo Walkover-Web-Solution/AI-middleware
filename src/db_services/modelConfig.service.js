@@ -1,6 +1,22 @@
 import ModelsConfigModel from "../mongoModel/ModelConfig.model.js";
 import { flatten } from "flat";
 
+async function getModelInfoByServiceAndType(service, model_type) {
+  const modelInfo = await ModelsConfigModel.find({
+    service,
+    ...(model_type && { "validationConfig.type": model_type }),
+  })
+    .select("-configuration")
+    .lean();
+
+  const filteredInfo = modelInfo.map((mc) => ({
+    ...mc,
+    _id: mc._id.toString(),
+  }));
+
+  return { error: false, data: filteredInfo };
+}
+
 async function checkModel(model_name, service) {
   //function to check if a model configuration exists
   const existingConfig = await ModelsConfigModel.findOne({ model_name, service });
@@ -122,4 +138,5 @@ export default {
   getModelConfigsByNameAndService,
   checkModel,
   updateModelConfigs,
+  getModelInfoByServiceAndType,
 };
