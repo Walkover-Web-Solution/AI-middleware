@@ -2,6 +2,24 @@ import modelConfigDbService from "../db_services/modelConfig.service.js";
 import { validateModel } from "../services/utils/modelValidation.utils.js";
 import ConfigurationServices from "../db_services/configuration.service.js";
 
+async function getModelInfoByServiceAndType(req, res, next) {
+  const { service, model_type } = req.query;
+
+  const result = await modelConfigDbService.getModelInfoByServiceAndType(service, model_type);
+
+  if (result.length == 0) {
+    throw new Error(`No model(s) exist for Service: '${service}' and Model Type: '${model_type}'`);
+  }
+
+  res.locals = {
+    success: true,
+    data: result,
+    count: result.length,
+  };
+  req.statusCode = 200;
+  return next();
+}
+
 async function saveUserModelConfiguration(req, res, next) {
   const org_id = req.profile.org.id;
   const { model_name, service, display_name, status, configuration, outputConfig, validationConfig } = req.body;
@@ -67,4 +85,4 @@ async function deleteUserModelConfiguration(req, res, next) {
   return next();
 }
 
-export { saveUserModelConfiguration, deleteUserModelConfiguration };
+export { getModelInfoByServiceAndType, saveUserModelConfiguration, deleteUserModelConfiguration };
