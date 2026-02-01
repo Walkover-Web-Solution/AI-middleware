@@ -24,12 +24,11 @@ const createAgentController = async (req, res, next) => {
     const user_id = req.profile.user.id;
     const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
 
-    let prompt =
-      "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
-    let name = null;
-    let service = "openai";
-    let model = "gpt-5-nano";
-    let type = "chat";
+        let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
+        let name = agents?.name || null;
+        let service = "openai";
+        let model = "gpt-5-nano";
+        let type = "chat";
 
     if (agents.templateId) {
       const template_id = agents.templateId;
@@ -61,28 +60,34 @@ const createAgentController = async (req, res, next) => {
       }
     }
 
-    let name_next_count = 1;
-    let slug_next_count = 1;
+        let slugName;
+        
+        if (name) {
+            slugName = name;
+        } else {
+            let name_next_count = 1;
+            let slug_next_count = 1;
 
-    for (const agent of all_agent) {
-      name = name || "untitled_agent";
-      if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.name.replace("untitled_agent_", ""));
-        if (num >= name_next_count) name_next_count = num + 1;
-      } else if (agent.name === name) {
-        name_next_count += 1;
-      }
+            for (const agent of all_agent) {
+                name = name || "untitled_agent";
+                if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
+                    const num = parseInt(agent.name.replace("untitled_agent_", ""));
+                    if (num >= name_next_count) name_next_count = num + 1;
+                } else if (agent.name === name) {
+                    name_next_count += 1;
+                }
 
-      if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-        if (num >= slug_next_count) slug_next_count = num + 1;
-      } else if (agent.slugName === name) {
-        slug_next_count += 1;
-      }
-    }
+                if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
+                    const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
+                    if (num >= slug_next_count) slug_next_count = num + 1;
+                } else if (agent.slugName === name) {
+                    slug_next_count += 1;
+                }
+            }
 
-    const slugName = `${name}_${slug_next_count}`;
-    name = `${name}_${name_next_count}`;
+            slugName = `${name}_${slug_next_count}`;
+            name = `${name}_${name_next_count}`;
+        }
 
     // Construct model data based on model configuration
     const keys_to_update = [
