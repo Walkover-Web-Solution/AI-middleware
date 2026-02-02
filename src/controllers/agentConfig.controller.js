@@ -26,6 +26,7 @@ const createAgentController = async (req, res, next) => {
 
         let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
         let name = agents?.name || null;
+        const meta =req.body.meta || null;
         let service = "openai";
         let model = "gpt-5-nano";
         let type = "chat";
@@ -169,6 +170,7 @@ const createAgentController = async (req, res, next) => {
       bridge_status: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
+      meta: meta,
     });
 
     const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
