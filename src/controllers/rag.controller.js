@@ -79,29 +79,66 @@ export const getEmbedToken = async (req, res, next) => {
 
 export const searchKnowledge = async (req, res, next) => {
   try {
-    const { query } = req.body;
-    const ownerId = req.body.agent_id;
+    const { query, collection_id, resource_id, owner_id } = req.body;
 
     // Get environment variables
-    const hippocampusUrl = "http://hippocampus.gtwy.ai/search";
     const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
-    const collectionId = process.env.HIPPOCAMPUS_COLLECTION_ID;
+    let ownerId;
+    let collectionId;
 
-    // Make the API call to Hippocampus
-    const response = await axios.post(
-      hippocampusUrl,
-      {
-        query,
-        collectionId,
-        ownerId,
-      },
-      {
+    // Type 1: Search by collection_id (owner_id is required from body)
+    if (collection_id) {
+      collectionId = collection_id;
+      ownerId = owner_id; // Already validated to be present
+    }
+    // Type 2: Search by resource_id
+    else if (resource_id) {
+      // Always fetch resource details to get collection_id (and owner_id if not provided)
+      const resourceUrl = `http://hippocampus.gtwy.ai/resource/${resource_id}`;
+      const resourceResponse = await axios.get(resourceUrl, {
         headers: {
-          "Content-Type": "application/json",
           "x-api-key": hippocampusApiKey,
         },
+      });
+
+      // Extract collection_id from resource response (always needed)
+      collectionId = resourceResponse.data?.collectionId;
+
+      // If owner_id was not provided in body, get it from resource response
+      if (owner_id) {
+        ownerId = owner_id;
+      } else {
+        ownerId = resourceResponse.data?.ownerId;
       }
-    );
+
+      if (!collectionId) {
+        throw new Error("Failed to retrieve collectionId from resource");
+      }
+
+      if (!ownerId) {
+        throw new Error("Failed to retrieve ownerId from resource");
+      }
+    }
+
+    // Make the API call to Hippocampus search
+    const hippocampusUrl = "http://hippocampus.gtwy.ai/search";
+    const searchPayload = {
+      query,
+      ownerId,
+      collectionId, // Always send collection_id
+    };
+
+    // Add resource_id if it was provided
+    if (resource_id) {
+      searchPayload.resourceId = resource_id;
+    }
+
+    const response = await axios.post(hippocampusUrl, searchPayload, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": hippocampusApiKey,
+      },
+    });
 
     // Extract only content from the result
     const answers = response.data?.result?.map((item) => item.payload?.content) || [];
@@ -252,7 +289,10 @@ export const createResourceInCollection = async (req, res, next) => {
     const user_id = req.profile.user.id;
     const org_id = req.profile.org.id;
     let ownerId;
-    if (folder_id) {
+    // Use owner_id from body if provided, otherwise use current logic
+    if (req.body.owner_id) {
+      ownerId = req.body.owner_id;
+    } else if (folder_id) {
       ownerId = org_id + "_" + folder_id + "_" + user_id;
     } else if (isEmbedUser) {
       ownerId = org_id + "_" + user_id;
@@ -451,7 +491,10 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
     const user_id = req.profile.user.id;
     const org_id = req.profile.org.id;
     let ownerId;
-    if (folder_id) {
+    // Use owner_id from body if provided, otherwise use current logic
+    if (req.body.owner_id) {
+      ownerId = req.body.owner_id;
+    } else if (folder_id) {
       ownerId = org_id + "_" + folder_id + "_" + user_id;
     } else if (isEmbedUser) {
       ownerId = org_id + "_" + user_id;

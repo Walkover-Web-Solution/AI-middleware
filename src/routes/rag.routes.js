@@ -28,7 +28,7 @@ const routes = express.Router();
 
 routes.route("/embed/login").get(EmbeddecodeToken, ragEmbedUserLogin);
 routes.get("/get-emebed-token", middleware, getEmbedToken);
-routes.post("/chatbot/search", middleware, validate({ body: searchSchema }), searchKnowledge);
+routes.post("/search", middleware, validate({ body: searchSchema }), searchKnowledge);
 
 // Collection routes
 routes.post(

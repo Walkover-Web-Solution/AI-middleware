@@ -4,10 +4,41 @@ const searchSchema = Joi.object({
   query: Joi.string().required().messages({
     "any.required": "query is required",
   }),
-  agent_id: Joi.string().required().messages({
-    "any.required": "agent_id is required",
-  }),
-}).unknown(true);
+  collection_id: Joi.string().optional(),
+  resource_id: Joi.string().optional(),
+  owner_id: Joi.string().optional(),
+})
+  .custom((value, helpers) => {
+    const { collection_id, resource_id, owner_id } = value;
+
+    // Either collection_id or resource_id must be provided
+    if (!collection_id && !resource_id) {
+      return helpers.error("custom.searchType", {
+        message: "Either collection_id or resource_id must be provided",
+      });
+    }
+
+    // Both cannot be provided at the same time
+    if (collection_id && resource_id) {
+      return helpers.error("custom.searchType", {
+        message: "Cannot provide both collection_id and resource_id",
+      });
+    }
+
+    // If collection_id is provided, owner_id is required
+    if (collection_id && !owner_id) {
+      return helpers.error("custom.ownerIdRequired", {
+        message: "owner_id is required when using collection_id",
+      });
+    }
+
+    return value;
+  })
+  .messages({
+    "custom.searchType": "{{#message}}",
+    "custom.ownerIdRequired": "{{#message}}",
+  })
+  .unknown(true);
 
 const createCollectionSchema = Joi.object({
   name: Joi.string().required().messages({
