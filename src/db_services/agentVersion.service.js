@@ -9,6 +9,7 @@ import conversationDbService from "./conversation.service.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { redis_keys, bridge_ids } from "../configs/constant.js";
+import { getReqOptVariablesInPrompt, transformAgentVariableToToolCallFormat } from "../utils/agentVariables.js";
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -401,11 +402,15 @@ async function publish(org_id, version_id, user_id) {
   const parentConfiguration = await configurationModel.findById(parentId).lean();
   if (!parentConfiguration) throw new Error("Parent configuration not found");
 
-  const publishedVersionId = getVersionData._id.toString();
-  const previousPublishedVersionId = parentConfiguration.published_version_id;
+    const publishedVersionId = getVersionData._id.toString();
+    const previousPublishedVersionId = parentConfiguration.published_version_id;
 
-  // Preserve chatbot_auto_answers value from parent before updating
-  const chatbotAutoAnswers = parentConfiguration.chatbot_auto_answers;
+    // Extract agent variables logic
+    const prompt = getVersionData.configuration?.prompt || "";
+    const variableState = getVersionData.variables_state || {};
+    const variablePath = getVersionData.variables_path || {};
+    const agentVariables = getReqOptVariablesInPrompt(prompt, variableState, variablePath);
+    const transformedAgentVariables = transformAgentVariableToToolCallFormat(agentVariables);
 
   // Prepare updated configuration
   const updatedConfiguration = { ...parentConfiguration, ...getVersionData };
@@ -418,18 +423,26 @@ async function publish(org_id, version_id, user_id) {
     updatedConfiguration.chatbot_auto_answers = chatbotAutoAnswers;
   }
 
-  if (updatedConfiguration.function_ids) {
-    updatedConfiguration.function_ids = updatedConfiguration.function_ids.map((fid) => new ObjectId(fid));
-  }
+    if (updatedConfiguration.function_ids) {
+        updatedConfiguration.function_ids = updatedConfiguration.function_ids.map(fid => new ObjectId(fid));
+    }
 
-  // Background tasks
-  const prompt = updatedConfiguration.configuration?.prompt || "";
-  const tools = getVersionData.apiCalls;
+    // Update connected_agent_details with agent variables
+    updatedConfiguration.connected_agent_details = {
+        ...updatedConfiguration.connected_agent_details || {},
+        agent_variables: {
+            fields: transformedAgentVariables.fields,
+            required_params: transformedAgentVariables.required_params
+        }
+    };
 
-  makeQuestion(parentId, prompt, tools, true).catch(console.error);
-  getPromptEnhancerPercentage(parentId, prompt).catch(console.error);
-  calculateAndSavePromptTokens(parentId, prompt, tools).catch(console.error);
-  // deleteCurrentTestcaseHistory(version_id).catch(console.error); // Implement if needed
+    // Background tasks
+    const tools = getVersionData.apiCalls;
+    
+    makeQuestion(parentId, prompt, tools, true).catch(console.error);
+    getPromptEnhancerPercentage(parentId, prompt).catch(console.error);
+    calculateAndSavePromptTokens(parentId, prompt, tools).catch(console.error);
+    // deleteCurrentTestcaseHistory(version_id).catch(console.error); // Implement if needed
 
   // Transaction
   const session = await mongoose.startSession();
@@ -465,7 +478,7 @@ async function publish(org_id, version_id, user_id) {
     },
   ]);
 
-  return { success: true, message: "Configuration updated successfully" };
+    return { success: true, message: "Version published successfully" };
 }
 
 async function getAllConnectedAgents(id, org_id, type) {
