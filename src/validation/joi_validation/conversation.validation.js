@@ -70,13 +70,16 @@ const getAllSubThreadsController = {
 };
 
 const deleteBridges = {
-    params: Joi.object().keys({
-        agent_id: Joi.objectId().required(),
-    }).unknown(true),
-    body: Joi.object().keys({
-        org_id: Joi.string(),
-        restore: Joi.boolean(),
-    }).unknown(true),
+  params: Joi.object()
+    .keys({
+      agent_id: Joi.objectId().required(),
+    })
+    .unknown(true),
+  body: Joi.object()
+    .keys({
+      restore: Joi.boolean(),
+    })
+    .unknown(true),
 };
 
 const getSystemPromptHistory = {

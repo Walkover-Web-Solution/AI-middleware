@@ -190,19 +190,19 @@ const createAgentController = async (req, res, next) => {
 };
 
 const updateAgentController = async (req, res, next) => {
-    // Validation handled by middleware
-    const { agent_id, version_id } = req.params;
-    const body = req.body;
-    const org_id = req.profile.org.id;
-    const user_id = req.profile.user.id;
-    const agentData = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
-    if (!agentData.bridges) {
-        res.locals = { success: false, message: "Agent not found" };
-        req.statusCode = 404;
-        return next();
-    }
-    const agent = agentData.bridges;
-    const parent_id = agent.parent_id;
+  // Validation handled by middleware
+  const { agent_id, version_id } = req.params;
+  const body = req.body;
+  const org_id = String(req.profile.org.id);
+  const user_id = String(req.profile.user.id);
+  const agentData = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
+  if (!agentData.bridges) {
+    res.locals = { success: false, message: "Agent not found" };
+    req.statusCode = 404;
+    return next();
+  }
+  const agent = agentData.bridges;
+  const parent_id = agent.parent_id;
 
     // Authorization check is now handled by requireAdminRole middleware
     const current_configuration = agent.configuration || {};
@@ -630,7 +630,8 @@ const getAllAgentController = async (req, res, next) => {
 
 const deleteAgentController = async (req, res, next) => {
     const { agent_id } = req.params;
-    const { org_id, restore = false } = req.body;
+    const org_id = req.profile.org.id;
+    const { restore = false } = req.body;
     try {
 
         let result;
