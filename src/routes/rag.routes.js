@@ -2,7 +2,6 @@ import express from "express";
 import {
   getEmbedToken,
   ragEmbedUserLogin,
-  searchKnowledge,
   createCollection,
   getAllCollections,
   getCollectionById,
@@ -16,7 +15,6 @@ import {
 import { EmbeddecodeToken, middleware, checkAgentAccessMiddleware } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
-  searchSchema,
   createCollectionSchema,
   collectionIdSchema,
   createResourceSchema,
@@ -28,7 +26,6 @@ const routes = express.Router();
 
 routes.route("/embed/login").get(EmbeddecodeToken, ragEmbedUserLogin);
 routes.get("/get-emebed-token", middleware, getEmbedToken);
-routes.post("/search", middleware, validate({ body: searchSchema }), searchKnowledge);
 
 // Collection routes
 routes.post(
