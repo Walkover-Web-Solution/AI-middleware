@@ -37,6 +37,11 @@ router.put(
   validate(embedValidation.updateAgentMetadata),
   updateAgentController
 );
+router.put(
+  "/:agent_id",
+  GtwyEmbeddecodeToken,
+  updateAgentController
+);
 
 router.delete(
   "/:agent_id",
