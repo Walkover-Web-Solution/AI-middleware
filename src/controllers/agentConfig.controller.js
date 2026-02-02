@@ -25,6 +25,7 @@ const createAgentController = async (req, res, next) => {
 
         let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
         let name = agents?.name || null;
+        const meta =req.body.meta || {};
         let service = "openai";
         let model = "gpt-5-nano";
         let type = "chat";
@@ -151,24 +152,25 @@ const createAgentController = async (req, res, next) => {
         const agent_limit = agents.bridge_limit || 0;
         const agent_usage = agents.bridge_usage || 0;
 
-        const result = await ConfigurationServices.createAgent({
-            configuration: model_data,
-            name: name,
-            slugName: slugName,
-            service: service,
-            bridgeType: agentType,
-            org_id: org_id,
-            status: 1,
-            gpt_memory: true,
-            folder_id: folder_id,
-            user_id: user_id,
-            fall_back: fall_back,
-            bridge_limit: agent_limit,
-            bridge_usage: agent_usage,
-            bridge_status: 1,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+    const result = await ConfigurationServices.createAgent({
+      configuration: model_data,
+      name: name,
+      slugName: slugName,
+      service: service,
+      bridgeType: agentType,
+      org_id: org_id,
+      status: 1,
+      gpt_memory: true,
+      folder_id: folder_id,
+      user_id: user_id,
+      fall_back: fall_back,
+      bridge_limit: agent_limit,
+      bridge_usage: agent_usage,
+      bridge_status: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      meta: meta,
+    });
 
         const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
         const update_fields = { versions: [create_version._id.toString()] };
