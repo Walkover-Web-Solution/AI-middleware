@@ -417,6 +417,8 @@ async function publish(org_id, version_id, user_id) {
   delete updatedConfiguration._id;
   updatedConfiguration.published_version_id = publishedVersionId;
   delete updatedConfiguration.apiCalls; // Remove looked-up data
+  
+  const chatbotAutoAnswers = parentConfiguration.chatbot_auto_answers;
 
   // Restore the chatbot_auto_answers value from parent
   if (chatbotAutoAnswers !== undefined) {
