@@ -66,6 +66,16 @@ const getEmbedDataByUserId = {
     .unknown(true),
 };
 
+const updateAgentMetadata = {
+  body: Joi.object()
+    .keys({
+      meta: Joi.object().required().messages({
+        "any.required": "meta is required",
+      }),
+    })
+    .unknown(false),
+}
+
 export default {
   embedLogin,
   createEmbed,
@@ -73,4 +83,5 @@ export default {
   updateEmbed,
   genrateToken,
   getEmbedDataByUserId,
+  updateAgentMetadata
 };
