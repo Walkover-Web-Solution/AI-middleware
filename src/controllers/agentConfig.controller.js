@@ -198,8 +198,8 @@ const updateAgentController = async (req, res, next) => {
   // Validation handled by middleware
   const { agent_id, version_id } = req.params;
   const body = req.body;
-  const org_id = req.profile.org.id;
-  const user_id = req.profile.user.id;
+  const org_id = String(req.profile.org.id);
+  const user_id = String(req.profile.user.id);
   const agentData = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
   if (!agentData.bridges) {
     res.locals = { success: false, message: "Agent not found" };
@@ -667,32 +667,26 @@ const getAllAgentController = async (req, res, next) => {
 };
 
 const deleteAgentController = async (req, res, next) => {
-  const { agent_id } = req.params;
-  const { org_id, restore = false } = req.body;
-  try {
-    let result;
-
-    if (restore) {
-      // Restore the agent
-      result = await ConfigurationServices.restoreAgent(agent_id, org_id);
-
-      // Log restore operation for audit purposes
-      if (result.success) {
-        console.log(
-          `Agent restore completed for agent ${agent_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`
-        );
-      }
-    } else {
-      // Soft delete the agent
-      result = await ConfigurationServices.deleteAgent(agent_id, org_id);
-
-      // Log soft delete operation for audit purposes
-      if (result.success) {
-        console.log(
-          `Soft delete initiated for agent ${agent_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`
-        );
-      }
-    }
+    const { agent_id } = req.params;
+    const org_id = req.profile.org.id;
+    const { restore = false } = req.body;
+    try {
+        let result;
+        if (restore) {
+            // Restore the agent
+            result = await ConfigurationServices.restoreAgent(agent_id, org_id);
+            // Log restore operation for audit purposes
+            if (result.success) {
+                console.log(`Agent restore completed for agent ${agent_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
+            }
+        } else {
+            // Soft delete the agent
+            result = await ConfigurationServices.deleteAgent(agent_id, org_id);
+            // Log soft delete operation for audit purposes
+            if (result.success) {
+                console.log(`Soft delete initiated for agent ${agent_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);
+            }
+        }
 
     res.locals = result;
     req.statusCode = result?.success ? 200 : 400;
