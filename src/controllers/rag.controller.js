@@ -255,7 +255,10 @@ export const createResourceInCollection = async (req, res, next) => {
         const user_id = req.profile.user.id;
         const org_id = req.profile.org.id;
         let ownerId;
-        if(folder_id){
+        // Use owner_id from body if provided, otherwise use current logic
+        if (req.body.owner_id) {
+            ownerId = req.body.owner_id;
+        } else if(folder_id){
             ownerId = org_id + "_" + folder_id + "_" + user_id;
         }
         else if(isEmbedUser){
@@ -453,7 +456,10 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
         const user_id = req.profile.user.id;
         const org_id = req.profile.org.id;
         let ownerId;
-        if(folder_id){
+        // Use owner_id from body if provided, otherwise use current logic
+        if (req.body.owner_id) {
+            ownerId = req.body.owner_id;
+        } else if(folder_id){
             ownerId = org_id + "_" + folder_id + "_" + user_id;
         }
         else if(isEmbedUser){
