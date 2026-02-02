@@ -24,7 +24,7 @@ const createAgentController = async (req, res, next) => {
         const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
 
         let prompt = "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
-        let name = null;
+        let name = agents?.name || null;
         let service = "openai";
         let model = "gpt-5-nano";
         let type = "chat";
@@ -42,45 +42,51 @@ const createAgentController = async (req, res, next) => {
 
         const all_agent_name = all_agent.map(agent => agent.name);
 
-        if (purpose) {
-            const variables = {
+    if (purpose) {
+      const variables = {
                 "purpose": purpose,
                 "all_bridge_names": all_agent_name
-            };
-            const user = "Generate Agent Configuration accroding to the given user purpose.";
+      };
+      const user = "Generate Agent Configuration accroding to the given user purpose.";
             const agent_data = await callAiMiddleware(user, bridge_ids['create_bridge_using_ai'], variables);
-            // Assuming agent_data is parsed JSON from callAiMiddleware
+      // Assuming agent_data is parsed JSON from callAiMiddleware
             if (typeof agent_data === 'object') {
-                model = agent_data.model || model;
-                service = agent_data.service || service;
-                name = agent_data.name;
-                prompt = agent_data.system_prompt || prompt;
-                type = agent_data.type || type;
+        model = agent_data.model || model;
+        service = agent_data.service || service;
+        name = name || agent_data.name;
+        prompt = agent_data.system_prompt || prompt;
+        type = agent_data.type || type;
+      }
+    }
+
+        let slugName;
+        
+        if (name) {
+            slugName = name;
+        } else {
+            let name_next_count = 1;
+            let slug_next_count = 1;
+
+            for (const agent of all_agent) {
+                name = name || "untitled_agent";
+                if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
+                    const num = parseInt(agent.name.replace("untitled_agent_", ""));
+                    if (num >= name_next_count) name_next_count = num + 1;
+                } else if (agent.name === name) {
+                    name_next_count += 1;
+                }
+
+                if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
+                    const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
+                    if (num >= slug_next_count) slug_next_count = num + 1;
+                } else if (agent.slugName === name) {
+                    slug_next_count += 1;
+                }
             }
+
+            slugName = `${name}_${slug_next_count}`;
+            name = `${name}_${name_next_count}`;
         }
-
-        let name_next_count = 1;
-        let slug_next_count = 1;
-
-        for (const agent of all_agent) {
-            name = name || "untitled_agent";
-            if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-                const num = parseInt(agent.name.replace("untitled_agent_", ""));
-                if (num >= name_next_count) name_next_count = num + 1;
-            } else if (agent.name === name) {
-                name_next_count += 1;
-            }
-
-            if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-                const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-                if (num >= slug_next_count) slug_next_count = num + 1;
-            } else if (agent.slugName === name) {
-                slug_next_count += 1;
-            }
-        }
-
-        const slugName = `${name}_${slug_next_count}`;
-        name = `${name}_${name_next_count}`;
 
         // Construct model data based on model configuration
         const keys_to_update = [
