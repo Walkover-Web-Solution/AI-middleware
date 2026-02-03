@@ -9,7 +9,7 @@ import conversationDbService from "./conversation.service.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { redis_keys, bridge_ids } from "../configs/constant.js";
-import { getReqOptVariablesInPrompt, transformAgentVariableToToolCallFormat } from "../utils/agentVariables.js";
+import { getReqOptVariablesInPrompt, transformAgentVariableToToolCallFormat } from "../utils/BuildAgentVariables.utility.js";
 
 const ObjectId = mongoose.Types.ObjectId;
 
