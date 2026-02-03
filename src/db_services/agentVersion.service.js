@@ -9,6 +9,7 @@ import conversationDbService from "./conversation.service.js";
 import { deleteInCache } from "../cache_service/index.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { redis_keys, bridge_ids } from "../configs/constant.js";
+import { getReqOptVariablesInPrompt, transformAgentVariableToToolCallFormat } from "../utils/BuildAgentVariables.utility.js";
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -416,16 +417,22 @@ async function publish(org_id, version_id, user_id) {
     const publishedVersionId = getVersionData._id.toString();
     const previousPublishedVersionId = parentConfiguration.published_version_id;
 
-    // Preserve chatbot_auto_answers value from parent before updating
-    const chatbotAutoAnswers = parentConfiguration.chatbot_auto_answers;
+    // Extract agent variables logic
+    const prompt = getVersionData.configuration?.prompt || "";
+    const variableState = getVersionData.variables_state || {};
+    const variablePath = getVersionData.variables_path || {};
+    const agentVariables = getReqOptVariablesInPrompt(prompt, variableState, variablePath);
+    const transformedAgentVariables = transformAgentVariableToToolCallFormat(agentVariables);
 
     // Prepare updated configuration
     const updatedConfiguration = { ...parentConfiguration, ...getVersionData };
     delete updatedConfiguration._id;
     updatedConfiguration.published_version_id = publishedVersionId;
     delete updatedConfiguration.apiCalls; // Remove looked-up data
+  
+    const chatbotAutoAnswers = parentConfiguration.chatbot_auto_answers;
 
-    // Restore the chatbot_auto_answers value from parent
+  // Restore the chatbot_auto_answers value from parent
     if (chatbotAutoAnswers !== undefined) {
         updatedConfiguration.chatbot_auto_answers = chatbotAutoAnswers;
     }
@@ -434,8 +441,16 @@ async function publish(org_id, version_id, user_id) {
         updatedConfiguration.function_ids = updatedConfiguration.function_ids.map(fid => new ObjectId(fid));
     }
 
+    // Update connected_agent_details with agent variables
+    updatedConfiguration.connected_agent_details = {
+        ...updatedConfiguration.connected_agent_details || {},
+        agent_variables: {
+            fields: transformedAgentVariables.fields,
+            required_params: transformedAgentVariables.required_params
+        }
+    };
+
     // Background tasks
-    const prompt = updatedConfiguration.configuration?.prompt || "";
     const tools = getVersionData.apiCalls;
     
     makeQuestion(parentId, prompt, tools, true).catch(console.error);
@@ -483,7 +498,7 @@ async function publish(org_id, version_id, user_id) {
         type: 'Version published'
     }]);
 
-    return { success: true, message: "Configuration updated successfully" };
+    return { success: true, message: "Version published successfully" };
 }
 
 async function getAllConnectedAgents(id, org_id, type) {
