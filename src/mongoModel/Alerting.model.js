@@ -19,10 +19,22 @@ const alertSchema = new mongoose.Schema({
       type: Map,
       of: String,
     },
+    user_url: {
+      type: String,
+      required: false,
+    },
   },
   alertType: {
     type: [String],
-    enum: ["Error", "Variable", "metrix_limit_reached", "retry_mechanism", "knowledge_base", "thumbsdown"],
+    enum: [
+      "Error",
+      "Variable",
+      "metrix_limit_reached",
+      "retry_mechanism",
+      "knowledge_base",
+      "thumbsdown",
+      "broadcast_response",
+    ],
     default: [],
     required: true,
   },
