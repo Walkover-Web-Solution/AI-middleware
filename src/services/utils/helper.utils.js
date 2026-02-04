@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import axios from 'axios';
 
 class Helper {
   static encrypt(text) {
