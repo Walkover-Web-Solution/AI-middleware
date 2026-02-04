@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient } from "redis";
 
 const client = createClient({
   url: process.env.REDIS_URI,
@@ -7,12 +7,12 @@ const client = createClient({
   },
 });
 
-client.on('error', (error) => {
-  console.error("Redis:",error)
+client.on("error", (error) => {
+  console.error("Redis:", error);
 });
 
-client.on('ready', () => {
-  console.log('Redis is ready');
+client.on("ready", () => {
+  console.log("Redis is ready");
 });
 
 client.connect();

@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('raw_data', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("raw_data", {
       id: {
         allowNull: false,
         type: Sequelize.UUID,
@@ -11,44 +11,44 @@ module.exports = {
         primaryKey: true,
       },
       org_id: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       authkey_name: {
         type: Sequelize.STRING,
       },
       latency: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
       },
       service: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       model: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
-      status :{
-        type:   Sequelize.BOOLEAN,
+      status: {
+        type: Sequelize.BOOLEAN,
       },
-      error:{
-        type:Sequelize.TEXT,
-        default:"none"
+      error: {
+        type: Sequelize.TEXT,
+        default: "none",
       },
       input_tokens: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
       },
       output_tokens: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
       },
       expected_cost: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-      }
+      },
     });
   },
-// eslint-disable-next-line no-unused-vars
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('raw_data');
-  }
+  // eslint-disable-next-line no-unused-vars
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("raw_data");
+  },
 };

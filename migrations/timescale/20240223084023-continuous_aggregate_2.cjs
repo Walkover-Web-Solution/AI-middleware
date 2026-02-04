@@ -25,8 +25,7 @@ module.exports = {
         GROUP BY 
           org_id, bridge_id, version_id, interval, service, apikey_id, model, thread_id;
           `); // input token sum?
-          
-          
+
     await queryInterface.sequelize.query(`
       SELECT add_continuous_aggregate_policy('daily_data_aggregate',
           start_offset => INTERVAL '3 days',
@@ -39,7 +38,7 @@ module.exports = {
       SELECT set_chunk_time_interval('daily_data_aggregate', INTERVAL '1 day');
     `);
   },
-// eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
       DROP MATERIALIZED VIEW IF EXISTS daily_data_aggregate;

@@ -1,5 +1,5 @@
 import { Model, fn } from "sequelize";
-export default ((sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   class raw_data extends Model {
     /**
      * Helper method for defining associations.
@@ -11,44 +11,47 @@ export default ((sequelize, DataTypes) => {
       // define association here
     }
   }
-  raw_data.init({
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
+  raw_data.init(
+    {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+      },
+      org_id: DataTypes.STRING,
+      bridge_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      version_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      thread_id: DataTypes.STRING,
+      model: DataTypes.STRING,
+      service: DataTypes.STRING,
+      input_tokens: DataTypes.FLOAT,
+      output_tokens: DataTypes.FLOAT,
+      total_tokens: DataTypes.FLOAT,
+      apikey_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      created_at: {
+        allowNull: false,
+        type: DataTypes.DATE,
+        defaultValue: fn("now"),
+      },
+      latency: DataTypes.FLOAT,
+      success: DataTypes.BOOLEAN,
+      cost: DataTypes.FLOAT,
     },
-    org_id: DataTypes.STRING,
-    bridge_id: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    version_id: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    thread_id: DataTypes.STRING,
-    model: DataTypes.STRING,
-    service: DataTypes.STRING,
-    input_tokens: DataTypes.FLOAT,
-    output_tokens: DataTypes.FLOAT,
-    total_tokens: DataTypes.FLOAT,
-    apikey_id: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    created_at: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: fn('now')
-    },
-    latency: DataTypes.FLOAT,
-    success: DataTypes.BOOLEAN,
-    cost: DataTypes.FLOAT
-  }, {
-    sequelize,
-    modelName: 'raw_data',
-    timestamps: false
-  });
+    {
+      sequelize,
+      modelName: "raw_data",
+      timestamps: false,
+    }
+  );
   return raw_data;
-});
+};

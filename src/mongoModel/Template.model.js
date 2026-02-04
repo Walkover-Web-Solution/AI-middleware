@@ -3,27 +3,26 @@ import mongoose from "mongoose";
 const template = new mongoose.Schema({
   template: {
     type: String,
-    required: true
+    required: true,
   },
   templateName: {
     type: String,
-    required: true
+    required: true,
   },
   created_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   updated_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   visible: {
     type: Boolean,
-    default: true
+    default: true,
   },
-  
 });
 
 const templateModel = mongoose.model("template", template);
 
-export default templateModel
+export default templateModel;

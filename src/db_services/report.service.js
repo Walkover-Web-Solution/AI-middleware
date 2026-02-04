@@ -1,6 +1,6 @@
-import models from '../../models/index.js';
-import { Op } from 'sequelize';
-import configurationService from '../db_services/configuration.service.js';
+import models from "../../models/index.js";
+import { Op } from "sequelize";
+import configurationService from "../db_services/configuration.service.js";
 
 async function get_data_from_pg(org_ids) {
   const results = [];
@@ -63,55 +63,42 @@ async function get_data_from_pg(org_ids) {
     `;
 
     // Use Promise.all to fetch all required data in parallel
-    const [
-      conversations,
-      rawData,
-      bridgeStats,
-      activeBridges
-    ] = await Promise.all([
+    const [conversations, rawData, bridgeStats, activeBridges] = await Promise.all([
       // Fetch conversations
       models.pg.conversations.findAll({
         where: {
           org_id,
-          createdAt: conversationDateFilter
+          createdAt: conversationDateFilter,
         },
         attributes: [
-          'bridge_id',
-          'message_by',
-          'message',
-          'tools_call_data',
-          'createdAt',
-          'message_id',
-          'user_feedback'
-        ]
+          "bridge_id",
+          "message_by",
+          "message",
+          "tools_call_data",
+          "createdAt",
+          "message_id",
+          "user_feedback",
+        ],
       }),
 
       // Fetch rawData
       models.pg.raw_data.findAll({
         where: {
           org_id,
-          created_at: conversationDateFilter
+          created_at: conversationDateFilter,
         },
-        attributes: [
-          'service',
-          'status',
-          'input_tokens',
-          'output_tokens',
-          'expected_cost',
-          'message_id',
-          'error'
-        ]
+        attributes: ["service", "status", "input_tokens", "output_tokens", "expected_cost", "message_id", "error"],
       }),
 
       // Execute bridgeStats query
       models.pg.sequelize.query(bridgeStatsQuery, {
-        type: models.pg.sequelize.QueryTypes.SELECT
+        type: models.pg.sequelize.QueryTypes.SELECT,
       }),
 
       // Execute activeBridges query
       models.pg.sequelize.query(activeBridgesQuery, {
-        type: models.pg.sequelize.QueryTypes.SELECT
-      })
+        type: models.pg.sequelize.QueryTypes.SELECT,
+      }),
     ]);
 
     // Initialize variables to store totals
@@ -156,14 +143,14 @@ async function get_data_from_pg(org_ids) {
 
       // Tools call => track usage in topBridges
       if (conversation.tools_call_data) {
-        let bridgeData = topBridges.find(bridge => bridge.BridgeName === bridge_id);
+        let bridgeData = topBridges.find((bridge) => bridge.BridgeName === bridge_id);
         if (!bridgeData) {
           bridgeData = { BridgeName: bridge_id, Hits: 0, TokensUsed: 0, Cost: 0 };
           topBridges.push(bridgeData);
         }
         bridgeData.Hits++;
         if (correspondingRawData) {
-          bridgeData.TokensUsed += (correspondingRawData.input_tokens + correspondingRawData.output_tokens);
+          bridgeData.TokensUsed += correspondingRawData.input_tokens + correspondingRawData.output_tokens;
           bridgeData.Cost += correspondingRawData.expected_cost;
         }
       }
@@ -182,7 +169,7 @@ async function get_data_from_pg(org_ids) {
 
     // Calculate the total errors vs. successes from the rawData
     for (const r of rawData) {
-      if (r.error && r.error.trim() !== '') {
+      if (r.error && r.error.trim() !== "") {
         totalErrorCount++;
       } else {
         totalSuccessCount++;
@@ -196,19 +183,19 @@ async function get_data_from_pg(org_ids) {
           totalHits,
           totalTokensConsumed,
           totalCost,
-          activeBridges: activeBridges_count
+          activeBridges: activeBridges_count,
         },
         topBridgesTable: bridgeStats,
         NewBridgesCreated: topBridges.length, // same logic as before
         PerformanceMetrics: {
           totalSuccess: totalSuccessCount,
-          totalError: totalErrorCount
+          totalError: totalErrorCount,
         },
         ClientFeedback: {
           dislike: totalDislikes,
-          positiveFeedback: totalPositiveFeedback
-        }
-      }
+          positiveFeedback: totalPositiveFeedback,
+        },
+      },
     };
 
     results.push(orgData);
@@ -219,116 +206,110 @@ async function get_data_from_pg(org_ids) {
 
 async function get_data_for_daily_report(org_ids) {
   const results = [];
-  
+
   // Get today's date and yesterday's date for daily report
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  
+
   // Set time to beginning and end of yesterday
   yesterday.setHours(0, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
   endOfYesterday.setHours(23, 59, 59, 999);
-  
+
   // Prepare date filter for yesterday
   const dateFilter = {
     [Op.gte]: yesterday,
     [Op.lte]: endOfYesterday,
   };
-  
+
   for (let org_id of org_ids) {
     org_id = org_id.toString();
-    
+
     // Fetch conversations and raw data for yesterday
     const [conversations, rawData] = await Promise.all([
       // Fetch conversations
       models.pg.conversations.findAll({
         where: {
           org_id,
-          createdAt: dateFilter
+          createdAt: dateFilter,
         },
-        attributes: [
-          'bridge_id',
-          'message_id'
-        ]
+        attributes: ["bridge_id", "message_id"],
       }),
-      
+
       // Fetch rawData
       models.pg.raw_data.findAll({
         where: {
           org_id,
-          created_at: dateFilter
+          created_at: dateFilter,
         },
-        attributes: [
-          'message_id',
-          'error'
-        ]
-      })
+        attributes: ["message_id", "error"],
+      }),
     ]);
-    
+
     // Create a map of message_id to raw_data for quick lookup
     const rawDataMap = new Map();
     for (const r of rawData) {
       rawDataMap.set(r.message_id, r);
     }
-    
+
     // Create a map to track error counts by bridge_id
     const bridgeErrorCounts = new Map();
-    
+
     // Process each conversation to count errors by bridge
     for (const conversation of conversations) {
       const { bridge_id, message_id } = conversation;
-      
+
       if (!bridge_id) continue;
-      
+
       // Initialize bridge in map if not exists
       if (!bridgeErrorCounts.has(bridge_id)) {
-        bridgeErrorCounts.set(bridge_id, { 
+        bridgeErrorCounts.set(bridge_id, {
           errorCount: 0,
-          totalCount: 0
+          totalCount: 0,
         });
       }
-      
+
       // Increment total count for this bridge
       const bridgeData = bridgeErrorCounts.get(bridge_id);
       bridgeData.totalCount++;
-      
+
       // Check if there was an error for this message
       const rawDataEntry = rawDataMap.get(message_id);
-      if (rawDataEntry && rawDataEntry.error && rawDataEntry.error.trim() !== '') {
+      if (rawDataEntry && rawDataEntry.error && rawDataEntry.error.trim() !== "") {
         bridgeData.errorCount++;
       }
     }
-    
+
     // Convert the map to an array of objects with bridge names
     const bridgeErrorReport = [];
     for (const [bridgeId, data] of bridgeErrorCounts.entries()) {
       // Get bridge name from MongoDB
       const bridgeName = await configurationService.getAgentNameById(bridgeId, org_id);
-      
+
       bridgeErrorReport.push({
         bridge_id: bridgeId,
-        bridge_name: bridgeName || 'Unknown Bridge',
+        bridge_name: bridgeName || "Unknown Bridge",
         error_count: data.errorCount,
         total_count: data.totalCount,
-        error_rate: data.totalCount > 0 ? (data.errorCount / data.totalCount * 100).toFixed(2) + '%' : '0%'
+        error_rate: data.totalCount > 0 ? ((data.errorCount / data.totalCount) * 100).toFixed(2) + "%" : "0%",
       });
     }
-    
+
     // Sort by error count in descending order
     bridgeErrorReport.sort((a, b) => b.error_count - a.error_count);
-    
+
     // Create the final JSON for this org_id
     const orgData = {
       [org_id]: {
-        date: yesterday.toISOString().split('T')[0],
-        bridge_error_report: bridgeErrorReport
-      }
+        date: yesterday.toISOString().split("T")[0],
+        bridge_error_report: bridgeErrorReport,
+      },
     };
-    
+
     results.push(orgData);
   }
-  
+
   return results;
 }
 
@@ -339,30 +320,30 @@ async function get_data_for_daily_report(org_ids) {
  */
 function getReportDateRange(reportType) {
   const now = new Date();
-  
-  if (reportType === 'monthly') {
+
+  if (reportType === "monthly") {
     const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
     return {
       startDate: firstDayOfLastMonth,
-      endDate: lastDayOfLastMonth
+      endDate: lastDayOfLastMonth,
     };
-  } else if (reportType === 'weekly') {
+  } else if (reportType === "weekly") {
     const day = now.getDay() || 7; // Convert Sunday (0) to 7 for easier calculation
     const prevMonday = new Date(now);
     prevMonday.setDate(now.getDate() - (day + 6)); // Go back to previous Monday
     prevMonday.setHours(0, 0, 0, 0);
-    
+
     const prevSunday = new Date(prevMonday);
     prevSunday.setDate(prevMonday.getDate() + 6); // Sunday is 6 days after Monday
     prevSunday.setHours(23, 59, 59, 999);
-    
+
     return {
       startDate: prevMonday,
-      endDate: prevSunday
+      endDate: prevSunday,
     };
   }
-  
+
   throw new Error(`Invalid report type: ${reportType}`);
 }
 
@@ -390,17 +371,17 @@ async function get_latency_report_data(org_ids, reportType) {
       models.pg.conversations.findAll({
         where: {
           org_id,
-          createdAt: dateFilter
+          createdAt: dateFilter,
         },
-        attributes: ['bridge_id', 'message_id']
+        attributes: ["bridge_id", "message_id"],
       }),
       models.pg.raw_data.findAll({
         where: {
           org_id,
-          created_at: dateFilter
+          created_at: dateFilter,
         },
-        attributes: ['message_id', 'latency']
-      })
+        attributes: ["message_id", "latency"],
+      }),
     ]);
 
     // Skip this org if no data is available
@@ -422,7 +403,7 @@ async function get_latency_report_data(org_ids, reportType) {
     // Process each conversation to calculate average latency by bridge
     for (const conversation of conversations) {
       const { bridge_id, message_id } = conversation;
-      
+
       if (!bridge_id) continue;
 
       const latency = rawDataMap.get(message_id);
@@ -441,7 +422,7 @@ async function get_latency_report_data(org_ids, reportType) {
       if (!bridgeLatencyStats.has(bridge_id)) {
         bridgeLatencyStats.set(bridge_id, {
           totalLatency: 0,
-          count: 0
+          count: 0,
         });
       }
 
@@ -460,12 +441,12 @@ async function get_latency_report_data(org_ids, reportType) {
     for (const [bridgeId, stats] of bridgeLatencyStats.entries()) {
       // Get bridge name from service
       const bridgeName = await configurationService.getAgentNameById(bridgeId, org_id);
-      
+
       bridgeLatencyReport.push({
         bridge_id: bridgeId,
-        bridge_name: bridgeName || 'Unknown Bridge',
+        bridge_name: bridgeName || "Unknown Bridge",
         avg_latency: stats.count > 0 ? (stats.totalLatency / stats.count).toFixed(2) : 0,
-        total_requests: stats.count
+        total_requests: stats.count,
       });
     }
 
@@ -476,31 +457,31 @@ async function get_latency_report_data(org_ids, reportType) {
     const orgData = {
       [org_id]: {
         report_period: {
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
         },
-        bridge_latency_report: bridgeLatencyReport
-      }
+        bridge_latency_report: bridgeLatencyReport,
+      },
     };
 
     results.push(orgData);
   }
-  
+
   // Send data to external service
   const data = {
-    "results": results,
-    "time": reportType
+    results: results,
+    time: reportType,
   };
-  
-  const url = 'https://flow.sokt.io/func/scri4zMzbGiR';
-  await fetch(url, { 
-    method: 'POST', 
+
+  const url = "https://flow.sokt.io/func/scri4zMzbGiR";
+  await fetch(url, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
-  
+
   return results;
 }
 

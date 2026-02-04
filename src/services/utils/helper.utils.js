@@ -4,11 +4,11 @@ import jwt from "jsonwebtoken";
 class Helper {
   static encrypt(text) {
     const algorithm = process.env.ALGORITHM;
-    const iv = crypto.createHash('sha512').update(process.env.Secret_IV).digest('hex').substring(0, 16);
-    const key = crypto.createHash('sha512').update(process.env.Encreaption_key).digest('hex').substring(0, 32);
+    const iv = crypto.createHash("sha512").update(process.env.Secret_IV).digest("hex").substring(0, 16);
+    const key = crypto.createHash("sha512").update(process.env.Encreaption_key).digest("hex").substring(0, 32);
     let cipher = crypto.createCipheriv(algorithm, key, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
+    let encrypted = cipher.update(text, "utf8", "hex");
+    encrypted += cipher.final("hex");
     return encrypted;
   }
   static decrypt(encryptedText) {
@@ -16,27 +16,26 @@ class Helper {
     const encryptionKey = process.env.Encreaption_key;
     const secretIv = process.env.Secret_IV;
 
-    const iv = crypto.createHash('sha512').update(secretIv).digest('hex').substring(0, 16);
-    const key = crypto.createHash('sha512').update(encryptionKey).digest('hex').substring(0, 32);
+    const iv = crypto.createHash("sha512").update(secretIv).digest("hex").substring(0, 16);
+    const key = crypto.createHash("sha512").update(encryptionKey).digest("hex").substring(0, 32);
 
-    const encryptedTextBytes = Buffer.from(encryptedText, 'hex');
+    const encryptedTextBytes = Buffer.from(encryptedText, "hex");
     try {
-      const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key, 'utf8'), Buffer.from(iv, 'utf8'));
+      const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key, "utf8"), Buffer.from(iv, "utf8"));
       let decryptedBytes = Buffer.concat([decipher.update(encryptedTextBytes), decipher.final()]);
-      token = decryptedBytes.toString('utf8');
+      token = decryptedBytes.toString("utf8");
     } catch {
-      const decipher = crypto.createDecipheriv('aes-256-cfb', Buffer.from(key, 'utf8'), Buffer.from(iv, 'utf8'));
+      const decipher = crypto.createDecipheriv("aes-256-cfb", Buffer.from(key, "utf8"), Buffer.from(iv, "utf8"));
       let decryptedBytes = Buffer.concat([decipher.update(encryptedTextBytes), decipher.final()]);
-      token = decryptedBytes.toString('utf8');
+      token = decryptedBytes.toString("utf8");
     }
     return token;
   }
   static maskApiKey = (key) => {
-    if (!key) return '';
-    if (key.length > 6)
-      return key.slice(0, 3) + '*'.repeat(9) + key.slice(-3);
+    if (!key) return "";
+    if (key.length > 6) return key.slice(0, 3) + "*".repeat(9) + key.slice(-3);
     return key;
-  }
+  };
 
   static parseJson = (jsonString) => {
     try {
@@ -56,7 +55,7 @@ class Helper {
     return matches;
   }
 
-  static async responseMiddlewareForBridge(service, response, isUpdate = false) {
+  static async responseMiddlewareForBridge(service, response) {
     // Simplified response middleware
     return response;
   }
@@ -77,12 +76,12 @@ class Helper {
             type: "object",
             enum: [],
             required_params: [],
-            parameter: {}
+            parameter: {},
           };
         }
       }
 
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
         if (path.length > 0) {
           let parentObj = fields[path[0]];
           for (let i = 1; i < path.length; i++) {
@@ -99,7 +98,7 @@ class Helper {
               type: "object",
               enum: [],
               required_params: [],
-              parameter: {}
+              parameter: {},
             };
           }
         }
@@ -125,7 +124,7 @@ class Helper {
             type: "string",
             enum: [],
             required_params: [],
-            parameter: {}
+            parameter: {},
           };
         } else {
           fields[key] = {
@@ -133,7 +132,7 @@ class Helper {
             type: "string",
             enum: [],
             required_params: [],
-            parameter: {}
+            parameter: {},
           };
         }
       }
@@ -143,36 +142,35 @@ class Helper {
   }
 
   static transformFieldsStructure(fields) {
-    if (!fields || typeof fields !== 'object') return {};
-    
+    if (!fields || typeof fields !== "object") return {};
+
     const transformed = {};
-    
+
     for (const [key, value] of Object.entries(fields)) {
-        transformed[key] = {
-            description: value.description || "",
-            type: value.type || "string",
-            enum: value.enum || [],
-            required_params: value.required || value.required_params || [],  // Map 'required' to 'required_params'
-            parameter: value.parameter || {}
-        };
-        
-        // Recursively transform nested parameters
-        if (value.parameter && Object.keys(value.parameter).length > 0) {
-            transformed[key].parameter = Helper.transformFieldsStructure(value.parameter);
-        }
+      transformed[key] = {
+        description: value.description || "",
+        type: value.type || "string",
+        enum: value.enum || [],
+        required_params: value.required || value.required_params || [], // Map 'required' to 'required_params'
+        parameter: value.parameter || {},
+      };
+
+      // Recursively transform nested parameters
+      if (value.parameter && Object.keys(value.parameter).length > 0) {
+        transformed[key].parameter = Helper.transformFieldsStructure(value.parameter);
+      }
     }
-    
+
     return transformed;
-};
+  }
 
   static generate_token(payload, accesskey) {
     return jwt.sign(payload, accesskey);
   }
 
   static makeFunctionName(name) {
-    if (!name) return '';
-    return name.replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!name) return "";
+    return name.replace(/[^a-zA-Z0-9_-]/g, "");
   }
-
 }
 export default Helper;

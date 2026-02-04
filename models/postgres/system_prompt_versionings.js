@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-export default ((sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   class system_prompt_versionings extends Model {
     /**
      * Helper method for defining associations.
@@ -11,39 +11,42 @@ export default ((sequelize, DataTypes) => {
       // define association here
     }
   }
-  system_prompt_versionings.init({
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
+  system_prompt_versionings.init(
+    {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+      },
+      created_at: {
+        allowNull: false,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        allowNull: false,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      system_prompt: {
+        allowNull: false,
+        type: DataTypes.TEXT,
+      },
+      bridge_id: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      org_id: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
     },
-    created_at: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    },
-    updated_at: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    },
-    system_prompt: {
-      allowNull: false,
-      type: DataTypes.TEXT
-    },
-    bridge_id: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    org_id: {
-      allowNull: false,
-      type: DataTypes.STRING
+    {
+      sequelize,
+      modelName: "system_prompt_versionings",
+      timestamps: false,
     }
-  }, {
-    sequelize,
-    modelName: "system_prompt_versionings",
-    timestamps: false
-  });
+  );
   return system_prompt_versionings;
-});
+};
