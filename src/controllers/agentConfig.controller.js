@@ -219,11 +219,11 @@ const updateAgentController = async (req, res, next) => {
   const update_fields = {};
   const user_history = [];
 
-  let new_configuration = body.configuration;
-  const service = body.service;
-  const page_config = body.page_config;
-  const web_search_filter = body.web_search_filters;
-  const gtwy_web_search_filter = body.gtwy_web_search_filters;
+    let new_configuration = body.configuration;
+    const service = body.service;
+    const page_config = body.page_config;
+    const web_search_filter = body.web_search_filters;
+    const gtwy_web_search_filter = body.gtwy_web_search_filters;
 
   if (new_configuration) {
     const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
