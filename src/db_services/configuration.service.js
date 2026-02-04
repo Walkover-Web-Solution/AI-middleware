@@ -646,18 +646,18 @@ const getAgentsByUserId = async (orgId, userId, agent_id) => {
       query._id = agent_id;
     }
     const agents = await configurationModel.find(query, {
-      "_id": 1,
-      "name": 1,
-      "service": 1,
+      _id: 1,
+      name: 1,
+      service: 1,
       "configuration.model": 1,
       "configuration.prompt": 1,
-      "bridgeType": 1,
-      "slugName": 1,
-      "variables_state": 1,
-      "meta": 1,
-      "deletedAt": 1,
+      bridgeType: 1,
+      slugName: 1,
+      variables_state: 1,
+      meta: 1,
+      deletedAt: 1,
     });
-    return agents.map(agent => {
+    return agents.map((agent) => {
       const agentData = agent._doc;
       const filtered = {};
       for (const [key, value] of Object.entries(agentData)) {

@@ -45,5 +45,4 @@ router.delete(
   deleteAgentController
 );
 
-
 export default router;

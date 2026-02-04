@@ -74,7 +74,7 @@ const updateAgentMetadata = {
       }),
     })
     .unknown(false),
-}
+};
 
 export default {
   embedLogin,
@@ -83,5 +83,5 @@ export default {
   updateEmbed,
   genrateToken,
   getEmbedDataByUserId,
-  updateAgentMetadata
+  updateAgentMetadata,
 };

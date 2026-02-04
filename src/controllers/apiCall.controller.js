@@ -65,8 +65,14 @@ const createApi = async (req, res, next) => {
 
     if (status === "published" || status === "updated") {
       const body_content = payload ? payload.body : null;
-      const traversed_body = Helper.traverseBody(body_content);
-      const fields = traversed_body.fields || {};
+      // const traversed_body = Helper.traverseBody(body_content);
+
+      let fields = body_content?.fields;
+      // const fields = traversed_body.fields || {};
+
+      // Transform 'required' to 'required_params' for each field
+      fields = Helper.transformFieldsStructure(fields);
+
       const api_data = await service.getApiData(org_id, script_id, folder_id, user_id, isEmbedUser);
 
       // Clean the title using makeFunctionName
@@ -202,7 +208,8 @@ const getAllInBuiltToolsController = async (req, res, next) => {
       {
         id: "3",
         name: "Gtwy web search",
-        description: "Allow models that support tool calling to search the web for the latest information before generating a response.",
+        description:
+          "Allow models that support tool calling to search the web for the latest information before generating a response.",
         value: "Gtwy_Web_Search",
       },
     ],

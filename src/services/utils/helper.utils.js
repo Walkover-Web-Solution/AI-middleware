@@ -141,6 +141,29 @@ class Helper {
     return { paths, fields, required_params };
   }
 
+  static transformFieldsStructure(fields) {
+    if (!fields || typeof fields !== "object") return {};
+
+    const transformed = {};
+
+    for (const [key, value] of Object.entries(fields)) {
+      transformed[key] = {
+        description: value.description || "",
+        type: value.type || "string",
+        enum: value.enum || [],
+        required_params: value.required || value.required_params || [], // Map 'required' to 'required_params'
+        parameter: value.parameter || {},
+      };
+
+      // Recursively transform nested parameters
+      if (value.parameter && Object.keys(value.parameter).length > 0) {
+        transformed[key].parameter = Helper.transformFieldsStructure(value.parameter);
+      }
+    }
+
+    return transformed;
+  }
+
   static generate_token(payload, accesskey) {
     return jwt.sign(payload, accesskey);
   }
