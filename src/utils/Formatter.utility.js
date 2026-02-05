@@ -431,4 +431,151 @@ function renderCardToTailwind(cardJson) {
     return renderNode(cardJson);
 }
 
-export { renderCardToTailwind, applyVariables, renderNode };
+
+/**
+ * Generates a JSON schema from a card template
+ * @param {Object} cardJson - The card JSON template
+ * @param {string} schemaName - Name for the schema (default: "nested_ui_components")
+ * @returns {Object} - JSON schema object with properties and required fields
+ */
+function generateSchemaFromCard(cardJson, schemaName = "nested_ui_components") {
+  const descMap = buildDescriptions(cardJson);
+  return buildSchemaFromDescriptionMap(schemaName, descMap);
+}
+
+function buildDescriptions(template) {
+  const result = {};
+
+  function makeDescription(prop, parent, path) {
+    const type = parent?.type;
+    const key = parent?.key;
+
+    switch (prop) {
+      case "name":
+        if (type === "Input") return "Input field name used to bind the user’s typed value.";
+        if (type === "Button") return "Name/identifier used to reference this button.";
+        return "Logical name used to reference this field.";
+
+      case "label":
+        if (type === "Button") return key ? `Button label for the "${key}" action.` : "Button label text shown to the user.";
+        return "Display label text shown to the user.";
+
+      case "placeholder":
+        return "Placeholder text shown when the input field is empty.";
+
+      case "defaultValue":
+        return "Default value shown before the user edits this field.";
+
+      case "value":
+        if (type === "Text" || type === "Title" || type === "Caption") return "Static text content displayed in the UI.";
+        return "Value used for this field.";
+
+      case "src":
+        return "Source URL/path for the image to display.";
+
+      case "alt":
+        return "Alternative text describing the image for accessibility.";
+
+      case "iconStart":
+        if (type === "Button") return "Icon identifier shown at the start (left side) of the button.";
+        return "Icon identifier displayed before the main content.";
+
+      default:
+        return `Value for field at path "${path}".`;
+    }
+  }
+
+  function walk(node, path) {
+    if (Array.isArray(node)) {
+      node.forEach((child, index) => {
+        const childPath = path ? `${path}[${index}]` : `[${index}]`;
+        walk(child, childPath);
+      });
+      return;
+    }
+
+    if (node && typeof node === "object") {
+      for (const key of Object.keys(node)) {
+        const value = node[key];
+
+        // Keep children arrays as children[0].children[1]...
+        if (Array.isArray(value) && key === "children") {
+          const nextPath = path ? `${path}.${key}` : key;
+          value.forEach((child, index) => walk(child, `${nextPath}[${index}]`));
+          continue;
+        }
+
+        const nextPath = path ? `${path}.${key}` : key;
+
+        // Collect descriptions for interesting props
+        if (["name", "label", "placeholder", "defaultValue", "value", "src", "alt", "iconStart"].includes(key)) {
+          result[nextPath] = makeDescription(key, node, nextPath);
+        }
+
+        // Recurse
+        if (value && typeof value === "object") walk(value, nextPath);
+      }
+    }
+  }
+
+  walk(template, "");
+  return result; // path -> description
+}
+
+function buildSchemaFromDescriptionMap(name, descMap) {
+  const properties = {};
+  const required = [];
+
+  for (const path of Object.keys(descMap)) {
+    properties[path] = { type: "string", description: descMap[path] || "" };
+    required.push(path);
+  }
+
+  return {
+    name,
+    schema: {
+      type: "object",
+      properties,
+      required,
+      additionalProperties: false,
+    },
+    strict: true,
+  };
+}
+
+function getByPath(obj, path) {
+  try {
+    const tokens = [];
+    path.split(".").forEach((part) => {
+      const re = /([^\[]+)|\[(\d+)\]/g;
+      let m;
+      while ((m = re.exec(part))) {
+        if (m[1]) tokens.push(m[1]);
+        if (m[2]) tokens.push(Number(m[2]));
+      }
+    });
+
+    let cur = obj;
+    for (const t of tokens) {
+      if (cur == null) return undefined;
+      cur = cur[t];
+    }
+    return cur;
+  } catch {
+    return undefined;
+  }
+}
+
+function buildVariables(template, descMap, varPrefix = "vars") {
+  const vars = {};
+  for (const path of Object.keys(descMap)) {
+    vars[path] = {
+      description: descMap[path] || "",
+      example: getByPath(template, path),
+      value: `{{${varPrefix}.${path}}}`, // variable placeholder
+    };
+  }
+  return vars;
+}
+
+export { renderCardToTailwind, applyVariables, renderNode, generateSchemaFromCard };

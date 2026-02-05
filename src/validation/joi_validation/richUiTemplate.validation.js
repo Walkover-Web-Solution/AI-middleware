@@ -5,9 +5,7 @@ const createRichUiTemplateSchema = Joi.object({
         'any.required': 'Template name is required'
     }),
     description: Joi.string().optional().allow(''),
-    json_schema: Joi.object().required().messages({
-        'any.required': 'JSON schema is required'
-    }),
+    json_schema: Joi.object().optional(),
     template_format: Joi.object().required().messages({
         'any.required': 'Template format is required'
     }),

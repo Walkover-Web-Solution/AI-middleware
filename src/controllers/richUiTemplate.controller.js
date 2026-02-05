@@ -4,6 +4,7 @@ import {
     updateTemplate,
     deleteTemplate
 } from "../db_services/richUiTemplate.service.js";
+import { generateSchemaFromCard } from "../utils/Formatter.utility.js";
 
 // Create a new rich UI template
 export const createRichUiTemplate = async (req, res, next) => {
@@ -11,16 +12,27 @@ export const createRichUiTemplate = async (req, res, next) => {
         const { name, description, json_schema, template_format, html } = req.body;
         const user_id = req.profile.user.id;
 
+        let schema = json_schema;
+        if (!schema && template_format) {
+            schema = generateSchemaFromCard(template_format);
+        }
+
+        if (!name || !description || !schema || !template_format || !html) {
+            res.locals = { success: false, message: "Missing required fields" };
+            req.statusCode = 400;
+            return next();
+        }
+
         const templateData = {
             name,
             description,
-            json_schema,
+            json_schema: schema,
             template_format,
             html
         };
 
         const result = await createTemplate(templateData, user_id);
-        
+
         res.locals = result;
         req.statusCode = 201;
         return next();
@@ -57,15 +69,15 @@ export const updateRichUiTemplate = async (req, res, next) => {
         // Filter to only include keys that are provided and have values
         const updateData = {};
         const allowedFields = ['name', 'description', 'json_schema', 'template_format', 'html'];
-        
+
         allowedFields.forEach(field => {
             if (requestData.hasOwnProperty(field) && requestData[field] !== undefined && requestData[field] !== null) {
                 updateData[field] = requestData[field];
             }
         });
-        
+
         const result = await updateTemplate(template_id, updateData, user_id);
-        
+
         res.locals = result;
         req.statusCode = 200;
         return next();
@@ -83,7 +95,7 @@ export const deleteRichUiTemplate = async (req, res, next) => {
         const user_id = req.profile.user.id;
 
         const result = await deleteTemplate(template_id, user_id);
-        
+
         res.locals = result;
         req.statusCode = 200;
         return next();
