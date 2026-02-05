@@ -50,7 +50,7 @@ const createAlert = {
           "any.required": "alertType is required",
         }),
         alertType: Joi.array().items(
-            Joi.string().valid('thumbsdown', 'Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism')
+            Joi.string().valid('thumbsdown', 'Variable', 'Error', 'metrix_limit_reached', 'retry_mechanism', 'broadcast_response')
         ).min(1).required().messages({
             'array.min': 'alertType must contain at least one type',
             'any.required': 'alertType is required'
