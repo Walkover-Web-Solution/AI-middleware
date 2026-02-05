@@ -28,7 +28,8 @@ const callAi = {
           "optimize_prompt",
           "generate_test_cases",
           "generate_summary",
-          "generate_json"
+          "generate_json",
+            'rich_ui_template'
         )
         .required(),
       json_schema: Joi.alternatives().conditional("type", {

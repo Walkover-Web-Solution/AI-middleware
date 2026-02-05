@@ -4,10 +4,10 @@ import ConfigurationServices from "../db_services/configuration.service.js";
 import Helper from "../services/utils/helper.utils.js";
 
 const getAllApiCalls = async (req, res, next) => {
-  const org_id = req.profile?.org?.id;
-  const folder_id = req.profile?.extraDetails?.folder_id || null;
-  const user_id = req.profile?.user?.id;
-  const isEmbedUser = req.IsEmbedUser;
+    const org_id = req.profile?.org?.id;
+    const folder_id = req.profile?.extraDetails?.folder_id || null;
+    const user_id = req.profile?.user?.id;
+    const isEmbedUser = req.IsEmbedUser;
 
   const functions = await service.getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser);
 

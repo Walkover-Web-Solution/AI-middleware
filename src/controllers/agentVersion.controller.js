@@ -23,9 +23,9 @@ try {
 }
 
 const createVersion = async (req, res, next) => {
-  const { version_id, version_description } = req.body;
-  const org_id = req.profile.org.id;
-  const user_id = req.profile.user.id;
+    const { version_id, version_description } = req.body;
+    const org_id = req.profile.org.id;
+    const user_id = req.profile.user.id;
 
   const agentData = await ConfigurationServices.getAgentsWithoutTools(null, org_id, version_id);
 
@@ -35,8 +35,8 @@ const createVersion = async (req, res, next) => {
     return next();
   }
 
-  const parent_id = agentData.bridges.parent_id;
-  const agentVersionData = { ...agentData.bridges, version_description, user_id };
+    const parent_id = agentData.bridges.parent_id;
+    const agentVersionData = { ...agentData.bridges, version_description, user_id };
 
   const newVersion = await agentVersionDbService.createAgentVersion(agentVersionData);
   const create_new_version = newVersion._id.toString();
