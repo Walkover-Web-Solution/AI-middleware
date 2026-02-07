@@ -101,7 +101,6 @@ const deleteBridges = {
     .unknown(true),
   body: Joi.object()
     .keys({
-      org_id: Joi.string(),
       restore: Joi.boolean()
     })
     .unknown(true)

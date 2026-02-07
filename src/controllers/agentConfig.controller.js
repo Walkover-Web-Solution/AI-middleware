@@ -26,7 +26,8 @@ const createAgentController = async (req, res, next) => {
 
     let prompt =
       "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
-    let name = null;
+    let name = agents?.name || null;
+    const meta = req.body.meta || null;
     let service = "openai";
     let model = "gpt-5-nano";
     let type = "chat";
@@ -55,34 +56,40 @@ const createAgentController = async (req, res, next) => {
       if (typeof agent_data === "object") {
         model = agent_data.model || model;
         service = agent_data.service || service;
-        name = agent_data.name;
+        name = name || agent_data.name;
         prompt = agent_data.system_prompt || prompt;
         type = agent_data.type || type;
       }
     }
 
-    let name_next_count = 1;
-    let slug_next_count = 1;
+    let slugName;
 
-    for (const agent of all_agent) {
-      name = name || "untitled_agent";
-      if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.name.replace("untitled_agent_", ""));
-        if (num >= name_next_count) name_next_count = num + 1;
-      } else if (agent.name === name) {
-        name_next_count += 1;
+    if (name) {
+      slugName = name;
+    } else {
+      let name_next_count = 1;
+      let slug_next_count = 1;
+
+      for (const agent of all_agent) {
+        name = name || "untitled_agent";
+        if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
+          const num = parseInt(agent.name.replace("untitled_agent_", ""));
+          if (num >= name_next_count) name_next_count = num + 1;
+        } else if (agent.name === name) {
+          name_next_count += 1;
+        }
+
+        if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
+          const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
+          if (num >= slug_next_count) slug_next_count = num + 1;
+        } else if (agent.slugName === name) {
+          slug_next_count += 1;
+        }
       }
 
-      if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-        const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-        if (num >= slug_next_count) slug_next_count = num + 1;
-      } else if (agent.slugName === name) {
-        slug_next_count += 1;
-      }
+      slugName = `${name}_${slug_next_count}`;
+      name = `${name}_${name_next_count}`;
     }
-
-    const slugName = `${name}_${slug_next_count}`;
-    name = `${name}_${name_next_count}`;
 
     // Construct model data based on model configuration
     const keys_to_update = [
@@ -163,7 +170,8 @@ const createAgentController = async (req, res, next) => {
       bridge_usage: agent_usage,
       bridge_status: 1,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      meta: meta
     });
 
     const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
@@ -193,8 +201,8 @@ const updateAgentController = async (req, res, next) => {
   // Validation handled by middleware
   const { agent_id, version_id } = req.params;
   const body = req.body;
-  const org_id = req.profile.org.id;
-  const user_id = req.profile.user.id;
+  const org_id = String(req.profile.org.id);
+  const user_id = String(req.profile.user.id);
   const agentData = await ConfigurationServices.getAgentsWithTools(agent_id, org_id, version_id);
   if (!agentData.bridges) {
     res.locals = { success: false, message: "Agent not found" };
@@ -653,14 +661,13 @@ const getAllAgentController = async (req, res, next) => {
 
 const deleteAgentController = async (req, res, next) => {
   const { agent_id } = req.params;
-  const { org_id, restore = false } = req.body;
+  const org_id = req.profile.org.id;
+  const { restore = false } = req.body;
   try {
     let result;
-
     if (restore) {
       // Restore the agent
       result = await ConfigurationServices.restoreAgent(agent_id, org_id);
-
       // Log restore operation for audit purposes
       if (result.success) {
         console.log(`Agent restore completed for agent ${agent_id} and ${result.restoredVersionsCount || 0} versions for org ${org_id}`);
@@ -668,7 +675,6 @@ const deleteAgentController = async (req, res, next) => {
     } else {
       // Soft delete the agent
       result = await ConfigurationServices.deleteAgent(agent_id, org_id);
-
       // Log soft delete operation for audit purposes
       if (result.success) {
         console.log(`Soft delete initiated for agent ${agent_id} and ${result.deletedVersionsCount || 0} versions for org ${org_id}`);

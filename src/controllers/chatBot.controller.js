@@ -4,41 +4,57 @@ import configurationService from "../db_services/configuration.service.js";
 import token from "../services/commonService/generateToken.js";
 import { generateIdentifier } from "../services/utils/utility.service.js";
 import { generateToken } from "../services/utils/users.service.js";
+import mongoose from "mongoose";
 
 const getAllChatBots = async (req, res, next) => {
   const org_id = req.profile.org.id;
   const userId = req.profile.user.id;
 
-  const chatbots = await ChatbotDbService.getAll(org_id);
+  let chatbots = await ChatbotDbService.getAll(org_id);
 
   let defaultChatbot = chatbots.find((chatbot) => chatbot.type === "default");
-  if (chatbots.length === 1 && defaultChatbot) {
-    const defaultChatbotData = {
-      orgId: org_id,
-      title: req.params.name || "chatbot1",
-      createdBy: userId,
-      updatedBy: userId
-    };
-    await ChatbotDbService.create(defaultChatbotData);
+
+  if (!defaultChatbot) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      defaultChatbot = await ChatbotDbService.create(
+        {
+          orgId: org_id,
+          title: "Default Chatbot",
+          type: "default",
+          createdBy: userId,
+          updatedBy: userId
+        },
+        session
+      );
+      await ChatbotDbService.create(
+        {
+          orgId: org_id,
+          title: req.params.name || "chatbot1",
+          type: "chatbot",
+          createdBy: userId,
+          updatedBy: userId
+        },
+        session
+      );
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
+
+  chatbots = await ChatbotDbService.getAll(org_id);
+  const { chatBot } = await responseTypeService.getAll(org_id);
 
   let accessKey;
-  if (!defaultChatbot) {
-    const defaultChatbotData = {
-      orgId: org_id,
-      title: "Default Chatbot",
-      type: "default",
-      createdBy: userId,
-      updatedBy: userId
-    };
-    defaultChatbot = await ChatbotDbService.create(defaultChatbotData);
-  }
-
-  const { chatBot } = await responseTypeService.getAll(org_id);
   if (chatBot?.orgAcessToken) {
     accessKey = chatBot?.orgAcessToken;
   } else {
-    const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(14));
+    const org = await responseTypeService.createOrgToken(org_id, generateIdentifier(32));
     accessKey = org.orgData.orgAcessToken;
   }
 

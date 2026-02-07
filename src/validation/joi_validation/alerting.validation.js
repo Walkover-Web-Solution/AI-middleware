@@ -8,7 +8,8 @@ const createAlert = {
     .keys({
       webhookConfiguration: Joi.object({
         url: Joi.string().uri().optional(),
-        headers: Joi.object().optional()
+        headers: Joi.object().optional(),
+        user_url: Joi.string().uri().optional()
       })
         .unknown(true)
         .required()
@@ -22,13 +23,17 @@ const createAlert = {
       bridges: Joi.array()
         .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
         .min(1)
-        .required()
+        .when("alertType", {
+          is: Joi.array().items(Joi.string().valid("broadcast_response")),
+          then: Joi.optional(),
+          otherwise: Joi.required()
+        })
         .messages({
           "array.min": "bridges must contain at least one bridge ID",
           "any.required": "bridges is required"
         }),
       alertType: Joi.array()
-        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism"))
+        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism", "broadcast_response"))
         .min(1)
         .required()
         .messages({
@@ -60,7 +65,8 @@ const updateAlert = {
     .keys({
       webhookConfiguration: Joi.object({
         url: Joi.string().uri().optional(),
-        headers: Joi.object().optional()
+        headers: Joi.object().optional(),
+        user_url: Joi.string().uri().optional()
       })
         .unknown(true)
         .optional(),
@@ -69,7 +75,7 @@ const updateAlert = {
         .optional(),
       name: Joi.string().optional(),
       alertType: Joi.array()
-        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism"))
+        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism", "broadcast_response"))
         .optional()
     })
     .unknown(true)

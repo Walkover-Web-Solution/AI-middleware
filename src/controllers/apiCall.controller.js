@@ -188,6 +188,12 @@ const getAllInBuiltToolsController = async (req, res, next) => {
         name: "image generation",
         description: "Allow models to generate images based on the user's input.",
         value: "image_generation"
+      },
+      {
+        id: "3",
+        name: "Gtwy web search",
+        description: "Allow models that support tool calling to search the web for the latest information before generating a response.",
+        value: "Gtwy_Web_Search"
       }
     ]
   };

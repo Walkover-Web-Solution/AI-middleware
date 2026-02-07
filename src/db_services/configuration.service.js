@@ -637,9 +637,20 @@ const getAgentsByUserId = async (orgId, userId, agent_id) => {
       bridgeType: 1,
       slugName: 1,
       variables_state: 1,
-      meta: 1
+      meta: 1,
+      deletedAt: 1
     });
-    return agents.map((agent) => agent._doc);
+    return agents.map((agent) => {
+      const agentData = agent._doc;
+      const filtered = {};
+      for (const [key, value] of Object.entries(agentData)) {
+        if (value === null || value === undefined) {
+          continue;
+        }
+        filtered[key] = value;
+      }
+      return filtered;
+    });
   } catch (error) {
     console.error("Error fetching agents:", error);
     return { success: false, error: "Agent not found!!" };
@@ -918,6 +929,7 @@ const updateAgents = async (version_id, agents, add = 1) => {
     // Add or update the connected agents
     const setFields = {};
     for (const [agent_name, agent_info] of Object.entries(agents)) {
+      agent_info.thread_id = true;
       setFields[`connected_agents.${agent_name}`] = agent_info;
     }
     to_update = { $set: setFields };
