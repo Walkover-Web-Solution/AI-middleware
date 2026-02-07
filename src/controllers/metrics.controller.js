@@ -1,13 +1,9 @@
 import metrics_sevice from "../db_services/metrics.service.js";
-import { buildWhereClause, selectTable } from "../utils/metrics.utils.js"
-
+import { buildWhereClause, selectTable } from "../utils/metrics.utils.js";
 
 const getMetricsData = async (req, res, next) => {
   const org_id = req.profile?.org?.id;
-  const {
-    startTime,
-    endTime,
-  } = req.query;
+  const { startTime, endTime } = req.query;
   const { apikey_id, service, model, thread_id, bridge_id, version_id, range, factor } = req.body;
   const values = [];
   const params = {
@@ -19,7 +15,7 @@ const getMetricsData = async (req, res, next) => {
     service,
     model,
     startTime,
-    endTime,
+    endTime
   };
   let start_date = new Date();
   let end_date = new Date();
@@ -41,13 +37,13 @@ const getMetricsData = async (req, res, next) => {
     res.locals = {
       statusCode: 200,
       data: [...data, ...today_data],
-      message: 'Successfully get request data'
+      message: "Successfully get request data"
     };
   } else {
     res.locals = {
       statusCode: 200,
       data,
-      message: 'Successfully get request data'
+      message: "Successfully get request data"
     };
   }
   req.statusCode = 200;
@@ -58,11 +54,11 @@ const getBridgeMetrics = async (req, res, next) => {
   const org_id = req.profile?.org?.id;
   const { start_date, end_date } = req.body;
 
-  let table = 'daily_data';
+  let table = "daily_data";
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
 
   if (!start_date || !end_date || new Date(start_date).getTime() > oneDayAgo) {
-    table = 'fifteen_minute_data';
+    table = "fifteen_minute_data";
   }
 
   let query = `SELECT bridge_id, 
@@ -89,7 +85,7 @@ const getBridgeMetrics = async (req, res, next) => {
   res.locals = {
     statusCode: 200,
     data,
-    message: 'Successfully retrieved bridge metrics'
+    message: "Successfully retrieved bridge metrics"
   };
   req.statusCode = 200;
   return next();

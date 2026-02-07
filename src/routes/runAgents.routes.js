@@ -12,5 +12,4 @@ router.post("/login", middleware, validate(runAgentsValidation.loginPublicUser),
 router.get("/", agentsAuth, runAgentsController.getAllAgents);
 router.get("/:slug_name", agentsAuth, validate(runAgentsValidation.getAgent), runAgentsController.getAgent);
 
-
 export default router;

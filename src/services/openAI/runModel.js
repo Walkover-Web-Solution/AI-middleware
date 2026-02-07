@@ -47,7 +47,4 @@ const createEmbeddings = async (configuration, apiKey) => {
     };
   }
 };
-export {
-  runModel,
-  createEmbeddings
-};
+export { runModel, createEmbeddings };

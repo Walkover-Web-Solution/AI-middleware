@@ -1,7 +1,7 @@
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports } from "winston";
 
 const { timestamp, combine, printf, colorize } = format;
-const SERVICE_NAME = process.env.SERVICE_NAME || 'dev-gtwy.ai';
+const SERVICE_NAME = process.env.SERVICE_NAME || "dev-gtwy.ai";
 
 // const LEVELS = {
 //   error: 0,
@@ -13,31 +13,30 @@ const SERVICE_NAME = process.env.SERVICE_NAME || 'dev-gtwy.ai';
 //   silly: 6
 // };
 
-function buildDevLogger(logLevel = 'http') {
+function buildDevLogger(logLevel = "http") {
   const localLogFormat = printf(({ level, message, timestamp, stack }) => `${timestamp} ${level} ${stack || message}`);
 
   return createLogger({
     level: logLevel,
-    format: combine(colorize(), timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), format.errors({ stack: true }), localLogFormat),
+    format: combine(colorize(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), format.errors({ stack: true }), localLogFormat),
     defaultMeta: SERVICE_NAME,
-    transports: [new transports.Console()],
+    transports: [new transports.Console()]
   });
 }
 
-function buildProdLogger(logLevel = 'http') {
-  
+function buildProdLogger(logLevel = "http") {
   return createLogger({
     level: logLevel,
-    format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), format.errors({ stack: true }), format.json()),
+    format: combine(timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), format.errors({ stack: true }), format.json()),
     defaultMeta: { service: SERVICE_NAME },
     transports: [
-      new transports.Console(),
-    //   new transports.File({ filename: `logs/log_${formattedDate}.log` }),
-    ],
+      new transports.Console()
+      //   new transports.File({ filename: `logs/log_${formattedDate}.log` }),
+    ]
   });
 }
 const logger = () => {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     return buildDevLogger(process.env.LOG_LEVEL);
   }
 

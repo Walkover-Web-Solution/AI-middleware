@@ -10,7 +10,7 @@ const FolderSchema = new mongoose.Schema({
     required: true
   },
   type: {
-    type: String,
+    type: String
   },
   config: {
     type: Object,
@@ -35,9 +35,9 @@ const FolderSchema = new mongoose.Schema({
   folder_usage: {
     type: Number,
     default: 0
- }
+  }
 });
 
-const FolderModel = mongoose.model('Folder', FolderSchema);
+const FolderModel = mongoose.model("Folder", FolderSchema);
 
 export default FolderModel;
