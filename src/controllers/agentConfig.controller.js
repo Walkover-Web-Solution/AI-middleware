@@ -80,7 +80,7 @@ const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
             // Check Slug Collision
             const slugMatch = agent.slugName.match(nameRegex);
             if (slugMatch) {
-                const num = slugMatch[2] ? parseInt(slugMatch[2]) : 0;
+const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
                 if (num >= slug_next_count) {
                     slug_next_count = num + 1;
                 }
