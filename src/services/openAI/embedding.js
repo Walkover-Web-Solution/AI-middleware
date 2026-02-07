@@ -1,11 +1,7 @@
 import { createEmbeddings } from "./runModel.js";
 const embeddings = async (configuration, apikey) => {
   try {
-    const {
-      success,
-      response,
-      error
-    } = await createEmbeddings(configuration, apikey);
+    const { success, response, error } = await createEmbeddings(configuration, apikey);
     if (!success) {
       return {
         success: false,
@@ -21,6 +17,4 @@ const embeddings = async (configuration, apikey) => {
     return;
   }
 };
-export {
-  embeddings
-};
+export { embeddings };

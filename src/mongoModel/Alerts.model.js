@@ -2,15 +2,18 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
-const WebhookConfigurationSchema = new Schema({
-  url: {
-    type: String
+const WebhookConfigurationSchema = new Schema(
+  {
+    url: {
+      type: String
+    },
+    headers: {
+      type: Map,
+      of: String
+    }
   },
-  headers: {
-    type: Map,
-    of: String
-  }
-}, { _id: false });
+  { _id: false }
+);
 
 const AlertSchema = new Schema({
   org_id: {
@@ -39,6 +42,6 @@ const AlertSchema = new Schema({
   }
 });
 
-const alerts_Model = mongoose.model('alerts', AlertSchema);
+const alerts_Model = mongoose.model("alerts", AlertSchema);
 
 export { alerts_Model };

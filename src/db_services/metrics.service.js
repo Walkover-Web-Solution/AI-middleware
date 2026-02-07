@@ -1,5 +1,5 @@
-import combinedModels  from "./../../models/index.js";
-const timescale = combinedModels.timescale
+import combinedModels from "./../../models/index.js";
+const timescale = combinedModels.timescale;
 import Sequelize from "sequelize";
 async function find(query, values) {
   try {
@@ -10,7 +10,7 @@ async function find(query, values) {
     const results = await timescale.sequelize.query(query, queryOptions);
     return results;
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error("Error executing query:", error);
     throw error;
   }
 }

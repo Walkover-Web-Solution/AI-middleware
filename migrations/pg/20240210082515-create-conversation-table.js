@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('conversations', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("conversations", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -28,10 +28,10 @@ module.exports = {
       message_by: {
         type: Sequelize.STRING
       },
-      type:{
-        type:Sequelize.ENUM('chat', 'completion', 'embedding'),
+      type: {
+        type: Sequelize.ENUM("chat", "completion", "embedding"),
         allowNull: false,
-        defaultValue: 'chat'
+        defaultValue: "chat"
       },
       createdAt: {
         allowNull: false,
@@ -41,15 +41,14 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
-      function:{
+      function: {
         allowNull: true,
         type: Sequelize.JSON
       }
-      
     });
   },
-// eslint-disable-next-line no-unused-vars
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('conversations');
+  // eslint-disable-next-line no-unused-vars
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("conversations");
   }
 };

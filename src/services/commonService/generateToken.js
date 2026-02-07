@@ -4,7 +4,7 @@ const generateToken = ({ payload, accessKey }) => {
     return jwt.sign(payload, accessKey);
   } catch (error) {
     console.error("Error generating token:", error);
-    throw new Error('Failed to generate token');
+    throw new Error("Failed to generate token");
   }
 };
 export default {

@@ -1,21 +1,21 @@
-import rabbitmqService from './rabbitmq.service.js';
-import logger from '../logger.js';
-import { configDotenv } from 'dotenv';
+import rabbitmqService from "./rabbitmq.service.js";
+import logger from "../logger.js";
+import { configDotenv } from "dotenv";
 
 let rabbitConnection;
 let rabbitChannel;
 configDotenv();
-const RABBIT_CONNECTION_STRING = process.env.QUEUE_CONNECTIONURL || '';
+const RABBIT_CONNECTION_STRING = process.env.QUEUE_CONNECTIONURL || "";
 
 class RabbitMqProducer {
   static instance;
-  
+
   constructor() {
-    logger.info('[PRODUCER] Listening for connection...');
-    rabbitmqService(RABBIT_CONNECTION_STRING).on('connect', async (connection) => {
-      logger.info('[PRODUCER] Connection received...');
+    logger.info("[PRODUCER] Listening for connection...");
+    rabbitmqService(RABBIT_CONNECTION_STRING).on("connect", async (connection) => {
+      logger.info("[PRODUCER] Connection received...");
       rabbitConnection = connection;
-      logger.info('[PRODUCER] Creating channel...');
+      logger.info("[PRODUCER] Creating channel...");
       rabbitChannel = await rabbitConnection.createChannel();
     });
   }
@@ -27,8 +27,8 @@ class RabbitMqProducer {
 
   async publishToQueue(queueName, payload) {
     try {
-      logger.debug('[PRODUCER] Preparing payload...');
-      payload = (typeof payload === 'string') ? payload : JSON.stringify(payload);
+      logger.debug("[PRODUCER] Preparing payload...");
+      payload = typeof payload === "string" ? payload : JSON.stringify(payload);
       const payloadBuffer = Buffer.from(payload);
       logger.debug(`[PRODUCER] Asserting '${queueName}' queue...`);
       rabbitChannel.assertQueue(queueName, { durable: true });
@@ -42,5 +42,3 @@ class RabbitMqProducer {
 }
 
 export default RabbitMqProducer.getSingletonInstance();
-
-

@@ -1,9 +1,10 @@
-'use strict';
+/* eslint-disable no-unused-vars */
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('conversation_logs', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("conversation_logs", {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -66,7 +67,7 @@ module.exports = {
         defaultValue: []
       },
       AiConfig: {
-        type: Sequelize.JSONB,
+        type: Sequelize.JSONB
       },
       fallback_model: {
         type: Sequelize.JSONB,
@@ -116,17 +117,17 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     });
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('conversation_logs');
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("conversation_logs");
   }
 };

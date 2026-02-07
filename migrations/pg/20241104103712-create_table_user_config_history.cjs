@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('user_bridge_config_history', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("user_bridge_config_history", {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -28,12 +28,12 @@ module.exports = {
       time: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     });
   },
 
-  async down (queryInterface) {
-    await queryInterface.dropTable('user_bridge_config_history');
+  async down(queryInterface) {
+    await queryInterface.dropTable("user_bridge_config_history");
   }
 };
