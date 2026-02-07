@@ -1,26 +1,22 @@
 import { runModel } from "./runModel.js";
 const completion = async (configuration, apikey) => {
   try {
-    const {
-      success,
-      response,
-      error
-    } = await runModel(configuration, false, apikey);
+    const { success, response, error } = await runModel(configuration, false, apikey);
     if (!success) {
       return {
         success: false,
-        error: error
+        error: error,
       };
     }
     return {
       success: true,
-      modelResponse: response
+      modelResponse: response,
     };
   } catch (error) {
     console.error("common error=>", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -30,6 +26,4 @@ const completion = async (configuration, apikey) => {
 //     console.log("response=>",JSON.stringify(response));
 // }
 // a()
-export {
-  completion
-};
+export { completion };

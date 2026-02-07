@@ -2,43 +2,46 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
-const WebhookConfigurationSchema = new Schema({
-  url: {
-    type: String
+const WebhookConfigurationSchema = new Schema(
+  {
+    url: {
+      type: String,
+    },
+    headers: {
+      type: Map,
+      of: String,
+    },
   },
-  headers: {
-    type: Map,
-    of: String
-  }
-}, { _id: false });
+  { _id: false }
+);
 
 const AlertSchema = new Schema({
   org_id: {
-    type: String
+    type: String,
   },
   name: {
-    type: String
+    type: String,
   },
   webhookConfiguration: {
-    type: WebhookConfigurationSchema
+    type: WebhookConfigurationSchema,
   },
   alertType: {
-    type: [String]
+    type: [String],
   },
   bridges: {
-    type: [String]
+    type: [String],
   },
   limit: {
-    type: Number
+    type: Number,
   },
   createdAt: {
-    type: Date
+    type: Date,
   },
   updatedAt: {
-    type: Date
-  }
+    type: Date,
+  },
 });
 
-const alerts_Model = mongoose.model('alerts', AlertSchema);
+const alerts_Model = mongoose.model("alerts", AlertSchema);
 
 export { alerts_Model };

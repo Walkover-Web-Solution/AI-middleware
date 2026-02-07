@@ -1,6 +1,5 @@
 import configurationService from "../../db_services/configuration.service.js";
 import helper from "../../services/utils/helper.utils.js";
-import token from "../../services/commonService/generateToken.js";
 
 const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {
   let RTLayer = false;
@@ -9,7 +8,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key, temp
   if (!result.success) {
     return {
       success: false,
-      error: "bridge_id does not exist"
+      error: "bridge_id does not exist",
     };
   }
   configuration = configuration ? configuration : result?.bridges?.configuration;
@@ -27,7 +26,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key, temp
     service: service,
     apikey: api_key,
     RTLayer: RTLayer,
-    template: templateContent?.template
+    template: templateContent?.template,
   };
 };
 
@@ -36,7 +35,4 @@ function convertToTimestamp(dateTimeStr) {
   return dateObj.getTime();
 }
 
-export {
-  getConfiguration,
-  convertToTimestamp
-};
+export { getConfiguration, convertToTimestamp };
