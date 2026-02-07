@@ -71,7 +71,7 @@ const createAgentController = async (req, res, next) => {
             // Check Name Collision
             const nameMatch = agent.name.match(nameRegex);
             if (nameMatch) {
-                const num = nameMatch[2] ? parseInt(nameMatch[2]) : 0;
+const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
                 if (num >= name_next_count) {
                     name_next_count = num + 1;
                 }
