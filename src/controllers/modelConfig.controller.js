@@ -27,12 +27,12 @@ async function saveUserModelConfiguration(req, res, next) {
     status,
     configuration,
     outputConfig,
-    validationConfig,
+    validationConfig
   });
   res.locals = {
     success: true,
     message: `Model configuration saved successfully`,
-    result,
+    result
   };
   req.statusCode = 200;
   return next();
@@ -49,7 +49,7 @@ async function deleteUserModelConfiguration(req, res, next) {
     return res.status(409).json({
       success: false,
       error: "Cannot delete model configuration as it is currently in use",
-      usageDetails: usageCheck.data,
+      usageDetails: usageCheck.data
     });
   }
 
@@ -61,7 +61,7 @@ async function deleteUserModelConfiguration(req, res, next) {
 
   res.locals = {
     success: true,
-    message: `Model configuration '${model_name}' for service '${service}' deleted successfully.`,
+    message: `Model configuration '${model_name}' for service '${service}' deleted successfully.`
   };
   req.statusCode = 200;
   return next();

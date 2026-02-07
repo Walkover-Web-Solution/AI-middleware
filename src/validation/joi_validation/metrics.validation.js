@@ -10,7 +10,7 @@ const getMetricsData = {
   query: Joi.object()
     .keys({
       startTime: Joi.string().optional(),
-      endTime: Joi.string().optional(),
+      endTime: Joi.string().optional()
     })
     .unknown(true),
   body: Joi.object()
@@ -23,18 +23,18 @@ const getMetricsData = {
       version_id: idSchema.optional(),
       range: Joi.number().integer().required().messages({
         "any.required": "range is required",
-        "number.base": "range must be a number",
+        "number.base": "range must be a number"
       }),
       factor: Joi.string().required().messages({
         "any.required": "factor is required",
-        "string.base": "factor must be a string",
+        "string.base": "factor must be a string"
       }),
       start_date: Joi.date().optional(),
-      end_date: Joi.date().optional(),
+      end_date: Joi.date().optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
-  getMetricsData,
+  getMetricsData
 };

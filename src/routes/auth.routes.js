@@ -4,7 +4,7 @@ import {
   verifyAuthTokenController,
   saveAuthTokenInDbController,
   getAuthTokenInDbController,
-  getClientInfoController,
+  getClientInfoController
 } from "../controllers/auth.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";

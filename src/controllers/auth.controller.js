@@ -11,8 +11,8 @@ const createAuthToken = async (req, res, next) => {
     await updateOrganizationData(org_id, {
       meta: {
         ...data?.meta,
-        auth_token,
-      },
+        auth_token
+      }
     });
   res.locals = { auth_token: data?.meta?.auth_token || auth_token };
   req.statusCode = 200;
@@ -27,7 +27,7 @@ const saveAuthTokenInDbController = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Auth token saved successfully",
-    result,
+    result
   };
   req.statusCode = 201;
   return next();
@@ -41,7 +41,7 @@ const getAuthTokenInDbController = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Auth token found successfully",
-    result,
+    result
   };
   req.statusCode = 200;
   return next();
@@ -55,19 +55,16 @@ const verifyAuthTokenController = async (req, res) => {
 
   const data = {
     company_id: org.id,
-    user_id: user.id,
+    user_id: user.id
   };
 
   const accessToken = await createProxyToken({
-    ...data,
+    ...data
   });
 
   const refreshToken = jwt.sign({ ...data }, process.env.SecretKey);
 
-  return res.redirect(
-    301,
-    `${redirection_url}?access_token=${accessToken}&refresh_token=${refreshToken}&state=${state}`
-  );
+  return res.redirect(301, `${redirection_url}?access_token=${accessToken}&refresh_token=${refreshToken}&state=${state}`);
 };
 
 const getClientInfoController = async (req, res, next) => {
@@ -82,16 +79,10 @@ const getClientInfoController = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Client info found successfully",
-    result,
+    result
   };
   req.statusCode = 200;
   return next();
 };
 
-export {
-  createAuthToken,
-  saveAuthTokenInDbController,
-  verifyAuthTokenController,
-  getClientInfoController,
-  getAuthTokenInDbController,
-};
+export { createAuthToken, saveAuthTokenInDbController, verifyAuthTokenController, getClientInfoController, getAuthTokenInDbController };

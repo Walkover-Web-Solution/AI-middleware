@@ -9,14 +9,7 @@ const updateBridgeSchema = Joi.object({
     model: Joi.string()
       .when(Joi.ref("/service"), {
         is: "google",
-        then: Joi.valid(
-          "gemini-pro",
-          "gemini-1.5-pro",
-          "gemini-1.0-pro-vision",
-          "gemini-1.0-pro",
-          "gemini-1.5-Flash",
-          "embedding-001"
-        ),
+        then: Joi.valid("gemini-pro", "gemini-1.5-pro", "gemini-1.0-pro-vision", "gemini-1.0-pro", "gemini-1.5-Flash", "embedding-001"),
         otherwise: Joi.string().valid(
           "gpt-3.5-turbo",
           "gpt-3.5-turbo-0613",
@@ -37,14 +30,14 @@ const updateBridgeSchema = Joi.object({
           "text-embedding-3-small",
           "text-embedding-ada-002",
           "gpt-3.5-turbo-instruct"
-        ),
+        )
       })
       .required(),
     type: Joi.string().valid("chat", "embedding", "completion"),
     prompt: Joi.alternatives().try(Joi.string().allow(""), Joi.array()).optional(),
     input: Joi.string().allow("").optional(),
     RTLayer: Joi.boolean().allow(null).optional(),
-    webhook: Joi.string().allow("").optional(),
+    webhook: Joi.string().allow("").optional()
   }),
   service: Joi.string().valid("openai", "google").required(),
   apikey: Joi.string()
@@ -52,8 +45,8 @@ const updateBridgeSchema = Joi.object({
     .optional()
     .allow(""),
   org_id: Joi.string().required().messages({
-    "string.base": "The input must be a string",
-  }),
+    "string.base": "The input must be a string"
+  })
 })
   .when(
     Joi.object({
@@ -83,7 +76,7 @@ const updateBridgeSchema = Joi.object({
         "gemini-1.0-pro-vision",
         "gemini-1.0-pro",
         "gemini-1.5-Flash"
-      ),
+      )
     }).unknown(),
     {
       then: Joi.object({
@@ -98,7 +91,7 @@ const updateBridgeSchema = Joi.object({
             presence_penalty: Joi.string(),
             n: Joi.string(),
             stop: Joi.string(),
-            stream: Joi.string(),
+            stream: Joi.string()
           }),
           "gpt-3.5-turbo-0613": Joi.object({
             temperature: Joi.string(),
@@ -109,7 +102,7 @@ const updateBridgeSchema = Joi.object({
             presence_penalty: Joi.string(),
             n: Joi.string(),
             stop: Joi.string(),
-            stream: Joi.string(),
+            stream: Joi.string()
           }),
           "gpt-3.5-turbo-0125": Joi.object({
             temperature: Joi.string(),
@@ -123,7 +116,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-3.5-turbo-0301": Joi.object({
             temperature: Joi.string(),
@@ -137,7 +130,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-3.5-turbo-1106": Joi.object({
             temperature: Joi.string(),
@@ -151,7 +144,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-3.5-turbo-16k": Joi.object({
             temperature: Joi.string(),
@@ -165,7 +158,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-3.5-turbo-16k-0613": Joi.object({
             temperature: Joi.string(),
@@ -179,7 +172,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-4": Joi.object({
             temperature: Joi.string(),
@@ -192,7 +185,7 @@ const updateBridgeSchema = Joi.object({
             stop: Joi.string(),
             stream: Joi.string(),
             tools: Joi.string(),
-            tool_choice: Joi.string(),
+            tool_choice: Joi.string()
           }),
           "gpt-4o": Joi.object({
             temperature: Joi.string(),
@@ -205,7 +198,7 @@ const updateBridgeSchema = Joi.object({
             stop: Joi.string(),
             stream: Joi.string(),
             tools: Joi.string(),
-            tool_choice: Joi.string(),
+            tool_choice: Joi.string()
           }),
           "chatgpt-4o-latest": Joi.object({
             temperature: Joi.string(),
@@ -216,7 +209,7 @@ const updateBridgeSchema = Joi.object({
             presence_penalty: Joi.string(),
             n: Joi.string(),
             stop: Joi.string(),
-            stream: Joi.string(),
+            stream: Joi.string()
           }),
           "gpt-4-0613": Joi.object({
             temperature: Joi.string(),
@@ -229,7 +222,7 @@ const updateBridgeSchema = Joi.object({
             stop: Joi.string(),
             stream: Joi.string(),
             tools: Joi.string(),
-            tool_choice: Joi.string(),
+            tool_choice: Joi.string()
           }),
           "gpt-4-1106-preview": Joi.object({
             temperature: Joi.string(),
@@ -243,7 +236,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-4-turbo-preview": Joi.object({
             temperature: Joi.string(),
@@ -257,7 +250,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-4-0125-preview": Joi.object({
             temperature: Joi.string(),
@@ -271,7 +264,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-4-turbo-2024-04-09": Joi.object({
             temperature: Joi.string(),
@@ -285,7 +278,7 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "gpt-4-turbo": Joi.object({
             temperature: Joi.string(),
@@ -299,19 +292,19 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             tools: Joi.string(),
             tool_choice: Joi.string(),
-            response_format: Joi.string(),
+            response_format: Joi.string()
           }),
           "text-embedding-3-large": Joi.object({
             encoding_format: Joi.string(),
-            dimensions: Joi.string(),
+            dimensions: Joi.string()
           }),
           "text-embedding-3-small": Joi.object({
             encoding_format: Joi.string(),
-            dimensions: Joi.string(),
+            dimensions: Joi.string()
           }),
           "text-embedding-ada-002": Joi.object({
             encoding_format: Joi.string(),
-            dimensions: Joi.string(),
+            dimensions: Joi.string()
           }),
           "gpt-3.5-turbo-instruct": Joi.object({
             best_of: Joi.string(),
@@ -327,52 +320,52 @@ const updateBridgeSchema = Joi.object({
             stream: Joi.string(),
             suffix: Joi.string(),
             temperature: Joi.string(),
-            top_p: Joi.string(),
+            top_p: Joi.string()
           }),
           "gemini-pro": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
+            stopSequences: Joi.string()
           }),
           "gemini-1.0-pro-vision": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
+            stopSequences: Joi.string()
           }),
           "gemini-1.0-pro": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
+            stopSequences: Joi.string()
           }),
           "gemini-1.5-Flash": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
+            stopSequences: Joi.string()
           }),
           "gemini-1.5-pro": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
+            stopSequences: Joi.string()
           }),
           "embedding-001": Joi.object({
             temperature: Joi.string(),
             topK: Joi.string(),
             topP: Joi.string(),
             maxOutputTokens: Joi.string(),
-            stopSequences: Joi.string(),
-          }),
-        }).unknown(), // Allow any additional properties within each model's configuration
-      }),
+            stopSequences: Joi.string()
+          })
+        }).unknown() // Allow any additional properties within each model's configuration
+      })
     }
   )
   .unknown(true);
@@ -382,7 +375,7 @@ const createThreadHistrorySchema = Joi.object({
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required(),
   org_id: Joi.string().required().messages({
-    "string.base": "The org_id must be a string",
+    "string.base": "The org_id must be a string"
   }),
   thread_id: Joi.string().required(),
   sub_thread_id: Joi.string().required(),
@@ -390,16 +383,16 @@ const createThreadHistrorySchema = Joi.object({
   message: Joi.string().required(),
   type: Joi.string().valid("chat").required(),
   message_by: Joi.string().valid("assistant").required(),
-  message_id: Joi.string(),
+  message_id: Joi.string()
 }).unknown(true);
 
 const subscribeSchema = Joi.object({
   slugName: Joi.string().required().messages({
     "string.empty": "slugName is required",
-    "any.required": "slugName is required",
+    "any.required": "slugName is required"
   }),
   versionId: Joi.string().optional().allow(""),
-  helloId: Joi.string().optional().allow(""),
+  helloId: Joi.string().optional().allow("")
 }).unknown(true);
 
 export { updateBridgeSchema, createThreadHistrorySchema, subscribeSchema };

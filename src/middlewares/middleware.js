@@ -15,11 +15,11 @@ const ROLE_PERMISSIONS = {
   viewer: ["get_agent"],
   editor: [
     "get_agent",
-    "create_agent",
+    "create_agent"
     // 'delete_agent',
     // 'update_agent'
   ],
-  admin: ["get_agent", "create_agent", "clone_agent"],
+  admin: ["get_agent", "create_agent", "clone_agent"]
 };
 
 /**
@@ -73,7 +73,7 @@ const determineRoleFromPermissions = (userPermissions, isEmbed = false) => {
 
 const makeDataIfProxyTokenGiven = async (req) => {
   const headers = {
-    proxy_auth_token: req.headers.proxy_auth_token,
+    proxy_auth_token: req.headers.proxy_auth_token
   };
   const response = await axios.get("https://routes.msg91.com/api/c/getDetails", { headers });
 
@@ -90,12 +90,12 @@ const makeDataIfProxyTokenGiven = async (req) => {
       name: responseData.data[0].name,
       meta: responseData.data[0].meta,
       isEmbedUser: responseData.data[0].meta?.type === "embed",
-      folder_id: responseData.data[0].meta?.folder_id,
+      folder_id: responseData.data[0].meta?.folder_id
     },
     org: {
       id: responseData.data[0].currentCompany.id,
-      name: responseData.data[0].currentCompany.name,
-    },
+      name: responseData.data[0].currentCompany.name
+    }
   };
 };
 
@@ -121,20 +121,20 @@ const makeDataIfPauthKeyGiven = async (req) => {
       meta: {
         throttle_limit: authkey?.throttle_limit,
         temporary_throttle_limit: authkey?.temporary_throttle_limit,
-        temporary_throttle_time: authkey?.temporary_throttle_time,
-      },
+        temporary_throttle_time: authkey?.temporary_throttle_time
+      }
     },
     org: {
       id: company.id,
-      name: company.name,
+      name: company.name
     },
     extraDetails: {
       tokenType: null,
       message: response?.data?.message,
-      proxy_auth_type: "pauthkey",
+      proxy_auth_type: "pauthkey"
     },
     authkey,
-    proxyResponse: response?.data,
+    proxyResponse: response?.data
   };
 };
 
@@ -277,17 +277,17 @@ const EmbeddecodeToken = async (req, res, next) => {
             user_id: proxyResponse.data.user.id,
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,
-            folder_id: checkToken?.folder_id,
+            folder_id: checkToken?.folder_id
           };
           req.profile = {
             user: {
               id: proxyResponse.data.user.id,
-              name: "",
+              name: ""
             },
             org: {
               id: proxyResponse.data.company.id,
-              name: orgTokenFromDb?.name,
-            },
+              name: orgTokenFromDb?.name
+            }
           };
           req.IsEmbedUser = true;
           return next();
@@ -354,9 +354,7 @@ const getAgentAccessRole = async (user_id, org_id, bridge_id, original_role_name
 
     // Query configuration collection for the bridge
     try {
-      const bridge_doc = await configurationModel
-        .findOne({ _id: new mongoose.Types.ObjectId(bridge_id), org_id: org_id }, { users: 1 })
-        .lean();
+      const bridge_doc = await configurationModel.findOne({ _id: new mongoose.Types.ObjectId(bridge_id), org_id: org_id }, { users: 1 }).lean();
 
       if (!bridge_doc) {
         // Bridge not found, return original role_name
@@ -424,7 +422,7 @@ const checkAgentAccessMiddleware = async (req, res, next) => {
     if (access_role === "viewer") {
       return res.status(403).json({
         success: false,
-        message: "You don't have access",
+        message: "You don't have access"
       });
     }
     req.access_role = access_role;
@@ -474,7 +472,7 @@ const requireAdminRole = async (req, res, next) => {
       if (role_name === "viewer") {
         return res.status(403).json({
           success: false,
-          message: "You don't have access to update this agent",
+          message: "You don't have access to update this agent"
         });
       }
       return next();
@@ -497,8 +495,7 @@ const requireAdminRole = async (req, res, next) => {
       }
 
       // Check if user_id is in the users array
-      const isUserInArray =
-        usersArray && Array.isArray(usersArray) && usersArray.some((u) => String(u) === String(user_id));
+      const isUserInArray = usersArray && Array.isArray(usersArray) && usersArray.some((u) => String(u) === String(user_id));
 
       // Handle viewer role
       if (role_name === "viewer") {
@@ -507,7 +504,7 @@ const requireAdminRole = async (req, res, next) => {
         }
         return res.status(403).json({
           success: false,
-          message: "You don't have access to update this agent",
+          message: "You don't have access to update this agent"
         });
       }
 
@@ -526,14 +523,14 @@ const requireAdminRole = async (req, res, next) => {
         // Users array exists but user is not in it
         return res.status(403).json({
           success: false,
-          message: "You don't have access to update this agent",
+          message: "You don't have access to update this agent"
         });
       }
 
       // For any other role, deny by default
       return res.status(403).json({
         success: false,
-        message: "You don't have access to update this agent",
+        message: "You don't have access to update this agent"
       });
     } catch (dbError) {
       console.error("Error querying agent users:", dbError);
@@ -541,7 +538,7 @@ const requireAdminRole = async (req, res, next) => {
       if (role_name === "viewer") {
         return res.status(403).json({
           success: false,
-          message: "You don't have access to update this agent",
+          message: "You don't have access to update this agent"
         });
       }
       return next();
@@ -550,7 +547,7 @@ const requireAdminRole = async (req, res, next) => {
     console.error("Error in requireAdminRole:", err);
     return res.status(403).json({
       success: false,
-      message: "You don't have access to update this agent",
+      message: "You don't have access to update this agent"
     });
   }
 };
@@ -563,5 +560,5 @@ export {
   loginAuth,
   checkAgentAccessMiddleware,
   getAgentAccessRole,
-  requireAdminRole,
+  requireAdminRole
 };

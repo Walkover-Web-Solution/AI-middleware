@@ -32,7 +32,7 @@ async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
         const payload = {
           details: details_payload,
           bridge_id,
-          org_id,
+          org_id
         };
 
         // Send the response
@@ -48,7 +48,7 @@ async function send_error_to_webhook(bridge_id, org_id, error_log, error_type) {
 function thumbs_down_error(details) {
   return {
     alert: "Thumbs down on response",
-    Variables: details,
+    Variables: details
   };
 }
 
@@ -57,8 +57,8 @@ function create_response_format(url, headers) {
     type: "webhook",
     cred: {
       url: url,
-      headers: headers,
-    },
+      headers: headers
+    }
   };
 }
 

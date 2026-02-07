@@ -28,7 +28,7 @@ const getPrebuiltPrompts = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Prebuilt prompts retrieved successfully",
-    data: prebuiltPrompts,
+    data: prebuiltPrompts
   };
   req.statusCode = 200;
   return next();
@@ -41,13 +41,13 @@ const updatePrebuiltPrompt = async (req, res, next) => {
   const prompt_text = body[prompt_id];
 
   const updatedPrompt = await prebuiltPromptDbService.updatePrebuiltPromptService(org_id, prompt_id, {
-    prompt: prompt_text,
+    prompt: prompt_text
   });
 
   res.locals = {
     success: true,
     message: "Prebuilt prompt updated successfully",
-    data: updatedPrompt,
+    data: updatedPrompt
   };
   req.statusCode = 200;
   return next();
@@ -63,13 +63,13 @@ const resetPrebuiltPrompts = async (req, res, next) => {
   if (bridgePrompt.bridge.configuration.prompt) {
     const originalPrompt = bridgePrompt.bridge.configuration.prompt;
     const updatedPrompt = await prebuiltPromptDbService.updatePrebuiltPromptService(org_id, prompt_id, {
-      prompt: originalPrompt,
+      prompt: originalPrompt
     });
 
     res.locals = {
       success: true,
       message: `Successfully reset ${prompt_id} to original value`,
-      data: updatedPrompt,
+      data: updatedPrompt
     };
     req.statusCode = 200;
     return next();
@@ -89,7 +89,7 @@ const getSpecificPrebuiltPrompt = async (req, res, next) => {
   res.locals = {
     success: true,
     message: `Retrieved prompt '${prompt_key}' successfully`,
-    data: specificPrompt,
+    data: specificPrompt
   };
   req.statusCode = 200;
   return next();
@@ -99,5 +99,5 @@ export default {
   getPrebuiltPrompts,
   updatePrebuiltPrompt,
   resetPrebuiltPrompts,
-  getSpecificPrebuiltPrompt,
+  getSpecificPrebuiltPrompt
 };

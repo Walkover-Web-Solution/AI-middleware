@@ -92,5 +92,5 @@ export async function cleanupCache(type, id) {
 }
 
 export default {
-  deleteInCache,
+  deleteInCache
 };

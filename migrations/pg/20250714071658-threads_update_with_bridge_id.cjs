@@ -34,7 +34,7 @@ module.exports = {
       // Find all threads in MongoDB where bridge_id is not present
       const threadsWithoutBridgeId = await threadsCollection
         .find({
-          $or: [{ bridge_id: { $exists: false } }, { bridge_id: null }, { bridge_id: "" }],
+          $or: [{ bridge_id: { $exists: false } }, { bridge_id: null }, { bridge_id: "" }]
         })
         .toArray();
 
@@ -63,7 +63,7 @@ module.exports = {
           // Build the query conditions for PostgreSQL using Sequelize
           let whereCondition = {
             org_id,
-            thread_id,
+            thread_id
           };
 
           // Add sub_thread_id to condition if it exists
@@ -81,7 +81,7 @@ module.exports = {
              GROUP BY bridge_id, org_id, thread_id, sub_thread_id`,
             {
               replacements: whereCondition,
-              type: Sequelize.QueryTypes.SELECT,
+              type: Sequelize.QueryTypes.SELECT
             }
           );
 
@@ -118,7 +118,7 @@ module.exports = {
               // Clone the entire document and only change the bridge_id
               const newThreadDoc = {
                 ...threadClone,
-                bridge_id: bridgeIdFromPg,
+                bridge_id: bridgeIdFromPg
               };
               await threadsCollection.insertOne(newThreadDoc);
               console.log(`Created new thread document for additional bridge_id: ${bridgeIdFromPg}`);
@@ -147,5 +147,5 @@ module.exports = {
      * If needed, a separate backup/restore strategy should be implemented.
      */
     console.log("Down migration not implemented for this migration as it modifies MongoDB data.");
-  },
+  }
 };

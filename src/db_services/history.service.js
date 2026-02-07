@@ -11,15 +11,7 @@ import Sequelize from "sequelize";
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function findConversationLogsByIds(
-  org_id,
-  bridge_id,
-  thread_id,
-  sub_thread_id,
-  page = 1,
-  limit = 30,
-  version_id = null
-) {
+async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_thread_id, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
 
@@ -28,7 +20,7 @@ async function findConversationLogsByIds(
       org_id: org_id,
       bridge_id: bridge_id,
       thread_id: thread_id,
-      sub_thread_id: sub_thread_id,
+      sub_thread_id: sub_thread_id
     };
 
     if (version_id) {
@@ -40,7 +32,7 @@ async function findConversationLogsByIds(
       where: whereConditions,
       order: [["created_at", "DESC"]],
       limit: limit,
-      offset: offset,
+      offset: offset
     });
 
     // Reverse the conversation logs array
@@ -48,14 +40,14 @@ async function findConversationLogsByIds(
 
     return {
       success: true,
-      data: reversedLogs,
+      data: reversedLogs
     };
   } catch (error) {
     console.error("Error fetching conversation logs:", error);
     return {
       success: false,
       message: "Failed to fetch conversation logs",
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -73,23 +65,14 @@ async function findConversationLogsByIds(
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status and data
  */
-async function findRecentThreadsByBridgeId(
-  org_id,
-  bridge_id,
-  filters,
-  user_feedback,
-  error,
-  page = 1,
-  limit = 30,
-  version_id = null
-) {
+async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feedback, error, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
 
     // Build where conditions
     const whereConditions = {
       org_id: org_id,
-      bridge_id: bridge_id,
+      bridge_id: bridge_id
     };
 
     if (user_feedback !== "all" && user_feedback !== "undefined") {
@@ -128,31 +111,27 @@ async function findRecentThreadsByBridgeId(
           { llm_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
           { user: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
           { chatbot_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
-          { updated_llm_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } },
-        ],
+          { updated_llm_message: { [Sequelize.Op.iLike]: `%${filters.keyword}%` } }
+        ]
       };
       whereConditions[Sequelize.Op.and] = [keywordConditions];
     }
 
     // Get recent threads with distinct thread_id, ordered by updated_at
     const threads = await models.pg.conversation_logs.findAll({
-      attributes: [
-        "thread_id",
-        [Sequelize.fn("MAX", Sequelize.col("id")), "id"],
-        [Sequelize.fn("MAX", Sequelize.col("updated_at")), "updated_at"],
-      ],
+      attributes: ["thread_id", [Sequelize.fn("MAX", Sequelize.col("id")), "id"], [Sequelize.fn("MAX", Sequelize.col("updated_at")), "updated_at"]],
       where: whereConditions,
       group: ["thread_id"],
       order: [[Sequelize.fn("MAX", Sequelize.col("updated_at")), "DESC"]],
       limit: limit,
-      offset: offset,
+      offset: offset
     });
 
     // Format the response - simple thread data only
     const formattedThreads = threads.map((thread) => ({
       id: thread.dataValues.id,
       thread_id: thread.dataValues.thread_id,
-      updated_at: thread.dataValues.updated_at,
+      updated_at: thread.dataValues.updated_at
     }));
 
     // If keyword search is active, fetch matching messages for the found threads
@@ -161,12 +140,12 @@ async function findRecentThreadsByBridgeId(
 
       const messagesWhere = {
         ...whereConditions,
-        thread_id: { [Sequelize.Op.in]: threadIds },
+        thread_id: { [Sequelize.Op.in]: threadIds }
       };
 
       const matchedMessages = await models.pg.conversation_logs.findAll({
         where: messagesWhere,
-        order: [["created_at", "DESC"]],
+        order: [["created_at", "DESC"]]
       });
 
       // Attach matching messages to threads
@@ -192,7 +171,7 @@ async function findRecentThreadsByBridgeId(
           return {
             message_id: msg.message_id,
             message: content,
-            created_at: msg.created_at,
+            created_at: msg.created_at
           };
         });
 
@@ -205,8 +184,8 @@ async function findRecentThreadsByBridgeId(
               .filter((m) => m.sub_thread_id === stId)
               .map((msg) => ({
                 message_id: msg.message_id,
-                message: msg.user || msg.llm_message || "Match found", // Simplify for subthread view
-              })),
+                message: msg.user || msg.llm_message || "Match found" // Simplify for subthread view
+              }))
           }));
         }
       });
@@ -217,9 +196,9 @@ async function findRecentThreadsByBridgeId(
       attributes: [
         [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 0 THEN 1 END")), "total_feedback_0"],
         [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 1 THEN 1 END")), "total_feedback_1"],
-        [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 2 THEN 1 END")), "total_feedback_2"],
+        [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 2 THEN 1 END")), "total_feedback_2"]
       ],
-      where: whereConditions,
+      where: whereConditions
     });
 
     return {
@@ -228,15 +207,15 @@ async function findRecentThreadsByBridgeId(
       total_user_feedback_count: {
         0: parseInt(totalFeedbackCount.dataValues.total_feedback_0) || 0,
         1: parseInt(totalFeedbackCount.dataValues.total_feedback_1) || 0,
-        2: parseInt(totalFeedbackCount.dataValues.total_feedback_2) || 0,
-      },
+        2: parseInt(totalFeedbackCount.dataValues.total_feedback_2) || 0
+      }
     };
   } catch (error) {
     console.error("Error fetching recent threads:", error);
     return {
       success: false,
       message: "Failed to fetch recent threads",
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -257,7 +236,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
     // Build where conditions
     const whereConditions = {
       org_id: org_id,
-      bridge_id: bridge_id,
+      bridge_id: bridge_id
     };
 
     // Add time range filter
@@ -280,40 +259,40 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
         [Sequelize.Op.or]: [
           {
             message_id: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             thread_id: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             sub_thread_id: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             llm_message: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             user: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             chatbot_message: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
           },
           {
             updated_llm_message: {
-              [Sequelize.Op.iLike]: `%${filters.keyword}%`,
-            },
-          },
-        ],
+              [Sequelize.Op.iLike]: `%${filters.keyword}%`
+            }
+          }
+        ]
       };
       whereConditions[Sequelize.Op.and] = [keywordConditions];
     }
@@ -321,7 +300,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
     // Get all matching logs
     const logs = await models.pg.conversation_logs.findAll({
       where: whereConditions,
-      order: [["created_at", "ASC"]],
+      order: [["created_at", "ASC"]]
     });
 
     // Group data by thread_id and sub_thread_id
@@ -335,7 +314,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
       if (!groupedData[threadId]) {
         groupedData[threadId] = {
           thread_id: threadId,
-          sub_thread: {},
+          sub_thread: {}
         };
       }
 
@@ -343,7 +322,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
       if (!groupedData[threadId].sub_thread[subThreadId]) {
         groupedData[threadId].sub_thread[subThreadId] = {
           sub_thread_id: subThreadId,
-          messages: [],
+          messages: []
         };
       }
 
@@ -352,7 +331,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
       if (message) {
         groupedData[threadId].sub_thread[subThreadId].messages.push({
           message: message,
-          message_id: log.message_id,
+          message_id: log.message_id
         });
       }
     });
@@ -360,19 +339,19 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
     // Convert grouped data to array format
     const result = Object.values(groupedData).map((thread) => ({
       ...thread,
-      sub_thread: Object.values(thread.sub_thread),
+      sub_thread: Object.values(thread.sub_thread)
     }));
 
     return {
       success: true,
-      data: result,
+      data: result
     };
   } catch (error) {
     console.error("Error searching conversation logs:", error);
     return {
       success: false,
       message: "Failed to search conversation logs",
-      error: error.message,
+      error: error.message
     };
   }
 }
@@ -387,15 +366,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
  * @param {number} limit - Items per page (default: 30)
  * @returns {Object} - Success status, formatted data with pagination
  */
-async function findThreadHistoryFormatted(
-  org_id,
-  thread_id,
-  bridge_id,
-  sub_thread_id,
-  page = 1,
-  limit = 30,
-  version_id = null
-) {
+async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30, version_id = null) {
   try {
     const offset = (page - 1) * limit;
 
@@ -404,7 +375,7 @@ async function findThreadHistoryFormatted(
       org_id: org_id,
       thread_id: thread_id,
       bridge_id: bridge_id,
-      sub_thread_id: sub_thread_id ? sub_thread_id : thread_id,
+      sub_thread_id: sub_thread_id ? sub_thread_id : thread_id
     };
 
     if (version_id) {
@@ -413,7 +384,7 @@ async function findThreadHistoryFormatted(
 
     // Get total count
     const totalCount = await models.pg.conversation_logs.count({
-      where: whereConditions,
+      where: whereConditions
     });
 
     // Get paginated data
@@ -421,7 +392,7 @@ async function findThreadHistoryFormatted(
       where: whereConditions,
       order: [["created_at", "DESC"]],
       limit: limit,
-      offset: offset,
+      offset: offset
     });
 
     // Reverse to get chronological order
@@ -445,7 +416,7 @@ async function findThreadHistoryFormatted(
           image_urls: [],
           urls: log.user_urls || null,
           message_id: log.message_id,
-          error: log.error || "",
+          error: log.error || ""
         });
       }
 
@@ -464,9 +435,8 @@ async function findThreadHistoryFormatted(
           image_urls: log.llm_urls || null,
           urls: null,
           message_id: log.message_id + "_llm",
-          fallback_model:
-            typeof log.fallback_model === "object" ? JSON.stringify(log.fallback_model) : log.fallback_model || "",
-          error: "",
+          fallback_model: typeof log.fallback_model === "object" ? JSON.stringify(log.fallback_model) : log.fallback_model || "",
+          error: ""
         });
       }
     });
@@ -479,21 +449,21 @@ async function findThreadHistoryFormatted(
       data: formattedData,
       totalPages: totalPages,
       totalEnteries: totalCount,
-      starterQuestion: [],
+      starterQuestion: []
     };
   } catch (error) {
     console.error("Error fetching thread history:", error);
     return {
       success: false,
       message: "Failed to fetch thread history",
-      error: error.message,
+      error: error.message
     };
   }
 }
 
 const findHistoryByMessageId = async (message_id) => {
   const result = await models.pg.conversation_logs.findOne({
-    where: { message_id },
+    where: { message_id }
   });
   return result;
 };
@@ -503,9 +473,9 @@ async function updateStatus({ status, message_id }) {
     { user_feedback: status },
     {
       where: {
-        message_id,
+        message_id
       },
-      returning: true,
+      returning: true
     }
   );
   if (affectedCount === 0) {
@@ -546,7 +516,7 @@ async function createConversationLog(payload) {
       firstAttemptError: payload.firstAttemptError || null,
       finish_reason: payload.finish_reason || null,
       parent_id: payload.parent_id || null,
-      child_id: payload.child_id || null,
+      child_id: payload.child_id || null
     };
 
     transformedPayload.prompt = payload.prompt || null;
@@ -576,7 +546,7 @@ async function findChatbotThreadHistory(org_id, thread_id, bridge_id, sub_thread
     org_id: org_id,
     thread_id: thread_id,
     bridge_id: bridge_id,
-    sub_thread_id: sub_thread_id,
+    sub_thread_id: sub_thread_id
   };
   const logs = await models.pg.conversation_logs.findAll({
     where: whereConditions,
@@ -595,18 +565,18 @@ async function findChatbotThreadHistory(org_id, thread_id, bridge_id, sub_thread
       "user_urls",
       "llm_urls",
       "created_at",
-      "updated_at",
+      "updated_at"
     ],
     order: [["created_at", "DESC"]],
     limit: limit,
-    offset: offset,
+    offset: offset
   });
 
   const reversedLogs = logs.reverse();
 
   return {
     success: true,
-    data: reversedLogs,
+    data: reversedLogs
   };
 }
 
@@ -619,5 +589,5 @@ export {
   findHistoryByMessageId,
   findHistoryByMessageId as getHistoryByMessageId,
   createConversationLog,
-  findChatbotThreadHistory,
+  findChatbotThreadHistory
 };

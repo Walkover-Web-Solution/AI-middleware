@@ -15,8 +15,8 @@ export default {
         "chore", // Maintenance tasks
         "revert", // Revert a previous commit
         "build", // Build system changes
-        "ci", // CI/CD changes
-      ],
-    ],
-  },
+        "ci" // CI/CD changes
+      ]
+    ]
+  }
 };

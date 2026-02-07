@@ -3,17 +3,17 @@ import mongoose from "mongoose";
 const ConfigurationSchema = new mongoose.Schema({
   service: {
     type: String,
-    required: true,
+    required: true
   },
   model_name: {
     type: String,
-    required: true,
+    required: true
   },
   configuration: {
     model: {
       type: { field: { type: String }, level: { type: Number }, default: { type: String } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     creativity_level: {
       type: {
@@ -22,10 +22,10 @@ const ConfigurationSchema = new mongoose.Schema({
         max: { type: Number },
         step: { type: Number },
         level: { type: Number },
-        default: { type: Number },
+        default: { type: Number }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     max_tokens: {
       type: {
@@ -34,10 +34,10 @@ const ConfigurationSchema = new mongoose.Schema({
         max: { type: Number },
         step: { type: Number },
         level: { type: Number },
-        default: { type: Number },
+        default: { type: Number }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     probability_cutoff: {
       type: {
@@ -46,15 +46,15 @@ const ConfigurationSchema = new mongoose.Schema({
         max: { type: Number },
         step: { type: Number },
         level: { type: Number },
-        default: { type: Number },
+        default: { type: Number }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     log_probability: {
       type: { field: { type: String }, level: { type: Number }, typeOf: { type: String }, default: { type: Boolean } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     repetition_penalty: {
       type: {
@@ -63,10 +63,10 @@ const ConfigurationSchema = new mongoose.Schema({
         max: { type: Number },
         step: { type: Number },
         level: { type: Number },
-        default: { type: Number },
+        default: { type: Number }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     novelty_penalty: {
       type: {
@@ -75,25 +75,25 @@ const ConfigurationSchema = new mongoose.Schema({
         max: { type: Number },
         step: { type: Number },
         level: { type: Number },
-        default: { type: Number },
+        default: { type: Number }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     response_count: {
       type: { field: { type: String }, typeOf: { type: String }, level: { type: Number }, default: { type: Number } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     stop: {
       type: { field: { type: String }, level: { type: Number }, default: { type: String } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     tools: {
       type: { field: { type: String }, level: { type: Number }, typeOf: { type: String }, default: { type: Array } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     tool_choice: {
       type: {
@@ -101,21 +101,21 @@ const ConfigurationSchema = new mongoose.Schema({
         options: { type: Array },
         level: { type: Number },
         typeOf: { type: String },
-        default: { type: String },
+        default: { type: String }
       },
       default: undefined,
-      _id: false,
+      _id: false
     },
     response_type: {
       type: { field: { type: String }, options: { type: Array }, level: { type: Number }, default: { type: Object } },
       default: undefined,
-      _id: false,
+      _id: false
     },
     parallel_tool_calls: {
       type: { field: { type: String }, level: { type: Number }, typeOf: { type: String }, default: { type: Boolean } },
       default: undefined,
-      _id: false,
-    },
+      _id: false
+    }
   },
   outputConfig: {
     usage: [
@@ -127,13 +127,13 @@ const ConfigurationSchema = new mongoose.Schema({
         total_cost: {
           input_cost: { type: Number },
           output_cost: { type: Number },
-          cached_cost: { type: Number },
-        },
-      },
+          cached_cost: { type: Number }
+        }
+      }
     ],
     message: { type: String },
     tools: { type: String },
-    assistant: { type: String },
+    assistant: { type: String }
   },
   validationConfig: {
     system_prompt: { type: Boolean },
@@ -145,12 +145,12 @@ const ConfigurationSchema = new mongoose.Schema({
       output_cost: { type: Number },
       description: { type: String },
       knowledge_cutoff: { type: String },
-      usecase: [{ type: String }],
-    },
+      usecase: [{ type: String }]
+    }
   },
   status: { type: Number, default: 1 },
   display_name: { type: String, required: false },
-  org_id: { type: String, required: false },
+  org_id: { type: String, required: false }
 });
 
 ConfigurationSchema.index({ model_name: 1, service: 1 }, { unique: true });

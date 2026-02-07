@@ -8,7 +8,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key, temp
   if (!result.success) {
     return {
       success: false,
-      error: "bridge_id does not exist",
+      error: "bridge_id does not exist"
     };
   }
   configuration = configuration ? configuration : result?.bridges?.configuration;
@@ -26,7 +26,7 @@ const getConfiguration = async (configuration, service, bridge_id, api_key, temp
     service: service,
     apikey: api_key,
     RTLayer: RTLayer,
-    template: templateContent?.template,
+    template: templateContent?.template
   };
 };
 

@@ -5,7 +5,7 @@ const sendRequest = async (url, data, method, header) => {
       url: url,
       data: data,
       method: method,
-      header: header,
+      header: header
     };
     const response = await axios(options);
     return response;

@@ -12,12 +12,12 @@ const createSubThread = {
     .keys({
       thread_id: Joi.string().required().messages({
         "string.empty": "thread_id is required",
-        "any.required": "thread_id is required",
+        "any.required": "thread_id is required"
       }),
       subThreadId: Joi.string().optional(),
-      name: Joi.string().optional().allow(""),
+      name: Joi.string().optional().allow("")
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 /**
@@ -29,14 +29,14 @@ const createSubThreadWithAi = {
     .keys({
       thread_id: Joi.string().required().messages({
         "string.empty": "thread_id is required",
-        "any.required": "thread_id is required",
+        "any.required": "thread_id is required"
       }),
       subThreadId: Joi.string().optional(),
       name: Joi.string().optional().allow(""),
       user: Joi.string().optional().allow(""),
-      botId: Joi.string().optional(),
+      botId: Joi.string().optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 /**
@@ -48,19 +48,19 @@ const getAllSubThread = {
     .keys({
       thread_id: Joi.string().required().messages({
         "string.empty": "thread_id is required",
-        "any.required": "thread_id is required",
-      }),
+        "any.required": "thread_id is required"
+      })
     })
     .unknown(true),
   query: Joi.object()
     .keys({
-      slugName: Joi.string().optional(),
+      slugName: Joi.string().optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
   createSubThread,
   createSubThreadWithAi,
-  getAllSubThread,
+  getAllSubThread
 };
