@@ -8,19 +8,24 @@ async function runChat(configuration, api_key, service) {
       model: configuration?.model
     });
     delete configuration?.generationConfig?.model;
-    configuration.safetySettings = [{
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-    }, {
-      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-    }, {
-      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-    }, {
-      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-    }];
+    configuration.safetySettings = [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      }
+    ];
     switch (service) {
       case "chat":
         const chat = model.startChat({
@@ -33,19 +38,17 @@ async function runChat(configuration, api_key, service) {
         const history = await chat.getHistory();
         const msgContent = {
           role: "user",
-          parts: [{
-            text: configuration?.user_input
-          }]
+          parts: [
+            {
+              text: configuration?.user_input
+            }
+          ]
         };
         const contents = [...history, msgContent];
-        const {
-          totalTokens: input_tokens
-        } = await model.countTokens({
+        const { totalTokens: input_tokens } = await model.countTokens({
           contents
         });
-        const {
-          totalTokens: output_tokens
-        } = await model.countTokens({
+        const { totalTokens: output_tokens } = await model.countTokens({
           contents: response.candidates[0].content
         });
         return {
@@ -60,12 +63,8 @@ async function runChat(configuration, api_key, service) {
         };
       case "completion":
         const promptResponse = await model.generateContent(configuration?.prompt);
-        const {
-          totalTokens: prompt_tokens
-        } = await model.countTokens(configuration?.prompt);
-        const {
-          totalTokens: completion_tokens
-        } = await model.countTokens(promptResponse.response.text());
+        const { totalTokens: prompt_tokens } = await model.countTokens(configuration?.prompt);
+        const { totalTokens: completion_tokens } = await model.countTokens(promptResponse.response.text());
         return {
           success: true,
           modelResponse: promptResponse.response,
@@ -101,9 +100,7 @@ async function runChat(configuration, api_key, service) {
     };
   }
 }
-export {
-  runChat
-}; //     const generationConfig = {
+export { runChat }; //     const generationConfig = {
 //       temperature: 0.9,
 //       topK: 1,
 //       topP: 1,

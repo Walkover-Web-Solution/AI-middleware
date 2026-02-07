@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -31,18 +31,21 @@ module.exports = {
 
     await queryInterface.sequelize.query(`
       SELECT add_job('insert_into_daily_data', '1 day', initial_start => '2024-12-24 18:31:00+00'::timestamptz);
-    `)
-
+    `);
   },
   // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     let jobId = 0;
-    await queryInterface.sequelize.query(`
+    await queryInterface.sequelize
+      .query(
+        `
     SELECT job_id  as id
 FROM timescaledb_information.jobs where proc_name like 'insert_into_daily_data';
-  `).then((result) => {
-    jobId = result[0][0].id;
-  });
+  `
+      )
+      .then((result) => {
+        jobId = result[0][0].id;
+      });
     await queryInterface.sequelize.query(`
       DROP FUNCTION insert_into_daily_data;
     `);

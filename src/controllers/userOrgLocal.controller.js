@@ -1,62 +1,45 @@
 import { storeInCache } from "../cache_service/index.js";
 import { updateProxyDetails, getProxyDetails, removeClientUser } from "../services/proxy.service.js";
-import { reissueToken } from "../services/utils/token.utils.js";
 import axios from "axios";
 
 const userOrgLocalToken = async (req, res, next) => {
-  const { user, org, exp, iat, ...extra } = req.profile;
-
   // Call external API to generate auth token
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
-  const response = await axios.get(apiUrl, 
-    {
-      headers: {
-        'authkey': process.env.ADMIN_API_KEY,
-        'proxy_auth_token': req.headers.proxy_auth_token || req.headers.authorization?.replace('Bearer ', '')
-      }
+  const response = await axios.get(apiUrl, {
+    headers: {
+      authkey: process.env.ADMIN_API_KEY,
+      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", "")
     }
-  );
-  
+  });
+
   const token = response.data.data.jwt;
   // const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
   return next();
-}
+};
 
 const switchUserOrgLocal = async (req, res, next) => {
-  const { orgId, orgName } = req.body;
-  const { user, org, exp, iat, ...extra } = req.profile;
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  const remainingLifetime = Number.isFinite(exp) ? Math.max(exp - nowInSeconds, 0) : null;
-  const expiresInOptions = Number.isFinite(remainingLifetime)
-    ? { expiresInSeconds: Math.max(remainingLifetime, 1) }
-    : {};
-
   // Call external API to generate auth token with new org
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
-  const response = await axios.get(apiUrl,
-    {
-      headers: {
-        'authkey': process.env.ADMIN_API_KEY,
-        'proxy_auth_token': req.headers.proxy_auth_token || req.headers.authorization?.replace('Bearer ', '')
-      }
+  const response = await axios.get(apiUrl, {
+    headers: {
+      authkey: process.env.ADMIN_API_KEY,
+      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", "")
     }
-  );
-  
+  });
+
   const token = response.data.data.jwt;
   // const token = reissueToken(jwtToken);
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
   return next();
-}
+};
 
 const updateUserDetails = async (req, res, next) => {
   const { company_id, company, user_id, user } = req.body;
   const isCompanyUpdate = company_id && company;
-  const updateObject = isCompanyUpdate
-    ? { company_id, company: { "meta": company?.meta } }
-    : { user_id, Cuser: { "meta": user?.meta } };
+  const updateObject = isCompanyUpdate ? { company_id, company: { meta: company?.meta } } : { user_id, Cuser: { meta: user?.meta } };
 
   const data = await updateProxyDetails(updateObject);
 
@@ -88,7 +71,7 @@ const removeUsersFromOrg = async (req, res, next) => {
 
   const ownerId = user_detail.data.data[0].id;
   if (userId === ownerId) {
-    throw new Error('You cannot remove the owner of the organization');
+    throw new Error("You cannot remove the owner of the organization");
   }
 
   const response = await removeClientUser(userId, companyId, featureId);
@@ -96,11 +79,6 @@ const removeUsersFromOrg = async (req, res, next) => {
   res.locals = { data: response.data.message, success: true };
   req.statusCode = 200;
   return next();
-}
+};
 
-export {
-  userOrgLocalToken,
-  switchUserOrgLocal,
-  updateUserDetails,
-  removeUsersFromOrg
-}
+export { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, removeUsersFromOrg };

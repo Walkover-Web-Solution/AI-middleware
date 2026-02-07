@@ -18,7 +18,7 @@ const apiCall = new mongoose.Schema({
   },
   script_id: {
     type: String,
-    required: true,
+    required: true
   },
   fields: {
     type: mongoose.Schema.Types.Mixed,

@@ -1,9 +1,10 @@
-'use strict';
+/* eslint-disable no-unused-vars */
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('orchestrator_history', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable("orchestrator_history", {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -49,7 +50,7 @@ module.exports = {
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.fn('NOW')
+        defaultValue: Sequelize.fn("NOW")
       },
       latency: {
         type: Sequelize.JSON,
@@ -89,7 +90,7 @@ module.exports = {
     });
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('orchestrator_history');
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("orchestrator_history");
   }
 };

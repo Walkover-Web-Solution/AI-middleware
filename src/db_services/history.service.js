@@ -1,7 +1,6 @@
 import models from "../../models/index.js";
 import Sequelize from "sequelize";
 
-
 /**
  * Get conversation logs with pagination and filtering
  * @param {string} org_id - Organization ID
@@ -31,7 +30,7 @@ async function findConversationLogsByIds(org_id, bridge_id, thread_id, sub_threa
     // Get paginated data
     const logs = await models.pg.conversation_logs.findAll({
       where: whereConditions,
-      order: [['created_at', 'DESC']],
+      order: [["created_at", "DESC"]],
       limit: limit,
       offset: offset
     });
@@ -76,11 +75,11 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
       bridge_id: bridge_id
     };
 
-    if (user_feedback !== 'all' && user_feedback !== 'undefined') {
+    if (user_feedback !== "all" && user_feedback !== "undefined") {
       whereConditions.user_feedback = user_feedback === "all" ? 0 : user_feedback;
     }
 
-    if (error !== 'false') {
+    if (error !== "false") {
       whereConditions.error = error;
     }
 
@@ -120,20 +119,16 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
 
     // Get recent threads with distinct thread_id, ordered by updated_at
     const threads = await models.pg.conversation_logs.findAll({
-      attributes: [
-        'thread_id',
-        [Sequelize.fn('MAX', Sequelize.col('id')), 'id'],
-        [Sequelize.fn('MAX', Sequelize.col('updated_at')), 'updated_at']
-      ],
+      attributes: ["thread_id", [Sequelize.fn("MAX", Sequelize.col("id")), "id"], [Sequelize.fn("MAX", Sequelize.col("updated_at")), "updated_at"]],
       where: whereConditions,
-      group: ['thread_id'],
-      order: [[Sequelize.fn('MAX', Sequelize.col('updated_at')), 'DESC']],
+      group: ["thread_id"],
+      order: [[Sequelize.fn("MAX", Sequelize.col("updated_at")), "DESC"]],
       limit: limit,
       offset: offset
     });
 
     // Format the response - simple thread data only
-    const formattedThreads = threads.map(thread => ({
+    const formattedThreads = threads.map((thread) => ({
       id: thread.dataValues.id,
       thread_id: thread.dataValues.thread_id,
       updated_at: thread.dataValues.updated_at
@@ -141,7 +136,7 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
 
     // If keyword search is active, fetch matching messages for the found threads
     if (filters?.keyword && formattedThreads?.length > 0) {
-      const threadIds = formattedThreads.map(t => t.thread_id);
+      const threadIds = formattedThreads.map((t) => t.thread_id);
 
       const messagesWhere = {
         ...whereConditions,
@@ -150,23 +145,23 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
 
       const matchedMessages = await models.pg.conversation_logs.findAll({
         where: messagesWhere,
-        order: [['created_at', 'DESC']]
+        order: [["created_at", "DESC"]]
       });
 
       // Attach matching messages to threads
-      formattedThreads.forEach(thread => {
-        const threadMessages = matchedMessages.filter(m => m.thread_id === thread.thread_id);
+      formattedThreads.forEach((thread) => {
+        const threadMessages = matchedMessages.filter((m) => m.thread_id === thread.thread_id);
 
-        thread.message = threadMessages.map(msg => {
+        thread.message = threadMessages.map((msg) => {
           // Determine the content to display
-          let content = '';
+          let content = "";
           if (msg.user && msg.user.toLowerCase().includes(filters.keyword.toLowerCase())) {
             content = msg.user;
-          } else if ((msg.llm_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+          } else if ((msg.llm_message || "").toLowerCase().includes(filters.keyword.toLowerCase())) {
             content = msg.llm_message;
-          } else if ((msg.chatbot_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+          } else if ((msg.chatbot_message || "").toLowerCase().includes(filters.keyword.toLowerCase())) {
             content = msg.chatbot_message;
-          } else if ((msg.updated_llm_message || '').toLowerCase().includes(filters.keyword.toLowerCase())) {
+          } else if ((msg.updated_llm_message || "").toLowerCase().includes(filters.keyword.toLowerCase())) {
             content = msg.updated_llm_message;
           } else {
             // Fallback if match query matched ID or something else
@@ -180,15 +175,17 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
           };
         });
 
-        const distinctSubThreads = [...new Set(threadMessages.map(m => m.sub_thread_id).filter(Boolean))];
+        const distinctSubThreads = [...new Set(threadMessages.map((m) => m.sub_thread_id).filter(Boolean))];
         if (distinctSubThreads.length > 0) {
-          thread.sub_thread = distinctSubThreads.map(stId => ({
+          thread.sub_thread = distinctSubThreads.map((stId) => ({
             sub_thread_id: stId,
             display_name: stId,
-            messages: threadMessages.filter(m => m.sub_thread_id === stId).map(msg => ({
-              message_id: msg.message_id,
-              message: msg.user || msg.llm_message || "Match found" // Simplify for subthread view
-            }))
+            messages: threadMessages
+              .filter((m) => m.sub_thread_id === stId)
+              .map((msg) => ({
+                message_id: msg.message_id,
+                message: msg.user || msg.llm_message || "Match found" // Simplify for subthread view
+              }))
           }));
         }
       });
@@ -197,9 +194,9 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
     // Get total count of all user_feedback values across all threads
     const totalFeedbackCount = await models.pg.conversation_logs.findOne({
       attributes: [
-        [Sequelize.fn('COUNT', Sequelize.literal("CASE WHEN user_feedback = 0 THEN 1 END")), 'total_feedback_0'],
-        [Sequelize.fn('COUNT', Sequelize.literal("CASE WHEN user_feedback = 1 THEN 1 END")), 'total_feedback_1'],
-        [Sequelize.fn('COUNT', Sequelize.literal("CASE WHEN user_feedback = 2 THEN 1 END")), 'total_feedback_2']
+        [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 0 THEN 1 END")), "total_feedback_0"],
+        [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 1 THEN 1 END")), "total_feedback_1"],
+        [Sequelize.fn("COUNT", Sequelize.literal("CASE WHEN user_feedback = 2 THEN 1 END")), "total_feedback_2"]
       ],
       where: whereConditions
     });
@@ -208,9 +205,9 @@ async function findRecentThreadsByBridgeId(org_id, bridge_id, filters, user_feed
       success: true,
       data: formattedThreads,
       total_user_feedback_count: {
-        "0": parseInt(totalFeedbackCount.dataValues.total_feedback_0) || 0,
-        "1": parseInt(totalFeedbackCount.dataValues.total_feedback_1) || 0,
-        "2": parseInt(totalFeedbackCount.dataValues.total_feedback_2) || 0
+        0: parseInt(totalFeedbackCount.dataValues.total_feedback_0) || 0,
+        1: parseInt(totalFeedbackCount.dataValues.total_feedback_1) || 0,
+        2: parseInt(totalFeedbackCount.dataValues.total_feedback_2) || 0
       }
     };
   } catch (error) {
@@ -303,13 +300,13 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
     // Get all matching logs
     const logs = await models.pg.conversation_logs.findAll({
       where: whereConditions,
-      order: [['created_at', 'ASC']]
+      order: [["created_at", "ASC"]]
     });
 
     // Group data by thread_id and sub_thread_id
     const groupedData = {};
 
-    logs.forEach(log => {
+    logs.forEach((log) => {
       const threadId = log.thread_id;
       const subThreadId = log.sub_thread_id;
 
@@ -340,7 +337,7 @@ async function findConversationLogsByFilters(org_id, bridge_id, filters) {
     });
 
     // Convert grouped data to array format
-    const result = Object.values(groupedData).map(thread => ({
+    const result = Object.values(groupedData).map((thread) => ({
       ...thread,
       sub_thread: Object.values(thread.sub_thread)
     }));
@@ -393,7 +390,7 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
     // Get paginated data
     const logs = await models.pg.conversation_logs.findAll({
       where: whereConditions,
-      order: [['created_at', 'DESC']],
+      order: [["created_at", "DESC"]],
       limit: limit,
       offset: offset
     });
@@ -404,7 +401,7 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
     // Format data: split each entry into user and assistant messages
     const formattedData = [];
 
-    reversedLogs.forEach(log => {
+    reversedLogs.forEach((log) => {
       // Create user message entry
       if (log.user) {
         formattedData.push({
@@ -438,7 +435,7 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
           image_urls: log.llm_urls || null,
           urls: null,
           message_id: log.message_id + "_llm",
-          fallback_model: typeof log.fallback_model === 'object' ? JSON.stringify(log.fallback_model) : (log.fallback_model || ""),
+          fallback_model: typeof log.fallback_model === "object" ? JSON.stringify(log.fallback_model) : log.fallback_model || "",
           error: ""
         });
       }
@@ -466,26 +463,26 @@ async function findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thre
 
 const findHistoryByMessageId = async (message_id) => {
   const result = await models.pg.conversation_logs.findOne({
-    where: { message_id },
+    where: { message_id }
   });
   return result;
-}
+};
 
 async function updateStatus({ status, message_id }) {
-    const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
-      { user_feedback : status },
-      {
-        where: {
-          message_id
-        },
-        returning: true,
-      }
-    );
-    if (affectedCount === 0) {
-      return { success: true, message: 'No matching record found to update.' };
+  const [affectedCount, affectedRows] = await models.pg.conversation_logs.update(
+    { user_feedback: status },
+    {
+      where: {
+        message_id
+      },
+      returning: true
     }
+  );
+  if (affectedCount === 0) {
+    return { success: true, message: "No matching record found to update." };
+  }
 
-    return { success: true, result: affectedRows };
+  return { success: true, result: affectedRows };
 }
 
 /**
@@ -533,4 +530,64 @@ async function createConversationLog(payload) {
   }
 }
 
-export { findConversationLogsByIds, updateStatus, findRecentThreadsByBridgeId, findConversationLogsByFilters, findThreadHistoryFormatted, findHistoryByMessageId, findHistoryByMessageId as getHistoryByMessageId, createConversationLog };
+/**
+ * Get chatbot thread history with pagination (raw data without formatting)
+ * @param {string} org_id - Organization ID
+ * @param {string} thread_id - Thread ID
+ * @param {string} bridge_id - Bridge ID
+ * @param {string} sub_thread_id - Sub Thread ID
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 30)
+ * @returns {Object} - Success status, raw data with pagination
+ */
+async function findChatbotThreadHistory(org_id, thread_id, bridge_id, sub_thread_id, page = 1, limit = 30) {
+  const offset = (page - 1) * limit;
+  const whereConditions = {
+    org_id: org_id,
+    thread_id: thread_id,
+    bridge_id: bridge_id,
+    sub_thread_id: sub_thread_id
+  };
+  const logs = await models.pg.conversation_logs.findAll({
+    where: whereConditions,
+    attributes: [
+      "id",
+      "llm_message",
+      "user",
+      "chatbot_message",
+      "error",
+      "user_feedback",
+      "message_id",
+      "sub_thread_id",
+      "thread_id",
+      "version_id",
+      "bridge_id",
+      "user_urls",
+      "llm_urls",
+      "created_at",
+      "updated_at"
+    ],
+    order: [["created_at", "DESC"]],
+    limit: limit,
+    offset: offset
+  });
+
+  const reversedLogs = logs.reverse();
+
+  return {
+    success: true,
+    data: reversedLogs
+  };
+}
+
+export {
+  findConversationLogsByIds,
+  updateStatus,
+  findRecentThreadsByBridgeId,
+  findConversationLogsByFilters,
+  findThreadHistoryFormatted,
+  findHistoryByMessageId,
+  findHistoryByMessageId as getHistoryByMessageId,
+  createConversationLog,
+  findChatbotThreadHistory
+};

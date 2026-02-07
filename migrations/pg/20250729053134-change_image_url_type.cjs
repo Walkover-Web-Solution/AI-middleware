@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     // First, add a temporary column to store array of JSON data
-    await queryInterface.addColumn('conversations', 'image_url_temp', {
+    await queryInterface.addColumn("conversations", "image_url_temp", {
       type: Sequelize.ARRAY(Sequelize.JSON),
       allowNull: true
     });
@@ -21,15 +21,15 @@ module.exports = {
     `);
 
     // Drop the old column
-    await queryInterface.removeColumn('conversations', 'image_url');
+    await queryInterface.removeColumn("conversations", "image_url");
 
     // Rename the temporary column to the original name
-    await queryInterface.renameColumn('conversations', 'image_url_temp', 'image_urls');
+    await queryInterface.renameColumn("conversations", "image_url_temp", "image_urls");
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     // First, add a temporary column to store text data
-    await queryInterface.addColumn('conversations', 'image_url_temp', {
+    await queryInterface.addColumn("conversations", "image_url_temp", {
       type: Sequelize.TEXT,
       allowNull: true
     });
@@ -45,9 +45,9 @@ module.exports = {
     `);
 
     // Drop the JSON array column
-    await queryInterface.removeColumn('conversations', 'image_urls');
+    await queryInterface.removeColumn("conversations", "image_urls");
 
     // Rename the temporary column back to the original name
-    await queryInterface.renameColumn('conversations', 'image_url_temp', 'image_url');
+    await queryInterface.renameColumn("conversations", "image_url_temp", "image_url");
   }
 };

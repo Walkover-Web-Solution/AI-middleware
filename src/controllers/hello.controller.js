@@ -3,6 +3,7 @@ import { subscribeSchema } from "../validation/joi_validation/bridge.validation.
 import modelConfigService from "../db_services/modelConfig.service.js";
 
 export const subscribe = async (req, res, next) => {
+  // Validate request body
   const { ispublic } = req.chatBot;
   let data = {};
 
@@ -11,7 +12,7 @@ export const subscribe = async (req, res, next) => {
     if (error) {
       return res.status(400).json({
         error: "Validation failed",
-        details: error.details.map((detail) => detail.message),
+        details: error.details.map((detail) => detail.message)
       });
     }
     const { slugName, versionId } = value;
@@ -21,7 +22,6 @@ export const subscribe = async (req, res, next) => {
     const { slugName: url_slugName } = req.body;
     data = await ConfigurationServices.getAgentByUrlSlugname(url_slugName);
   }
-
   const model = data?.modelConfig?.model;
   const service = data?.service;
   const modelConfig = await modelConfigService.getModelConfigsByNameAndService(model, service);
@@ -34,7 +34,7 @@ export const subscribe = async (req, res, next) => {
 
   res.locals = {
     mode,
-    supportedServices: services,
+    supportedServices: services
   };
 
   req.statusCode = 200;
