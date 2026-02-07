@@ -12,28 +12,50 @@ const router = express.Router();
 router.post("/", middleware, requireAdminRole, validate(bridgeVersionValidation.createVersion), agentVersionController.createVersion);
 
 //bulk publish
-router.post("/bulk_publish", middleware, requireAdminRole, validate(bridgeVersionValidation.bulkPublishVersion), agentVersionController.bulkPublishVersion);
+router.post(
+  "/bulk_publish",
+  middleware,
+  requireAdminRole,
+  validate(bridgeVersionValidation.bulkPublishVersion),
+  agentVersionController.bulkPublishVersion
+);
 
 //get Version
 router.get("/:version_id", middleware, validate(bridgeVersionValidation.getVersion), agentVersionController.getVersion);
 
 //publish Version
-router.post("/publish/:version_id", middleware, requireAdminRole, validate(bridgeVersionValidation.publishVersion), agentVersionController.publishVersion);
+router.post(
+  "/publish/:version_id",
+  middleware,
+  requireAdminRole,
+  validate(bridgeVersionValidation.publishVersion),
+  agentVersionController.publishVersion
+);
 
 //delete Version
 router.delete("/:version_id", middleware, requireAdminRole, validate(bridgeVersionValidation.removeVersion), agentVersionController.removeVersion);
 
 //discard Version
-router.post("/discard/:version_id", middleware, requireAdminRole, validate(bridgeVersionValidation.discardVersion), agentVersionController.discardVersion);
+router.post(
+  "/discard/:version_id",
+  middleware,
+  requireAdminRole,
+  validate(bridgeVersionValidation.discardVersion),
+  agentVersionController.discardVersion
+);
 
 //suggest Model
 router.get("/suggest-model/:version_id", middleware, validate(bridgeVersionValidation.suggestModel), agentVersionController.suggestModel);
 
 //get Connected Agents
-router.get("/connected-agents/:version_id", middleware, validate(bridgeVersionValidation.getConnectedAgents), agentVersionController.getConnectedAgents);
+router.get(
+  "/connected-agents/:version_id",
+  middleware,
+  validate(bridgeVersionValidation.getConnectedAgents),
+  agentVersionController.getConnectedAgents
+);
 
 //update Version
 router.put("/:version_id", middleware, requireAdminRole, validate(bridgeIdParamSchema), validate(updateBridgeSchema), updateAgentController);
 
 export default router;
-

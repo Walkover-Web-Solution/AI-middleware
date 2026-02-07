@@ -18,6 +18,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint && npm run format:check",
     "prepare": "husky install"
   },
   "keywords": [],
@@ -86,10 +89,24 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
     "@eslint/js": "^9.3.0",
     "eslint": "^9.3.0",
     "globals": "^15.3.0",
     "husky": "^8.0.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.0",
     "sequelize-cli": "^6.6.2"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "eslint --fix",
+      "eslint"
+    ],
+    "*.{json,md,yml,yaml,cjs}": [
+      "prettier --write"
+    ]
   }
 }

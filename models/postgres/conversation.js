@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 import { Model } from "sequelize";
-export default ((sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   class conversation extends Model {
     /**
      * Helper method for defining associations.
@@ -11,36 +11,39 @@ export default ((sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       conversation.hasMany(models.raw_data, {
-        foreignKey: 'chat_id',
-        as: 'raw_data'
+        foreignKey: "chat_id",
+        as: "raw_data"
       });
     }
   }
-  conversation.init({
-    org_id: DataTypes.STRING,
-    thread_id: DataTypes.STRING,
-    model_name: DataTypes.STRING,
-    bridge_id: DataTypes.STRING,
-    message: DataTypes.TEXT,
-    message_by: DataTypes.STRING,
-    function: DataTypes.JSON,
-    updated_message: DataTypes.TEXT,
-    // created_at: DataTypes.DATE,
-    type: {
-      type: DataTypes.ENUM('chat', 'completion', 'embedding'),
-      // Using ENUM for type field
-      allowNull: false
+  conversation.init(
+    {
+      org_id: DataTypes.STRING,
+      thread_id: DataTypes.STRING,
+      model_name: DataTypes.STRING,
+      bridge_id: DataTypes.STRING,
+      message: DataTypes.TEXT,
+      message_by: DataTypes.STRING,
+      function: DataTypes.JSON,
+      updated_message: DataTypes.TEXT,
+      // created_at: DataTypes.DATE,
+      type: {
+        type: DataTypes.ENUM("chat", "completion", "embedding"),
+        // Using ENUM for type field
+        allowNull: false
+      },
+      message_id: DataTypes.UUIDV4,
+      user_feedback: DataTypes.INTEGER,
+      is_reset: DataTypes.BOOLEAN,
+      version_id: DataTypes.STRING,
+      sub_thread_id: DataTypes.STRING,
+      external_reference: DataTypes.STRING
     },
-    message_id : DataTypes.UUIDV4,
-    user_feedback: DataTypes.INTEGER,
-    is_reset: DataTypes.BOOLEAN,
-    version_id: DataTypes.STRING,
-    sub_thread_id: DataTypes.STRING,
-    external_reference: DataTypes.STRING,
-  }, {
-    sequelize,
-    modelName: 'conversations',
-    tableName: 'conversations'
-  });
+    {
+      sequelize,
+      modelName: "conversations",
+      tableName: "conversations"
+    }
+  );
   return conversation;
-});
+};

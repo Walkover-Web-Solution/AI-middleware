@@ -1,11 +1,7 @@
 import { runModel } from "./runModel.js";
 const completion = async (configuration, apikey) => {
   try {
-    const {
-      success,
-      response,
-      error
-    } = await runModel(configuration, false, apikey);
+    const { success, response, error } = await runModel(configuration, false, apikey);
     if (!success) {
       return {
         success: false,
@@ -30,6 +26,4 @@ const completion = async (configuration, apikey) => {
 //     console.log("response=>",JSON.stringify(response));
 // }
 // a()
-export {
-  completion
-};
+export { completion };

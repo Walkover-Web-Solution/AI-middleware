@@ -7,15 +7,15 @@ import { createTestcaseSchema, testcaseIdSchema, bridgeIdSchema, testcaseUpdateS
 const router = express.Router();
 
 // Create a new testcase
-router.post('/create', middleware, validate({ body: createTestcaseSchema }), testcaseController.createTestcase);
+router.post("/create", middleware, validate({ body: createTestcaseSchema }), testcaseController.createTestcase);
 
 // Delete a testcase by _id
-router.delete('/:testcase_id', middleware, validate({ params: testcaseIdSchema }), testcaseController.deleteTestcase);
+router.delete("/:testcase_id", middleware, validate({ params: testcaseIdSchema }), testcaseController.deleteTestcase);
 
 // Get all testcases by bridge_id
-router.get('/:bridge_id', middleware, validate({ params: bridgeIdSchema }), testcaseController.getAllTestcases);
+router.get("/:bridge_id", middleware, validate({ params: bridgeIdSchema }), testcaseController.getAllTestcases);
 
 // Update a testcase by _id
-router.put('/:testcase_id', middleware, validate({params:testcaseIdSchema, body: testcaseUpdateSchema }), testcaseController.updateTestcases);
+router.put("/:testcase_id", middleware, validate({ params: testcaseIdSchema, body: testcaseUpdateSchema }), testcaseController.updateTestcases);
 
 export default router;

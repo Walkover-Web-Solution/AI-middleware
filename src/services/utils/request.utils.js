@@ -14,6 +14,4 @@ const sendRequest = async (url, data, method, header) => {
     return;
   }
 };
-export {
-  sendRequest
-};
+export { sendRequest };

@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-const {
-  Schema
-} = mongoose;
+const { Schema } = mongoose;
 
 // Define the schema for individual actions
 const ActionDetailSchema = new Schema({
@@ -44,5 +42,5 @@ const ActionSchema = new Schema({
 });
 
 // Create the model from the schema
-const ActionModel = mongoose.model('Actions', ActionSchema);
+const ActionModel = mongoose.model("Actions", ActionSchema);
 export default ActionModel;

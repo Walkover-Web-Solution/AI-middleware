@@ -11,18 +11,18 @@ const testcaseSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['function', 'response'],
+    enum: ["function", "response"],
     required: true
   },
   expected: {
     type: Object,
     required: true
   },
-    matching_type: {
-      type: String,
-      enum: ['exact', 'ai', 'cosine'],
-      required: true
-    }
+  matching_type: {
+    type: String,
+    enum: ["exact", "ai", "cosine"],
+    required: true
+  }
 });
 
 const testcaseModel = mongoose.model("testcases", testcaseSchema);

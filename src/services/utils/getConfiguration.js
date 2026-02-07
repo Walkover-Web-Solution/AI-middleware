@@ -1,6 +1,5 @@
 import configurationService from "../../db_services/configuration.service.js";
 import helper from "../../services/utils/helper.utils.js";
-import token from "../../services/commonService/generateToken.js";
 
 const getConfiguration = async (configuration, service, bridge_id, api_key, template_id = null) => {
   let RTLayer = false;
@@ -36,7 +35,4 @@ function convertToTimestamp(dateTimeStr) {
   return dateObj.getTime();
 }
 
-export {
-  getConfiguration,
-  convertToTimestamp
-};
+export { getConfiguration, convertToTimestamp };
