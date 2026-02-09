@@ -1,5 +1,14 @@
 import Joi from "joi";
 
+const searchSchema = Joi.object({
+  query: Joi.string().required().messages({
+    "any.required": "query is required"
+  }),
+  agent_id: Joi.string().required().messages({
+    "any.required": "agent_id is required"
+  })
+}).unknown(true);
+
 const createCollectionSchema = Joi.object({
   name: Joi.string().required().messages({
     "any.required": "Collection name is required"
@@ -59,4 +68,4 @@ const updateResourceSchema = Joi.object({
   content: Joi.string().optional()
 }).unknown(true);
 
-export { createCollectionSchema, createResourceSchema, collectionIdSchema, resourceIdSchema, updateResourceSchema };
+export { searchSchema, createCollectionSchema, createResourceSchema, collectionIdSchema, resourceIdSchema, updateResourceSchema };
