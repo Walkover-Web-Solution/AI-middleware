@@ -1,4 +1,4 @@
-import RagCollectionModel from '../mongoModel/RagCollection.model.js';
+import RagCollectionModel from "../mongoModel/RagCollection.model.js";
 
 /**
  * Create a new RAG collection
@@ -8,7 +8,7 @@ const create = async (collectionData) => {
     const collection = await RagCollectionModel.create(collectionData);
     return collection;
   } catch (error) {
-    console.error('Error creating RAG collection:', error);
+    console.error("Error creating RAG collection:", error);
     throw error;
   }
 };
@@ -21,7 +21,7 @@ const getByCollectionId = async (collectionId) => {
     const collection = await RagCollectionModel.findOne({ collection_id: collectionId });
     return collection;
   } catch (error) {
-    console.error('Error fetching RAG collection:', error);
+    console.error("Error fetching RAG collection:", error);
     throw error;
   }
 };
@@ -34,7 +34,7 @@ const getAllByOrgId = async (orgId) => {
     const collections = await RagCollectionModel.find({ org_id: orgId });
     return collections;
   } catch (error) {
-    console.error('Error fetching RAG collections:', error);
+    console.error("Error fetching RAG collections:", error);
     throw error;
   }
 };
@@ -46,7 +46,7 @@ const addResourceId = async (collectionId, resourceId) => {
   try {
     const collection = await RagCollectionModel.findOneAndUpdate(
       { collection_id: collectionId },
-      { 
+      {
         $addToSet: { resource_ids: resourceId },
         $set: { updated_at: new Date() }
       },
@@ -54,7 +54,7 @@ const addResourceId = async (collectionId, resourceId) => {
     );
     return collection;
   } catch (error) {
-    console.error('Error adding resource ID to collection:', error);
+    console.error("Error adding resource ID to collection:", error);
     throw error;
   }
 };
@@ -66,7 +66,7 @@ const removeResourceId = async (collectionId, resourceId) => {
   try {
     const collection = await RagCollectionModel.findOneAndUpdate(
       { collection_id: collectionId },
-      { 
+      {
         $pull: { resource_ids: resourceId },
         $set: { updated_at: new Date() }
       },
@@ -74,7 +74,7 @@ const removeResourceId = async (collectionId, resourceId) => {
     );
     return collection;
   } catch (error) {
-    console.error('Error removing resource ID from collection:', error);
+    console.error("Error removing resource ID from collection:", error);
     throw error;
   }
 };
@@ -87,7 +87,7 @@ const deleteByCollectionId = async (collectionId) => {
     const collection = await RagCollectionModel.findOneAndDelete({ collection_id: collectionId });
     return collection;
   } catch (error) {
-    console.error('Error deleting RAG collection:', error);
+    console.error("Error deleting RAG collection:", error);
     throw error;
   }
 };
@@ -100,7 +100,7 @@ const getCollectionByResourceId = async (resourceId) => {
     const collection = await RagCollectionModel.findOne({ resource_ids: resourceId });
     return collection;
   } catch (error) {
-    console.error('Error finding collection by resource ID:', error);
+    console.error("Error finding collection by resource ID:", error);
     throw error;
   }
 };
@@ -114,4 +114,3 @@ export default {
   deleteByCollectionId,
   getCollectionByResourceId
 };
-

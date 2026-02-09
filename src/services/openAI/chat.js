@@ -2,11 +2,7 @@ import { runModel } from "./runModel.js";
 
 const chats = async (configuration, apikey) => {
   try {
-    const {
-      success,
-      response,
-      error
-    } = await runModel(configuration, true, apikey);
+    const { success, response, error } = await runModel(configuration, true, apikey);
     if (!success) {
       return {
         success: false,
@@ -25,6 +21,4 @@ const chats = async (configuration, apikey) => {
     };
   }
 };
-export {
-  chats
-};
+export { chats };

@@ -1,7 +1,6 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-
     await queryInterface.createTable("daily_data", {
       id: {
         allowNull: false,
@@ -11,15 +10,15 @@ module.exports = {
       org_id: {
         type: Sequelize.STRING
       },
-      bridge_id:{
+      bridge_id: {
         type: Sequelize.STRING,
         allowNull: false
       },
-      version_id : {
+      version_id: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      thread_id : {
+      thread_id: {
         type: Sequelize.STRING,
         allowNull: true
       },
@@ -48,33 +47,28 @@ module.exports = {
       },
       record_count: {
         type: Sequelize.FLOAT,
-        defaultValue: 0,
+        defaultValue: 0
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE
-      },
-
-
+      }
     });
-    await queryInterface.addIndex('daily_data', {
-      fields: ['id', 'created_at'],
-      unique: true,
-      name: 'daily_data_index_id_created_at',
-    });
-   
-    await queryInterface.sequelize.query(
-      "SELECT create_hypertable('daily_data', by_range('created_at', INTERVAL '1 day'));"
-    );
     await queryInterface.addIndex("daily_data", {
-      fields: ["org_id", "service","bridge_id","version_id","thread_id","apikey_id" ,"model", "created_at"],
+      fields: ["id", "created_at"],
       unique: true,
-      name: 'unique_constraint_daily_org_service_model_created_at',
+      name: "daily_data_index_id_created_at"
     });
 
+    await queryInterface.sequelize.query("SELECT create_hypertable('daily_data', by_range('created_at', INTERVAL '1 day'));");
+    await queryInterface.addIndex("daily_data", {
+      fields: ["org_id", "service", "bridge_id", "version_id", "thread_id", "apikey_id", "model", "created_at"],
+      unique: true,
+      name: "unique_constraint_daily_org_service_model_created_at"
+    });
   },
   // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("daily_data");
-  },
+  }
 };

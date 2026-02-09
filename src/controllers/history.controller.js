@@ -1,4 +1,10 @@
-import { findConversationLogsByIds, findRecentThreadsByBridgeId, findHistoryByMessageId } from "../db_services/history.service.js";
+import {
+  findConversationLogsByIds,
+  findRecentThreadsByBridgeId,
+  findHistoryByMessageId,
+  findChatbotThreadHistory
+} from "../db_services/history.service.js";
+import configurationService from "../db_services/configuration.service.js";
 
 /**
  * GET /conversation-logs/:bridge_id/:thread_id/:sub_thread_id
@@ -11,14 +17,7 @@ const getConversationLogs = async (req, res, next) => {
   const limitNum = req.query.limit || 30;
 
   // Get conversation logs
-  const result = await findConversationLogsByIds(
-    org_id,
-    agent_id,
-    thread_id,
-    sub_thread_id,
-    pageNum,
-    limitNum
-  );
+  const result = await findConversationLogsByIds(org_id, agent_id, thread_id, sub_thread_id, pageNum, limitNum);
 
   if (result.success) {
     res.locals = {
@@ -48,30 +47,24 @@ const getRecentThreads = async (req, res, next) => {
   // Extract query parameters
   const pageNum = parseInt(req.query.page) || 1;
   const limitNum = parseInt(req.query.limit) || 30;
-  const user_feedback = req.query.user_feedback || 'all';
-  const error = req.query.error || 'false';
+  const user_feedback = req.query.user_feedback || "all";
+  const error = req.query.error || "false";
   const version_id = req.query.version_id;
 
   // Extract search filters (supports both search and regular listing)
   const filters = {
     keyword: req.query.keyword,
-    time_range: (req.query.start_date || req.query.end_date) ? {
-      start: req.query.start_date,
-      end: req.query.end_date
-    } : undefined
+    time_range:
+      req.query.start_date || req.query.end_date
+        ? {
+            start: req.query.start_date,
+            end: req.query.end_date
+          }
+        : undefined
   };
 
   // Get recent threads with search functionality built-in
-  const result = await findRecentThreadsByBridgeId(
-    org_id,
-    agent_id,
-    filters,
-    user_feedback,
-    error,
-    pageNum,
-    limitNum,
-    version_id
-  );
+  const result = await findRecentThreadsByBridgeId(org_id, agent_id, filters, user_feedback, error, pageNum, limitNum, version_id);
 
   if (result.success) {
     res.locals = {
@@ -108,9 +101,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
       const messageRecord = await findHistoryByMessageId(msgId);
       if (!messageRecord) return null;
 
-      const message = messageRecord?.toJSON
-        ? messageRecord.toJSON()
-        : messageRecord;
+      const message = messageRecord?.toJSON ? messageRecord.toJSON() : messageRecord;
 
       if (!Array.isArray(message.tools_call_data)) {
         return message;
@@ -124,9 +115,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
           const metadata = tool?.data?.metadata;
 
           if (metadata?.type === "agent" && metadata?.message_id) {
-            const fullChildMessage = await resolveMessage(
-              metadata.message_id
-            );
+            const fullChildMessage = await resolveMessage(metadata.message_id);
 
             if (fullChildMessage) {
               fullChildMessage.name = tool?.name || null;
@@ -147,10 +136,7 @@ const getRecursiveAgentHistory = async (req, res, next) => {
       return next();
     }
 
-    if (
-      rootMessage.org_id !== org_id ||
-      rootMessage.bridge_id !== agent_id
-    ) {
+    if (rootMessage.org_id !== org_id || rootMessage.bridge_id !== agent_id) {
       res.locals = { success: false, message: "Unauthorized access" };
       req.statusCode = 403;
       return next();
@@ -173,7 +159,6 @@ const getRecursiveAgentHistory = async (req, res, next) => {
     };
     req.statusCode = 200;
     return next();
-
   } catch (error) {
     console.error("Recursive history error:", error);
     res.locals = {
@@ -186,10 +171,40 @@ const getRecursiveAgentHistory = async (req, res, next) => {
   }
 };
 
+const getChatbotThreadHistory = async (req, res, next) => {
+  const page = parseInt(req.query.pageNo) || 1;
+  const pageSize = parseInt(req.query.limit) || 30;
+  const { thread_id, bridge_slugName } = req.params;
+  const { sub_thread_id = thread_id } = req.query;
+  let org_id = req?.profile?.org?.id || req?.profile?.org_id;
 
+  const bridge = req.chatBot?.ispublic
+    ? await configurationService.getAgentByUrlSlugname(bridge_slugName)
+    : await configurationService.getAgentIdBySlugname(org_id, bridge_slugName);
+
+  const bridge_id = bridge?._id?.toString();
+  const starterQuestion = !bridge?.IsstarterQuestionEnable ? [] : bridge?.starterQuestion;
+  org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
+
+  const result = await findChatbotThreadHistory(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
+
+  if (result.success) {
+    res.locals = {
+      ...result,
+      starterQuestion
+    };
+    req.statusCode = 200;
+    return next();
+  } else {
+    res.locals = result;
+    req.statusCode = 500;
+    return next();
+  }
+};
 
 export default {
   getConversationLogs,
   getRecentThreads,
-  getRecursiveAgentHistory
+  getRecursiveAgentHistory,
+  getChatbotThreadHistory
 };

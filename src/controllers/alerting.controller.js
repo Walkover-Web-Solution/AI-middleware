@@ -50,7 +50,7 @@ async function deleteAlert(req, res, next) {
     req.statusCode = 404;
     return next();
   }
-  
+
   res.locals = {
     success: true,
     message: "Alert successfully deleted"
@@ -62,12 +62,12 @@ async function deleteAlert(req, res, next) {
 async function updateAlert(req, res, next) {
   const { id } = req.params;
   const { webhookConfiguration, bridges, name, alertType } = req.body;
-  
+
   const alertData = await alertingDbservices.getById(id);
   if (!alertData.success) {
     res.locals = {
       success: false,
-      message: 'Alert not found'
+      message: "Alert not found"
     };
     req.statusCode = 404;
     return next();
@@ -108,10 +108,9 @@ async function updateAlert(req, res, next) {
   }
 }
 
-
 export default {
   createAlert,
   getAllAlerts,
   deleteAlert,
   updateAlert
-}
+};
