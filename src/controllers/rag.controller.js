@@ -490,51 +490,44 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
   }
 };
 
+export const getResourcesByCollectionAndOwner = async (req, res, next) => {
+  try {
+    const { collectionId, ownerId } = req.query;
+    const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+    const hippocampusUrl = "http://hippocampus.gtwy.ai";
+
+    const resourcesResponse = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": hippocampusApiKey
+      }
+    });
+
+    const resources = resourcesResponse.data?.resources || [];
+
+    res.locals = {
+      success: true,
+      message: "Resources fetched for the specified collection",
+      data: {
+        resources,
+        created: 0
+      }
+    };
+    req.statusCode = 200;
+    return next();
+  } catch (error) {
+    console.error("Error fetching resources for specified collection:", error);
+    res.locals = {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+    req.statusCode = error.response?.status || 500;
+    return next();
+  }
+};
+
 export const getOrCreateDefaultCollections = async (req, res, next) => {
   try {
-    const queryCollectionId = req.query?.collection_id;
-    const queryOwnerId = req.query?.owner_id;
-
-    // If both collectionId and ownerId are sent in query, use them and return resources for that collection only
-    if (queryCollectionId && queryOwnerId) {
-      const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
-      const hippocampusUrl = "http://hippocampus.gtwy.ai";
-
-      try {
-        const resourcesResponse = await axios.get(
-          `${hippocampusUrl}/collection/${queryCollectionId}/resources?content=true&ownerId=${queryOwnerId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": hippocampusApiKey
-            }
-          }
-        );
-
-        const resources = resourcesResponse.data?.resources || [];
-
-        res.locals = {
-          success: true,
-          message: "Resources fetched for the specified collection",
-          data: {
-            resources,
-            created: 0
-          }
-        };
-        req.statusCode = 200;
-        return next();
-      } catch (error) {
-        console.error("Error fetching resources for specified collection:", error);
-        res.locals = {
-          success: false,
-          error: error.response?.data?.message || error.message
-        };
-        req.statusCode = error.response?.status || 500;
-        return next();
-      }
-    }
-
-    // Default logic: use profile org and req.ownerId, get or create default collections
     const org_id = req.profile?.org?.id;
     const ownerId = req.ownerId;
     // Define the three default collections with their settings
