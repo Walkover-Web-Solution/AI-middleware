@@ -1,4 +1,7 @@
 import Joi from "joi";
+import joiObjectId from "joi-objectid";
+
+Joi.objectId = joiObjectId(Joi);
 
 const searchSchema = Joi.object({
   query: Joi.string().required().messages({
@@ -69,8 +72,9 @@ const updateResourceSchema = Joi.object({
 }).unknown(true);
 
 const getResourcesByCollectionQuerySchema = Joi.object({
-  collectionId: Joi.string().required().messages({
-    "any.required": "collectionId is required"
+  collectionId: Joi.objectId().required().messages({
+    "any.required": "collectionId is required",
+    "string.pattern.base": "collectionId must be a valid MongoDB ObjectId"
   }),
   ownerId: Joi.string().required().messages({
     "any.required": "ownerId is required"
