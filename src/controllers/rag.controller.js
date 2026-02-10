@@ -490,6 +490,42 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
   }
 };
 
+export const getResourcesByCollectionAndOwner = async (req, res, next) => {
+  try {
+    const { collectionId, ownerId } = req.query;
+    const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+    const hippocampusUrl = "http://hippocampus.gtwy.ai";
+
+    const resourcesResponse = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": hippocampusApiKey
+      }
+    });
+
+    const resources = resourcesResponse.data?.resources || [];
+
+    res.locals = {
+      success: true,
+      message: "Resources fetched for the specified collection",
+      data: {
+        resources,
+        created: 0
+      }
+    };
+    req.statusCode = 200;
+    return next();
+  } catch (error) {
+    console.error("Error fetching resources for specified collection:", error);
+    res.locals = {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+    req.statusCode = error.response?.status || 500;
+    return next();
+  }
+};
+
 export const getOrCreateDefaultCollections = async (req, res, next) => {
   try {
     const org_id = req.profile?.org?.id;
