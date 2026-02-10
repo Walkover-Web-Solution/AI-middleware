@@ -68,4 +68,21 @@ const updateResourceSchema = Joi.object({
   content: Joi.string().optional()
 }).unknown(true);
 
-export { searchSchema, createCollectionSchema, createResourceSchema, collectionIdSchema, resourceIdSchema, updateResourceSchema };
+const getResourcesByCollectionQuerySchema = Joi.object({
+  collectionId: Joi.string().required().messages({
+    "any.required": "collectionId is required"
+  }),
+  ownerId: Joi.string().required().messages({
+    "any.required": "ownerId is required"
+  })
+}).unknown(true);
+
+export {
+  searchSchema,
+  createCollectionSchema,
+  createResourceSchema,
+  collectionIdSchema,
+  resourceIdSchema,
+  updateResourceSchema,
+  getResourcesByCollectionQuerySchema
+};
