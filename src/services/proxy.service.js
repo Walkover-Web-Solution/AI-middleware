@@ -116,7 +116,7 @@ export async function createProxyToken(token_data) {
   }
 }
 
-export async function getUsers(org_id, page = 1, pageSize = 10, exclude_role_ids = "18") {
+export async function getUsers(org_id, page = 1, pageSize = 10, exclude_role_ids = process.env.PROXY_USER_ROLE_ID) {
   try {
     const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
       params: {
