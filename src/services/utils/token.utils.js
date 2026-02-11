@@ -6,14 +6,24 @@ import jwt from "jsonwebtoken";
  * @param {object} [signOptions] - Optional options for jwt.sign.
  * @returns {string} - The new JWT token.
  */
-
 export const reissueToken = (token, signOptions = {}) => {
   if (!token) {
     throw new Error("Token is required for reissuing");
   }
-  const decoded = jwt.decode(token);
-  // eslint-disable-next-line no-unused-vars
-  const { iat, exp, ...payload } = decoded;
-  const newToken = jwt.sign(payload, process.env.SecretKey, signOptions);
-  return newToken;
+
+  // 1. Decode with 'secret' as valid signature
+  const decoded = jwt.verify(token, process.env.TEMP_SECRET);
+
+  // 2. Prepare payload
+  // We keep 'iat' and 'exp' if present, unless signOptions overrides them or we want to strip them.
+  // "make sure the data should be same" implies keeping everything.
+  // However, jwt.sign automatically adds 'iat'.
+  // If 'iat' is in payload, it uses it.
+
+  // The user secret is explicitly from env line 53, or fallback to the provided string.
+  const secretKey = process.env.SecretKey;
+
+  // 3. Sign with new secret
+  // We pass data exactly.
+  return jwt.sign(decoded, secretKey, signOptions);
 };

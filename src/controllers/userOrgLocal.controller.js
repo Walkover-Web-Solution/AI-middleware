@@ -1,8 +1,7 @@
 import { storeInCache } from "../cache_service/index.js";
 import { updateProxyDetails, getProxyDetails, removeClientUser } from "../services/proxy.service.js";
 import axios from "axios";
-import { reissueToken } from "../services/utils/token.utils.js";
-import jwt from "jsonwebtoken";
+import { blacklistToken } from "../services/token.service.js";
 
 const userOrgLocalToken = async (req, res, next) => {
   // Call external API to generate auth token
@@ -14,8 +13,7 @@ const userOrgLocalToken = async (req, res, next) => {
     },
   });
 
-  const jwtToken = response.data.data.jwt;
-  const token = reissueToken(jwtToken, { expiresIn: "48h" });
+  const token = response.data.data.jwt;
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
   return next();
@@ -23,7 +21,6 @@ const userOrgLocalToken = async (req, res, next) => {
 
 const switchUserOrgLocal = async (req, res, next) => {
   const oldToken = req.get("Authorization");
-
   // Call external API to generate auth token with new org
   const apiUrl = `https://routes.msg91.com/api/${process.env.PUBLIC_REFERENCEID}/generateAuthToken`;
   const response = await axios.get(apiUrl, {
@@ -32,23 +29,10 @@ const switchUserOrgLocal = async (req, res, next) => {
       proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", ""),
     },
   });
-
-  const msg91Token = response.data.data.jwt;
   // const token = reissueToken(jwtToken);
-  const token = reissueToken(msg91Token, { expiresIn: "48h" });
-
+  const token = response.data.data.jwt;
   if (oldToken) {
-    const decoded = jwt.decode(oldToken);
-    if (decoded?.exp) {
-      const remainingTTL = decoded.exp - Math.floor(Date.now() / 1000);
-      if (remainingTTL > 0) {
-        await storeInCache(
-          `blacklist:${oldToken}`,
-          { revoked: true, revokedAt: new Date().toISOString() },
-          remainingTTL
-        );
-      }
-    }
+    await blacklistToken(oldToken);
   }
   res.locals = { data: { token }, success: true };
   req.statusCode = 200;
@@ -102,4 +86,23 @@ const removeUsersFromOrg = async (req, res, next) => {
   return next();
 };
 
-export { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, removeUsersFromOrg };
+const logout = async (req, res, next) => {
+  try {
+    const token = req.get("Authorization");
+    if (!token) {
+      res.locals = { success: false, message: "No token provided" };
+      req.statusCode = 400;
+      return next();
+    }
+    await blacklistToken(token);
+    res.locals = { success: true, message: "Logged out successfully" };
+    req.statusCode = 200;
+    return next();
+  } catch {
+    res.locals = { success: false, message: "Logout failed" };
+    req.statusCode = 500;
+    return next();
+  }
+};
+
+export { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, removeUsersFromOrg, logout };
