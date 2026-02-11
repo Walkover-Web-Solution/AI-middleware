@@ -1,17 +1,11 @@
 import express from "express";
-import {
-  userOrgLocalToken,
-  switchUserOrgLocal,
-  updateUserDetails,
-  removeUsersFromOrg,
-  logout,
-} from "../controllers/userOrgLocal.controller.js";
+import { userOrgLocalToken, switchUserOrgLocal, updateUserDetails, removeUsersFromOrg, logout } from "../controllers/userOrgLocal.controller.js";
 import { middleware, loginAuth } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   switchUserOrgLocalBodySchema,
   updateUserDetailsBodySchema,
-  removeUsersFromOrgBodySchema,
+  removeUsersFromOrgBodySchema
 } from "../validation/joi_validation/userOrgLocal.validation.js";
 
 const routes = express.Router();
