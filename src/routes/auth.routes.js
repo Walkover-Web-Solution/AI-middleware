@@ -9,7 +9,6 @@ import {
 import { middleware } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import authValidation from "../validation/joi_validation/auth.validation.js";
-
 const router = express.Router();
 
 router.get("/auth_token", middleware, createAuthToken);
