@@ -25,20 +25,18 @@ module.exports = {
       const apiCalls = db.collection("apicalls");
 
       const filter = {
-        $or: [{ bridge_status: { $exists: false } }, { bridge_status: null }],
+        $or: [{ bridge_status: { $exists: false } }, { bridge_status: null }]
       };
 
       const update = { $set: { bridge_status: 1 } };
       const result = await configurations.updateMany(filter, update);
 
-      console.log(
-        `Matched ${result.matchedCount} configuration documents; updated ${result.modifiedCount} documents with bridge_status = 1`
-      );
+      console.log(`Matched ${result.matchedCount} configuration documents; updated ${result.modifiedCount} documents with bridge_status = 1`);
 
       // Normalize apicall bridge_ids field so null values become empty arrays
       console.log("Normalizing apicall bridge_ids field (null -> [])");
       const bridgeIdsNullFilter = {
-        $or: [{ bridge_ids: { $exists: false } }, { bridge_ids: null }],
+        $or: [{ bridge_ids: { $exists: false } }, { bridge_ids: null }]
       };
 
       const apiCallsNeedingNormalization = await apiCalls.countDocuments(bridgeIdsNullFilter);
@@ -61,5 +59,5 @@ module.exports = {
 
   async down() {
     console.log("Down migration is not implemented for this MongoDB data backfill/conversion.");
-  },
+  }
 };

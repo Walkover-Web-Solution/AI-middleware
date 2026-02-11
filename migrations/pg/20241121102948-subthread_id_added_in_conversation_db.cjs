@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.addColumn("conversations", "sub_thread_id", {
       type: Sequelize.STRING, // Adjust the type as needed
-      allowNull: true, // Set to false if you want to enforce NOT NULL
+      allowNull: true // Set to false if you want to enforce NOT NULL
     });
 
     // Copy data from thread_id to sub_thread_id
@@ -17,5 +17,5 @@ module.exports = {
 
   async down(queryInterface) {
     await queryInterface.removeColumn("conversations", "sub_thread_id");
-  },
+  }
 };

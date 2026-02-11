@@ -23,14 +23,11 @@ const loginPublicUser = async (req, res, next) => {
     }
   }
 
-  const token = generateToken(
-    { userId: userId, userEmail: userEmail, ispublic: isPublic },
-    process.env.PUBLIC_CHATBOT_TOKEN
-  );
+  const token = generateToken({ userId: userId, userEmail: userEmail, ispublic: isPublic }, process.env.PUBLIC_CHATBOT_TOKEN);
 
   res.locals = {
     token: token,
-    user_id: userId,
+    user_id: userId
   };
   req.statusCode = 200;
   return next();
@@ -42,7 +39,7 @@ const getAllAgents = async (req, res, next) => {
 
   res.locals = {
     success: true,
-    data: result,
+    data: result
   };
   req.statusCode = 200;
   return next();
@@ -56,7 +53,7 @@ const getAgent = async (req, res, next) => {
 
   res.locals = {
     success: true,
-    data: agent,
+    data: agent
   };
   req.statusCode = 200;
   return next();
@@ -65,5 +62,5 @@ const getAgent = async (req, res, next) => {
 export default {
   loginPublicUser,
   getAllAgents,
-  getAgent,
+  getAgent
 };

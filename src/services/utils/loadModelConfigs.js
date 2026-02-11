@@ -38,9 +38,7 @@ const initModelConfiguration = async () => {
 
 const backgroundListenForChanges = async () => {
   try {
-    const stream = ModelsConfigModel.watch([
-      { $match: { operationType: { $in: ["insert", "update", "replace", "delete"] } } },
-    ]);
+    const stream = ModelsConfigModel.watch([{ $match: { operationType: { $in: ["insert", "update", "replace", "delete"] } } }]);
 
     console.log("MongoDB change stream is now listening for model configuration changes.");
 

@@ -17,35 +17,35 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER
       },
       created_at: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
       updated_at: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
       system_prompt: {
         allowNull: false,
-        type: DataTypes.TEXT,
+        type: DataTypes.TEXT
       },
       bridge_id: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       org_id: {
         allowNull: false,
-        type: DataTypes.STRING,
-      },
+        type: DataTypes.STRING
+      }
     },
     {
       sequelize,
       modelName: "system_prompt_versionings",
-      timestamps: false,
+      timestamps: false
     }
   );
   return system_prompt_versionings;

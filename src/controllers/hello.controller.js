@@ -12,7 +12,7 @@ export const subscribe = async (req, res, next) => {
     if (error) {
       return res.status(400).json({
         error: "Validation failed",
-        details: error.details.map((detail) => detail.message),
+        details: error.details.map((detail) => detail.message)
       });
     }
     const { slugName, versionId } = value;
@@ -34,7 +34,7 @@ export const subscribe = async (req, res, next) => {
 
   res.locals = {
     mode,
-    supportedServices: services,
+    supportedServices: services
   };
 
   req.statusCode = 200;

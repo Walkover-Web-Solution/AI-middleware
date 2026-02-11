@@ -20,111 +20,111 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        allowNull: false,
+        allowNull: false
       },
       llm_message: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       user: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       chatbot_message: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       updated_llm_message: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       prompt: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       error: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       user_feedback: {
         type: DataTypes.INTEGER,
-        defaultValue: 0,
+        defaultValue: 0
       },
       tools_call_data: {
         type: DataTypes.JSONB,
-        defaultValue: [],
+        defaultValue: []
       },
       message_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       sub_thread_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       thread_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       version_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       bridge_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       user_urls: {
         type: DataTypes.JSONB,
-        defaultValue: [],
+        defaultValue: []
       },
       llm_urls: {
         type: DataTypes.JSONB,
-        defaultValue: [],
+        defaultValue: []
       },
       AiConfig: {
-        type: DataTypes.JSONB,
+        type: DataTypes.JSONB
       },
       fallback_model: {
         type: DataTypes.JSONB,
-        allowNull: true,
+        allowNull: true
       },
       org_id: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       service: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       model: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       status: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        defaultValue: false
       },
       tokens: {
         type: DataTypes.JSONB,
-        allowNull: true,
+        allowNull: true
       },
       variables: {
         type: DataTypes.JSONB,
-        allowNull: true,
+        allowNull: true
       },
       latency: {
         type: DataTypes.JSONB,
-        allowNull: true,
+        allowNull: true
       },
       firstAttemptError: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
       finish_reason: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
       parent_id: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
       child_id: {
         type: DataTypes.STRING,
-        allowNull: true,
-      },
+        allowNull: true
+      }
     },
     {
       sequelize,
@@ -132,7 +132,7 @@ export default (sequelize, DataTypes) => {
       tableName: "conversation_logs",
       timestamps: true,
       createdAt: "created_at",
-      updatedAt: "updated_at",
+      updatedAt: "updated_at"
     }
   );
 

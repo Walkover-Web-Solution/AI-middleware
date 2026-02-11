@@ -6,11 +6,11 @@ module.exports = {
     await queryInterface.addColumn("conversations", "annotations", {
       type: Sequelize.ARRAY(Sequelize.JSONB),
       allowNull: true,
-      defaultValue: [],
+      defaultValue: []
     });
   },
 
   async down(queryInterface) {
     await queryInterface.removeColumn("conversations", "annotations");
-  },
+  }
 };

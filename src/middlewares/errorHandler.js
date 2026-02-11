@@ -5,7 +5,7 @@ const errorHandlerMiddleware = (err, _, res, next) => {
   const defaultError = {
     StatusCodes: err?.statusCode || StatusCodes.BAD_REQUEST,
     msg: err?.message || "Something went wrong, try again later",
-    data: err?.data || {},
+    data: err?.data || {}
   };
   if (err.name === "ValidationError") {
     // we are handeling missing value as well as valid email

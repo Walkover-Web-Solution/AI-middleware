@@ -50,11 +50,7 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
 
         if (parsedValue.usage_value) {
           let type =
-            redisKeyPattern === "bridgeusedcost_"
-              ? cost_types.bridge
-              : redisKeyPattern === "folderusedcost_"
-                ? cost_types.folder
-                : cost_types.apikey;
+            redisKeyPattern === "bridgeusedcost_" ? cost_types.bridge : redisKeyPattern === "folderusedcost_" ? cost_types.folder : cost_types.apikey;
           parsedValue = Number(parsedValue.usage_value);
           await cleanupCache(type, id);
         }
@@ -85,8 +81,8 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
         bulkOps.push({
           updateOne: {
             filter: { _id: new mongoose.Types.ObjectId(id) },
-            update: { $set: updateData },
-          },
+            update: { $set: updateData }
+          }
         });
 
         keysToDelete.push(key);
@@ -129,7 +125,7 @@ async function moveDataRedisToMongodb(redisKeyPattern, modelName, fieldMapping =
     updated,
     skipped,
     errors,
-    cacheKeysDeleted: keysToDelete.length,
+    cacheKeysDeleted: keysToDelete.length
   };
 
   return result;

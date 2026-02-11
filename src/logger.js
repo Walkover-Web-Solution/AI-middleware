@@ -18,14 +18,9 @@ function buildDevLogger(logLevel = "http") {
 
   return createLogger({
     level: logLevel,
-    format: combine(
-      colorize(),
-      timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-      format.errors({ stack: true }),
-      localLogFormat
-    ),
+    format: combine(colorize(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), format.errors({ stack: true }), localLogFormat),
     defaultMeta: SERVICE_NAME,
-    transports: [new transports.Console()],
+    transports: [new transports.Console()]
   });
 }
 
@@ -35,9 +30,9 @@ function buildProdLogger(logLevel = "http") {
     format: combine(timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), format.errors({ stack: true }), format.json()),
     defaultMeta: { service: SERVICE_NAME },
     transports: [
-      new transports.Console(),
+      new transports.Console()
       //   new transports.File({ filename: `logs/log_${formattedDate}.log` }),
-    ],
+    ]
   });
 }
 const logger = () => {

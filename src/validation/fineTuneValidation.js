@@ -7,7 +7,7 @@ const FineTuneSchema = Joi.object({
   bridge_id: Joi.objectId().required(),
   user_feedback: Joi.array()
     .items(Joi.number().valid(0, 1, 2))
-    .required(),
+    .required()
 });
 
 export { FineTuneSchema };

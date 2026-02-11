@@ -20,13 +20,13 @@ const createPromptWrapper = async (req, res, next) => {
     template,
     variables: extractVariables(template),
     org_id,
-    created_by,
+    created_by
   });
 
   res.locals = {
     success: true,
     message: "Prompt wrapper created successfully",
-    data: result,
+    data: result
   };
   req.statusCode = 201;
   return next();
@@ -45,7 +45,7 @@ const getAllPromptWrappers = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Prompt wrappers retrieved successfully",
-    data: result,
+    data: result
   };
   req.statusCode = 200;
   return next();
@@ -72,7 +72,7 @@ const getPromptWrapperById = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Prompt wrapper retrieved successfully",
-    data: result,
+    data: result
   };
   req.statusCode = 200;
   return next();
@@ -105,7 +105,7 @@ const updatePromptWrapper = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "Prompt wrapper updated successfully",
-    data: result,
+    data: result
   };
   req.statusCode = 200;
   return next();
@@ -131,7 +131,7 @@ const deletePromptWrapper = async (req, res, next) => {
 
   res.locals = {
     success: true,
-    message: "Prompt wrapper deleted successfully",
+    message: "Prompt wrapper deleted successfully"
   };
   req.statusCode = 200;
   return next();
@@ -142,5 +142,5 @@ export default {
   getAllPromptWrappers,
   getPromptWrapperById,
   updatePromptWrapper,
-  deletePromptWrapper,
+  deletePromptWrapper
 };

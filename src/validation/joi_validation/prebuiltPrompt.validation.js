@@ -6,7 +6,7 @@ const validPromptIds = [
   "structured_output_optimizer",
   "chatbot_suggestions",
   "generate_summary",
-  "generate_test_cases",
+  "generate_test_cases"
 ];
 
 const getPrebuiltPrompts = {
@@ -27,7 +27,7 @@ const updatePrebuiltPrompt = {
       const prompt_id = keys[0];
       if (!validPromptIds.includes(prompt_id)) {
         return helpers.error("any.custom", {
-          message: `Invalid prompt_id. Must be one of: ${validPromptIds.join(", ")}`,
+          message: `Invalid prompt_id. Must be one of: ${validPromptIds.join(", ")}`
         });
       }
       if (!value[prompt_id] || typeof value[prompt_id] !== "string") {
@@ -35,7 +35,7 @@ const updatePrebuiltPrompt = {
       }
       return value;
     })
-    .required(),
+    .required()
 };
 
 const resetPrebuiltPrompts = {
@@ -46,10 +46,10 @@ const resetPrebuiltPrompts = {
         .required()
         .messages({
           "any.required": "prompt_id is required in request body",
-          "any.only": `Invalid prompt_id. Must be one of: ${validPromptIds.join(", ")}`,
-        }),
+          "any.only": `Invalid prompt_id. Must be one of: ${validPromptIds.join(", ")}`
+        })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getSpecificPrebuiltPrompt = {
@@ -60,15 +60,15 @@ const getSpecificPrebuiltPrompt = {
         .required()
         .messages({
           "any.required": "prompt_key is required",
-          "any.only": `Invalid prompt_key. Must be one of: ${validPromptIds.join(", ")}`,
-        }),
+          "any.only": `Invalid prompt_key. Must be one of: ${validPromptIds.join(", ")}`
+        })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
   getPrebuiltPrompts,
   updatePrebuiltPrompt,
   resetPrebuiltPrompts,
-  getSpecificPrebuiltPrompt,
+  getSpecificPrebuiltPrompt
 };

@@ -24,7 +24,7 @@ const getAllChatBots = async (req, res, next) => {
           title: "Default Chatbot",
           type: "default",
           createdBy: userId,
-          updatedBy: userId,
+          updatedBy: userId
         },
         session
       );
@@ -34,7 +34,7 @@ const getAllChatBots = async (req, res, next) => {
           title: req.params.name || "chatbot1",
           type: "chatbot",
           createdBy: userId,
-          updatedBy: userId,
+          updatedBy: userId
         },
         session
       );
@@ -60,7 +60,7 @@ const getAllChatBots = async (req, res, next) => {
 
   const chatbot_token = token.generateToken({
     payload: { org_id, chatbot_id: defaultChatbot.id, user_id: req.profile.user.id },
-    accessKey: accessKey,
+    accessKey: accessKey
   });
 
   // Filter out the default chatbot from the chatbots array
@@ -118,11 +118,11 @@ const loginUser = async (req, res, next) => {
         width: "100",
         widthUnit: "%",
         type: "popup",
-        themeColor: "#000000",
+        themeColor: "#000000"
       },
       userId: req.chatBot.userId,
       token: `Bearer ${generateToken({ user_id: req.chatBot.userId, userEmail: req.chatBot.userEmail, org_id: "public", variables, ispublic })}`,
-      chatbot_id: "Public_Agents",
+      chatbot_id: "Public_Agents"
     };
     res.locals = { data: dataToSend, success: true };
     req.statusCode = 200;
@@ -150,7 +150,7 @@ const loginUser = async (req, res, next) => {
     config: chatBotConfig.config,
     userId: user_id,
     token: `Bearer ${generateToken({ user_id, org_id, variables })}`,
-    chatbot_id,
+    chatbot_id
   };
   res.locals = { data: dataToSend, success: true };
   req.statusCode = 200;
@@ -199,7 +199,7 @@ const addorRemoveBridgeInChatBot = async (req, res, next) => {
   res.locals = {
     success: true,
     message: `Bridge ${action === "add" ? "added to" : "removed from"} chatbot successfully`,
-    chatbot: updatedChatBot,
+    chatbot: updatedChatBot
   };
   req.statusCode = 200;
   return next();
@@ -220,12 +220,4 @@ const createOrRemoveAction = async (req, res) => {
   // filterDataOfBridgeOnTheBaseOfUI({ bridges: response }, bridgeId, false);
   return res.status(200).json({ success: true, data: response });
 };
-export {
-  getAllChatBots,
-  getOneChatBot,
-  updateChatBotConfig,
-  loginUser,
-  createOrgToken,
-  addorRemoveBridgeInChatBot,
-  createOrRemoveAction,
-};
+export { getAllChatBots, getOneChatBot, updateChatBotConfig, loginUser, createOrgToken, addorRemoveBridgeInChatBot, createOrRemoveAction };

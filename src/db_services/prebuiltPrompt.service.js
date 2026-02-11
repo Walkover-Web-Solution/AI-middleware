@@ -19,7 +19,7 @@ async function updatePrebuiltPromptService(org_id, prompt_id, prompt_data) {
 
     if (existingDocument) {
       const updateData = {
-        [`prebuilt_prompts.${prompt_id}`]: prompt_data.prompt,
+        [`prebuilt_prompts.${prompt_id}`]: prompt_data.prompt
       };
 
       await PrebuiltPrompt.updateOne({ org_id }, { $set: updateData });
@@ -28,8 +28,8 @@ async function updatePrebuiltPromptService(org_id, prompt_id, prompt_data) {
       const newPromptData = {
         org_id,
         prebuilt_prompts: {
-          [prompt_id]: prompt_data.prompt,
-        },
+          [prompt_id]: prompt_data.prompt
+        }
       };
       await PrebuiltPrompt.create(newPromptData);
       return { [prompt_id]: prompt_data.prompt };
@@ -57,5 +57,5 @@ async function getPrebuiltPromptsService(org_id) {
 export default {
   getSpecificPrebuiltPrompt,
   updatePrebuiltPromptService,
-  getPrebuiltPromptsService,
+  getPrebuiltPromptsService
 };

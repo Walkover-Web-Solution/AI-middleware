@@ -42,8 +42,8 @@ async function validateAnthropicModel(modelName) {
     const response = await axios.get("https://api.anthropic.com/v1/models", {
       headers: {
         "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
+        "anthropic-version": "2023-06-01"
+      }
     });
 
     if (response.status !== 200) {
@@ -72,8 +72,8 @@ async function validateMistralModel(modelName) {
     const response = await axios.get("https://api.mistral.ai/v1/models", {
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
 
     if (response.status !== 200) {
@@ -102,8 +102,8 @@ async function validateGroqModel(modelName) {
     const response = await axios.get("https://api.groq.com/openai/v1/models", {
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
 
     if (response.status !== 200) {
@@ -131,8 +131,8 @@ async function validateOpenAIModel(modelName) {
 
     const response = await axios.get("https://api.openai.com/v1/models", {
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+        Authorization: `Bearer ${apiKey}`
+      }
     });
 
     if (response.status !== 200) {
@@ -178,11 +178,4 @@ async function validateModel(service, modelName) {
   }
 }
 
-export {
-  validateModel,
-  validateOpenRouterModel,
-  validateAnthropicModel,
-  validateOpenAIModel,
-  validateGroqModel,
-  validateMistralModel,
-};
+export { validateModel, validateOpenRouterModel, validateAnthropicModel, validateOpenAIModel, validateGroqModel, validateMistralModel };

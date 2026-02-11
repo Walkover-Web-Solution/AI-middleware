@@ -2,65 +2,65 @@ import mongoose from "mongoose";
 const apiCall = new mongoose.Schema({
   org_id: {
     type: String,
-    default: "",
+    default: ""
   },
   bridge_id: {
     type: String,
-    default: "",
+    default: ""
   },
   bridge_ids: {
     type: [mongoose.Schema.Types.ObjectId],
-    default: [],
+    default: []
   },
   activated: {
     type: Boolean,
-    default: false,
+    default: false
   },
   script_id: {
     type: String,
-    required: true,
+    required: true
   },
   fields: {
     type: mongoose.Schema.Types.Mixed,
-    default: {},
+    default: {}
   },
   // Backup of original fields before migration
   old_fields: {
     type: mongoose.Schema.Types.Mixed,
-    default: {},
+    default: {}
   },
   required_params: {
     type: [String],
-    default: [],
+    default: []
   },
   description: {
     type: String,
-    default: "",
+    default: ""
   },
   title: {
     type: String,
-    default: "",
+    default: ""
   },
   status: {
     type: Number,
-    default: 1,
+    default: 1
   },
   created_at: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   updated_at: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   folder_id: {
     type: String,
-    default: "",
+    default: ""
   },
   user_id: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 const apiCallModel = mongoose.model("apicall", apiCall);
 export default apiCallModel;
