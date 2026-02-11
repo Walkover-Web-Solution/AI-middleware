@@ -14,81 +14,81 @@ export default (sequelize, DataTypes) => {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
+        autoIncrement: true
       },
       org_id: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       thread_id: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       sub_thread_id: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       model_name: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: false
       },
       orchestrator_id: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       user: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: false
       },
       response: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       tool_call_data: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       latency: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       tokens: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       error: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       variables: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       user_urls: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       llm_urls: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       ai_config: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
-        field: "createdAt",
-      },
+        field: "createdAt"
+      }
     },
     {
       sequelize,
       modelName: "orchestrator_history",
       tableName: "orchestrator_history",
       timestamps: true,
-      updatedAt: false,
+      updatedAt: false
     }
   );
 

@@ -25,7 +25,7 @@ async function scanCacheKeys(pattern) {
     // Use scanIterator with optimized settings for 1GB Redis
     for await (const key of client.scanIterator({
       MATCH: match,
-      COUNT: 2500, // Increased batch size for better performance
+      COUNT: 2500 // Increased batch size for better performance
     })) {
       keys.push(key.slice(REDIS_PREFIX.length));
       processedCount++;

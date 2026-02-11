@@ -17,14 +17,14 @@ const userOrgLocalToken = {
 const switchUserOrgLocalBodySchema = Joi.object()
   .keys({
     orgId: idSchema.required().messages({
-      "any.required": "orgId is required",
+      "any.required": "orgId is required"
     }),
-    orgName: Joi.string().allow("", null).optional(),
+    orgName: Joi.string().allow("", null).optional()
   })
   .unknown(true);
 
 const switchUserOrgLocal = {
-  body: switchUserOrgLocalBodySchema,
+  body: switchUserOrgLocalBodySchema
 };
 
 /**
@@ -36,19 +36,19 @@ const updateUserDetailsBodySchema = Joi.object()
     company_id: idSchema.optional(),
     company: Joi.object().optional(),
     user_id: idSchema.optional(),
-    user: Joi.object().optional(),
+    user: Joi.object().optional()
   })
   .or("company_id", "user_id")
   .and("company_id", "company")
   .and("user_id", "user")
   .messages({
     "object.missing": "Either company_id or user_id is required",
-    "object.and": "company_id must be provided with company, and user_id must be provided with user",
+    "object.and": "company_id must be provided with company, and user_id must be provided with user"
   })
   .unknown(true);
 
 const updateUserDetails = {
-  body: updateUserDetailsBodySchema,
+  body: updateUserDetailsBodySchema
 };
 
 /**
@@ -58,20 +58,20 @@ const updateUserDetails = {
 const removeUsersFromOrgBodySchema = Joi.object()
   .keys({
     user_id: idSchema.required().messages({
-      "any.required": "user_id is required",
-    }),
+      "any.required": "user_id is required"
+    })
   })
   .unknown(true);
 
 const removeUsersFromOrg = {
-  body: removeUsersFromOrgBodySchema,
+  body: removeUsersFromOrgBodySchema
 };
 
 export default {
   userOrgLocalToken,
   switchUserOrgLocal,
   updateUserDetails,
-  removeUsersFromOrg,
+  removeUsersFromOrg
 };
 
 // Named exports for direct schema access

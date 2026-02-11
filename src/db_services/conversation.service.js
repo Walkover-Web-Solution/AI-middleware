@@ -4,28 +4,12 @@ import Thread from "../mongoModel/Thread.model.js";
 import { findInCache, storeInCache } from "../cache_service/index.js";
 import { getUsers } from "../services/proxy.service.js";
 
-async function findMessage(
-  org_id,
-  thread_id,
-  bridge_id,
-  sub_thread_id,
-  page,
-  pageSize,
-  user_feedback,
-  version_id,
-  isChatbot,
-  error
-) {
+async function findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error) {
   const offset = page && pageSize ? (page - 1) * pageSize : null;
   const limit = pageSize || null;
 
   // Build the WHERE clause for the SQL query
-  let whereConditions = [
-    `org_id = '${org_id}'`,
-    `thread_id = '${thread_id}'`,
-    `bridge_id = '${bridge_id}'`,
-    `sub_thread_id = '${sub_thread_id}'`,
-  ];
+  let whereConditions = [`org_id = '${org_id}'`, `thread_id = '${thread_id}'`, `bridge_id = '${bridge_id}'`, `sub_thread_id = '${sub_thread_id}'`];
 
   if (version_id !== undefined && version_id) {
     whereConditions.push(`version_id = '${version_id}'`);
@@ -158,19 +142,19 @@ async function deleteLastThread(org_id, thread_id, bridge_id) {
       bridge_id,
       // Find records where tools_call_data is not null/empty (indicates tool_calls)
       tools_call_data: {
-        [Sequelize.Op.ne]: null,
-      },
+        [Sequelize.Op.ne]: null
+      }
     },
-    order: [["id", "DESC"]],
+    order: [["id", "DESC"]]
   });
   if (recordsTodelete) {
     await recordsTodelete.destroy();
     return {
-      success: true,
+      success: true
     };
   }
   return {
-    success: false,
+    success: false
   };
 }
 
@@ -181,7 +165,7 @@ async function storeSystemPrompt(promptText, orgId, bridgeId) {
       org_id: orgId,
       bridge_id: bridgeId,
       created_at: new Date(),
-      updated_at: new Date(),
+      updated_at: new Date()
     });
     return result;
   } catch (error) {
@@ -195,13 +179,13 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
     org_id,
     thread_id,
     bridge_id,
-    [Sequelize.Op.or]: [{ error: "" }, { error: { [Sequelize.Op.is]: null } }],
+    [Sequelize.Op.or]: [{ error: "" }, { error: { [Sequelize.Op.is]: null } }]
   };
 
   if (!user_feedback_array.includes(0)) {
     // If 0 is not included, filter by user_feedback
     whereClause.user_feedback = {
-      [Sequelize.Op.in]: user_feedback_array,
+      [Sequelize.Op.in]: user_feedback_array
     };
   }
 
@@ -213,11 +197,11 @@ async function findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedbac
       "id",
       [Sequelize.literal("NULL"), "function"],
       ["updated_llm_message", "updated_message"],
-      "error",
+      "error"
     ],
     where: whereClause,
     order: [["id", "DESC"]],
-    raw: true,
+    raw: true
   });
 
   conversations = conversations.reverse();
@@ -228,11 +212,11 @@ async function system_prompt_data(org_id, bridge_id) {
   const system_prompt = await models.pg.system_prompt_versionings.findOne({
     where: {
       org_id,
-      bridge_id,
+      bridge_id
     },
     order: [["updated_at", "DESC"]],
     raw: true,
-    limit: 1,
+    limit: 1
   });
 
   return system_prompt;
@@ -245,9 +229,9 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
         where: {
           org_id,
           bridge_id,
-          id,
+          id
         },
-        returning: true,
+        returning: true
       }
     );
 
@@ -266,7 +250,7 @@ async function updateMessage({ org_id, bridge_id, message, id }) {
       updated_message: row.updated_llm_message,
       type: null,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      updatedAt: row.updated_at
     }));
 
     return { success: true, result: result };
@@ -282,9 +266,9 @@ async function updateStatus({ status, message_id }) {
       { user_feedback: status },
       {
         where: {
-          message_id,
+          message_id
         },
-        returning: true,
+        returning: true
       }
     );
     if (affectedCount === 0) {
@@ -310,34 +294,25 @@ const findMessageByMessageId = async (bridge_id, org_id, thread_id, message_id) 
       thread_id,
       message_id,
       // Find assistant messages (where llm_message or chatbot_message exists and user is null/empty)
-      [Sequelize.Op.or]: [
-        { llm_message: { [Sequelize.Op.ne]: null } },
-        { chatbot_message: { [Sequelize.Op.ne]: null } },
-      ],
+      [Sequelize.Op.or]: [{ llm_message: { [Sequelize.Op.ne]: null } }, { chatbot_message: { [Sequelize.Op.ne]: null } }]
     },
     raw: true,
-    limit: 1,
+    limit: 1
   });
 const addThreadId = async (message_id, thread_id, type) => {
   // In conversation_logs, we don't have external_reference or message_by
   // We'll add external_reference as a variable in the variables JSONB field
   return await models.pg.conversation_logs.update(
     {
-      variables: Sequelize.fn(
-        "jsonb_set",
-        Sequelize.col("variables"),
-        "{external_reference}",
-        Sequelize.literal(`'"${thread_id}"'::jsonb`),
-        true
-      ),
+      variables: Sequelize.fn("jsonb_set", Sequelize.col("variables"), "{external_reference}", Sequelize.literal(`'"${thread_id}"'::jsonb`), true)
     },
     {
       where: {
         message_id,
         // type was 'user' or 'assistant', map to appropriate conditions
-        ...(type === "user" ? { user: { [Sequelize.Op.ne]: null } } : {}),
+        ...(type === "user" ? { user: { [Sequelize.Op.ne]: null } } : {})
       },
-      returning: true,
+      returning: true
     }
   );
 };
@@ -349,7 +324,7 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
     org_id: org_id,
     thread_id: thread_id,
     bridge_id: bridge_id,
-    sub_thread_id: sub_thread_id,
+    sub_thread_id: sub_thread_id
   };
 
   let conversations = await models.pg.conversation_logs.findAll({
@@ -358,20 +333,20 @@ async function findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, pa
         Sequelize.literal(
           `CASE WHEN user IS NOT NULL AND user != '' THEN user WHEN llm_message IS NOT NULL AND llm_message != '' THEN llm_message ELSE chatbot_message END`
         ),
-        "content",
+        "content"
       ],
       [Sequelize.literal(`CASE WHEN user IS NOT NULL AND user != '' THEN 'user' ELSE 'assistant' END`), "role"],
       ["created_at", "createdAt"],
       "id",
       [Sequelize.literal("NULL"), "is_reset"],
       "tools_call_data",
-      ["llm_urls", "image_urls"],
+      ["llm_urls", "image_urls"]
     ],
     where: whereClause,
     order: [["id", "DESC"]],
     offset: offset,
     limit: limit,
-    raw: true,
+    raw: true
   });
   conversations = conversations.reverse();
   return { conversations };
@@ -385,18 +360,13 @@ async function sortThreadsByHits(threads) {
   const subThreadIds = [...new Set(threads.map((t) => t.sub_thread_id).filter(Boolean))];
 
   const latestEntries = await models.pg.conversation_logs.findAll({
-    attributes: [
-      "sub_thread_id",
-      [models.pg.sequelize.fn("MAX", models.pg.sequelize.col("created_at")), "latestCreatedAt"],
-    ],
+    attributes: ["sub_thread_id", [models.pg.sequelize.fn("MAX", models.pg.sequelize.col("created_at")), "latestCreatedAt"]],
     where: { sub_thread_id: subThreadIds },
     group: ["sub_thread_id"],
-    raw: true,
+    raw: true
   });
 
-  const latestSubThreadMap = new Map(
-    latestEntries.map((entry) => [entry.sub_thread_id, new Date(entry.latestCreatedAt)])
-  );
+  const latestSubThreadMap = new Map(latestEntries.map((entry) => [entry.sub_thread_id, new Date(entry.latestCreatedAt)]));
 
   threads.sort((a, b) => {
     const dateA = latestSubThreadMap.get(a.sub_thread_id) || new Date(0);
@@ -448,12 +418,12 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users
       const history = await models.pg.user_bridge_config_history.findAll({
         where: {
           org_id: org_id,
-          version_id: version_id,
+          version_id: version_id
         },
         attributes: ["id", "user_id", "org_id", "bridge_id", "type", "time", "version_id"],
         order: [["time", "DESC"]],
         offset: offset,
-        limit: pageSize,
+        limit: pageSize
       });
 
       if (history.length === 0) {
@@ -464,7 +434,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users
         const user = Array.isArray(userData) ? userData.find((user) => user?.id === entry?.dataValues?.user_id) : null;
         return {
           ...entry?.dataValues,
-          user_name: user ? user?.name : "Unknown",
+          user_name: user ? user?.name : "Unknown"
         };
       });
 
@@ -482,7 +452,7 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users
       const mappedUsers = filteredUsers.map((user) => ({
         id: user.id,
         name: user.name,
-        email: user.email,
+        email: user.email
       }));
 
       return { success: true, users: mappedUsers };
@@ -498,7 +468,7 @@ async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, is
     let whereClause = {
       org_id,
       thread_id,
-      bridge_id,
+      bridge_id
     };
 
     // Apply version_id filter
@@ -508,20 +478,16 @@ async function getSubThreadsByError(org_id, thread_id, bridge_id, version_id, is
 
     if (isError) {
       whereClause.error = {
-        [models.pg.Sequelize.Op.and]: [{ [models.pg.Sequelize.Op.ne]: "" }, { [models.pg.Sequelize.Op.ne]: null }],
+        [models.pg.Sequelize.Op.and]: [{ [models.pg.Sequelize.Op.ne]: "" }, { [models.pg.Sequelize.Op.ne]: null }]
       };
     }
 
     const result = await models.pg.conversation_logs.findAll({
-      attributes: [
-        "sub_thread_id",
-        "version_id",
-        [models.pg.Sequelize.fn("MAX", models.pg.Sequelize.col("created_at")), "latest_error"],
-      ],
+      attributes: ["sub_thread_id", "version_id", [models.pg.Sequelize.fn("MAX", models.pg.Sequelize.col("created_at")), "latest_error"]],
       where: whereClause,
       group: ["sub_thread_id", "version_id"],
       order: [[models.pg.Sequelize.literal("latest_error"), "DESC"]],
-      raw: true,
+      raw: true
     });
 
     return result.map((item) => item.sub_thread_id);
@@ -540,27 +506,23 @@ async function sortThreadsByLatestActivity(threads, org_id, bridge_id) {
     // Extract thread_id and sub_thread_id from threads
     const threadIds = threads.map((thread) => ({
       thread_id: thread.thread_id,
-      sub_thread_id: thread.sub_thread_id,
+      sub_thread_id: thread.sub_thread_id
     }));
 
     // Query PostgreSQL to get latest conversation activity for each thread
     const conversationActivity = await models.pg.conversation_logs.findAll({
-      attributes: [
-        "thread_id",
-        "sub_thread_id",
-        [models.pg.Sequelize.fn("MAX", models.pg.Sequelize.col("created_at")), "latest_activity"],
-      ],
+      attributes: ["thread_id", "sub_thread_id", [models.pg.Sequelize.fn("MAX", models.pg.Sequelize.col("created_at")), "latest_activity"]],
       where: {
         org_id,
         bridge_id,
         [models.pg.Sequelize.Op.or]: threadIds.map(({ thread_id, sub_thread_id }) => ({
           thread_id,
-          sub_thread_id,
-        })),
+          sub_thread_id
+        }))
       },
       group: ["thread_id", "sub_thread_id"],
       order: [[models.pg.Sequelize.literal("latest_activity"), "DESC"]],
-      raw: true,
+      raw: true
     });
 
     // Create a map for quick lookup of latest activity
@@ -620,5 +582,5 @@ export default {
   sortThreadsByHits,
   getSubThreadsByError,
   sortThreadsByLatestActivity,
-  addBulkUserEntries,
+  addBulkUserEntries
 };

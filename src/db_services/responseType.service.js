@@ -5,16 +5,16 @@ const create = async (orgId) => {
   try {
     const temp = await responseTypeModel.create({
       orgId: orgId,
-      responseTypes: defaultResponseJson,
+      responseTypes: defaultResponseJson
     });
     return {
       success: true,
-      chatBot: temp,
+      chatBot: temp
     };
   } catch (error) {
     return {
       success: false,
-      error: "Failed to create response in org " + error,
+      error: "Failed to create response in org " + error
     };
   }
 };
@@ -29,13 +29,13 @@ const update = async (orgId, updateData) => {
     console.log("Document updated:", temp);
     return {
       success: true,
-      chatBot: temp,
+      chatBot: temp
     };
   } catch (error) {
     console.error("Error updating document:", error);
     return {
       success: false,
-      error: "Failed to update response in org",
+      error: "Failed to update response in org"
     };
   }
 };
@@ -43,7 +43,7 @@ const update = async (orgId, updateData) => {
 const getAll = async (orgId) => {
   try {
     const temp = await responseTypeModel.findOne({
-      orgId: orgId,
+      orgId: orgId
     });
     return { success: true, chatBot: temp };
   } catch (error) {
@@ -55,15 +55,15 @@ const addResponseTypes = async (orgId, responseId, responseJson) => {
   try {
     const temp = await responseTypeModel.findOneAndUpdate(
       {
-        orgId: orgId,
+        orgId: orgId
       },
       {
         $set: {
-          [`responseTypes.${responseId}`]: responseJson,
-        },
+          [`responseTypes.${responseId}`]: responseJson
+        }
       },
       {
-        new: true,
+        new: true
       }
     );
     console.log("Document created:", temp);
@@ -71,7 +71,7 @@ const addResponseTypes = async (orgId, responseId, responseJson) => {
   } catch (error) {
     return {
       success: false,
-      error: "Failed to add response in org " + error,
+      error: "Failed to add response in org " + error
     };
   }
 };
@@ -81,16 +81,16 @@ const createOrgToken = async (orgId, token) => {
     const orgData = await responseTypeModel
       .findOneAndUpdate(
         {
-          orgId: orgId,
+          orgId: orgId
         },
         {
           $set: {
-            orgAcessToken: token,
-          },
+            orgAcessToken: token
+          }
         },
         {
           new: true,
-          upsert: true,
+          upsert: true
         }
       )
       .lean();
@@ -98,7 +98,7 @@ const createOrgToken = async (orgId, token) => {
   } catch (error) {
     return {
       success: false,
-      error: error?.message,
+      error: error?.message
     };
   }
 };
@@ -108,5 +108,5 @@ export default {
   addResponseTypes,
   getAll,
   createOrgToken,
-  update,
+  update
 };

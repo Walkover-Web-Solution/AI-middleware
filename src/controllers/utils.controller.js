@@ -14,9 +14,7 @@ const clearRedisCache = async (req, res, next) => {
     const identifiers = ids ? ids : id;
     await deleteInCache(identifiers);
 
-    const message = Array.isArray(identifiers)
-      ? `Redis Keys cleared successfully (${identifiers.length} keys)`
-      : "Redis Key cleared successfully";
+    const message = Array.isArray(identifiers) ? `Redis Keys cleared successfully (${identifiers.length} keys)` : "Redis Key cleared successfully";
 
     res.locals = { message };
     req.statusCode = 200;
@@ -115,7 +113,7 @@ const getCurrentOrgUsers = async (req, res, next) => {
   const users = allUsers.map((user) => ({
     user_id: user.id || null,
     name: user.name || null,
-    email: user.email || null,
+    email: user.email || null
   }));
 
   res.locals = { data: users, success: true };
@@ -128,5 +126,5 @@ export default {
   getRedisCache,
   callGtwy,
   generateToken,
-  getCurrentOrgUsers,
+  getCurrentOrgUsers
 };

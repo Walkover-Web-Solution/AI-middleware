@@ -5,41 +5,41 @@ const { Schema } = mongoose;
 const WebhookConfigurationSchema = new Schema(
   {
     url: {
-      type: String,
+      type: String
     },
     headers: {
       type: Map,
-      of: String,
-    },
+      of: String
+    }
   },
   { _id: false }
 );
 
 const AlertSchema = new Schema({
   org_id: {
-    type: String,
+    type: String
   },
   name: {
-    type: String,
+    type: String
   },
   webhookConfiguration: {
-    type: WebhookConfigurationSchema,
+    type: WebhookConfigurationSchema
   },
   alertType: {
-    type: [String],
+    type: [String]
   },
   bridges: {
-    type: [String],
+    type: [String]
   },
   limit: {
-    type: Number,
+    type: Number
   },
   createdAt: {
-    type: Date,
+    type: Date
   },
   updatedAt: {
-    type: Date,
-  },
+    type: Date
+  }
 });
 
 const alerts_Model = mongoose.model("alerts", AlertSchema);

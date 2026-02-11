@@ -5,24 +5,24 @@ const promptWrapperSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
     },
     template: {
       type: String,
-      required: true,
+      required: true
     },
     variables: {
       type: [String],
-      default: [],
+      default: []
     },
     org_id: {
       type: String,
-      required: true,
+      required: true
     },
     created_by: {
       type: String,
-      required: true,
-    },
+      required: true
+    }
   },
   { timestamps: true }
 );

@@ -30,17 +30,17 @@ const GtwyEmbeddecodeToken = async (req, res, next) => {
             org_name: orgTokenFromDb?.name,
             org_id: proxyResponse.data.company.id,
             folder_id: decodedToken.folder_id,
-            user_id: proxyResponse.data.user.id,
+            user_id: proxyResponse.data.user.id
           };
           req.profile = {
             user: {
               id: proxyResponse.data.user.id,
-              name: name,
+              name: name
             },
             org: {
               id: proxyResponse.data.company.id,
-              name: orgTokenFromDb?.name,
-            },
+              name: orgTokenFromDb?.name
+            }
           };
           req.IsEmbedUser = true;
           return next();

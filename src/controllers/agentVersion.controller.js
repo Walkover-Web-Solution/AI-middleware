@@ -48,7 +48,7 @@ const createVersion = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "version created successfully",
-    version_id: create_new_version,
+    version_id: create_new_version
   };
   req.statusCode = 200;
   return next();
@@ -67,7 +67,7 @@ const getVersion = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "agent get successfully",
-    agent: agent,
+    agent: agent
   };
   req.statusCode = 200;
   return next();
@@ -83,7 +83,7 @@ const publishVersion = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "version published successfully",
-    version_id: version_id,
+    version_id: version_id
   };
   req.statusCode = 200;
   return next();
@@ -124,7 +124,7 @@ const bulkPublishVersion = async (req, res, next) => {
     success: failed.length === 0,
     message: "Bulk publish completed",
     published_version_ids: published,
-    failed: failed,
+    failed: failed
   };
   req.statusCode = 200;
   return next();
@@ -132,13 +132,26 @@ const bulkPublishVersion = async (req, res, next) => {
 
 const discardVersion = async (req, res, next) => {
   const { version_id } = req.params;
-  const agentDataResult = await agentVersionDbService.getVersionWithTools(version_id);
-  if (!agentDataResult || !agentDataResult.bridges) {
-    res.locals = { success: false, message: "Agent not found" };
+  const { bridge_id } = req.body;
+  const org_id = req.profile.org.id;
+
+  // Verify version exists
+  const versionDataResult = await agentVersionDbService.getVersionWithTools(version_id);
+  if (!versionDataResult || !versionDataResult.bridges) {
+    res.locals = { success: false, message: "Version not found" };
     req.statusCode = 400;
     return next();
   }
-  const agentData = agentDataResult.bridges;
+
+  // Fetch bridge/agent data using bridge_id
+  const bridgeDataResult = await ConfigurationServices.getAgentsWithoutTools(bridge_id, org_id);
+  if (!bridgeDataResult || !bridgeDataResult.bridges) {
+    res.locals = { success: false, message: "Bridge not found" };
+    req.statusCode = 400;
+    return next();
+  }
+
+  const agentData = { ...bridgeDataResult.bridges };
   const keysToRemove = ["name", "slugName", "bridgeType", "_id", "versions", "status", "apiCalls", "bridge_status"];
   keysToRemove.forEach((key) => delete agentData[key]);
 
@@ -148,7 +161,7 @@ const discardVersion = async (req, res, next) => {
   res.locals = {
     success: true,
     message: "version changes discarded successfully",
-    version_id: version_id,
+    version_id: version_id
   };
   req.statusCode = 200;
   return next();
@@ -180,7 +193,7 @@ const suggestModel = async (req, res, next) => {
     res.locals = {
       success: false,
       message: "Please select api key for proceeding further",
-      data: { model: null, error: "Please select api key for proceeding further" },
+      data: { model: null, error: "Please select api key for proceeding further" }
     };
     req.statusCode = 400;
     return next();
@@ -211,7 +224,7 @@ const suggestModel = async (req, res, next) => {
   const message = JSON.stringify({ prompt: prompt, tool_calls: tool_calls });
   const variables = {
     available_models: JSON.stringify(available_models),
-    unavailable_models: JSON.stringify(unavailable_models),
+    unavailable_models: JSON.stringify(unavailable_models)
   };
 
   const ai_response = await callAiMiddleware(message, bridge_ids["suggest_model"], variables);
@@ -219,14 +232,14 @@ const suggestModel = async (req, res, next) => {
   const response = {
     available: {
       model: ai_response.best_model_from_available_models,
-      service: getServiceByModel(ai_response.best_model_from_available_models),
-    },
+      service: getServiceByModel(ai_response.best_model_from_available_models)
+    }
   };
 
   if (ai_response.best_model_from_unavailable_models) {
     response.unavailable = {
       model: ai_response.best_model_from_unavailable_models,
-      service: getServiceByModel(ai_response.best_model_from_unavailable_models),
+      service: getServiceByModel(ai_response.best_model_from_unavailable_models)
     };
   }
 
@@ -254,5 +267,5 @@ export default {
   bulkPublishVersion,
   discardVersion,
   suggestModel,
-  getConnectedAgents,
+  getConnectedAgents
 };

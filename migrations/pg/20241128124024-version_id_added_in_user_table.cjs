@@ -7,7 +7,7 @@ module.exports = {
     await queryInterface.addColumn("user_bridge_config_history", "version_id", {
       type: Sequelize.STRING,
       allowNull: false,
-      defaultValue: "",
+      defaultValue: ""
     });
 
     // Copy data from 'bridge_id' to 'version_id' for existing rows
@@ -24,7 +24,7 @@ module.exports = {
     // Optionally, remove validation from 'bridge_id' if needed
     await queryInterface.changeColumn("user_bridge_config_history", "bridge_id", {
       type: queryInterface.sequelize.Sequelize.STRING,
-      validate: {},
+      validate: {}
     });
-  },
+  }
 };

@@ -4,17 +4,17 @@ const Schema = mongoose.Schema;
 const actionTypeModel = new Schema(
   {
     description: {
-      type: String,
+      type: String
     },
     type: {
-      type: String,
+      type: String
     },
     variable: {
-      type: String,
-    },
+      type: String
+    }
   },
   {
-    _id: false,
+    _id: false
   }
 );
 
@@ -23,19 +23,19 @@ const pageConfigSchema = new Schema(
     url_slugname: {
       type: String,
       unique: true,
-      sparse: true, // this makes sure that if the url_slugname is not present in the document
+      sparse: true // this makes sure that if the url_slugname is not present in the document
       // mongo will still create an index on the field, and will not throw an error if the field is not present in the document.
       // This is useful when we are using the same schema for multiple collections, and not all collections have this field.
     },
     availability: {
       type: String,
       enum: ["public", "private"],
-      default: "private",
+      default: "private"
     },
     allowedUsers: {
       type: [String],
-      default: [],
-    },
+      default: []
+    }
   },
   { _id: false }
 );
@@ -43,239 +43,239 @@ const pageConfigSchema = new Schema(
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
-    required: true,
+    required: true
   },
   user_id: {
     type: String,
-    required: true,
+    required: true
   },
   service: {
     type: String,
-    default: "",
+    default: ""
   },
   bridgeType: {
     type: String,
     enum: ["api", "chatbot"],
     required: true,
-    default: "chatbot",
+    default: "chatbot"
   },
   name: {
     type: String,
-    default: "",
+    default: ""
   },
   configuration: {
     type: Object,
-    default: {},
+    default: {}
   },
   apikey: {
     type: String,
-    default: "",
+    default: ""
   },
   gpt_memory: {
     type: Boolean,
-    default: false,
+    default: false
   },
   gpt_memory_context: {
     type: String,
-    default: null,
+    default: null
   },
   folder_id: {
     type: String,
-    default: null,
+    default: null
   },
   pre_tools: {
     type: Array,
-    default: [],
+    default: []
   },
   is_drafted: {
     type: Boolean,
-    default: false,
+    default: false
   },
   parent_id: {
     type: String,
-    default: null,
+    default: null
   },
   published_version_id: {
     type: String,
-    default: null,
+    default: null
   },
   variables_path: {
     type: Object,
-    default: {},
+    default: {}
   },
   variables_state: {
     type: Object,
-    default: {},
+    default: {}
   },
   starterQuestion: {
     type: Array,
-    default: [],
+    default: []
   },
   tool_call_count: {
     type: Number,
-    default: 0,
+    default: 0
   },
   version_description: {
     type: String,
-    default: "",
+    default: ""
   },
   connected_agents: {
     type: Object,
-    default: {},
+    default: {}
   },
   doc_ids: {
     type: Array,
-    default: [],
+    default: []
   },
   guardrails: {
     type: Object,
     default: {
       is_enabled: false,
       guardrails_configuration: {},
-      guardrails_custom_prompt: "",
-    },
+      guardrails_custom_prompt: ""
+    }
   },
   built_in_tools: {
     type: Array,
-    default: [],
+    default: []
   },
   fall_back: {
     type: Object,
     default: {
       is_enable: false,
       service: "",
-      model: "",
-    },
+      model: ""
+    }
   },
   bridge_summary: {
     type: String,
-    default: "",
+    default: ""
   },
   connected_agent_details: {
     type: Object,
-    default: {},
+    default: {}
   },
   user_reference: {
     type: String,
-    default: "",
+    default: ""
   },
   bridge_status: {
     type: Number,
-    default: 1,
+    default: 1
   },
   function_ids: {
     type: Array,
-    default: [],
+    default: []
   },
   agent_variables: {
     type: Object,
-    default: {},
+    default: {}
   },
   total_tokens: {
     type: Number,
-    default: 0,
+    default: 0
   },
   prompt_total_tokens: {
     type: Number,
-    default: 0,
+    default: 0
   },
   prompt_enhancer_percentage: {
     type: Number,
-    default: 0,
+    default: 0
   },
   created_at: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   updatedAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   api_call: {
     type: Object,
-    default: {},
+    default: {}
   },
   api_endpoints: {
     type: Object,
-    default: [],
+    default: []
   },
   is_api_call: {
     type: Boolean,
-    default: false,
+    default: false
   },
   slugName: {
     type: String,
-    required: true,
+    required: true
   },
   status: {
     type: Number,
     default: 1,
-    required: true,
+    required: true
   },
   responseIds: {
     type: Array,
-    default: [],
+    default: []
   },
   responseRef: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "ResponseType",
+    ref: "ResponseType"
   },
   versions: {
     type: [String],
-    default: [],
+    default: []
   },
   defaultQuestions: {
-    type: Array,
+    type: Array
   },
   actions: {
     type: Map,
-    of: actionTypeModel,
+    of: actionTypeModel
   },
   hello_id: {
-    type: String,
+    type: String
   },
   IsstarterQuestionEnable: {
-    type: Boolean,
+    type: Boolean
   },
   page_config: {
     type: pageConfigSchema,
-    default: null,
+    default: null
   },
   apikey_object_id: {
-    type: Object,
+    type: Object
   },
   meta: {
     type: Object,
-    default: {},
+    default: {}
   },
   deletedAt: {
     type: Date,
-    default: null,
+    default: null
   },
   bridge_limit: {
     type: Number,
-    default: 0,
+    default: 0
   },
   bridge_usage: {
     type: Number,
-    default: 0,
+    default: 0
   },
   last_used: {
     type: Date,
-    default: null,
+    default: null
   },
   users: {
     type: [mongoose.Schema.Types.Mixed],
-    default: undefined,
+    default: undefined
   },
   chatbot_auto_answers: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 configuration.index({ org_id: 1, slugName: 1 }, { unique: true });

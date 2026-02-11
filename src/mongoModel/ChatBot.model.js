@@ -14,34 +14,34 @@ const ChatBotSchema = new Schema(
         themeColor: "#000000",
         chatbotTitle: "Chatbot",
         chatbotSubtitle: "Chatbot subtitle",
-        iconUrl: "",
-      },
+        iconUrl: ""
+      }
     },
     orgId: {
-      type: String,
+      type: String
     },
     title: {
-      type: String,
+      type: String
     },
     createdBy: {
-      type: String,
+      type: String
     },
     type: {
       type: String,
-      default: "chatbot",
+      default: "chatbot"
     },
     updatedBy: {
-      type: String,
+      type: String
     },
     bridge: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "configuration", // Replace 'Configuration' with your actual model name
-      },
-    ],
+        ref: "configuration" // Replace 'Configuration' with your actual model name
+      }
+    ]
   },
   {
-    minimize: false,
+    minimize: false
   }
 );
 

@@ -76,7 +76,7 @@ class Helper {
             type: "object",
             enum: [],
             required_params: [],
-            parameter: {},
+            parameter: {}
           };
         }
       }
@@ -98,7 +98,7 @@ class Helper {
               type: "object",
               enum: [],
               required_params: [],
-              parameter: {},
+              parameter: {}
             };
           }
         }
@@ -124,7 +124,7 @@ class Helper {
             type: "string",
             enum: [],
             required_params: [],
-            parameter: {},
+            parameter: {}
           };
         } else {
           fields[key] = {
@@ -132,7 +132,7 @@ class Helper {
             type: "string",
             enum: [],
             required_params: [],
-            parameter: {},
+            parameter: {}
           };
         }
       }

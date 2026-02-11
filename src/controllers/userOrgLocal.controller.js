@@ -9,8 +9,8 @@ const userOrgLocalToken = async (req, res, next) => {
   const response = await axios.get(apiUrl, {
     headers: {
       authkey: process.env.ADMIN_API_KEY,
-      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", ""),
-    },
+      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", "")
+    }
   });
 
   const token = response.data.data.jwt;
@@ -26,8 +26,8 @@ const switchUserOrgLocal = async (req, res, next) => {
   const response = await axios.get(apiUrl, {
     headers: {
       authkey: process.env.ADMIN_API_KEY,
-      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", ""),
-    },
+      proxy_auth_token: req.headers.proxy_auth_token || req.headers.authorization?.replace("Bearer ", "")
+    }
   });
   // const token = reissueToken(jwtToken);
   const token = response.data.data.jwt;
@@ -42,9 +42,7 @@ const switchUserOrgLocal = async (req, res, next) => {
 const updateUserDetails = async (req, res, next) => {
   const { company_id, company, user_id, user } = req.body;
   const isCompanyUpdate = company_id && company;
-  const updateObject = isCompanyUpdate
-    ? { company_id, company: { meta: company?.meta } }
-    : { user_id, Cuser: { meta: user?.meta } };
+  const updateObject = isCompanyUpdate ? { company_id, company: { meta: company?.meta } } : { user_id, Cuser: { meta: user?.meta } };
 
   const data = await updateProxyDetails(updateObject);
 
@@ -57,7 +55,7 @@ const updateUserDetails = async (req, res, next) => {
   res.locals = {
     message: isCompanyUpdate ? "Company details updated successfully" : "User details updated successfully",
     data,
-    success: true,
+    success: true
   };
   req.statusCode = 200;
   return next();
@@ -71,7 +69,7 @@ const removeUsersFromOrg = async (req, res, next) => {
   const user_detail = await getProxyDetails({
     company_id: companyId,
     pageNo: 1,
-    itemsPerPage: 1,
+    itemsPerPage: 1
   });
 
   const ownerId = user_detail.data.data[0].id;

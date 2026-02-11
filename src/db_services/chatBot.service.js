@@ -1,8 +1,8 @@
 import ChatBotModel from "../mongoModel/ChatBot.model.js";
 
-const create = async (chatBotData) => {
+const create = async (chatBotData, session = null) => {
   const newChatBot = new ChatBotModel(chatBotData);
-  const savedChatBot = await newChatBot.save();
+  const savedChatBot = await newChatBot.save({ session });
   return savedChatBot;
 };
 
@@ -30,20 +30,12 @@ const updateChatbotConfig = async (botId, config) => {
 };
 
 const addBridge = async (botId, bridgeId) => {
-  const updatedChatBot = await ChatBotModel.findByIdAndUpdate(
-    botId,
-    { $addToSet: { bridge: bridgeId } },
-    { new: true }
-  ).populate("bridge");
+  const updatedChatBot = await ChatBotModel.findByIdAndUpdate(botId, { $addToSet: { bridge: bridgeId } }, { new: true }).populate("bridge");
   return updatedChatBot;
 };
 
 const removeBridge = async (botId, bridgeId) => {
-  const updatedChatBot = await ChatBotModel.findByIdAndUpdate(
-    botId,
-    { $pull: { bridge: bridgeId } },
-    { new: true }
-  ).populate("bridge");
+  const updatedChatBot = await ChatBotModel.findByIdAndUpdate(botId, { $pull: { bridge: bridgeId } }, { new: true }).populate("bridge");
   return updatedChatBot;
 };
 
@@ -60,5 +52,5 @@ export default {
   updateChatbotConfig,
   addBridge,
   removeBridge,
-  findById,
+  findById
 };
