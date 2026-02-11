@@ -20,10 +20,9 @@ const template = new mongoose.Schema({
   visible: {
     type: Boolean,
     default: true
-  },
-  
+  }
 });
 
 const templateModel = mongoose.model("template", template);
 
-export default templateModel
+export default templateModel;

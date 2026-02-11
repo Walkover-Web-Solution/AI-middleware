@@ -1,39 +1,44 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const actionTypeModel = new Schema({
-  description: {
-    type: String
+const actionTypeModel = new Schema(
+  {
+    description: {
+      type: String
+    },
+    type: {
+      type: String
+    },
+    variable: {
+      type: String
+    }
   },
-  type :{
-    type : String
-  },
-  variable : {
-    type : String 
+  {
+    _id: false
   }
-}, {
-  _id: false
-});
+);
 
-const pageConfigSchema = new Schema({
+const pageConfigSchema = new Schema(
+  {
     url_slugname: {
-        type: String,
-        unique: true,
-        sparse: true // this makes sure that if the url_slugname is not present in the document
-        // mongo will still create an index on the field, and will not throw an error if the field is not present in the document.
-        // This is useful when we are using the same schema for multiple collections, and not all collections have this field.
+      type: String,
+      unique: true,
+      sparse: true // this makes sure that if the url_slugname is not present in the document
+      // mongo will still create an index on the field, and will not throw an error if the field is not present in the document.
+      // This is useful when we are using the same schema for multiple collections, and not all collections have this field.
     },
     availability: {
-        type: String,
-        enum: ['public', 'private'],
-        default: 'private'
+      type: String,
+      enum: ["public", "private"],
+      default: "private"
     },
     allowedUsers: {
-        type: [String],
-        default: []
+      type: [String],
+      default: []
     }
-}, { _id: false });
-
+  },
+  { _id: false }
+);
 
 const configuration = new mongoose.Schema({
   org_id: {
@@ -50,9 +55,9 @@ const configuration = new mongoose.Schema({
   },
   bridgeType: {
     type: String,
-    enum: ['api', 'chatbot'],
+    enum: ["api", "chatbot"],
     required: true,
-    default: 'chatbot'
+    default: "chatbot"
   },
   name: {
     type: String,
@@ -69,6 +74,10 @@ const configuration = new mongoose.Schema({
   gpt_memory: {
     type: Boolean,
     default: false
+  },
+  gpt_memory_context: {
+    type: String,
+    default: null
   },
   folder_id: {
     type: String,
@@ -202,7 +211,7 @@ const configuration = new mongoose.Schema({
     type: String,
     required: true
   },
-  status:{
+  status: {
     type: Number,
     default: 1,
     required: true
@@ -213,7 +222,7 @@ const configuration = new mongoose.Schema({
   },
   responseRef: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ResponseType'
+    ref: "ResponseType"
   },
   versions: {
     type: [String],
@@ -222,19 +231,19 @@ const configuration = new mongoose.Schema({
   defaultQuestions: {
     type: Array
   },
-  actions : {
+  actions: {
     type: Map,
-    of :  actionTypeModel
+    of: actionTypeModel
   },
-  hello_id :{
+  hello_id: {
     type: String
   },
-  IsstarterQuestionEnable:{
+  IsstarterQuestionEnable: {
     type: Boolean
   },
-  page_config : {
-    type : pageConfigSchema,
-    default : null,
+  page_config: {
+    type: pageConfigSchema,
+    default: null
   },
   apikey_object_id: {
     type: Object

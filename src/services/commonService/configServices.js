@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import { createThreadHistory, getThreadMessageHistory } from "../../controllers/conversation.controller.js";
+import crypto from "crypto";
+import { getThreadMessageHistory } from "../../controllers/conversation.controller.js";
 import configurationService from "../../db_services/configuration.service.js";
 import { createThreadHistrorySchema } from "../../validation/joi_validation/bridge.validation.js";
 import { updateMessageSchema } from "../../validation/joi_validation/validation.js";
@@ -7,11 +7,10 @@ import conversationDbService from "../../db_services/conversation.service.js";
 import { generateIdForOpenAiFunctionCall } from "../../services/utils/utility.service.js";
 import { FineTuneSchema } from "../../validation/fineTuneValidation.js";
 import { chatbotHistoryValidationSchema } from "../../validation/joi_validation/chatBot.validation.js";
-import { send_error_to_webhook } from "../sendErrorWebhook.service.js"
+import { send_error_to_webhook } from "../sendErrorWebhook.service.js";
 import { findThreadHistoryFormatted, updateStatus, createConversationLog } from "../../db_services/history.service.js";
 
 const getThreads = async (req, res, next) => {
-
   let page = parseInt(req.query.pageNo) || 1;
   let pageSize = parseInt(req.query.limit) || 30;
   let { bridge_id } = req.params;
@@ -22,7 +21,9 @@ const getThreads = async (req, res, next) => {
   let bridge = {};
 
   if (bridge_slugName) {
-    bridge = req.chatBot?.ispublic ? await configurationService.getAgentByUrlSlugname(bridge_slugName) : await configurationService.getAgentIdBySlugname(org_id, bridge_slugName);
+    bridge = req.chatBot?.ispublic
+      ? await configurationService.getAgentByUrlSlugname(bridge_slugName)
+      : await configurationService.getAgentIdBySlugname(org_id, bridge_slugName);
     bridge_id = bridge?._id?.toString();
     starterQuestion = !bridge?.IsstarterQuestionEnable ? [] : bridge?.starterQuestion;
     org_id = req.chatBot?.ispublic ? bridge?.org_id : org_id;
@@ -30,18 +31,17 @@ const getThreads = async (req, res, next) => {
   let threads = await findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
   threads = {
     ...threads,
-    starterQuestion,
-  }
+    starterQuestion
+  };
   res.locals = threads;
   req.statusCode = 200;
   return next();
 };
 
-
 const FineTuneData = async (req, res, next) => {
   const { thread_ids, user_feedback } = req.body;
   const org_id = req.profile?.org?.id;
-  const { bridge_id } = req.params
+  const { bridge_id } = req.params;
   await FineTuneSchema.validateAsync({
     bridge_id,
     user_feedback
@@ -50,16 +50,8 @@ const FineTuneData = async (req, res, next) => {
   let result = [];
 
   for (const thread_id of thread_ids) {
-    const threadData = await conversationDbService.findThreadsForFineTune(
-      org_id,
-      thread_id,
-      bridge_id,
-      user_feedback
-    );
-    const system_prompt = await conversationDbService.system_prompt_data(
-      org_id,
-      bridge_id
-    );
+    const threadData = await conversationDbService.findThreadsForFineTune(org_id, thread_id, bridge_id, user_feedback);
+    const system_prompt = await conversationDbService.system_prompt_data(org_id, bridge_id);
     let filteredData = [];
 
     for (let i = 0; i < threadData.length; i++) {
@@ -67,21 +59,10 @@ const FineTuneData = async (req, res, next) => {
       const nextItem = threadData[i + 1];
       const nextNextItem = threadData[i + 2];
 
-      if (
-        currentItem.role === "user" &&
-        nextItem &&
-        nextItem.role === "assistant" &&
-        nextItem.id === currentItem.id + 1
-      ) {
+      if (currentItem.role === "user" && nextItem && nextItem.role === "assistant" && nextItem.id === currentItem.id + 1) {
         filteredData.push(currentItem, nextItem);
         i += 1;
-      } else if (
-        currentItem.role === "user" &&
-        nextItem &&
-        nextItem.role === "tools_call" &&
-        nextNextItem &&
-        nextNextItem.role === "assistant"
-      ) {
+      } else if (currentItem.role === "user" && nextItem && nextItem.role === "tools_call" && nextNextItem && nextNextItem.role === "assistant") {
         filteredData.push(currentItem, nextItem, nextNextItem);
         i += 2;
       }
@@ -89,8 +70,8 @@ const FineTuneData = async (req, res, next) => {
     let messages = [
       {
         role: "system",
-        content: system_prompt.system_prompt,
-      },
+        content: system_prompt.system_prompt
+      }
     ];
 
     for (let i = 0; i < filteredData.length; i++) {
@@ -105,9 +86,9 @@ const FineTuneData = async (req, res, next) => {
             type: "function",
             function: {
               name: functionObj.name || "",
-              arguments: functionObj.arguments || "{}",
+              arguments: functionObj.arguments || "{}"
             },
-            response: functionObj.response || "",
+            response: functionObj.response || ""
           });
         }
 
@@ -116,15 +97,15 @@ const FineTuneData = async (req, res, next) => {
           tool_calls: toolCalls.map(({ id, type, function: func }) => ({
             id,
             type,
-            function: func,
-          })),
+            function: func
+          }))
         });
 
         for (const toolCall of toolCalls) {
           messages.push({
             role: "tool",
             tool_call_id: toolCall.id,
-            content: toolCall.response,
+            content: toolCall.response
           });
         }
         if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
@@ -147,10 +128,10 @@ const FineTuneData = async (req, res, next) => {
         }
         const message = {
           role: item.role,
-          content: messageContent,
-        }
+          content: messageContent
+        };
         if (item.updated_message !== null) {
-          message.weight = 1
+          message.weight = 1;
         }
         messages.push(message);
       }
@@ -161,14 +142,14 @@ const FineTuneData = async (req, res, next) => {
   }
 
   let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
-  if (jsonlData == '') {
+  if (jsonlData == "") {
     jsonlData = {
-      "messages": []
-    }
+      messages: []
+    };
   }
 
-  res.locals = { data: jsonlData, contentType: "text/plain" }
-  req.statusCode = 200
+  res.locals = { data: jsonlData, contentType: "text/plain" };
+  req.statusCode = 200;
   return next();
 };
 
@@ -186,36 +167,35 @@ const updateThreadMessage = async (req, res, next) => {
   res.locals = result;
   req.statusCode = result?.success ? 200 : 400;
   return next();
-}
+};
 
 const updateMessageStatus = async (req, res, next) => {
   const status = req.params.status;
   const message_id = req.body.message_id;
   const bridge_id = req.body.agent_id;
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
-  let error_message = "User reacted thumbs down on response"
+  let error_message = "User reacted thumbs down on response";
+
+  let result;
   if (status === "2") {
-    sendError(bridge_id, org_id, error_message, "thumbsdown");
+    // Run both operations in parallel since they don't depend on each other
+    [result] = await Promise.all([updateStatus({ status, message_id }), sendError(bridge_id, org_id, error_message, "thumbsdown")]);
+  } else {
+    result = await updateStatus({ status, message_id });
   }
-  const result = await updateStatus({ status, message_id })
 
   res.locals = result;
   req.statusCode = result?.success ? 200 : 400;
   return next();
-}
+};
 
 const sendError = async (bridge_id, org_id, error_message, error_type) => {
   send_error_to_webhook(bridge_id, org_id, error_message, error_type);
-}
+};
 
 export const createEntry = async (req, res, next) => {
-  const {
-    thread_id,
-    bridge_id
-  } = req.params;
-  const {
-    message
-  } = req.body;
+  const { thread_id, bridge_id } = req.params;
+  const { message } = req.body;
   const message_id = crypto.randomUUID();
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
   const result = (await configurationService.getAgents(bridge_id))?.bridges;
@@ -229,7 +209,7 @@ export const createEntry = async (req, res, next) => {
     message_by: "assistant",
     message_id: message_id,
     sub_thread_id: thread_id
-  }
+  };
   try {
     await createThreadHistrorySchema.validateAsync(payload);
   } catch (error) {
@@ -273,18 +253,23 @@ const getThreadMessages = async (req, res, next) => {
   res.locals = threads;
   req.statusCode = 200;
   return next();
-}
+};
 
 const getAllSubThreadsController = async (req, res, next) => {
   const { thread_id } = req.params;
   const { bridge_id, error, version_id } = req.query;
   const isError = error === "false" ? false : true;
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
-  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
+
   if (isError || version_id) {
-    const sub_thread_ids = await conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError);
-    const threadsWithDisplayNames = sub_thread_ids.map(sub_thread_id => {
-      const thread = threads.find(t => t.sub_thread_id === sub_thread_id);
+    // Run both queries in parallel since they don't depend on each other
+    const [threads, sub_thread_ids] = await Promise.all([
+      conversationDbService.getSubThreads(org_id, thread_id, bridge_id),
+      conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError)
+    ]);
+
+    const threadsWithDisplayNames = sub_thread_ids.map((sub_thread_id) => {
+      const thread = threads.find((t) => t.sub_thread_id === sub_thread_id);
       return {
         sub_thread_id,
         display_name: thread ? thread.display_name : sub_thread_id
@@ -292,12 +277,14 @@ const getAllSubThreadsController = async (req, res, next) => {
     });
     return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
   }
+
+  const threads = await conversationDbService.getSubThreads(org_id, thread_id, bridge_id);
   // sort the threads accroing to their hits in PG.
   const sortedThreads = await conversationDbService.sortThreadsByHits(threads);
   res.locals = { threads: sortedThreads, success: true };
   req.statusCode = 200;
   return next();
-}
+};
 const getAllUserUpdates = async (req, res, next) => {
   const { version_id } = req.params;
   const org_id = req?.profile?.org?.id || req?.profile?.org_id;
@@ -307,8 +294,7 @@ const getAllUserUpdates = async (req, res, next) => {
   res.locals = { userData, success: true };
   req.statusCode = 200;
   return next();
-}
-
+};
 
 export default {
   getThreads,
@@ -320,4 +306,4 @@ export default {
   getThreadMessages,
   getAllSubThreadsController,
   getAllUserUpdates
-} 
+};

@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-export default ((sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   class user_bridge_config_history extends Model {
     /**
      * Helper method for defining associations.
@@ -11,41 +11,44 @@ export default ((sequelize, DataTypes) => {
       // define association here
     }
   }
-  user_bridge_config_history.init({
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
+  user_bridge_config_history.init(
+    {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER
+      },
+      user_id: {
+        allowNull: false,
+        type: DataTypes.INTEGER
+      },
+      time: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+      },
+      type: {
+        allowNull: false,
+        type: DataTypes.STRING
+      },
+      bridge_id: {
+        allowNull: false,
+        type: DataTypes.STRING
+      },
+      version_id: {
+        allowNull: false,
+        type: DataTypes.STRING
+      },
+      org_id: {
+        allowNull: false,
+        type: DataTypes.STRING
+      }
     },
-    user_id: {
-      allowNull: false,
-      type: DataTypes.INTEGER
-    },
-    time: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    },
-    type: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    bridge_id: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    version_id: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    org_id: {
-      allowNull: false,
-      type: DataTypes.STRING
+    {
+      sequelize,
+      modelName: "user_bridge_config_history",
+      timestamps: false
     }
-  }, {
-    sequelize,
-    modelName: "user_bridge_config_history",
-    timestamps: false
-  });
+  );
   return user_bridge_config_history;
-});
+};

@@ -8,11 +8,15 @@ import agentConfigValidation from "../validation/joi_validation/agentConfig.vali
 
 const router = express.Router();
 
-router.delete('/redis', validate(utilsValidation.clearRedisCache), utilsController.clearRedisCache);
-router.get('/redis/:id', validate(utilsValidation.getRedisCache), utilsController.getRedisCache);
-router.post('/call-gtwy', middleware, validate(utilsValidation.callAi), utilsController.callGtwy);
-router.get('/getBridgesAndVersions/:modelName', validate(agentConfigValidation.getAgentsByModel), agentConfigController.getAgentsAndVersionsByModelController);
-router.post('/token', middleware, validate(utilsValidation.generateToken), utilsController.generateToken);
-router.get('/users-details', middleware, utilsController.getCurrentOrgUsers);
+router.delete("/redis", validate(utilsValidation.clearRedisCache), utilsController.clearRedisCache);
+router.get("/redis/:id", validate(utilsValidation.getRedisCache), utilsController.getRedisCache);
+router.post("/call-gtwy", middleware, validate(utilsValidation.callAi), utilsController.callGtwy);
+router.get(
+  "/getBridgesAndVersions/:modelName",
+  validate(agentConfigValidation.getAgentsByModel),
+  agentConfigController.getAgentsAndVersionsByModelController
+);
+router.post("/token", middleware, validate(utilsValidation.generateToken), utilsController.generateToken);
+router.get("/users-details", middleware, utilsController.getCurrentOrgUsers);
 
 export default router;

@@ -1,5 +1,5 @@
 import { sendRequest } from "./request.utils.js";
-import RTLayer from 'rtlayer-node';
+import RTLayer from "rtlayer-node";
 
 class ResponseSender {
   constructor() {
@@ -9,17 +9,10 @@ class ResponseSender {
   async sendResponse({ rtlLayer, webhook, data, reqBody, headers }) {
     const { rtlOptions, ...dataToSend } = reqBody || {};
     if (rtlLayer) {
-      await this.rtlayer.message(
-        { ...dataToSend, ...data },
-        rtlOptions
-      );
+      await this.rtlayer.message({ ...dataToSend, ...data }, rtlOptions);
     }
     if (webhook) {
-      await sendRequest(webhook, 
-        { ...reqBody, ...data }, 
-        'POST', 
-        headers
-      );
+      await sendRequest(webhook, { ...reqBody, ...data }, "POST", headers);
     }
     return;
   }

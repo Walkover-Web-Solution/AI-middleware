@@ -13,7 +13,7 @@ const getThread = async (thread_id, org_id, bridge_id) => {
   }
 };
 
-const getChatData = async chat_id => {
+const getChatData = async (chat_id) => {
   try {
     const chat = await conversationDbService.findChat(chat_id);
     return {
@@ -28,7 +28,18 @@ const getChatData = async chat_id => {
 
 const getThreadHistory = async ({ thread_id, org_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error }) => {
   try {
-    const chats = await conversationDbService.findMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize, user_feedback, version_id, isChatbot, error);
+    const chats = await conversationDbService.findMessage(
+      org_id,
+      thread_id,
+      bridge_id,
+      sub_thread_id,
+      page,
+      pageSize,
+      user_feedback,
+      version_id,
+      isChatbot,
+      error
+    );
     return {
       success: true,
       data: chats?.conversations,
@@ -64,7 +75,7 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
     const chats = await conversationDbService.findThreadMessage(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
     return {
       success: true,
-      data: chats?.conversations,
+      data: chats?.conversations
     };
   } catch (error) {
     console.error("getThreadMessageHistory error:", error);
@@ -72,12 +83,4 @@ const getThreadMessageHistory = async ({ thread_id, org_id, bridge_id, sub_threa
   }
 };
 
-
-export {
-  getThread,
-  getChatData,
-  getThreadHistory,
-  getThreadHistoryByMessageId,
-  createThreadHistory,
-  getThreadMessageHistory
-};
+export { getThread, getChatData, getThreadHistory, getThreadHistoryByMessageId, createThreadHistory, getThreadMessageHistory };

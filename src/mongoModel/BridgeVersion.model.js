@@ -1,19 +1,22 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const actionTypeModel = new Schema({
-  description: {
-    type: String
+const actionTypeModel = new Schema(
+  {
+    description: {
+      type: String
+    },
+    type: {
+      type: String
+    },
+    variable: {
+      type: String
+    }
   },
-  type :{
-    type : String
-  },
-  variable : {
-    type : String 
+  {
+    _id: false
   }
-}, {
-  _id: false
-});
+);
 const version = new mongoose.Schema({
   org_id: {
     type: String,
@@ -23,8 +26,8 @@ const version = new mongoose.Schema({
     type: String,
     required: true
   },
-  apikey_object_id:{
-      type :Object
+  apikey_object_id: {
+    type: Object
   },
   service: {
     type: String,
@@ -41,6 +44,10 @@ const version = new mongoose.Schema({
   gpt_memory: {
     type: Boolean,
     default: false
+  },
+  gpt_memory_context: {
+    type: String,
+    default: null
   },
   folder_id: {
     type: String,
@@ -150,7 +157,7 @@ const version = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  status:{
+  status: {
     type: Number,
     default: 1,
     required: true
@@ -161,16 +168,16 @@ const version = new mongoose.Schema({
   },
   responseRef: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ResponseType'
+    ref: "ResponseType"
   },
   defaultQuestions: {
     type: Array
   },
-  actions : {
+  actions: {
     type: Map,
-    of :  actionTypeModel
+    of: actionTypeModel
   },
-  hello_id :{
+  hello_id: {
     type: String
   },
   connected_agents: {

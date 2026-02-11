@@ -1,91 +1,85 @@
-
-
 async function callOpenAIModelsApi(apiKey) {
-    const url = 'https://api.openai.com/v1/models';
-    const headers = {
-      'Authorization': `Bearer ${apiKey}`
-    };
+  const url = "https://api.openai.com/v1/models";
+  const headers = {
+    Authorization: `Bearer ${apiKey}`
+  };
 
-    try {
-      const response = await fetch(url, { method: 'GET', headers });
+  try {
+    const response = await fetch(url, { method: "GET", headers });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, error: error.message };
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 }
 
 async function callAnthropicApi(apiKey, model = "claude-3-7-sonnet-20250219") {
-    const url = 'https://api.anthropic.com/v1/messages';
-    const headers = {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json'
-    };
+  const url = "https://api.anthropic.com/v1/messages";
+  const headers = {
+    "x-api-key": apiKey,
+    "anthropic-version": "2023-06-01",
+    "content-type": "application/json"
+  };
 
-    const body = JSON.stringify({
-      model: model,
-      max_tokens: 1,
-      messages: [
-        { role: "user", content: "Hello, world" }
-      ]
-    });
+  const body = JSON.stringify({
+    model: model,
+    max_tokens: 1,
+    messages: [{ role: "user", content: "Hello, world" }]
+  });
 
-    try {
-      const response = await fetch(url, { method: 'POST', headers, body });
+  try {
+    const response = await fetch(url, { method: "POST", headers, body });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, error: error.message };
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 }
 
 async function callGroqApi(apiKey, model = "llama-3.3-70b-versatile") {
-    const url = 'https://api.groq.com/openai/v1/chat/completions';
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    };
+  const url = "https://api.groq.com/openai/v1/chat/completions";
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`
+  };
 
-    const body = JSON.stringify({
-      model: model,
-      messages: [
-        { role: "user", content: "hii" }
-      ]
-    });
+  const body = JSON.stringify({
+    model: model,
+    messages: [{ role: "user", content: "hii" }]
+  });
 
-    try {
-      const response = await fetch(url, { method: 'POST', headers, body });
+  try {
+    const response = await fetch(url, { method: "POST", headers, body });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, error: error.message };
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 }
 
 async function callOpenRouterApi(apiKey) {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
-      method: 'GET',
+    const response = await fetch("https://openrouter.ai/api/v1/models", {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      }
     });
 
     if (!response.ok) {
@@ -99,21 +93,21 @@ async function callOpenRouterApi(apiKey) {
   }
 }
 
-async function callMistralApi(apiKey, model = 'mistral-small-latest') {
+async function callMistralApi(apiKey, model = "mistral-small-latest") {
   try {
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: model,
         messages: [
           {
-            role: 'user',
-            content: 'hi'
+            role: "user",
+            content: "hi"
           }
         ]
       })
@@ -130,20 +124,20 @@ async function callMistralApi(apiKey, model = 'mistral-small-latest') {
   }
 }
 
-async function callGeminiApi(apiKey, model = 'gemini-2.5-flash') {
+async function callGeminiApi(apiKey) {
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
       },
       body: JSON.stringify({
         contents: [
           {
             parts: [
               {
-                text: 'hi'
+                text: "hi"
               }
             ]
           }
@@ -163,20 +157,20 @@ async function callGeminiApi(apiKey, model = 'gemini-2.5-flash') {
   }
 }
 
-async function callAiMlApi(apiKey, model = 'llama-3.1-8b-instruct') {
+async function callAiMlApi(apiKey, model = "llama-3.1-8b-instruct") {
   try {
-    const response = await fetch('https://backend.ai.ml/openai/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://backend.ai.ml/openai/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: model,
         messages: [
           {
-            role: 'user',
-            content: 'Hello!'
+            role: "user",
+            content: "Hello!"
           }
         ]
       })
@@ -195,10 +189,10 @@ async function callAiMlApi(apiKey, model = 'llama-3.1-8b-instruct') {
 
 async function callGrokApi(apiKey) {
   try {
-    const response = await fetch('https://api.x.ai/v1/models', {
-      method: 'GET',
+    const response = await fetch("https://api.x.ai/v1/models", {
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`
       }
     });
 
@@ -213,14 +207,4 @@ async function callGrokApi(apiKey) {
   }
 }
 
-
-export {
-  callOpenAIModelsApi,
-  callAnthropicApi,
-  callGroqApi,
-  callOpenRouterApi,
-  callMistralApi,
-  callGeminiApi,
-  callAiMlApi,
-  callGrokApi
-}
+export { callOpenAIModelsApi, callAnthropicApi, callGroqApi, callOpenRouterApi, callMistralApi, callGeminiApi, callAiMlApi, callGrokApi };
