@@ -408,12 +408,30 @@ const widthStyle = node.width ? `width:${node.width}px;flex:0 0 ${node.width}px;
             const blockClass = node.block ? "btn-block" : "";
             const sizeClass = node.size === "sm" ? "btn-sm" : node.size === "lg" ? "btn-lg" : "";
 
+            let iconStartHtml = "";
+            if (node.iconStart) {
+                iconStartHtml = `
+<span class="inline-flex h-5 w-5 items-center justify-center">
+  <span class="text-[0.7rem] uppercase tracking-tight">${node.iconStart}</span>
+</span>`;
+            }
+
+            let dataAttrs = "";
+            if (node.onClickAction) {
+                if (node.onClickAction.type) {
+                    dataAttrs += ` data-action-type="${node.onClickAction.type}"`;
+                }
+                if (node.onClickAction.payload) {
+                    dataAttrs += ` data-action-payload='${JSON.stringify(node.onClickAction.payload)}'`;
+                }
+            }
+
             return `
 <button
   type="${node.submit ? "submit" : "button"}"
-  class="btn ${styleClass} ${blockClass} ${sizeClass}"
+  class="btn ${styleClass} ${blockClass} ${sizeClass}"${dataAttrs}
 >
-  ${node.label}
+  ${iconStartHtml}${iconStartHtml ? " " : ""}${node.label}
 </button>
 `.trim();
         }
@@ -436,11 +454,14 @@ function renderCardToTailwind(cardJson) {
  * Generates a JSON schema from a card template
  * @param {Object} cardJson - The card JSON template
  * @param {string} schemaName - Name for the schema (default: "nested_ui_components")
- * @returns {Object} - JSON schema object with properties and required fields
+ * @param {string} varPrefix - Variable prefix (default: "vars")
+ * @returns {Object} - Object containing schema and variables
  */
-function generateSchemaFromCard(cardJson, schemaName = "nested_ui_components") {
+function generateSchemaFromCard(cardJson, schemaName = "nested_ui_components", varPrefix = "vars") {
   const descMap = buildDescriptions(cardJson);
-  return buildSchemaFromDescriptionMap(schemaName, descMap);
+  const variables = buildVariables(cardJson, descMap, varPrefix);
+  const schema = buildSchemaFromVariables(schemaName, variables);
+  return { schema, variables };
 }
 
 function buildDescriptions(template) {
@@ -543,6 +564,30 @@ function buildSchemaFromDescriptionMap(name, descMap) {
   };
 }
 
+function buildSchemaFromVariables(name, variables) {
+  const properties = {};
+  const required = [];
+
+  for (const path of Object.keys(variables)) {
+    properties[path] = { 
+      type: "string", 
+      description: variables[path].description || "" 
+    };
+    required.push(path);
+  }
+
+  return {
+    name,
+    schema: {
+      type: "object",
+      properties,
+      required,
+      additionalProperties: false,
+    },
+    strict: true,
+  };
+}
+
 function getByPath(obj, path) {
   try {
     const tokens = [];
@@ -578,4 +623,4 @@ function buildVariables(template, descMap, varPrefix = "vars") {
   return vars;
 }
 
-export { renderCardToTailwind, applyVariables, renderNode, generateSchemaFromCard };
+export { renderCardToTailwind, applyVariables, renderNode, generateSchemaFromCard, buildVariables, buildSchemaFromVariables };

@@ -10,28 +10,24 @@ import { generateSchemaFromCard } from "../utils/Formatter.utility.js";
 export const createRichUiTemplate = async (req, res, next) => {
     try {
         const { name, description, json_schema, template_format, html } = req.body;
-        const user_id = req.profile.user.id;
+        const { user: { id: user_id }, org_id } = req.profile;
 
-        let schema = json_schema;
-        if (!schema && template_format) {
-            schema = generateSchemaFromCard(template_format);
-        }
-
-        if (!name || !description || !schema || !template_format || !html) {
+        if (!name || !description || !template_format || !html) {
             res.locals = { success: false, message: "Missing required fields" };
             req.statusCode = 400;
             return next();
         }
 
-        const templateData = {
+        const schema = json_schema || generateSchemaFromCard(template_format).schema;
+
+        const result = await createTemplate({
             name,
             description,
             json_schema: schema,
             template_format,
-            html
-        };
-
-        const result = await createTemplate(templateData, user_id);
+            html,
+            org_id
+        }, user_id);
 
         res.locals = result;
         req.statusCode = 201;
@@ -46,9 +42,9 @@ export const createRichUiTemplate = async (req, res, next) => {
 // Get all templates
 export const getRichUiTemplates = async (req, res, next) => {
     try {
-        const result = await getTemplates();
-
-        res.locals = result;
+        const { org_id } = req.profile;
+        
+        res.locals = await getTemplates(org_id);
         req.statusCode = 200;
         return next();
     } catch (error) {
@@ -63,22 +59,15 @@ export const getRichUiTemplates = async (req, res, next) => {
 export const updateRichUiTemplate = async (req, res, next) => {
     try {
         const { template_id } = req.params;
-        const user_id = req.profile.user.id;
-        const requestData = req.body;
-
-        // Filter to only include keys that are provided and have values
-        const updateData = {};
+        const { user: { id: user_id } } = req.profile;
         const allowedFields = ['name', 'description', 'json_schema', 'template_format', 'html'];
 
-        allowedFields.forEach(field => {
-            if (requestData.hasOwnProperty(field) && requestData[field] !== undefined && requestData[field] !== null) {
-                updateData[field] = requestData[field];
-            }
-        });
+        const updateData = Object.fromEntries(
+            Object.entries(req.body)
+                .filter(([key, value]) => allowedFields.includes(key) && value != null)
+        );
 
-        const result = await updateTemplate(template_id, updateData, user_id);
-
-        res.locals = result;
+        res.locals = await updateTemplate(template_id, updateData, user_id);
         req.statusCode = 200;
         return next();
     } catch (error) {
@@ -92,11 +81,9 @@ export const updateRichUiTemplate = async (req, res, next) => {
 export const deleteRichUiTemplate = async (req, res, next) => {
     try {
         const { template_id } = req.params;
-        const user_id = req.profile.user.id;
+        const { user: { id: user_id } } = req.profile;
 
-        const result = await deleteTemplate(template_id, user_id);
-
-        res.locals = result;
+        res.locals = await deleteTemplate(template_id, user_id);
         req.statusCode = 200;
         return next();
     } catch (error) {

@@ -21,11 +21,14 @@ async function createTemplate(templateData, user_id) {
 }
 
 // Get all templates
-async function getTemplates() {
+async function getTemplates(org_id) {
     try {
-        const templates = await RichUiTemplate.find({})
-            .populate('created_by', 'name email')
-            .populate('updated_by', 'name email')
+        const templates = await RichUiTemplate.find({
+                $or: [
+                    { is_public: true },
+                    { org_id: org_id }
+                ]
+            })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -54,8 +57,6 @@ async function updateTemplate(template_id, updateData, user_id) {
             },
             { new: true, runValidators: true }
         )
-        .populate('created_by', 'name email')
-        .populate('updated_by', 'name email')
         .lean();
 
         if (!updatedTemplate) {

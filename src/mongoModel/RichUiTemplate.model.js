@@ -28,6 +28,14 @@ const richUiTemplateSchema = new mongoose.Schema({
     },
     updated_by: {
         type: String,
+    },
+    org_id: {
+        type: String,
+        required: true
+    },
+    is_public: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
