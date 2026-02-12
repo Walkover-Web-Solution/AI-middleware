@@ -9,16 +9,16 @@ const createAlert = {
       webhookConfiguration: Joi.object({
         url: Joi.string().uri().optional(),
         headers: Joi.object().optional(),
-        user_url: Joi.string().uri().optional(),
+        user_url: Joi.string().uri().optional()
       })
         .unknown(true)
         .required()
         .messages({
-          "any.required": "webhookConfiguration is required",
+          "any.required": "webhookConfiguration is required"
         }),
       name: Joi.string().required().messages({
         "string.empty": "name is required",
-        "any.required": "name is required",
+        "any.required": "name is required"
       }),
       bridges: Joi.array()
         .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
@@ -26,32 +26,23 @@ const createAlert = {
         .when("alertType", {
           is: Joi.array().items(Joi.string().valid("broadcast_response")),
           then: Joi.optional(),
-          otherwise: Joi.required(),
+          otherwise: Joi.required()
         })
         .messages({
           "array.min": "bridges must contain at least one bridge ID",
-          "any.required": "bridges is required",
+          "any.required": "bridges is required"
         }),
       alertType: Joi.array()
-        .items(
-          Joi.string().valid(
-            "thumbsdown",
-            "Variable",
-            "Error",
-            "metrix_limit_reached",
-            "retry_mechanism",
-            "broadcast_response"
-          )
-        )
+        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism", "broadcast_response"))
         .min(1)
         .required()
         .messages({
           "array.min": "alertType must contain at least one type",
-          "any.required": "alertType is required",
+          "any.required": "alertType is required"
         }),
-      limit: Joi.number().min(0).optional(),
+      limit: Joi.number().min(0).optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const getAllAlerts = {
@@ -66,8 +57,8 @@ const updateAlert = {
         .required()
         .messages({
           "string.pattern.base": "id must be a valid MongoDB ObjectId",
-          "any.required": "id is required",
-        }),
+          "any.required": "id is required"
+        })
     })
     .unknown(true),
   body: Joi.object()
@@ -75,7 +66,7 @@ const updateAlert = {
       webhookConfiguration: Joi.object({
         url: Joi.string().uri().optional(),
         headers: Joi.object().optional(),
-        user_url: Joi.string().uri().optional(),
+        user_url: Joi.string().uri().optional()
       })
         .unknown(true)
         .optional(),
@@ -84,19 +75,10 @@ const updateAlert = {
         .optional(),
       name: Joi.string().optional(),
       alertType: Joi.array()
-        .items(
-          Joi.string().valid(
-            "thumbsdown",
-            "Variable",
-            "Error",
-            "metrix_limit_reached",
-            "retry_mechanism",
-            "broadcast_response"
-          )
-        )
-        .optional(),
+        .items(Joi.string().valid("thumbsdown", "Variable", "Error", "metrix_limit_reached", "retry_mechanism", "broadcast_response"))
+        .optional()
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 const deleteAlert = {
@@ -107,15 +89,15 @@ const deleteAlert = {
         .required()
         .messages({
           "string.pattern.base": "id must be a valid MongoDB ObjectId",
-          "any.required": "id is required",
-        }),
+          "any.required": "id is required"
+        })
     })
-    .unknown(true),
+    .unknown(true)
 };
 
 export default {
   createAlert,
   getAllAlerts,
   updateAlert,
-  deleteAlert,
+  deleteAlert
 };

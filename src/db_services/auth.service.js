@@ -24,7 +24,7 @@ const saveAuthTokenInDb = async (name, redirection_url, org_id) => {
         isNew: false,
         client_id: existingAuth.client_id,
         redirection_url: existingAuth.redirection_url,
-        name: existingAuth.name,
+        name: existingAuth.name
       };
     }
 
@@ -35,14 +35,14 @@ const saveAuthTokenInDb = async (name, redirection_url, org_id) => {
       name,
       client_id,
       redirection_url,
-      org_id,
+      org_id
     });
 
     return {
       isNew: true,
       client_id,
       redirection_url,
-      name,
+      name
     };
   } catch (error) {
     throw new Error(`Failed to save auth token: ${error.message}`);
@@ -53,7 +53,7 @@ const verifyAuthToken = async (client_id, redirection_url) => {
   try {
     const result = await Auth.findOne({
       client_id: client_id,
-      redirection_url: redirection_url,
+      redirection_url: redirection_url
     });
     return result;
   } catch (error) {
@@ -78,5 +78,5 @@ export default {
   verifyAuthToken,
   findAuthByOrgId,
   generateClientId,
-  findAuthByClientId,
+  findAuthByClientId
 };

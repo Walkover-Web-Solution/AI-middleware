@@ -24,13 +24,13 @@ const getAllServiceModelsController = async (req, res, next) => {
           model: config.configuration?.model || {
             field: "drop",
             default: model_name,
-            level: 1,
+            level: 1
           },
-          additional_parameters: {},
+          additional_parameters: {}
         },
         validationConfig: config.validationConfig,
         outputConfig: config.outputConfig,
-        org_id: null,
+        org_id: null
       };
 
       // Move all other configuration fields to additional_parameters
@@ -63,8 +63,8 @@ const getAllServiceController = async (req, res, next) => {
       mistral: { model: new_agent_service["mistral"] },
       gemini: { model: new_agent_service["gemini"] },
       ai_ml: { model: new_agent_service["ai_ml"] },
-      grok: { model: new_agent_service["grok"] },
-    },
+      grok: { model: new_agent_service["grok"] }
+    }
   };
   req.statusCode = 200;
   return next();
@@ -72,5 +72,5 @@ const getAllServiceController = async (req, res, next) => {
 
 export default {
   getAllServiceModelsController,
-  getAllServiceController,
+  getAllServiceController
 };

@@ -15,7 +15,7 @@ const getMetricsData = async (req, res, next) => {
     service,
     model,
     startTime,
-    endTime,
+    endTime
   };
   let start_date = new Date();
   let end_date = new Date();
@@ -37,13 +37,13 @@ const getMetricsData = async (req, res, next) => {
     res.locals = {
       statusCode: 200,
       data: [...data, ...today_data],
-      message: "Successfully get request data",
+      message: "Successfully get request data"
     };
   } else {
     res.locals = {
       statusCode: 200,
       data,
-      message: "Successfully get request data",
+      message: "Successfully get request data"
     };
   }
   req.statusCode = 200;
@@ -85,7 +85,7 @@ const getBridgeMetrics = async (req, res, next) => {
   res.locals = {
     statusCode: 200,
     data,
-    message: "Successfully retrieved bridge metrics",
+    message: "Successfully retrieved bridge metrics"
   };
   req.statusCode = 200;
   return next();
@@ -93,5 +93,5 @@ const getBridgeMetrics = async (req, res, next) => {
 
 export default {
   getMetricsData,
-  getBridgeMetrics,
+  getBridgeMetrics
 };

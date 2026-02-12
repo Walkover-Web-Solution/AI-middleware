@@ -31,7 +31,7 @@ const getThreads = async (req, res, next) => {
   let threads = await findThreadHistoryFormatted(org_id, thread_id, bridge_id, sub_thread_id, page, pageSize);
   threads = {
     ...threads,
-    starterQuestion,
+    starterQuestion
   };
   res.locals = threads;
   req.statusCode = 200;
@@ -44,7 +44,7 @@ const FineTuneData = async (req, res, next) => {
   const { bridge_id } = req.params;
   await FineTuneSchema.validateAsync({
     bridge_id,
-    user_feedback,
+    user_feedback
   });
 
   let result = [];
@@ -59,21 +59,10 @@ const FineTuneData = async (req, res, next) => {
       const nextItem = threadData[i + 1];
       const nextNextItem = threadData[i + 2];
 
-      if (
-        currentItem.role === "user" &&
-        nextItem &&
-        nextItem.role === "assistant" &&
-        nextItem.id === currentItem.id + 1
-      ) {
+      if (currentItem.role === "user" && nextItem && nextItem.role === "assistant" && nextItem.id === currentItem.id + 1) {
         filteredData.push(currentItem, nextItem);
         i += 1;
-      } else if (
-        currentItem.role === "user" &&
-        nextItem &&
-        nextItem.role === "tools_call" &&
-        nextNextItem &&
-        nextNextItem.role === "assistant"
-      ) {
+      } else if (currentItem.role === "user" && nextItem && nextItem.role === "tools_call" && nextNextItem && nextNextItem.role === "assistant") {
         filteredData.push(currentItem, nextItem, nextNextItem);
         i += 2;
       }
@@ -81,8 +70,8 @@ const FineTuneData = async (req, res, next) => {
     let messages = [
       {
         role: "system",
-        content: system_prompt.system_prompt,
-      },
+        content: system_prompt.system_prompt
+      }
     ];
 
     for (let i = 0; i < filteredData.length; i++) {
@@ -97,9 +86,9 @@ const FineTuneData = async (req, res, next) => {
             type: "function",
             function: {
               name: functionObj.name || "",
-              arguments: functionObj.arguments || "{}",
+              arguments: functionObj.arguments || "{}"
             },
-            response: functionObj.response || "",
+            response: functionObj.response || ""
           });
         }
 
@@ -108,24 +97,23 @@ const FineTuneData = async (req, res, next) => {
           tool_calls: toolCalls.map(({ id, type, function: func }) => ({
             id,
             type,
-            function: func,
-          })),
+            function: func
+          }))
         });
 
         for (const toolCall of toolCalls) {
           messages.push({
             role: "tool",
             tool_call_id: toolCall.id,
-            content: toolCall.response,
+            content: toolCall.response
           });
         }
         if (filteredData[i + 1] && filteredData[i + 1].role === "assistant") {
           const assistantItem = filteredData[i + 1];
-          const assistantContent =
-            assistantItem.updated_message !== null ? assistantItem.updated_message : assistantItem.content;
+          const assistantContent = assistantItem.updated_message !== null ? assistantItem.updated_message : assistantItem.content;
           const message = {
             role: "assistant",
-            content: assistantContent,
+            content: assistantContent
           };
           if (assistantItem.updated_message !== null) {
             message.weight = 1;
@@ -140,7 +128,7 @@ const FineTuneData = async (req, res, next) => {
         }
         const message = {
           role: item.role,
-          content: messageContent,
+          content: messageContent
         };
         if (item.updated_message !== null) {
           message.weight = 1;
@@ -156,7 +144,7 @@ const FineTuneData = async (req, res, next) => {
   let jsonlData = result.map((conversation) => JSON.stringify(conversation)).join("\n");
   if (jsonlData == "") {
     jsonlData = {
-      messages: [],
+      messages: []
     };
   }
 
@@ -173,7 +161,7 @@ const updateThreadMessage = async (req, res, next) => {
     bridge_id,
     message,
     id,
-    org_id,
+    org_id
   });
   const result = await conversationDbService.updateMessage({ org_id, bridge_id, message, id });
   res.locals = result;
@@ -191,10 +179,7 @@ const updateMessageStatus = async (req, res, next) => {
   let result;
   if (status === "2") {
     // Run both operations in parallel since they don't depend on each other
-    [result] = await Promise.all([
-      updateStatus({ status, message_id }),
-      sendError(bridge_id, org_id, error_message, "thumbsdown"),
-    ]);
+    [result] = await Promise.all([updateStatus({ status, message_id }), sendError(bridge_id, org_id, error_message, "thumbsdown")]);
   } else {
     result = await updateStatus({ status, message_id });
   }
@@ -223,14 +208,14 @@ export const createEntry = async (req, res, next) => {
     type: "chat",
     message_by: "assistant",
     message_id: message_id,
-    sub_thread_id: thread_id,
+    sub_thread_id: thread_id
   };
   try {
     await createThreadHistrorySchema.validateAsync(payload);
   } catch (error) {
     return res.status(422).json({
       success: false,
-      error: error.details,
+      error: error.details
     });
   }
   // Use the new conversation_logs service instead of the old conversations table
@@ -280,14 +265,14 @@ const getAllSubThreadsController = async (req, res, next) => {
     // Run both queries in parallel since they don't depend on each other
     const [threads, sub_thread_ids] = await Promise.all([
       conversationDbService.getSubThreads(org_id, thread_id, bridge_id),
-      conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError),
+      conversationDbService.getSubThreadsByError(org_id, thread_id, bridge_id, version_id, isError)
     ]);
 
     const threadsWithDisplayNames = sub_thread_ids.map((sub_thread_id) => {
       const thread = threads.find((t) => t.sub_thread_id === sub_thread_id);
       return {
         sub_thread_id,
-        display_name: thread ? thread.display_name : sub_thread_id,
+        display_name: thread ? thread.display_name : sub_thread_id
       };
     });
     return res.status(200).json({ threads: threadsWithDisplayNames, success: true });
@@ -320,5 +305,5 @@ export default {
   extraThreadID,
   getThreadMessages,
   getAllSubThreadsController,
-  getAllUserUpdates,
+  getAllUserUpdates
 };

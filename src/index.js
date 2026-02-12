@@ -46,7 +46,7 @@ app.use(
   cors({
     origin: "*",
     maxAge: 86400,
-    preflightContinue: true,
+    preflightContinue: true
   })
 );
 app.use(express.json());

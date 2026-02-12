@@ -7,28 +7,10 @@ import apiCallValidation from "../validation/joi_validation/apiCall.validation.j
 const router = express.Router();
 
 router.get("/", middleware, controller.getAllApiCalls);
-router.put(
-  "/:function_id",
-  middleware,
-  checkAgentAccessMiddleware,
-  validate(apiCallValidation.updateApiCalls),
-  controller.updateApiCalls
-);
-router.delete(
-  "/",
-  middleware,
-  checkAgentAccessMiddleware,
-  validate(apiCallValidation.deleteFunction),
-  controller.deleteFunction
-);
+router.put("/:function_id", middleware, checkAgentAccessMiddleware, validate(apiCallValidation.updateApiCalls), controller.updateApiCalls);
+router.delete("/", middleware, checkAgentAccessMiddleware, validate(apiCallValidation.deleteFunction), controller.deleteFunction);
 router.post("/", middleware, checkAgentAccessMiddleware, validate(apiCallValidation.createApi), controller.createApi);
-router.put(
-  "/pre_tool/:agent_id",
-  middleware,
-  checkAgentAccessMiddleware,
-  validate(apiCallValidation.addPreTool),
-  controller.addPreTool
-);
+router.put("/pre_tool/:agent_id", middleware, checkAgentAccessMiddleware, validate(apiCallValidation.addPreTool), controller.addPreTool);
 router.get("/inbuilt", middleware, controller.getAllInBuiltToolsController);
 
 export default router;

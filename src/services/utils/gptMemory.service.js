@@ -53,10 +53,10 @@ const retrieveGptMemoryService = async ({ bridge_id, thread_id, sub_thread_id, v
     version_id,
     memory_id: memoryId,
     found: !!memory,
-    memory,
+    memory
   };
 };
 
 export default {
-  retrieveGptMemoryService,
+  retrieveGptMemoryService
 };

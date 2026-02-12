@@ -54,5 +54,5 @@ FROM timescaledb_information.jobs where proc_name like 'insert_into_fifteen_minu
         SELECT delete_job(${jobId});
       `);
     }
-  },
+  }
 };

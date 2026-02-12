@@ -17,37 +17,37 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER
       },
       user_id: {
         allowNull: false,
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER
       },
       time: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
       type: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       bridge_id: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       version_id: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       org_id: {
         allowNull: false,
-        type: DataTypes.STRING,
-      },
+        type: DataTypes.STRING
+      }
     },
     {
       sequelize,
       modelName: "user_bridge_config_history",
-      timestamps: false,
+      timestamps: false
     }
   );
   return user_bridge_config_history;

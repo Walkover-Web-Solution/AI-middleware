@@ -9,13 +9,13 @@ export default {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false,
-      },
-    },
+        rejectUnauthorized: false
+      }
+    }
   },
   test: {
     url: "",
-    dialect: "postgres",
+    dialect: "postgres"
   },
   production: {
     url: timescaleServiceUrl,
@@ -24,8 +24,8 @@ export default {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false,
-      },
-    },
-  },
+        rejectUnauthorized: false
+      }
+    }
+  }
 };

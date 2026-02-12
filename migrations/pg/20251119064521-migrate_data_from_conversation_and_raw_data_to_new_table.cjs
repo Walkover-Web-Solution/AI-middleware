@@ -64,7 +64,7 @@ WHERE c.message_id = ANY($messageIds::uuid[])
 ORDER BY c.message_id, c."createdAt"`,
           {
             bind: { messageIds: messageIdsBatch },
-            transaction,
+            transaction
           }
         );
 
@@ -91,7 +91,7 @@ FROM raw_data rd
 WHERE rd.message_id = ANY($messageIds::uuid[])`,
           {
             bind: { messageIds: messageIdsBatch },
-            transaction,
+            transaction
           }
         );
 
@@ -149,7 +149,7 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
               parent_id: null,
               child_id: null,
               created_at: null,
-              updated_at: null,
+              updated_at: null
             };
 
             // Process each conversation entry for this message_id
@@ -164,8 +164,7 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
               if (!newRecord.updated_at) newRecord.updated_at = conv.updatedAt;
 
               if (!newRecord.AiConfig && conv.message_by === "user") newRecord.AiConfig = conv.AiConfig;
-              if (!newRecord.fallback_model && conv.message_by === "assistant")
-                newRecord.fallback_model = conv.fallback_model;
+              if (!newRecord.fallback_model && conv.message_by === "assistant") newRecord.fallback_model = conv.fallback_model;
               if (!newRecord.image_urls && conv.message_by === "assistant") {
                 const imageItems = (conv.image_urls || []).map((url) => ({ url, type: "image" }));
                 const fileItems = (conv.urls || []).map((url) => ({ url, type: "pdf" }));
@@ -182,8 +181,7 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
                 newRecord.user_urls = userUrls;
               }
 
-              if (!newRecord.chatbot_message && conv.message_by === "assistant")
-                newRecord.chatbot_message = conv.chatbot_message;
+              if (!newRecord.chatbot_message && conv.message_by === "assistant") newRecord.chatbot_message = conv.chatbot_message;
               if (!newRecord.prompt && conv.message_by === "user") {
                 newRecord["prompt"] =
                   newRecord["AiConfig"]?.messages?.[0]?.role === "developer"
@@ -229,13 +227,13 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
               newRecord.tokens = {
                 input_tokens: rawData.input_tokens || 0,
                 output_tokens: rawData.output_tokens || 0,
-                expected_cost: rawData.expected_cost || 0,
+                expected_cost: rawData.expected_cost || 0
               };
 
               // Create latency JSON object
               if (rawData.latency) {
                 newRecord.latency = {
-                  total: rawData.latency,
+                  total: rawData.latency
                 };
               }
 
@@ -256,11 +254,11 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
                 newRecord.tokens = {
                   input_tokens: totalInputTokens,
                   output_tokens: totalOutputTokens,
-                  expected_cost: totalExpectedCost,
+                  expected_cost: totalExpectedCost
                 };
 
                 newRecord.latency = {
-                  total: totalLatency,
+                  total: totalLatency
                 };
               }
             }
@@ -287,14 +285,12 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
             fallback_model: record.fallback_model ? JSON.stringify(record.fallback_model) : null,
             tokens: record.tokens ? JSON.stringify(record.tokens) : null,
             variables: record.variables ? JSON.stringify(record.variables) : null,
-            latency: record.latency ? JSON.stringify(record.latency) : null,
+            latency: record.latency ? JSON.stringify(record.latency) : null
           }));
 
           await queryInterface.bulkInsert("conversation_logs", serializedRecords, { transaction });
           migratedCount += recordsToInsert.length;
-          console.log(
-            `Migrated ${recordsToInsert.length} records in this batch (Total: ${migratedCount}/${messageIds.length})`
-          );
+          console.log(`Migrated ${recordsToInsert.length} records in this batch (Total: ${migratedCount}/${messageIds.length})`);
         }
       }
 
@@ -326,7 +322,7 @@ WHERE rd.message_id = ANY($messageIds::uuid[])`,
       console.error("Rollback failed:", error);
       throw error;
     }
-  },
+  }
 };
 
 function sanitizeForPg(obj) {

@@ -11,7 +11,7 @@ async function deleteTestCaseById(id) {
   const success = result.deletedCount > 0;
   return {
     success,
-    message: success ? "Deleted successfully" : "Deletion failed",
+    message: success ? "Deleted successfully" : "Deletion failed"
   };
 }
 
@@ -36,17 +36,14 @@ async function getMergedTestcasesAndHistoryByBridgeId(bridge_id) {
           {
             $match: {
               $expr: {
-                $or: [
-                  { $eq: ["$testcase_id", "$$testcase_id"] },
-                  { $eq: ["$testcase_id", { $toString: "$$testcase_id" }] },
-                ],
-              },
-            },
-          },
+                $or: [{ $eq: ["$testcase_id", "$$testcase_id"] }, { $eq: ["$testcase_id", { $toString: "$$testcase_id" }] }]
+              }
+            }
+          }
         ],
-        as: "history",
-      },
-    },
+        as: "history"
+      }
+    }
   ]);
   return testcases;
 }
@@ -93,7 +90,7 @@ async function parseAndSaveTestcases(testcasesData, bridge_id) {
           conversation: [{ role: "user", content: String(userInput) }],
           type: "response",
           expected: { response: String(expectedOutput) },
-          matching_type: "ai",
+          matching_type: "ai"
         };
 
         const result = await saveTestCase(testcaseData);
@@ -117,5 +114,5 @@ export default {
   updateTestCaseById,
   getTestcaseById,
   getMergedTestcasesAndHistoryByBridgeId,
-  parseAndSaveTestcases,
+  parseAndSaveTestcases
 };

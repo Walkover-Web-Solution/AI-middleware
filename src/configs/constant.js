@@ -4,9 +4,9 @@ import { renderCardToTailwind } from "../utils/Formatter.utility.js";
 import gptMemoryService from "../services/utils/gptMemory.service.js";
 
 const collectionNames = {
-    ApikeyCredentials: 'ApikeyCredentials',
-    configuration: 'configuration',
-    Folder: 'Folder'
+  ApikeyCredentials: "ApikeyCredentials",
+  configuration: "configuration",
+  Folder: "Folder"
 };
 
 const bridge_ids = {
@@ -31,30 +31,30 @@ const bridge_ids = {
 };
 
 const redis_keys = {
-    bridgeusedcost_: 'bridgeusedcost_',
-    folderusedcost_: 'folderusedcost_',
-    apikeyusedcost_: 'apikeyusedcost_',
-    bridge_data_with_tools_: 'bridge_data_with_tools_',
-    get_bridge_data_: 'get_bridge_data_',
-    apikeylastused_: 'apikeylastused_',
-    bridgelastused_: 'bridgelastused_',
-    files_: 'files_',
-    gpt_memory_: 'gpt_memory_',
-    pdf_url_: 'pdf_url_',
-    metrix_bridges_: 'metrix_bridges_',
-    rate_limit_: 'rate_limit_',
-    openai_batch_: 'openai_batch_',
-    avg_response_time_: 'avg_response_time_',
-    timezone_and_org_: 'timezone_and_org_',
-    conversation_: 'conversation_',
-    last_transffered_agent_: 'last_transffered_agent_'
+  bridgeusedcost_: "bridgeusedcost_",
+  folderusedcost_: "folderusedcost_",
+  apikeyusedcost_: "apikeyusedcost_",
+  bridge_data_with_tools_: "bridge_data_with_tools_",
+  get_bridge_data_: "get_bridge_data_",
+  apikeylastused_: "apikeylastused_",
+  bridgelastused_: "bridgelastused_",
+  files_: "files_",
+  gpt_memory_: "gpt_memory_",
+  pdf_url_: "pdf_url_",
+  metrix_bridges_: "metrix_bridges_",
+  rate_limit_: "rate_limit_",
+  openai_batch_: "openai_batch_",
+  avg_response_time_: "avg_response_time_",
+  timezone_and_org_: "timezone_and_org_",
+  conversation_: "conversation_",
+  last_transffered_agent_: "last_transffered_agent_"
 };
 
 const cost_types = {
-    bridge: 'bridge',
-    folder: 'folder',
-    apikey: 'apikey'
-}
+  bridge: "bridge",
+  folder: "folder",
+  apikey: "apikey"
+};
 
 const prebuilt_prompt_bridge_id = [
   "optimze_prompt",
@@ -62,19 +62,18 @@ const prebuilt_prompt_bridge_id = [
   "structured_output_optimizer",
   "chatbot_suggestions",
   "generate_summary",
-  "generate_test_cases",
+  "generate_test_cases"
 ];
 
 const new_agent_service = {
-    openai: "gpt-5-nano",
-    anthropic: "claude-sonnet-4-20250514",
-    groq: "openai/gpt-oss-120b",
-    open_router: "openai/gpt-4o",
-    mistral: "mistral-small-latest",
-    gemini: "gemini-2.5-pro",
-    ai_ml: "gpt-oss-120b",
-    grok: "grok-4-fast"
-
+  openai: "gpt-5-nano",
+  anthropic: "claude-sonnet-4-20250514",
+  groq: "openai/gpt-oss-120b",
+  open_router: "openai/gpt-4o",
+  mistral: "mistral-small-latest",
+  gemini: "gemini-2.5-pro",
+  ai_ml: "gpt-oss-120b",
+  grok: "grok-4-fast"
 };
 
 export {
@@ -99,7 +98,7 @@ export const AI_OPERATION_CONFIG = {
     getPrompt: (context) => context.bridge.configuration?.prompt || "",
     getVariables: (req) => ({ query: req.body.query || "" }),
     getMessage: (req, context) => context.bridge.configuration?.prompt || "", // optimize_prompt uses prompt as message
-    successMessage: "Prompt optimized successfully",
+    successMessage: "Prompt optimized successfully"
   },
   generate_summary: {
     bridgeIdConst: bridge_ids["generate_summary"],
@@ -125,16 +124,15 @@ export const AI_OPERATION_CONFIG = {
       return { prompt: system_prompt };
     },
     getMessage: () => "generate summary from the user message provided in system prompt",
-    successMessage: "Summary generated successfully",
+    successMessage: "Summary generated successfully"
   },
   generate_json: {
     bridgeIdConst: bridge_ids["function_agrs_using_ai"],
     getMessage: (req) => {
-      const exampleJson =
-        typeof req.body.example_json === "object" ? JSON.stringify(req.body.example_json) : req.body.example_json;
+      const exampleJson = typeof req.body.example_json === "object" ? JSON.stringify(req.body.example_json) : req.body.example_json;
       return `geneate the json using the example json data : ${exampleJson}`;
     },
-    successMessage: "json generated successfully",
+    successMessage: "json generated successfully"
   },
   generate_test_cases: {
     bridgeIdConst: bridge_ids["generate_test_cases"],
@@ -154,16 +152,16 @@ export const AI_OPERATION_CONFIG = {
         success: true,
         message: `Test cases generated and ${savedTestcases.length} saved successfully`,
         result: aiResult,
-        saved_testcase_ids: savedTestcases,
+        saved_testcase_ids: savedTestcases
       };
-    },
+    }
   },
   structured_output: {
     bridgeIdConst: bridge_ids["structured_output_optimizer"],
     prebuiltKey: "structured_output_optimizer",
     getVariables: (req) => ({ json_schema: req.body.json_schema, query: req.body.query }),
     getMessage: () => "create the json shcmea accroding to the dummy json explained in system prompt.",
-    successMessage: "Structured output optimized successfully", // Or whatever default success message is appropriate, though callAiMiddleware returns result directly usually
+    successMessage: "Structured output optimized successfully" // Or whatever default success message is appropriate, though callAiMiddleware returns result directly usually
   },
   improve_prompt: {
     bridgeIdConst: bridge_ids["improve_prompt_optimizer"],
@@ -199,7 +197,7 @@ export const AI_OPERATION_CONFIG = {
         bridge_id,
         thread_id,
         sub_thread_id,
-        version_id,
+        version_id
       });
       return {
         bridge_id,
@@ -208,8 +206,8 @@ export const AI_OPERATION_CONFIG = {
         version_id,
         memory_id: memoryId,
         found: !!memory,
-        memory,
+        memory
       };
-    },
-  },
+    }
+  }
 };

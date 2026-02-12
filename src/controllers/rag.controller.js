@@ -10,16 +10,16 @@ export const ragEmbedUserLogin = async (req, res, next) => {
     user: {
       id: req.Embed.user_id,
       name: embeduser_name,
-      email: embeduser_email,
+      email: embeduser_email
     },
     org: {
       id: req.Embed.org_id,
-      name: req.Embed.org_name,
+      name: req.Embed.org_name
     },
     extraDetails: {
       type: "embed",
-      folder_id: req?.Embed?.folder_id,
-    },
+      folder_id: req?.Embed?.folder_id
+    }
   };
   const embedDetails = !req.isGtwyUser
     ? {
@@ -28,18 +28,18 @@ export const ragEmbedUserLogin = async (req, res, next) => {
         company_name: req.Embed.org_name,
         tokenType: "embed",
         embeduser_name,
-        embeduser_email,
+        embeduser_email
       }
     : {
         company_id: req.company_id,
         company_name: req.company_name,
-        user_id: req.user_id,
+        user_id: req.user_id
       };
   await createProxyToken(embedDetails);
   const response = {
     ...(req?.Embed || {}),
     ...(req.Embed?.user_id ? { user_id: req.Embed.user_id } : {}),
-    token: generateAuthToken(Tokendata.user, Tokendata.org, { extraDetails: Tokendata.extraDetails }),
+    token: generateAuthToken(Tokendata.user, Tokendata.org, { extraDetails: Tokendata.extraDetails })
   };
   res.locals = { data: response, success: true };
   req.statusCode = 200;
@@ -55,8 +55,8 @@ export const getKnowledgeBaseToken = async (req, res, next) => {
     auth_token = await updateOrganizationData(org_id, {
       meta: {
         ...data?.meta,
-        auth_token: auth_token,
-      },
+        auth_token: auth_token
+      }
     });
     auth_token = auth_token?.data?.company?.meta.auth_token;
   }
@@ -71,10 +71,58 @@ export const getEmbedToken = async (req, res, next) => {
   const token = await genrateToken(orgId);
   res.locals = {
     success: true,
-    token: token,
+    token: token
   };
   req.statusCode = 200;
   return next();
+};
+
+export const searchKnowledge = async (req, res, next) => {
+  try {
+    const { query } = req.body;
+    const ownerId = req.body.agent_id;
+
+    // Get environment variables
+    const hippocampusUrl = "http://hippocampus.gtwy.ai/search";
+    const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+    const collectionId = process.env.HIPPOCAMPUS_COLLECTION_ID;
+
+    // Make the API call to Hippocampus
+    const response = await axios.post(
+      hippocampusUrl,
+      {
+        query,
+        collectionId,
+        ownerId
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": hippocampusApiKey
+        }
+      }
+    );
+
+    // Extract only content from the result
+    const answers = response.data?.result?.map((item) => item.payload?.content) || [];
+
+    res.locals = {
+      success: true,
+      data: {
+        answers: answers
+      }
+    };
+    req.statusCode = 200;
+    return next();
+  } catch (error) {
+    console.error("Error calling Hippocampus API:", error.message);
+    res.locals = {
+      success: false,
+      error: error.response?.data || error.message
+    };
+    req.statusCode = error.response?.status || 500;
+    return next();
+  }
 };
 
 // Collection Management
@@ -86,7 +134,7 @@ export const createCollection = async (req, res, next) => {
     // Prepare data for Hippocampus API
     const hippocampusPayload = {
       name,
-      settings: settings,
+      settings: settings
     };
 
     // Call Hippocampus API to create collection
@@ -94,8 +142,8 @@ export const createCollection = async (req, res, next) => {
     const hippocampusResponse = await axios.post("http://hippocampus.gtwy.ai/collection", hippocampusPayload, {
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": hippocampusApiKey,
-      },
+        "x-api-key": hippocampusApiKey
+      }
     });
 
     // Prepare data for MongoDB
@@ -105,7 +153,7 @@ export const createCollection = async (req, res, next) => {
       settings: hippocampusPayload.settings,
       collection_id: hippocampusResponse?.data?._id,
       created_at: new Date(),
-      updated_at: new Date(),
+      updated_at: new Date()
     };
 
     // Save to MongoDB
@@ -116,8 +164,8 @@ export const createCollection = async (req, res, next) => {
       message: "Collection created successfully",
       data: {
         ...collection.toObject(),
-        hippocampus_response: hippocampusResponse.data,
-      },
+        hippocampus_response: hippocampusResponse.data
+      }
     };
     req.statusCode = 201;
     return next();
@@ -126,7 +174,7 @@ export const createCollection = async (req, res, next) => {
     res.locals = {
       success: false,
       error: error.message,
-      details: error.response?.data || error.message,
+      details: error.response?.data || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -147,7 +195,7 @@ export const getAllCollections = async (req, res, next) => {
 
     res.locals = {
       success: true,
-      data: formattedCollections,
+      data: formattedCollections
     };
     req.statusCode = 200;
     return next();
@@ -155,7 +203,7 @@ export const getAllCollections = async (req, res, next) => {
     console.error("Error fetching collections:", error);
     res.locals = {
       success: false,
-      error: error.message,
+      error: error.message
     };
     req.statusCode = 500;
     return next();
@@ -170,7 +218,7 @@ export const getCollectionById = async (req, res, next) => {
     if (!collection) {
       res.locals = {
         success: false,
-        message: "Collection not found",
+        message: "Collection not found"
       };
       req.statusCode = 404;
       return next();
@@ -178,7 +226,7 @@ export const getCollectionById = async (req, res, next) => {
 
     res.locals = {
       success: true,
-      data: collection,
+      data: collection
     };
     req.statusCode = 200;
     return next();
@@ -186,7 +234,7 @@ export const getCollectionById = async (req, res, next) => {
     console.error("Error fetching collection:", error);
     res.locals = {
       success: false,
-      error: error.message,
+      error: error.message
     };
     req.statusCode = 500;
     return next();
@@ -238,7 +286,7 @@ export const createResourceInCollection = async (req, res, next) => {
     if (!collectionId) {
       res.locals = {
         success: false,
-        message: "Collection not found",
+        message: "Collection not found"
       };
       req.statusCode = 400;
       return next();
@@ -256,13 +304,13 @@ export const createResourceInCollection = async (req, res, next) => {
         url,
         description,
         ownerId: ownerId || "public",
-        settings,
+        settings
       },
       {
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": hippocampusApiKey,
-        },
+          "x-api-key": hippocampusApiKey
+        }
       }
     );
 
@@ -274,7 +322,7 @@ export const createResourceInCollection = async (req, res, next) => {
     res.locals = {
       success: true,
       message: "Resource created successfully",
-      data: response.data,
+      data: response.data
     };
     req.statusCode = 201;
     return next();
@@ -282,7 +330,7 @@ export const createResourceInCollection = async (req, res, next) => {
     console.error("Error creating resource:", error);
     res.locals = {
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -303,20 +351,20 @@ export const updateResourceInCollection = async (req, res, next) => {
         title,
         description,
         content,
-        url,
+        url
       },
       {
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": hippocampusApiKey,
-        },
+          "x-api-key": hippocampusApiKey
+        }
       }
     );
 
     res.locals = {
       success: true,
       message: "Resource updated successfully",
-      data: response.data,
+      data: response.data
     };
     req.statusCode = 200;
     return next();
@@ -324,7 +372,7 @@ export const updateResourceInCollection = async (req, res, next) => {
     console.error("Error updating resource:", error);
     res.locals = {
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -341,14 +389,14 @@ export const deleteResourceFromCollection = async (req, res, next) => {
     const response = await axios.delete(`${hippocampusUrl}/resource/${id}`, {
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": hippocampusApiKey,
-      },
+        "x-api-key": hippocampusApiKey
+      }
     });
 
     res.locals = {
       success: true,
       message: "Resource deleted successfully",
-      data: response.data,
+      data: response.data
     };
     req.statusCode = 200;
     return next();
@@ -356,7 +404,7 @@ export const deleteResourceFromCollection = async (req, res, next) => {
     console.error("Error deleting resource:", error);
     res.locals = {
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -373,13 +421,13 @@ export const getResourceChunks = async (req, res, next) => {
     const response = await axios.get(`${hippocampusUrl}/resource/${id}/chunks`, {
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": hippocampusApiKey,
-      },
+        "x-api-key": hippocampusApiKey
+      }
     });
 
     res.locals = {
       success: true,
-      data: response.data,
+      data: response.data
     };
     req.statusCode = 200;
     return next();
@@ -387,7 +435,7 @@ export const getResourceChunks = async (req, res, next) => {
     console.error("Error fetching resource chunks:", error);
     res.locals = {
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -417,20 +465,17 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
       ownerId = org_id;
     }
 
-    const response = await axios.get(
-      `${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": hippocampusApiKey,
-        },
+    const response = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": hippocampusApiKey
       }
-    );
+    });
 
     res.locals = {
       success: true,
       message: "Resources fetched successfully",
-      data: response.data,
+      data: response.data
     };
     req.statusCode = 200;
     return next();
@@ -438,7 +483,43 @@ export const getAllResourcesByCollectionId = async (req, res, next) => {
     console.error("Error fetching resources by collection:", error);
     res.locals = {
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message
+    };
+    req.statusCode = error.response?.status || 500;
+    return next();
+  }
+};
+
+export const getResourcesByCollectionAndOwner = async (req, res, next) => {
+  try {
+    const { collectionId, ownerId } = req.query;
+    const hippocampusApiKey = process.env.HIPPOCAMPUS_API_KEY;
+    const hippocampusUrl = "http://hippocampus.gtwy.ai";
+
+    const resourcesResponse = await axios.get(`${hippocampusUrl}/collection/${collectionId}/resources?content=true&ownerId=${ownerId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": hippocampusApiKey
+      }
+    });
+
+    const resources = resourcesResponse.data?.resources || [];
+
+    res.locals = {
+      success: true,
+      message: "Resources fetched for the specified collection",
+      data: {
+        resources,
+        created: 0
+      }
+    };
+    req.statusCode = 200;
+    return next();
+  } catch (error) {
+    console.error("Error fetching resources for specified collection:", error);
+    res.locals = {
+      success: false,
+      error: error.response?.data?.message || error.message
     };
     req.statusCode = error.response?.status || 500;
     return next();
@@ -456,21 +537,21 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
         settings: {
           denseModel: "BAAI/bge-large-en-v1.5",
           sparseModel: "Qdrant/bm25",
-          rerankerModel: "colbert-ir/colbertv2.0",
-        },
+          rerankerModel: "colbert-ir/colbertv2.0"
+        }
       },
       {
         name: "moderate",
         settings: {
-          denseModel: "BAAI/bge-large-en-v1.5",
-        },
+          denseModel: "BAAI/bge-large-en-v1.5"
+        }
       },
       {
         name: "fastest",
         settings: {
-          denseModel: "BAAI/bge-small-en-v1.5",
-        },
-      },
+          denseModel: "BAAI/bge-small-en-v1.5"
+        }
+      }
     ];
 
     // Fetch existing collections for this org
@@ -530,14 +611,14 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
               name: defaultCol.name,
               settings: {
                 ...defaultCol.settings,
-                keepDuplicate: true,
-              },
+                keepDuplicate: true
+              }
             },
             {
               headers: {
                 "Content-Type": "application/json",
-                "x-api-key": hippocampusApiKey,
-              },
+                "x-api-key": hippocampusApiKey
+              }
             }
           );
 
@@ -547,11 +628,11 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
             org_id: org_id,
             settings: {
               ...defaultCol.settings,
-              keepDuplicate: true,
+              keepDuplicate: true
             },
             collection_id: hippocampusResponse?.data?._id,
             created_at: new Date(),
-            updated_at: new Date(),
+            updated_at: new Date()
           };
 
           const newCollection = await ragCollectionService.create(collectionData);
@@ -578,14 +659,14 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
           {
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": hippocampusApiKey,
-            },
+              "x-api-key": hippocampusApiKey
+            }
           }
         );
 
         // Add collection info to each resource and flatten into allResources
         const resourcesWithCollection = (resourcesResponse.data?.resources || []).map((resource) => ({
-          ...resource,
+          ...resource
         }));
         allResources.push(...resourcesWithCollection);
       } catch (error) {
@@ -596,14 +677,11 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
 
     res.locals = {
       success: true,
-      message:
-        createdCollections.length > 0
-          ? `${createdCollections.length} collection(s) created successfully`
-          : "All collections already exist",
+      message: createdCollections.length > 0 ? `${createdCollections.length} collection(s) created successfully` : "All collections already exist",
       data: {
         resources: allResources,
-        created: createdCollections.length,
-      },
+        created: createdCollections.length
+      }
     };
     req.statusCode = 200;
     return next();
@@ -611,7 +689,7 @@ export const getOrCreateDefaultCollections = async (req, res, next) => {
     console.error("Error in getOrCreateDefaultCollections:", error);
     res.locals = {
       success: false,
-      error: error.message,
+      error: error.message
     };
     req.statusCode = 500;
     return next();

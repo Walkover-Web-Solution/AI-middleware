@@ -43,5 +43,5 @@ module.exports = {
     await queryInterface.sequelize.query(`
       DROP MATERIALIZED VIEW IF EXISTS daily_data_aggregate;
     `);
-  },
+  }
 };

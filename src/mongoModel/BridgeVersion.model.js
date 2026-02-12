@@ -4,198 +4,198 @@ const Schema = mongoose.Schema;
 const actionTypeModel = new Schema(
   {
     description: {
-      type: String,
+      type: String
     },
     type: {
-      type: String,
+      type: String
     },
     variable: {
-      type: String,
-    },
+      type: String
+    }
   },
   {
-    _id: false,
+    _id: false
   }
 );
 const version = new mongoose.Schema({
   org_id: {
     type: String,
-    required: true,
+    required: true
   },
   user_id: {
     type: String,
-    required: true,
+    required: true
   },
   apikey_object_id: {
-    type: Object,
+    type: Object
   },
   service: {
     type: String,
-    default: "",
+    default: ""
   },
   configuration: {
     type: Object,
-    default: {},
+    default: {}
   },
   apikey: {
     type: String,
-    default: "",
+    default: ""
   },
   gpt_memory: {
     type: Boolean,
-    default: false,
+    default: false
   },
   gpt_memory_context: {
     type: String,
-    default: null,
+    default: null
   },
   folder_id: {
     type: String,
-    default: null,
+    default: null
   },
   is_drafted: {
     type: Boolean,
-    default: false,
+    default: false
   },
   parent_id: {
     type: String,
-    default: null,
+    default: null
   },
   variables_state: {
     type: Object,
-    default: {},
+    default: {}
   },
   function_ids: {
     type: [mongoose.Schema.Types.ObjectId],
-    default: [],
+    default: []
   },
   variables_path: {
     type: Object,
-    default: {},
+    default: {}
   },
   tool_call_count: {
     type: Number,
-    default: 0,
+    default: 0
   },
   agent_variables: {
     type: Object,
-    default: {},
+    default: {}
   },
   published_version_id: {
     type: String,
-    default: null,
+    default: null
   },
   starterQuestion: {
     type: Array,
-    default: [],
+    default: []
   },
   total_tokens: {
     type: Number,
-    default: 0,
+    default: 0
   },
   version_description: {
     type: String,
-    default: "",
+    default: ""
   },
   doc_ids: {
     type: Array,
-    default: [],
+    default: []
   },
   pre_tools: {
     type: Array,
-    default: [],
+    default: []
   },
   guardrails: {
     type: Object,
     default: {
       is_enabled: false,
       guardrails_configuration: {},
-      guardrails_custom_prompt: "",
-    },
+      guardrails_custom_prompt: ""
+    }
   },
   web_search_filters: {
     type: [String],
-    default: [],
+    default: []
   },
   gtwy_web_search_filters: {
     type: [String],
-    default: [],
+    default: []
   },
   user_reference: {
     type: String,
-    default: "",
+    default: ""
   },
   fall_back: {
     type: Object,
     default: {
       is_enable: false,
       service: "",
-      model: "",
-    },
+      model: ""
+    }
   },
   built_in_tools: {
     type: Array,
-    default: [],
+    default: []
   },
   connected_agent_details: {
     type: Object,
-    default: {},
+    default: {}
   },
   created_at: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   api_call: {
     type: Object,
-    default: {},
+    default: {}
   },
   api_endpoints: {
     type: Object,
-    default: [],
+    default: []
   },
   is_api_call: {
     type: Boolean,
-    default: false,
+    default: false
   },
   status: {
     type: Number,
     default: 1,
-    required: true,
+    required: true
   },
   responseIds: {
     type: Array,
-    default: [],
+    default: []
   },
   responseRef: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "ResponseType",
+    ref: "ResponseType"
   },
   defaultQuestions: {
-    type: Array,
+    type: Array
   },
   actions: {
     type: Map,
-    of: actionTypeModel,
+    of: actionTypeModel
   },
   hello_id: {
-    type: String,
+    type: String
   },
   connected_agents: {
     type: Object,
-    default: {},
+    default: {}
   },
   deletedAt: {
     type: Date,
-    default: null,
+    default: null
   },
   IsstarterQuestionEnable: {
     type: Boolean,
-    default: false,
+    default: false
   },
   chatbot_auto_answers: {
     type: Boolean,
-    default: false,
-  },
+    default: false
+  }
 });
 
 version.index({ deletedAt: 1 }, { expireAfterSeconds: 2592000 }); // TTL index for 30 days (1 month)
