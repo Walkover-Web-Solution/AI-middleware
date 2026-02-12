@@ -694,7 +694,23 @@ const findChatbotOfAgent = async (orgId, agentId) => {
   }
 };
 
-const gettemplateById = async (template_id) => {
+const removeResourceReference = async (resourceId) => {
+  try {
+    const result = await configurationModel.updateMany(
+      { "doc_ids.resource_id": resourceId },
+      { $pull: { doc_ids: { resource_id: resourceId } } }
+    );
+    return {
+      success: true,
+      modifiedCount: result.modifiedCount
+    };
+  } catch (error) {
+    console.error("Error removing resource reference from configurations:", error);
+    throw error;
+  }
+};
+
+const gettemplateById = async template_id => {
   try {
     return await templateModel.findById(template_id);
   } catch (error) {
@@ -1280,5 +1296,6 @@ export default {
   getAgentsAndVersionsByModel,
   getAgentsWithoutTools,
   cloneAgentToOrg,
-  getAgentUsers
+  getAgentUsers,
+  removeResourceReference
 };
