@@ -32,6 +32,71 @@ const createAgentController = async (req, res, next) => {
     let model = "gpt-5-nano";
     let type = "chat";
 
+    // If no folder_data (Main User), use structured object format
+    if (!folder_data) {
+      prompt = {
+        role: "AI Bot",
+        goal: "Respond logically and clearly, maintaining a neutral, automated tone.",
+        instruction:
+          "Guidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful."
+      };
+    }
+
+    // Check if folder has custom prompt configuration
+    if (folder_data?.config?.prompt) {
+      const folderPromptConfig = folder_data.config.prompt;
+      const useDefaultPrompt = folderPromptConfig.useDefaultPrompt !== false; // Default: true
+      // ✅ CASE 1: Use structured default object when default is ON
+      if (useDefaultPrompt) {
+        prompt = {
+          role: "AI Bot",
+          goal: "Respond logically and clearly, maintaining a neutral, automated tone.",
+          instruction:
+            "Guidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful."
+        };
+      }
+
+      if (!useDefaultPrompt && folderPromptConfig.customPrompt) {
+        // CASE 2: Use Custom Prompt (Embed Object)
+        let embedFields = Array.isArray(folderPromptConfig.embedFields) ? folderPromptConfig.embedFields : [];
+
+        // 1. Ensure default hidden fields exist
+        const defaultFields = ["role", "goal", "instruction"];
+        const existingFieldNames = new Set(embedFields.map((f) => f.name));
+
+        defaultFields.forEach((name) => {
+          if (!existingFieldNames.has(name)) {
+            const type = name === "instruction" ? "textarea" : "input";
+            embedFields.push({ name, value: "", type, hidden: true });
+            existingFieldNames.add(name);
+          }
+        });
+
+        // 2. Extract new variables from customPrompt string
+        const variableRegex = /\{\{([^}]+)\}\}/g;
+        const matches = folderPromptConfig.customPrompt.matchAll(variableRegex);
+
+        for (const match of matches) {
+          const varName = match[1]?.trim();
+          if (varName && !existingFieldNames.has(varName)) {
+            embedFields.push({
+              name: varName,
+              value: "",
+              type: "input",
+              hidden: false
+            });
+            existingFieldNames.add(varName);
+          }
+        }
+
+        prompt = {
+          customPrompt: folderPromptConfig.customPrompt,
+          embedFields: embedFields,
+          useDefaultPrompt: false
+        };
+      }
+    }
+
     if (agents.templateId) {
       const template_id = agents.templateId;
       const template_data = await ConfigurationServices.gettemplateById(template_id);
@@ -40,7 +105,10 @@ const createAgentController = async (req, res, next) => {
         req.statusCode = 404;
         return next();
       }
-      prompt = template_data.prompt || prompt;
+      // Only override if we don't have folder prompt config
+      if (!folder_data?.config?.prompt) {
+        prompt = template_data.prompt || prompt;
+      }
     }
 
     const all_agent_name = all_agent.map((agent) => agent.name);
@@ -57,7 +125,10 @@ const createAgentController = async (req, res, next) => {
         model = agent_data.model || model;
         service = agent_data.service || service;
         name = name || agent_data.name;
-        prompt = agent_data.system_prompt || prompt;
+        // Only override prompt if we don't have folder prompt config
+        if (!folder_data?.config?.prompt) {
+          prompt = agent_data.system_prompt || prompt;
+        }
         type = agent_data.type || type;
       }
     }
