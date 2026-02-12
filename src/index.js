@@ -87,7 +87,7 @@ app.use("/api/runagents", runAgentsRoutes);
 app.use("/api/template", templateRoute);
 app.use("/api/prompt_wrappers", promptWrapperRoutes);
 app.use("/api/internal", internalRoutes);
-app.use('/api/rich-ui-templates', richUiTemplateRoutes)
+app.use('/api/rich_ui_templates', richUiTemplateRoutes)
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);

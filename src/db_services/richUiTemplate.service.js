@@ -44,7 +44,7 @@ async function getTemplates(org_id) {
 
 
 // Update a template
-async function updateTemplate(template_id, updateData, user_id) {
+async function updateTemplate(template_id, updateData, user_id, is_public) {
     try {
         const updatedTemplate = await RichUiTemplate.findOneAndUpdate(
             {
@@ -53,6 +53,7 @@ async function updateTemplate(template_id, updateData, user_id) {
             {
                 ...updateData,
                 updated_by: user_id,
+                is_public: is_public,
                 updatedAt: new Date()
             },
             { new: true, runValidators: true }
