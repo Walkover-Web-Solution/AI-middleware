@@ -150,50 +150,32 @@ const createAgentController = async (req, res, next) => {
           name_next_count += 1;
         }
 
-        if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-          const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-          if (num >= slug_next_count) slug_next_count = num + 1;
-        } else if (agent.slugName === name) {
-          slug_next_count += 1;
-        }
-      }
+        name = name || "untitled_agent";
 
-      slugName = `${name}_${slug_next_count}`;
-      name = `${name}_${name_next_count}`;
-    }
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
 
-    // Construct model data based on model configuration
-    const keys_to_update = [
-      "model",
-      "creativity_level",
-      "max_tokens",
-      "probability_cutoff",
-      "log_probability",
-      "repetition_penalty",
-      "novelty_penalty",
-      "n",
-      "response_count",
-      "additional_stop_sequences",
-      "stream",
-      "stop",
-      "response_type",
-      "tool_choice",
-      "size",
-      "quality",
-      "style"
-    ];
+        let name_next_count = 1;
+        let slug_next_count = 1;
 
-    const model_data = {};
+        for (const agent of all_agent) {
+            // Check Name Collision
+            const nameMatch = agent.name.match(nameRegex);
+            if (nameMatch) {
+const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
+                if (num >= name_next_count) {
+                    name_next_count = num + 1;
+                }
+            }
 
-    // Get model configuration if available
-    const serviceLower = service.toLowerCase();
-    if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
-      const modelObj = modelConfigDocument[serviceLower][model];
-      const configurations = modelObj.configuration || {};
-
-      for (const key of keys_to_update) {
-        if (configurations[key]) {
-          model_data[key] = key === "model" ? configurations[key].default : "default";
+            // Check Slug Collision
+            const slugMatch = agent.slugName.match(nameRegex);
+            if (slugMatch) {
+const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
+                if (num >= slug_next_count) {
+                    slug_next_count = num + 1;
+                }
+            }
         }
       }
     }
