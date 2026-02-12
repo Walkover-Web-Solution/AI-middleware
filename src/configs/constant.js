@@ -1,6 +1,7 @@
 import ConfigurationServices from "../db_services/configuration.service.js";
 import testcaseDbservice from "../db_services/testcase.service.js";
 import gptMemoryService from "../services/utils/gptMemory.service.js";
+import { convertPromptToString } from "../utils/promptWrapper.utils.js";
 
 const collectionNames = {
   ApikeyCredentials: "ApikeyCredentials",
@@ -85,9 +86,9 @@ export const AI_OPERATION_CONFIG = {
       const bridgeResult = await ConfigurationServices.getAgents(bridge_id, org_id, version_id);
       return { bridge: bridgeResult.bridges };
     },
-    getPrompt: (context) => context.bridge.configuration?.prompt || "",
+    getPrompt: (context) => convertPromptToString(context.bridge.configuration?.prompt) || "",
     getVariables: (req) => ({ query: req.body.query || "" }),
-    getMessage: (req, context) => context.bridge.configuration?.prompt || "", // optimize_prompt uses prompt as message
+    getMessage: (req, context) => convertPromptToString(context.bridge.configuration?.prompt) || "", // optimize_prompt uses prompt as message
     successMessage: "Prompt optimized successfully"
   },
   generate_summary: {
@@ -107,7 +108,7 @@ export const AI_OPERATION_CONFIG = {
           tools[tool.title] = tool.description;
         });
       }
-      let system_prompt = bridgeData.configuration?.prompt || "";
+      let system_prompt = convertPromptToString(bridgeData.configuration?.prompt) || "";
       if (Object.keys(tools).length > 0) {
         system_prompt += `Available tool calls :-  ${JSON.stringify(tools)}`;
       }
@@ -133,7 +134,7 @@ export const AI_OPERATION_CONFIG = {
       if (!bridgeResult.bridges) throw new Error("Bridge data not found");
       return { bridgeData: bridgeResult.bridges };
     },
-    getVariables: (req, context) => ({ system_prompt: context.bridgeData.configuration?.prompt || "" }),
+    getVariables: (req, context) => ({ system_prompt: convertPromptToString(context.bridgeData.configuration?.prompt) || "" }),
     getMessage: () =>
       "Generate 10 comprehensive test cases for this AI assistant based on its system prompt and available tools. Each test case should include a UserInput and ExpectedOutput.",
     postProcess: async (aiResult, req) => {
