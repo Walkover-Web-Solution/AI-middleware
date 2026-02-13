@@ -148,7 +148,7 @@ const updateEmbed = async (req, res, next) => {
       folder.pre_tool_id = pre_tool_id;
     }
     if (variables_path) {
-      folder.variable_state = variables_path;
+      folder.variables_path = variables_path;
     }
     await folder.save();
     await cleanupCache(cost_types.folder, folder_id);
