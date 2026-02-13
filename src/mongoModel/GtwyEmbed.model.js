@@ -35,6 +35,18 @@ const FolderSchema = new mongoose.Schema({
   folder_usage: {
     type: Number,
     default: 0
+  },
+  variable_state: {
+    type: Object,
+    default: {}
+  },
+  tools_id: {
+    type: Array,
+    default: []
+  },
+  pre_tool_id: {
+    type: String,
+    default: ""
   }
 });
 
