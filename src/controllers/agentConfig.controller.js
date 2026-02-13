@@ -138,23 +138,31 @@ const createAgentController = async (req, res, next) => {
     if (name) {
       slugName = name;
     } else {
+      name = name || "untitled_agent";
+
+      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
+
       let name_next_count = 1;
       let slug_next_count = 1;
 
       for (const agent of all_agent) {
-        name = name || "untitled_agent";
-        if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-          const num = parseInt(agent.name.replace("untitled_agent_", ""));
-          if (num >= name_next_count) name_next_count = num + 1;
-        } else if (agent.name === name) {
-          name_next_count += 1;
+        // Check Name Collision
+        const nameMatch = agent.name.match(nameRegex);
+        if (nameMatch) {
+          const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
+          if (num >= name_next_count) {
+            name_next_count = num + 1;
+          }
         }
 
-        if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-          const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-          if (num >= slug_next_count) slug_next_count = num + 1;
-        } else if (agent.slugName === name) {
-          slug_next_count += 1;
+        // Check Slug Collision
+        const slugMatch = agent.slugName.match(nameRegex);
+        if (slugMatch) {
+          const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
+          if (num >= slug_next_count) {
+            slug_next_count = num + 1;
+          }
         }
       }
 
@@ -291,11 +299,11 @@ const updateAgentController = async (req, res, next) => {
   const update_fields = {};
   const user_history = [];
 
-    let new_configuration = body.configuration;
-    const service = body.service;
-    const page_config = body.page_config;
-    const web_search_filter = body.web_search_filters;
-    const gtwy_web_search_filter = body.gtwy_web_search_filters;
+  let new_configuration = body.configuration;
+  const service = body.service;
+  const page_config = body.page_config;
+  const web_search_filter = body.web_search_filters;
+  const gtwy_web_search_filter = body.gtwy_web_search_filters;
 
   if (new_configuration) {
     const { isValid, errorMessage } = validateJsonSchemaConfiguration(new_configuration);
