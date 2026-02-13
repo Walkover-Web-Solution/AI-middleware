@@ -57,16 +57,21 @@ const createEmbed = async (req, res, next) => {
     const { name, config, apikey_object_id, folder_limit, type, tools_id, pre_tool_id, variables_path } = req.body;
     const org_id = req.profile.org.id;
     const folder_type = type ? type : "embed";
+    
+    const folderConfig = {
+      ...config,
+      ...(tools_id && { tools_id }),
+      ...(pre_tool_id && { pre_tool_id }),
+      ...(variables_path && { variables_path })
+    };
+    
     const folder = await FolderModel.create({
       name,
       org_id,
       type: folder_type,
-      config,
+      config: folderConfig,
       apikey_object_id,
-      folder_limit,
-      tools_id,
-      pre_tool_id,
-      variables_path
+      folder_limit
     });
     res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
     req.statusCode = 200;
@@ -133,22 +138,20 @@ const updateEmbed = async (req, res, next) => {
       }
     }
 
-    folder.config = config;
+    const updatedConfig = {
+      ...config,
+      ...(tools_id !== undefined && { tools_id }),
+      ...(pre_tool_id !== undefined && { pre_tool_id }),
+      ...(variables_path !== undefined && { variables_path })
+    };
+
+    folder.config = updatedConfig;
     folder.apikey_object_id = apikey_object_id;
     if (folder_limit >= 0) {
       folder.folder_limit = folder_limit;
     }
     if (folder_usage == 0) {
       folder.folder_usage = 0;
-    }
-    if (tools_id) {
-      folder.tools_id = tools_id;
-    }
-    if (pre_tool_id) {
-      folder.pre_tool_id = pre_tool_id;
-    }
-    if (variables_path) {
-      folder.variables_path = variables_path;
     }
     await folder.save();
     await cleanupCache(cost_types.folder, folder_id);

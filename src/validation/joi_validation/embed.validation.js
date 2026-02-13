@@ -20,10 +20,7 @@ const createEmbed = {
         .optional()
         .default({}),
       folder_limit: Joi.number().min(0).optional().default(0),
-      type: Joi.string().valid("embed", "rag_embed").optional().default("embed"),
-      tools_id: Joi.array().items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/)).optional(),
-      pre_tool_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
-      variable_path: Joi.object().optional()
+      type: Joi.string().valid("embed", "rag_embed").optional().default("embed")
     })
     .unknown(true)
 };
@@ -47,10 +44,7 @@ const updateEmbed = {
         .pattern(Joi.string(), Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
         .optional(),
       folder_limit: Joi.number().min(0).optional(),
-      folder_usage: Joi.number().min(0).optional(),
-      variable_path: Joi.object().optional(),
-      tools_id: Joi.array().items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/)).optional(),
-      pre_tool_id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional()
+      folder_usage: Joi.number().min(0).optional()
     })
     .unknown(true)
 };
