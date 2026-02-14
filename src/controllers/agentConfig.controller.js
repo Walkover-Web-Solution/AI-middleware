@@ -12,6 +12,7 @@ import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
+import { convertPromptToString } from "../utils/promptWrapper.utils.js";
 
 const createAgentController = async (req, res, next) => {
   try {
@@ -329,7 +330,8 @@ const updateAgentController = async (req, res, next) => {
   }
 
   if (new_configuration && new_configuration.prompt) {
-    const prompt_result = await storeSystemPrompt(new_configuration.prompt, org_id, parent_id || version_id);
+    const promptString = convertPromptToString(new_configuration.prompt);
+    const prompt_result = await storeSystemPrompt(promptString, org_id, parent_id || version_id);
     if (prompt_result && prompt_result.id) {
       new_configuration.system_prompt_version_id = prompt_result.id;
     }

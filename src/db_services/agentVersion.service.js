@@ -10,7 +10,7 @@ import { deleteInCache } from "../cache_service/index.js";
 import { callAiMiddleware } from "../services/utils/aiCall.utils.js";
 import { redis_keys, bridge_ids } from "../configs/constant.js";
 import { getReqOptVariablesInPrompt, transformAgentVariableToToolCallFormat } from "../utils/agentVariables.js";
-
+import { convertPromptToString } from "../utils/promptWrapper.utils.js";
 const ObjectId = mongoose.Types.ObjectId;
 
 async function getVersion(version_id) {
@@ -392,7 +392,7 @@ async function publish(org_id, version_id, user_id) {
   const previousPublishedVersionId = parentConfiguration.published_version_id;
 
   // Extract agent variables logic
-  const prompt = getVersionData.configuration?.prompt || "";
+  const prompt = convertPromptToString(getVersionData.configuration?.prompt || "");
   const variableState = getVersionData.variables_state || {};
   const variablePath = getVersionData.variables_path || {};
   const agentVariables = getReqOptVariablesInPrompt(prompt, variableState, variablePath);
