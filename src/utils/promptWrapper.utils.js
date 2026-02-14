@@ -41,6 +41,11 @@ const convertPromptToString = (prompt) => {
   if (typeof prompt === "object" && prompt.embedFields) {
     const parts = [];
 
+    // Add custom prompt if present
+    if (prompt.customPrompt) {
+      parts.push(prompt.customPrompt);
+    }
+
     // Add visible embed fields only
     for (const field of prompt.embedFields) {
       if (typeof field === "object" && field.value && !field.hidden) {
