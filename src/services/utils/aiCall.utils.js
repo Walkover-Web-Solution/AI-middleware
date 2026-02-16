@@ -2,7 +2,15 @@ import axios from "axios";
 import { configDotenv } from "dotenv";
 configDotenv();
 
-async function callAiMiddleware(user, bridge_id, variables = {}, configuration = null, response_type = null, thread_id = null) {
+async function callAiMiddleware(
+  user,
+  bridge_id,
+  variables = {},
+  configuration = null,
+  response_type = null,
+  thread_id = null,
+  orchestrator_flag = false
+) {
   const requestBody = {
     user: user,
     bridge_id: bridge_id,
@@ -19,6 +27,10 @@ async function callAiMiddleware(user, bridge_id, variables = {}, configuration =
 
   if (thread_id !== null) {
     requestBody.thread_id = thread_id;
+  }
+
+  if (orchestrator_flag) {
+    requestBody.orchestrator_flag = orchestrator_flag;
   }
 
   try {
