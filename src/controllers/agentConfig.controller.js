@@ -134,42 +134,36 @@ const createAgentController = async (req, res, next) => {
       }
     }
 
-    let slugName;
+    name = name || "untitled_agent";
 
-    if (name) {
-      slugName = name;
-    } else {
-      name = name || "untitled_agent";
+    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
 
-      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
+    let name_next_count = 1;
+    let slug_next_count = 1;
 
-      let name_next_count = 1;
-      let slug_next_count = 1;
-
-      for (const agent of all_agent) {
-        // Check Name Collision
-        const nameMatch = agent.name.match(nameRegex);
-        if (nameMatch) {
-          const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
-          if (num >= name_next_count) {
-            name_next_count = num + 1;
-          }
-        }
-
-        // Check Slug Collision
-        const slugMatch = agent.slugName.match(nameRegex);
-        if (slugMatch) {
-          const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
-          if (num >= slug_next_count) {
-            slug_next_count = num + 1;
-          }
+    for (const agent of all_agent) {
+      // Check Name Collision
+      const nameMatch = agent.name.match(nameRegex);
+      if (nameMatch) {
+        const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
+        if (num >= name_next_count) {
+          name_next_count = num + 1;
         }
       }
 
-      slugName = `${name}_${slug_next_count}`;
-      name = `${name}_${name_next_count}`;
+      // Check Slug Collision
+      const slugMatch = agent.slugName.match(nameRegex);
+      if (slugMatch) {
+        const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
+        if (num >= slug_next_count) {
+          slug_next_count = num + 1;
+        }
+      }
     }
+
+    const slugName = `${name}_${slug_next_count}`;
+    name = `${name}_${name_next_count}`;
 
     // Construct model data based on model configuration
     const keys_to_update = [
