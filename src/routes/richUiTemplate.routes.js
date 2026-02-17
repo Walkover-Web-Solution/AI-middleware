@@ -1,17 +1,8 @@
 import express from "express";
-import {
-    createRichUiTemplate,
-    getRichUiTemplates,
-    updateRichUiTemplate,
-    deleteRichUiTemplate
-} from "../controllers/richUiTemplate.controller.js";
+import { createRichUiTemplate, getRichUiTemplates, updateRichUiTemplate, deleteRichUiTemplate } from "../controllers/richUiTemplate.controller.js";
 import { middleware } from "../middlewares/middleware.js";
 import validate from "../middlewares/validate.middleware.js";
-import {
-    createRichUiTemplateSchema,
-    updateRichUiTemplateSchema,
-    templateIdSchema
-} from "../validation/joi_validation/richUiTemplate.validation.js";
+import { createRichUiTemplateSchema, updateRichUiTemplateSchema, templateIdSchema } from "../validation/joi_validation/richUiTemplate.validation.js";
 
 const router = express.Router();
 

@@ -21,8 +21,16 @@ const callAi = {
   body: Joi.object()
     .keys({
       type: Joi.string()
-        .valid("structured_output", "gpt_memory", "improve_prompt", "optimize_prompt", "generate_test_cases", "generate_summary", "generate_json",
-            'rich_ui_template')
+        .valid(
+          "structured_output",
+          "gpt_memory",
+          "improve_prompt",
+          "optimize_prompt",
+          "generate_test_cases",
+          "generate_summary",
+          "generate_json",
+          "rich_ui_template"
+        )
         .required(),
       json_schema: Joi.alternatives().conditional("type", {
         is: "structured_output",

@@ -1,9 +1,9 @@
-import dotenv from 'dotenv';
-import logger from '../logger.js';
-import rabbitmqService from '../services/rabbitmq.service.js';
+import dotenv from "dotenv";
+import logger from "../logger.js";
+import rabbitmqService from "../services/rabbitmq.service.js";
 
 dotenv.config();
-const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED?.toLowerCase() === 'true';
+const CONSUMER_ENABLED = process.env.CONSUMER_ENABLED?.toLowerCase() === "true";
 const CONSUMERS = [];
 
 class Consumer {

@@ -37,7 +37,7 @@ import serviceRoutes from "./routes/service.routes.js";
 import converstaionRoutes from "./routes/conversation.routes.js";
 import internalRoutes from "./routes/internal.routes.js";
 import promptWrapperRoutes from "./routes/promptWrapper.routes.js";
-import richUiTemplateRoutes from './routes/richUiTemplate.routes.js'
+import richUiTemplateRoutes from "./routes/richUiTemplate.routes.js";
 const app = express();
 configDotenv();
 const PORT = process.env.PORT || 7072;
@@ -87,7 +87,7 @@ app.use("/api/runagents", runAgentsRoutes);
 app.use("/api/template", templateRoute);
 app.use("/api/prompt_wrappers", promptWrapperRoutes);
 app.use("/api/internal", internalRoutes);
-app.use('/api/rich_ui_templates', richUiTemplateRoutes)
+app.use("/api/rich_ui_templates", richUiTemplateRoutes);
 
 //Metrics
 // app.use('/api/v1/metrics', metrisRoutes);
