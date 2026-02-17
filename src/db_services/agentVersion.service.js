@@ -327,7 +327,7 @@ async function getPromptEnhancerPercentage(parentId, prompt) {
   try {
     if (!prompt) return null;
 
-    const promptEnhancerResult = await callAiMiddleware(prompt, bridge_ids["prompt_checker"], {}, null, null, null, true);
+    const promptEnhancerResult = await callAiMiddleware(prompt, bridge_ids["prompt_checker"], { user_prompt: prompt }, null, null, null, true);
     const prompt_enhancer_percentage = promptEnhancerResult.OptimizationPotential;
     const CriteriaCheck = promptEnhancerResult.CriteriaCheck;
     // Update the document in the configurationModel
