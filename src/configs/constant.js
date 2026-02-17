@@ -11,24 +11,24 @@ const collectionNames = {
 };
 
 const bridge_ids = {
-    'gpt_memory': '6752d9fc232e8659b2b65f0d',
-    'suggest_model': '67a75ab42d85a6d4f16a4c7e',
-    'make_question': '67459164ea7147ad4b75f92a',
-    'optimze_prompt': '6843d832aab19264b8967f3b',
-    'create_bridge_using_ai': '67e4e7934e58b9c3b991a29c',
-    'structured_output_optimizer': '67766c4eec020b944b3e0670',
-    'chatbot_response_with_actions': '67b3157bdd16f681b71b06a4',
-    'chatbot_response_without_actions': '67b30d46f8ab2d672f1682b4',
-    'get_csv_query_type': '67c2f4b40ef03932ed9a2b40',
-    'chatbot_suggestions': '674710c9141fcdaeb820aeb8',
-    'generate_summary': '679ca9520a9b42277fd2a3c1',
-    'function_agrs_using_ai': '67c81a424f3136bfb0e81906',
-    'compare_result': '67ce993c8407023ad4f7b277',
-    'generate_description': '6800d48f7dfc8ddcc495f918',
-    'improve_prompt_optimizer': '68e4ac02739a8b89ba27b22a',
-    'generate_test_cases': '68e8d1fbf8c9ba2043cf7afd',
-    'prompt_checker': '692ee19da04fbf2a132b252c',
-    'rich_ui_template': '6967b36c17a69473fa7fdb90'
+  gpt_memory: "6752d9fc232e8659b2b65f0d",
+  suggest_model: "67a75ab42d85a6d4f16a4c7e",
+  make_question: "67459164ea7147ad4b75f92a",
+  optimze_prompt: "6843d832aab19264b8967f3b",
+  create_bridge_using_ai: "67e4e7934e58b9c3b991a29c",
+  structured_output_optimizer: "67766c4eec020b944b3e0670",
+  chatbot_response_with_actions: "67b3157bdd16f681b71b06a4",
+  chatbot_response_without_actions: "67b30d46f8ab2d672f1682b4",
+  get_csv_query_type: "67c2f4b40ef03932ed9a2b40",
+  chatbot_suggestions: "674710c9141fcdaeb820aeb8",
+  generate_summary: "679ca9520a9b42277fd2a3c1",
+  function_agrs_using_ai: "67c81a424f3136bfb0e81906",
+  compare_result: "67ce993c8407023ad4f7b277",
+  generate_description: "6800d48f7dfc8ddcc495f918",
+  improve_prompt_optimizer: "68e4ac02739a8b89ba27b22a",
+  generate_test_cases: "68e8d1fbf8c9ba2043cf7afd",
+  prompt_checker: "692ee19da04fbf2a132b252c",
+  rich_ui_template: "6967b36c17a69473fa7fdb90"
 };
 
 const redis_keys = {
@@ -77,15 +77,7 @@ const new_agent_service = {
   grok: "grok-4-fast"
 };
 
-export {
-    collectionNames,
-    bridge_ids,
-    redis_keys,
-    cost_types,
-    prebuilt_prompt_bridge_id,
-    new_agent_service
-};
-
+export { collectionNames, bridge_ids, redis_keys, cost_types, prebuilt_prompt_bridge_id, new_agent_service };
 
 export const AI_OPERATION_CONFIG = {
   optimize_prompt: {
@@ -168,29 +160,29 @@ export const AI_OPERATION_CONFIG = {
     bridgeIdConst: bridge_ids["improve_prompt_optimizer"],
     getVariables: (req) => req.body.variables, // Assuming variables are passed directly in body as 'variables' object based on original code
     getMessage: () => "improve the prompt",
-    successMessage: "Prompt improved successfully",
+    successMessage: "Prompt improved successfully"
   },
-    rich_ui_template: {
-        bridgeIdConst: bridge_ids['rich_ui_template'],
-        getVariables: (req) => req.body,
-        getMessage: () => "generate the rich ui template",
-        successMessage: "Rich UI template generated successfully",
-        postProcess: async (aiResult) => {
-            let html = '';
-            try {
-                const cardJson = typeof aiResult === 'string' ? JSON.parse(aiResult) : aiResult;
-                html = renderCardToTailwind(cardJson);
-            } catch (error) {
-                console.error('Error rendering card to HTML:', error);
-            }
-            return {
-                success: true,
-                message: "Rich UI template generated successfully",
-                result: aiResult,
-                html: html
-            };
-        }
-    },
+  rich_ui_template: {
+    bridgeIdConst: bridge_ids["rich_ui_template"],
+    getVariables: (req) => req.body,
+    getMessage: () => "generate the rich ui template",
+    successMessage: "Rich UI template generated successfully",
+    postProcess: async (aiResult) => {
+      let html = "";
+      try {
+        const cardJson = typeof aiResult === "string" ? JSON.parse(aiResult) : aiResult;
+        html = renderCardToTailwind(cardJson);
+      } catch (error) {
+        console.error("Error rendering card to HTML:", error);
+      }
+      return {
+        success: true,
+        message: "Rich UI template generated successfully",
+        result: aiResult,
+        html: html
+      };
+    }
+  },
   gpt_memory: {
     handler: async (req) => {
       const { bridge_id, thread_id, sub_thread_id, version_id } = req.body;

@@ -64,9 +64,9 @@ async function callAiMiddleware(
 
 async function getAiMiddlewareAgentData(bridge_id) {
   try {
-    const response = await axios.get(`https://api.gtwy.ai/api/v1/config/getbridges/${bridge_id}`, {
+    const response = await axios.get(`https://db.gtwy.ai/api/agent/${bridge_id}`, {
       headers: {
-        pauthkey: process.env.AI_MIDDLEWARE_PAUTH_KEY,
+        pauthkey: process.env.GTWY_PAUTH_KEY,
         "Content-Type": "application/json",
         "Accept-Encoding": "gzip"
       }

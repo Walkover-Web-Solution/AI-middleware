@@ -57,14 +57,14 @@ const createEmbed = async (req, res, next) => {
     const { name, config, apikey_object_id, folder_limit, type, tools_id, pre_tool_id, variables_path } = req.body;
     const org_id = req.profile.org.id;
     const folder_type = type ? type : "embed";
-    
+
     const folderConfig = {
       ...config,
       ...(tools_id && { tools_id }),
       ...(pre_tool_id && { pre_tool_id }),
       ...(variables_path && { variables_path })
     };
-    
+
     const folder = await FolderModel.create({
       name,
       org_id,
