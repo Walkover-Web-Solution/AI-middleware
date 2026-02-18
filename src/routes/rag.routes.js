@@ -40,6 +40,7 @@ routes.get("/collection/:collectionId/resources", middleware, validate({ params:
 
 // Resource routes
 routes.get("/resource", middleware, getOrCreateDefaultCollections);
+// Public API
 routes.get("/resource/by-collection", middleware, validate({ query: getResourcesByCollectionQuerySchema }), getResourcesByCollectionAndOwner);
 routes.post("/resource", middleware, checkAgentAccessMiddleware, validate({ body: createResourceSchema }), createResourceInCollection);
 routes.put(
