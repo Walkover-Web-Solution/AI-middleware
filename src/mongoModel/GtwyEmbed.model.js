@@ -27,7 +27,8 @@ const ConfigSchema = new mongoose.Schema(
     tools_id: { type: [String], default: [] },
     variables_path: { type: Object, default: {} },
     pre_tool_id: { type: String, default: "" },
-    prompt: { type: Object, default: {} }
+    prompt: { type: Object, default: {} },
+    models: { type: Object, default: {} }
   },
   { _id: false, strict: false }
 );
