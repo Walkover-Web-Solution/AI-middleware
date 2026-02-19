@@ -75,7 +75,7 @@ const version = new mongoose.Schema({
   },
   tool_call_count: {
     type: Number,
-    default: 0
+    default: 3
   },
   agent_variables: {
     type: Object,

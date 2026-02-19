@@ -39,7 +39,7 @@ const embedLogin = async (req, res) => {
   };
 
   // Run DB query and token creation in parallel since they don't depend on each other
-  const [folder] = await Promise.all([FolderModel.findOne({ _id: req.Embed.folder_id }), createProxyToken(embedDetails)]);
+  const [folder] = await Promise.all([FolderModel.findOne({ _id: req.Embed.folder_id }).lean(), createProxyToken(embedDetails)]);
 
   const config = folder?.config || {};
   const apikey_object_id = folder?.apikey_object_id;
@@ -54,14 +54,22 @@ const embedLogin = async (req, res) => {
 
 const createEmbed = async (req, res, next) => {
   try {
-    const { name, config, apikey_object_id, folder_limit, type } = req.body;
+    const { name, config, apikey_object_id, folder_limit, type, tools_id, pre_tool_id, variables_path } = req.body;
     const org_id = req.profile.org.id;
     const folder_type = type ? type : "embed";
+
+    const folderConfig = {
+      ...config,
+      ...(tools_id && { tools_id }),
+      ...(pre_tool_id && { pre_tool_id }),
+      ...(variables_path && { variables_path })
+    };
+
     const folder = await FolderModel.create({
       name,
       org_id,
       type: folder_type,
-      config,
+      config: folderConfig,
       apikey_object_id,
       folder_limit
     });
@@ -104,7 +112,7 @@ const getAllEmbed = async (req, res, next) => {
 
 const updateEmbed = async (req, res, next) => {
   try {
-    const { folder_id, config, apikey_object_id, folder_limit, folder_usage } = req.body;
+    const { folder_id, config, apikey_object_id, folder_limit, folder_usage, variables_path, tools_id, pre_tool_id } = req.body;
     const org_id = req.profile.org.id;
 
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
@@ -130,7 +138,14 @@ const updateEmbed = async (req, res, next) => {
       }
     }
 
-    folder.config = config;
+    const updatedConfig = {
+      ...config,
+      ...(tools_id !== undefined && { tools_id }),
+      ...(pre_tool_id !== undefined && { pre_tool_id }),
+      ...(variables_path !== undefined && { variables_path })
+    };
+
+    folder.config = updatedConfig;
     folder.apikey_object_id = apikey_object_id;
     if (folder_limit >= 0) {
       folder.folder_limit = folder_limit;

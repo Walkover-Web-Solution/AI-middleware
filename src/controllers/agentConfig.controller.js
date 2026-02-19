@@ -12,6 +12,7 @@ import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
 import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.js";
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
+import { convertPromptToString } from "../utils/promptWrapper.utils.js";
 
 const createAgentController = async (req, res, next) => {
   try {
@@ -32,6 +33,71 @@ const createAgentController = async (req, res, next) => {
     let model = "gpt-5-nano";
     let type = "chat";
 
+    // If no folder_data (Main User), use structured object format
+    if (!folder_data) {
+      prompt = {
+        role: "AI Bot",
+        goal: "Respond logically and clearly, maintaining a neutral, automated tone.",
+        instruction:
+          "Guidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful."
+      };
+    }
+
+    // Check if folder has custom prompt configuration
+    if (folder_data?.config?.prompt) {
+      const folderPromptConfig = folder_data.config.prompt;
+      const useDefaultPrompt = folderPromptConfig.useDefaultPrompt !== false; // Default: true
+      // ✅ CASE 1: Use structured default object when default is ON
+      if (useDefaultPrompt) {
+        prompt = {
+          role: "AI Bot",
+          goal: "Respond logically and clearly, maintaining a neutral, automated tone.",
+          instruction:
+            "Guidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful."
+        };
+      }
+
+      if (!useDefaultPrompt && folderPromptConfig.customPrompt) {
+        // CASE 2: Use Custom Prompt (Embed Object)
+        let embedFields = Array.isArray(folderPromptConfig.embedFields) ? folderPromptConfig.embedFields : [];
+
+        // 1. Ensure default hidden fields exist
+        const defaultFields = ["role", "goal", "instruction"];
+        const existingFieldNames = new Set(embedFields.map((f) => f.name));
+
+        defaultFields.forEach((name) => {
+          if (!existingFieldNames.has(name)) {
+            const type = name === "instruction" ? "textarea" : "input";
+            embedFields.push({ name, value: "", type, hidden: true });
+            existingFieldNames.add(name);
+          }
+        });
+
+        // 2. Extract new variables from customPrompt string
+        const variableRegex = /\{\{([^}]+)\}\}/g;
+        const matches = folderPromptConfig.customPrompt.matchAll(variableRegex);
+
+        for (const match of matches) {
+          const varName = match[1]?.trim();
+          if (varName && !existingFieldNames.has(varName)) {
+            embedFields.push({
+              name: varName,
+              value: "",
+              type: "input",
+              hidden: false
+            });
+            existingFieldNames.add(varName);
+          }
+        }
+
+        prompt = {
+          customPrompt: folderPromptConfig.customPrompt,
+          embedFields: embedFields,
+          useDefaultPrompt: false
+        };
+      }
+    }
+
     if (agents.templateId) {
       const template_id = agents.templateId;
       const template_data = await ConfigurationServices.gettemplateById(template_id);
@@ -40,7 +106,10 @@ const createAgentController = async (req, res, next) => {
         req.statusCode = 404;
         return next();
       }
-      prompt = template_data.prompt || prompt;
+      // Only override if we don't have folder prompt config
+      if (!folder_data?.config?.prompt) {
+        prompt = template_data.prompt || prompt;
+      }
     }
 
     const all_agent_name = all_agent.map((agent) => agent.name);
@@ -57,39 +126,44 @@ const createAgentController = async (req, res, next) => {
         model = agent_data.model || model;
         service = agent_data.service || service;
         name = name || agent_data.name;
-        prompt = agent_data.system_prompt || prompt;
+        // Only override prompt if we don't have folder prompt config
+        if (!folder_data?.config?.prompt) {
+          prompt = agent_data.system_prompt || prompt;
+        }
         type = agent_data.type || type;
       }
     }
 
-    let slugName;
+    name = name || "untitled_agent";
 
-    if (name) {
-      slugName = name;
-    } else {
-      let name_next_count = 1;
-      let slug_next_count = 1;
+    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
 
-      for (const agent of all_agent) {
-        name = name || "untitled_agent";
-        if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
-          const num = parseInt(agent.name.replace("untitled_agent_", ""));
-          if (num >= name_next_count) name_next_count = num + 1;
-        } else if (agent.name === name) {
-          name_next_count += 1;
-        }
+    let name_next_count = 1;
+    let slug_next_count = 1;
 
-        if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
-          const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
-          if (num >= slug_next_count) slug_next_count = num + 1;
-        } else if (agent.slugName === name) {
-          slug_next_count += 1;
+    for (const agent of all_agent) {
+      // Check Name Collision
+      const nameMatch = agent.name.match(nameRegex);
+      if (nameMatch) {
+        const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
+        if (num >= name_next_count) {
+          name_next_count = num + 1;
         }
       }
 
-      slugName = `${name}_${slug_next_count}`;
-      name = `${name}_${name_next_count}`;
+      // Check Slug Collision
+      const slugMatch = agent.slugName.match(nameRegex);
+      if (slugMatch) {
+        const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
+        if (num >= slug_next_count) {
+          slug_next_count = num + 1;
+        }
+      }
     }
+
+    const slugName = `${name}_${slug_next_count}`;
+    name = `${name}_${name_next_count}`;
 
     // Construct model data based on model configuration
     const keys_to_update = [
@@ -250,7 +324,8 @@ const updateAgentController = async (req, res, next) => {
   }
 
   if (new_configuration && new_configuration.prompt) {
-    const prompt_result = await storeSystemPrompt(new_configuration.prompt, org_id, parent_id || version_id);
+    const promptString = convertPromptToString(new_configuration.prompt);
+    const prompt_result = await storeSystemPrompt(promptString, org_id, parent_id || version_id);
     if (prompt_result && prompt_result.id) {
       new_configuration.system_prompt_version_id = prompt_result.id;
     }
