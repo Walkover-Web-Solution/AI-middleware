@@ -123,14 +123,14 @@ const createAgentController = async (req, res, next) => {
       const agent_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
       // Assuming agent_data is parsed JSON from callAiMiddleware
       if (typeof agent_data === "object") {
-        model = agent_data.model || model;
-        service = agent_data.service || service;
+        model;
+        service;
         name = name || agent_data.name;
         // Only override prompt if we don't have folder prompt config
         if (!folder_data?.config?.prompt) {
           prompt = agent_data.system_prompt || prompt;
         }
-        type = agent_data.type || type;
+        type;
       }
     }
 
