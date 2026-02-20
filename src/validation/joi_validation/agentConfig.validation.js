@@ -19,7 +19,30 @@ const updateBridgeSchema = Joi.object({
   configuration: Joi.object({
     model: Joi.string().optional(),
     type: Joi.string().valid("chat", "embedding", "completion", "fine-tune", "reasoning", "image").optional(),
-    prompt: Joi.alternatives().try(Joi.string().allow(""), Joi.array()).optional(),
+    prompt: Joi.alternatives()
+      .try(
+        Joi.string().allow(""),
+        Joi.array(),
+        Joi.object({
+          role: Joi.string().allow("").optional(),
+          goal: Joi.string().allow("").optional(),
+          instruction: Joi.string().allow("").optional(),
+          // Embed-specific fields
+          customPrompt: Joi.string().allow("").optional(),
+          embedFields: Joi.array()
+            .items(
+              Joi.object({
+                name: Joi.string().required(),
+                value: Joi.string().allow("").optional(),
+                type: Joi.string().valid("input", "textarea").optional(),
+                hidden: Joi.boolean().optional()
+              })
+            )
+            .optional(),
+          useDefaultPrompt: Joi.boolean().optional()
+        })
+      )
+      .optional(),
     system_prompt_version_id: Joi.string().optional(),
     fine_tune_model: Joi.object().optional(),
     response_format: Joi.object().optional(),
