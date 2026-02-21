@@ -259,9 +259,11 @@ const createAgentController = async (req, res, next) => {
     };
     req.statusCode = 200;
 
-    sendAgentCreatedWebhook(updated_agent_result.result, org_id).catch((err) => {
-      console.error("Webhook failed:", err);
-    });
+    if (!folder_id) {
+      sendAgentCreatedWebhook(updated_agent_result.result, org_id).catch((err) => {
+        console.error("Webhook failed:", err);
+      });
+    }
 
     return next();
   } catch (e) {
