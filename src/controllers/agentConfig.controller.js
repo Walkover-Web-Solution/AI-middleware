@@ -58,43 +58,15 @@ const createAgentController = async (req, res, next) => {
       }
 
       if (!useDefaultPrompt && folderPromptConfig.customPrompt) {
-        // CASE 2: Use Custom Prompt (Embed Object)
-        let embedFields = Array.isArray(folderPromptConfig.embedFields) ? folderPromptConfig.embedFields : [];
-
-        // 1. Ensure default hidden fields exist
-        const defaultFields = ["role", "goal", "instruction"];
-        const existingFieldNames = new Set(embedFields.map((f) => f.name));
-
-        defaultFields.forEach((name) => {
-          if (!existingFieldNames.has(name)) {
-            const type = name === "instruction" ? "textarea" : "input";
-            embedFields.push({ name, value: "", type, hidden: true });
-            existingFieldNames.add(name);
+        // CASE 2: Use Custom Prompt - build variables from non-hidden embedFields
+        const embedFields = Array.isArray(folderPromptConfig.embedFields) ? folderPromptConfig.embedFields : [];
+        const variables = embedFields.reduce((acc, field) => {
+          if (field.hidden === false) {
+            acc[field.name] = field.value;
           }
-        });
-
-        // 2. Extract new variables from customPrompt string
-        const variableRegex = /\{\{([^}]+)\}\}/g;
-        const matches = folderPromptConfig.customPrompt.matchAll(variableRegex);
-
-        for (const match of matches) {
-          const varName = match[1]?.trim();
-          if (varName && !existingFieldNames.has(varName)) {
-            embedFields.push({
-              name: varName,
-              value: "",
-              type: "input",
-              hidden: false
-            });
-            existingFieldNames.add(varName);
-          }
-        }
-
-        prompt = {
-          customPrompt: folderPromptConfig.customPrompt,
-          embedFields: embedFields,
-          useDefaultPrompt: false
-        };
+          return acc;
+        }, {});
+        prompt = { ...variables };
       }
     }
 
