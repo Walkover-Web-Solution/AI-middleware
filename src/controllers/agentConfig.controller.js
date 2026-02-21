@@ -69,16 +69,14 @@ const createAgentController = async (req, res, next) => {
     } else {
       let name_next_count = 1;
       let slug_next_count = 1;
-
+      name = name || "untitled_agent";
       for (const agent of all_agent) {
-        name = name || "untitled_agent";
         if (name.startsWith("untitled_agent") && agent.name.startsWith("untitled_agent_")) {
           const num = parseInt(agent.name.replace("untitled_agent_", ""));
           if (num >= name_next_count) name_next_count = num + 1;
         } else if (agent.name === name) {
           name_next_count += 1;
         }
-
         if (name.startsWith("untitled_agent") && agent.slugName.startsWith("untitled_agent_")) {
           const num = parseInt(agent.slugName.replace("untitled_agent_", ""));
           if (num >= slug_next_count) slug_next_count = num + 1;
