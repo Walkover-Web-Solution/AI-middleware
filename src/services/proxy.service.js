@@ -16,7 +16,7 @@ export async function getUserOrgMapping(userId, orgId) {
       },
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN
+        Authkey: process.env.ADMIN_API_KEY
       }
     });
     // eslint-disable-next-line no-constant-binary-expression
@@ -44,7 +44,7 @@ export async function getOrganizationById(orgId) {
       // TODO not provided by proxy
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN
+        Authkey: process.env.ADMIN_API_KEY
       }
       // You can include credentials if required (e.g., 'withCredentials': true)
     });
@@ -62,7 +62,7 @@ export async function createOrFindUserAndCompany(userOrgObject) {
     const response = await axios.post(`${process.env.PROXY_BASE_URL}/createCUsers`, userOrgObject, {
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN
+        Authkey: process.env.ADMIN_API_KEY
       }
     });
 
@@ -83,7 +83,7 @@ export async function updateOrganizationData(orgId, orgDetails) {
     const response = await axios.put(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/updateDetails`, updateObject, {
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN
+        Authkey: process.env.ADMIN_API_KEY
       }
       // You can include credentials if required (e.g., 'withCredentials': true)
     });
@@ -102,7 +102,7 @@ export async function createProxyToken(token_data) {
     const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PROXY_USER_REFERENCE_ID}/getAuthToken?${queryData}`, {
       headers: {
         "Content-Type": "application/json",
-        Authkey: process.env.PROXY_ADMIN_TOKEN
+        Authkey: process.env.ADMIN_API_KEY
         // Add any other headers if needed
       }
       // You can include credentials if required (e.g., 'withCredentials': true)
@@ -126,7 +126,7 @@ export async function getUsers(org_id, page = 1, pageSize = 10, exclude_role_ids
         exclude_role_ids
       },
       headers: {
-        authkey: process.env.PROXY_ADMIN_TOKEN
+        authkey: process.env.ADMIN_API_KEY
       }
     });
     return response?.data?.data;
@@ -145,7 +145,7 @@ export async function validateCauthKey(pauthkey) {
       },
       {
         headers: {
-          authkey: process.env.PROXY_ADMIN_TOKEN
+          authkey: process.env.ADMIN_API_KEY
         }
       }
     );
@@ -165,7 +165,7 @@ export async function updateProxyDetails(updateObject) {
   try {
     const response = await axios.put(apiUrl, updateObject, {
       headers: {
-        Authkey: process.env.PROXY_ADMIN_TOKEN,
+        Authkey: process.env.ADMIN_API_KEY,
         "Content-Type": "application/json"
       }
     });
@@ -181,7 +181,7 @@ export async function getProxyDetails(params) {
     const response = await axios.get(`${process.env.PROXY_BASE_URL}/${process.env.PUBLIC_REFERENCEID}/getDetails`, {
       params,
       headers: {
-        authkey: process.env.PROXY_ADMIN_TOKEN
+        authkey: process.env.ADMIN_API_KEY
       }
     });
     return response.data;
@@ -199,7 +199,7 @@ export async function removeClientUser(userId, companyId, featureId) {
       {
         headers: {
           "Content-Type": "application/json",
-          Authkey: process.env.PROXY_ADMIN_TOKEN
+          Authkey: process.env.ADMIN_API_KEY
         }
       }
     );
