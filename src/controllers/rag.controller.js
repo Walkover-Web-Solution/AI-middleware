@@ -304,7 +304,7 @@ export const createResourceInCollection = async (req, res, next) => {
         url,
         description,
         ownerId: ownerId || "public",
-        settings
+        settings: { ...settings, keepDuplicate: true }
       },
       {
         headers: {
