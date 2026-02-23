@@ -347,6 +347,7 @@ const updateAgentController = async (req, res, next) => {
     "gpt_memory",
     "gpt_memory_context",
     "doc_ids",
+    "pre_tools_doc_ids",
     "variables_state",
     "IsstarterQuestionEnable",
     "name",
