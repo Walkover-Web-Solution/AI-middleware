@@ -329,14 +329,14 @@ async function getPromptEnhancerPercentage(parentId, prompt) {
 
     const promptEnhancerResult = await callAiMiddleware(prompt, bridge_ids["prompt_checker"], { user_prompt: prompt }, null, null, null, true);
     const prompt_enhancer_percentage = promptEnhancerResult.OptimizationPotential;
-    const CriteriaCheck = promptEnhancerResult.CriteriaCheck;
+    const criteria_check = promptEnhancerResult.CriteriaCheck;
     // Update the document in the configurationModel
     await configurationModel.updateOne(
       { _id: parentId },
-      { $set: { prompt_enhancer_percentage: prompt_enhancer_percentage, CriteriaCheck: CriteriaCheck } }
+      { $set: { prompt_enhancer_percentage: prompt_enhancer_percentage, criteria_check: criteria_check } }
     );
 
-    return { prompt_enhancer_percentage, CriteriaCheck };
+    return { prompt_enhancer_percentage, criteria_check };
   } catch (error) {
     console.error("Error getting prompt enhancer percentage:", error);
     return null;
