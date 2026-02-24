@@ -183,6 +183,10 @@ const configuration = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  criteria_check: {
+    type: Object,
+    default: {}
+  },
   created_at: {
     type: Date,
     default: Date.now
