@@ -152,7 +152,7 @@ const discardVersion = async (req, res, next) => {
   }
 
   const agentData = { ...bridgeDataResult.bridges };
-  const keysToRemove = ["name", "slugName", "bridgeType", "_id", "versions", "status", "apiCalls", "bridge_status"];
+  const keysToRemove = ["name", "slugName", "bridgeType", "_id", "versions", "apiCalls", "bridge_status"];
   keysToRemove.forEach((key) => delete agentData[key]);
 
   agentData.is_drafted = false;

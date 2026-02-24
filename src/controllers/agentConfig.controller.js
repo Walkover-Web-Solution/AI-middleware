@@ -355,7 +355,6 @@ const updateAgentController = async (req, res, next) => {
     "guardrails",
     "web_search_filters",
     "gtwy_web_search_filters",
-    "status",
     "chatbot_auto_answers"
   ];
 
