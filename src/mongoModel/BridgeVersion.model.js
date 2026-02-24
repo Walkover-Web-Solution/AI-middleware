@@ -157,11 +157,6 @@ const version = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  status: {
-    type: Number,
-    default: 1,
-    required: true
-  },
   responseIds: {
     type: Array,
     default: []

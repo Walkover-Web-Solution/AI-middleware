@@ -235,7 +235,6 @@ const createAgentController = async (req, res, next) => {
       service: service,
       bridgeType: agentType,
       org_id: org_id,
-      status: 1,
       gpt_memory: true,
       folder_id: folder_id,
       user_id: user_id,
