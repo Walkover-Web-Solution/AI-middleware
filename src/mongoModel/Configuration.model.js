@@ -211,11 +211,6 @@ const configuration = new mongoose.Schema({
     type: String,
     required: true
   },
-  status: {
-    type: Number,
-    default: 1,
-    required: true
-  },
   responseIds: {
     type: Array,
     default: []
