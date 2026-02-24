@@ -1162,7 +1162,6 @@ const getAllAgentsInOrg = async (org_id, folder_id, user_id, isEmbedUser) => {
       "configuration.prompt": 1,
       bridgeType: 1,
       slugName: 1,
-      status: 1,
       versions: 1,
       published_version_id: 1,
       total_tokens: 1,

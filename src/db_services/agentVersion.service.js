@@ -29,7 +29,7 @@ async function getVersion(version_id) {
 async function createAgentVersion(data) {
   try {
     const agentVersionData = data.toObject ? data.toObject() : { ...data };
-    const keysToRemove = ["name", "slugName", "bridgeType", "status"];
+    const keysToRemove = ["name", "slugName", "bridgeType"];
     keysToRemove.forEach((key) => delete agentVersionData[key]);
 
     agentVersionData.is_drafted = true;
