@@ -105,6 +105,14 @@ const version = new mongoose.Schema({
     type: Array,
     default: []
   },
+  pre_tools_doc_ids: {
+    type: Array,
+    default: []
+  },
+  query_refiner: {
+    type: Boolean,
+    default: false
+  },
   guardrails: {
     type: Object,
     default: {
