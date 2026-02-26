@@ -152,7 +152,9 @@ class Helper {
             description: value.description || "",
             type: value.type || "string",
             enum: value.enum || [],
-            required_params: value.required || value.required_params || [],  // Map 'required' to 'required_params'
+            required_params:  Array.isArray(value.required_params) ? value.required_params : 
+                 Array.isArray(value.required) ? value.required :
+                 [],
             parameter: value.parameter || {}
         };
         

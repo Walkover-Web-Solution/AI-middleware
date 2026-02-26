@@ -72,13 +72,14 @@ const createApi = async (req, res, next) => {
 
             // Transform 'required' to 'required_params' for each field
             fields = Helper.transformFieldsStructure(fields);
+            const required_params =  Object.keys(fields)|| [];
 
             const api_data = await service.getApiData(org_id, script_id, folder_id, user_id, isEmbedUser);
             
             // Clean the title using makeFunctionName
             const cleanedTitle = Helper.makeFunctionName(title || script_id || '');
             
-            const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], script_id, fields, cleanedTitle);
+            const result = await service.saveApi(desc, org_id, folder_id, user_id, api_data, [], script_id, fields, cleanedTitle,required_params);
 
             if (result.success) {
                 const responseData = result.api_data;
