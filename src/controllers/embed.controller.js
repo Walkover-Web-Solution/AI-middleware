@@ -54,7 +54,18 @@ const embedLogin = async (req, res) => {
 
 const createEmbed = async (req, res, next) => {
   try {
-    const { name, config, apikey_object_id, folder_limit, type, tools_id, pre_tool_id, variables_path } = req.body;
+    const {
+      name,
+      config,
+      apikey_object_id,
+      folder_limit,
+      folder_limit_reset_period,
+      folder_limit_start_date,
+      type,
+      tools_id,
+      pre_tool_id,
+      variables_path
+    } = req.body;
     const org_id = req.profile.org.id;
     const folder_type = type ? type : "embed";
 
@@ -71,7 +82,9 @@ const createEmbed = async (req, res, next) => {
       type: folder_type,
       config: folderConfig,
       apikey_object_id,
-      folder_limit
+      folder_limit,
+      folder_limit_reset_period,
+      folder_limit_start_date
     });
     res.locals = { data: { ...folder.toObject(), folder_id: folder._id } };
     req.statusCode = 200;
@@ -112,7 +125,18 @@ const getAllEmbed = async (req, res, next) => {
 
 const updateEmbed = async (req, res, next) => {
   try {
-    const { folder_id, config, apikey_object_id, folder_limit, folder_usage, variables_path, tools_id, pre_tool_id } = req.body;
+    const {
+      folder_id,
+      config,
+      apikey_object_id,
+      folder_limit,
+      folder_usage,
+      folder_limit_reset_period,
+      folder_limit_start_date,
+      variables_path,
+      tools_id,
+      pre_tool_id
+    } = req.body;
     const org_id = req.profile.org.id;
 
     const folder = await FolderModel.findOne({ _id: folder_id, org_id });
@@ -152,6 +176,12 @@ const updateEmbed = async (req, res, next) => {
     }
     if (folder_usage == 0) {
       folder.folder_usage = 0;
+    }
+    if (folder_limit_reset_period) {
+      folder.folder_limit_reset_period = folder_limit_reset_period;
+    }
+    if (folder_limit_start_date) {
+      folder.folder_limit_start_date = folder_limit_start_date;
     }
     await folder.save();
     await cleanupCache(cost_types.folder, folder_id);

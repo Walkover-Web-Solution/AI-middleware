@@ -263,6 +263,15 @@ const configuration = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  bridge_limit_reset_period: {
+    type: String,
+    enum: ["monthly", "weekly", "daily"],
+    default: "monthly"
+  },
+  bridge_limit_start_date: {
+    type: Date,
+    default: Date.now
+  },
   last_used: {
     type: Date,
     default: null
