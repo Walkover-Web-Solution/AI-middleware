@@ -28,7 +28,8 @@ const ConfigSchema = new mongoose.Schema(
     variables_path: { type: Object, default: {} },
     pre_tool_id: { type: String, default: "" },
     prompt: { type: Object, default: {} },
-    models: { type: Object, default: {} }
+    models: { type: Object, default: {} },
+    hidePromptHelper: { type: Boolean, default: false }
   },
   { _id: false, strict: false }
 );
