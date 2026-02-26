@@ -88,9 +88,9 @@ export const AI_OPERATION_CONFIG = {
       const bridgeResult = await ConfigurationServices.getAgents(bridge_id, org_id, version_id);
       return { bridge: bridgeResult.bridges };
     },
-    getPrompt: (context) => convertPromptToString(context.bridge.configuration?.prompt) || "",
-    getVariables: (req) => ({ query: req.body.query || "" }),
-    getMessage: (req, context) => convertPromptToString(context.bridge.configuration?.prompt) || "", // optimize_prompt uses prompt as message
+    getPrompt: (context) => context.bridge.configuration?.prompt || "",
+    getVariables: (req, context) => ({ query: req.body.query, fields: context.bridge.configuration?.prompt }),
+    getMessage: () => "optimize the prompt according the data contain in the fields",
     successMessage: "Prompt optimized successfully"
   },
   generate_summary: {
