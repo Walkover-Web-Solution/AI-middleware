@@ -257,6 +257,63 @@ async function processBulkUpdates(model, ids, service) {
   }
 }
 
+async function checkApikeyUsage(apikey_object_id, org_id) {
+  try {
+    const apiKeyData = await findApikeyById(apikey_object_id);
+    if (!apiKeyData || !apiKeyData.service) {
+      return { success: false, error: "API key not found" };
+    }
+    const service = apiKeyData.service;
+    const usageDetails = {
+      isInUse: false,
+      agents: [],
+      versions: []
+    };
+    // Check in Configuration (parent agents)
+    const configQuery = {
+      org_id: org_id,
+      [`apikey_object_id.${service}`]: apikey_object_id,
+      deletedAt: null
+    };
+    const configsUsingKey = await configurationModel.find(configQuery, { _id: 1, name: 1, slugName: 1 }).lean();
+
+    if (configsUsingKey.length > 0) {
+      usageDetails.isInUse = true;
+      usageDetails.agents = configsUsingKey.map((config) => ({
+        id: config._id,
+        name: config.name,
+        slugName: config.slugName
+      }));
+    }
+    // Check in BridgeVersion (agent versions)
+    const versionQuery = {
+      org_id: org_id,
+      [`apikey_object_id.${service}`]: apikey_object_id,
+      deletedAt: null
+    };
+    const versionsUsingKey = await versionModel.find(versionQuery, { _id: 1, parent_id: 1 }).lean();
+
+    if (versionsUsingKey.length > 0) {
+      usageDetails.isInUse = true;
+      usageDetails.versions = versionsUsingKey.map((version) => ({
+        id: version._id,
+        parent_id: version.parent_id
+      }));
+    }
+
+    return {
+      success: true,
+      ...usageDetails
+    };
+  } catch (error) {
+    console.error(`Error checking API key usage: ${error}`);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 export default {
   saveApikeyRecord,
   findApikeyByName,
@@ -265,5 +322,6 @@ export default {
   removeApikeyById,
   findApikeyById,
   findVersionsByIds,
-  removeApikeyFromEmbeds
+  removeApikeyFromEmbeds,
+  checkApikeyUsage
 };
