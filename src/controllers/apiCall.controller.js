@@ -72,7 +72,7 @@ const createApi = async (req, res, next) => {
 
       // Transform 'required' to 'required_params' for each field
       fields = Helper.transformFieldsStructure(fields);
-      const required_params = Object.keys(fields) || [];
+      const required_params = Object.keys(fields ?? {}) || [];
 
       const api_data = await service.getApiData(org_id, script_id, folder_id, user_id, isEmbedUser);
 

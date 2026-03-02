@@ -141,6 +141,13 @@ class Helper {
     return { paths, fields, required_params };
   }
 
+  /**
+   * Transforms fields structure by normalizing each field's properties
+   * and replacing 'required' with 'required_params'.
+   * @param {Object} fields - The fields object to transform
+   * @returns {Object} Transformed fields object with normalized structure, or {} if input is invalid
+   */
+
   static transformFieldsStructure(fields) {
     if (!fields || typeof fields !== "object") return {};
 
