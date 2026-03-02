@@ -634,6 +634,7 @@ const getAgentsByUserId = async (orgId, userId, agent_id) => {
       service: 1,
       "configuration.model": 1,
       "configuration.prompt": 1,
+      "configuration.type": 1,
       bridgeType: 1,
       slugName: 1,
       variables_state: 1,
