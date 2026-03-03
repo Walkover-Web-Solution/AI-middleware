@@ -63,4 +63,4 @@ const selectBestModel = async (systemContent, llmProviders) => {
   };
 };
 
-export { selectBestModel };
+export { selectBestModel, getSupportedModelSet };
