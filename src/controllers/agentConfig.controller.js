@@ -13,7 +13,7 @@ import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
 import { convertPromptToString } from "../utils/promptWrapper.utils.js";
-
+import apiCallService from "../db_services/apiCall.service.js";
 const createAgentController = async (req, res, next) => {
   try {
     const agents = req.body;
@@ -24,6 +24,7 @@ const createAgentController = async (req, res, next) => {
     const folder_data = await folderDbService.getFolderData(folder_id);
     const user_id = req.profile.user.id;
     const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
+    const isEmbedUser = req.IsEmbedUser;
 
     let prompt =
       "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
@@ -86,23 +87,35 @@ const createAgentController = async (req, res, next) => {
 
     const all_agent_name = all_agent.map((agent) => agent.name);
 
+    let agent_data = {};
+
     if (purpose) {
+      const functions = await apiCallService.getAllApiCallsByOrgId(org_id, folder_id, user_id, isEmbedUser);
       const variables = {
         purpose: purpose,
-        all_bridge_names: all_agent_name
+        all_bridge_names: all_agent_name,
+        tools: functions.map((tools) => {
+          return { id: tools._id, description: tools.description };
+        }),
+        fields: folder_data
+          ? folder_data?.config?.prompt?.embedFields
+              .filter((field) => !field.hidden)
+              .reduce((acc, field) => {
+                acc[field.name] = field.value || "";
+                return acc;
+              }, {})
+          : { role: "", goal: "", instruction: "" }
       };
       const user = "Generate Agent Configuration accroding to the given user purpose.";
-      const agent_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
-      // Assuming agent_data is parsed JSON from callAiMiddleware
-      if (typeof agent_data === "object") {
-        model = agent_data.model || model;
-        service = agent_data.service || service;
-        name = name || agent_data.name;
-        // Only override prompt if we don't have folder prompt config
-        if (!folder_data?.config?.prompt) {
-          prompt = agent_data.system_prompt || prompt;
-        }
-        type = agent_data.type || type;
+      const res_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
+      // Assuming res_data is parsed JSON from callAiMiddleware
+      if (typeof res_data === "object") {
+        agent_data = res_data;
+        model = agent_data?.configuration?.model;
+        service = agent_data?.service;
+        name = agent_data?.name;
+        prompt = agent_data?.configuration?.prompt;
+        type = agent_data?.configuration?.type;
       }
     }
 
@@ -203,16 +216,16 @@ const createAgentController = async (req, res, next) => {
     const agent_limit_start_date = agents.bridge_limit_start_date;
 
     const result = await ConfigurationServices.createAgent({
-      configuration: model_data,
+      ...agent_data,
       name: name,
       slugName: slugName,
       service: service,
       bridgeType: agentType,
       org_id: org_id,
-      gpt_memory: true,
+      gpt_memory: agent_data.gpt_memory !== undefined ? agent_data.gpt_memory : true,
       folder_id: folder_id,
       user_id: user_id,
-      fall_back: fall_back,
+      fall_back: agent_data.fall_back || fall_back,
       bridge_limit: agent_limit,
       bridge_usage: agent_usage,
       bridge_limit_reset_period: agent_limit_reset_period,
@@ -222,7 +235,6 @@ const createAgentController = async (req, res, next) => {
       updatedAt: new Date(),
       meta: meta
     });
-
     const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
     const update_fields = { versions: [create_version._id.toString()] };
     const updated_agent_result = await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
