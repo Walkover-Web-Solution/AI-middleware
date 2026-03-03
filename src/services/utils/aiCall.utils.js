@@ -32,7 +32,6 @@ async function callAiMiddleware(
   if (orchestrator_flag) {
     requestBody.orchestrator_flag = orchestrator_flag;
   }
-
   try {
     const response = await axios.post("https://api.gtwy.ai/api/v2/model/chat/completion", requestBody, {
       headers: {
