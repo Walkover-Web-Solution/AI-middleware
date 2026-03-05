@@ -154,6 +154,17 @@ class Helper {
     const transformed = {};
 
     for (const [key, value] of Object.entries(fields)) {
+      if (value === null) {
+        transformed[key] = {
+          description: "",
+          type: "string",
+          enum: [],
+          required_params: [],
+          parameter: {}
+        };
+        continue;
+      }
+
       transformed[key] = {
         description: value.description || "",
         type: value.type || "string",
