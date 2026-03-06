@@ -6,6 +6,7 @@ import { bridge_ids, new_agent_service } from "../configs/constant.js";
 import Helper from "../services/utils/helper.utils.js";
 import { ObjectId } from "mongodb";
 import conversationDbService from "../db_services/conversation.service.js";
+import { getUniqueNameAndSlug, normalizeFunctionIds, cloneFunctionsForAgent } from "../utils/agentConfig.utils.js";
 const { storeSystemPrompt, addBulkUserEntries } = conversationDbService;
 import { getDefaultValuesController } from "../services/utils/getDefaultValue.js";
 import { purgeRelatedBridgeCaches } from "../services/utils/redis.utils.js";
@@ -25,6 +26,7 @@ const createAgentController = async (req, res, next) => {
     const user_id = req.profile.user.id;
     const all_agent = await ConfigurationServices.getAgentsByUserId(org_id); // Assuming this returns all agents for org
 
+    let template_content = null;
     let prompt =
       "Role: AI Bot\nObjective: Respond logically and clearly, maintaining a neutral, automated tone.\nGuidelines:\nIdentify the task or question first.\nProvide brief reasoning before the answer or action.\nKeep responses concise and contextually relevant.\nAvoid emotion, filler, or self-reference.\nUse examples or placeholders only when helpful.";
     let name = agents?.name || null;
@@ -80,13 +82,23 @@ const createAgentController = async (req, res, next) => {
       }
       // Only override if we don't have folder prompt config
       if (!folder_data?.config?.prompt) {
-        prompt = template_data.prompt || prompt;
+        template_content = JSON.parse(template_data.template);
+
+        if (template_data.templateName) {
+          name = template_data.templateName;
+        }
+        if (template_content?.configuration?.prompt) {
+          prompt = template_content.configuration.prompt;
+        }
+        if (template_content?.service) service = template_content.service;
+        if (template_content?.configuration?.model) model = template_content.configuration.model;
+        if (template_content?.configuration?.type) type = template_content.configuration.type;
       }
     }
 
     const all_agent_name = all_agent.map((agent) => agent.name);
 
-    if (purpose) {
+    if (purpose && !template_content) {
       const variables = {
         purpose: purpose,
         all_bridge_names: all_agent_name
@@ -97,45 +109,20 @@ const createAgentController = async (req, res, next) => {
       if (typeof agent_data === "object") {
         model = agent_data.model || model;
         service = agent_data.service || service;
-        name = name || agent_data.name;
-        // Only override prompt if we don't have folder prompt config
-        if (!folder_data?.config?.prompt) {
-          prompt = agent_data.system_prompt || prompt;
-        }
+        name = agent_data.name;
+        prompt = agent_data.system_prompt || prompt;
         type = agent_data.type || type;
       }
     }
 
-    name = name || "untitled_agent";
-
-    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const nameRegex = new RegExp(`^${escapeRegExp(name)}(_(\\d+))?$`);
-
-    let name_next_count = 1;
-    let slug_next_count = 1;
-
-    for (const agent of all_agent) {
-      // Check Name Collision
-      const nameMatch = agent.name.match(nameRegex);
-      if (nameMatch) {
-        const num = nameMatch[2] ? parseInt(nameMatch[2], 10) : 0;
-        if (num >= name_next_count) {
-          name_next_count = num + 1;
-        }
-      }
-
-      // Check Slug Collision
-      const slugMatch = agent.slugName.match(nameRegex);
-      if (slugMatch) {
-        const num = slugMatch[2] ? parseInt(slugMatch[2], 10) : 0;
-        if (num >= slug_next_count) {
-          slug_next_count = num + 1;
-        }
-      }
+    let slugName = null;
+    if (template_content && name) {
+      slugName = name;
+    } else {
+      const nameSlugData = getUniqueNameAndSlug(name, all_agent);
+      slugName = nameSlugData.slugName;
+      name = nameSlugData.name;
     }
-
-    const slugName = `${name}_${slug_next_count}`;
-    name = `${name}_${name_next_count}`;
 
     // Construct model data based on model configuration
     const keys_to_update = [
@@ -158,30 +145,35 @@ const createAgentController = async (req, res, next) => {
       "style"
     ];
 
-    const model_data = {};
+    let model_data = {};
 
-    // Get model configuration if available
-    const serviceLower = service.toLowerCase();
-    if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
-      const modelObj = modelConfigDocument[serviceLower][model];
-      const configurations = modelObj.configuration || {};
+    if (template_content?.configuration) {
+      model_data = { ...template_content.configuration };
+    } else {
+      const serviceLower = service.toLowerCase();
+      if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
+        const modelObj = modelConfigDocument[serviceLower][model];
+        const configurations = modelObj.configuration || {};
 
-      for (const key of keys_to_update) {
-        if (configurations[key]) {
-          model_data[key] = key === "model" ? configurations[key].default : "default";
+        for (const key of keys_to_update) {
+          if (configurations[key]) {
+            model_data[key] = key === "model" ? configurations[key].default : "default";
+          }
         }
       }
     }
 
-    model_data.type = type;
-    model_data.response_format = {
+    model_data.type = model_data.type || type;
+    model_data.response_format = model_data.response_format || {
       type: "default",
       cred: {}
     };
-    model_data.is_rich_text = false;
-    model_data.prompt = prompt;
+    if (model_data.is_rich_text === undefined) {
+      model_data.is_rich_text = false;
+    }
+    model_data.prompt = model_data.prompt || prompt;
 
-    const fall_back = {
+    const fall_back = template_content?.fall_back || {
       is_enable: true,
       service: "ai_ml",
       model: "gpt-oss-120b"
@@ -202,12 +194,22 @@ const createAgentController = async (req, res, next) => {
     const agent_limit_reset_period = agents.bridge_limit_reset_period;
     const agent_limit_start_date = agents.bridge_limit_start_date;
 
+    const template_fields = ["variables_state", "built_in_tools", "gpt_memory_context", "user_reference", "bridge_summary", "agent_variables"];
+    const template_values = {};
+    if (template_content) {
+      for (const field of template_fields) {
+        if (template_content[field] !== undefined) {
+          template_values[field] = template_content[field];
+        }
+      }
+    }
+
     const result = await ConfigurationServices.createAgent({
       configuration: model_data,
       name: name,
       slugName: slugName,
       service: service,
-      bridgeType: agentType,
+      bridgeType: template_content?.bridgeType || agentType,
       org_id: org_id,
       gpt_memory: true,
       folder_id: folder_id,
@@ -220,17 +222,134 @@ const createAgentController = async (req, res, next) => {
       bridge_status: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
-      meta: meta
+      meta: meta,
+      ...template_values
     });
 
     const create_version = await agentVersionDbService.createAgentVersion(result.bridge);
     const update_fields = { versions: [create_version._id.toString()] };
-    const updated_agent_result = await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
+    await ConfigurationServices.updateAgent(result.bridge._id.toString(), update_fields);
+
+    all_agent.push({ name, slugName });
+
+    const parent_function_ids = normalizeFunctionIds(template_content?.function_ids);
+    if (parent_function_ids.length > 0) {
+      const cloned_function_ids = await cloneFunctionsForAgent(parent_function_ids, org_id, result.bridge._id.toString());
+      if (cloned_function_ids.length > 0) {
+        const functionObjectIds = cloned_function_ids.map((fid) => new ObjectId(fid));
+        await ConfigurationServices.updateAgent(result.bridge._id.toString(), { function_ids: functionObjectIds });
+        await ConfigurationServices.updateAgent(null, { function_ids: functionObjectIds }, create_version._id.toString());
+      }
+    }
+    const createChildAgentsRecursively = async (child_agents_map, parent_bridge_id, parent_version_id, ancestorIds = new Set()) => {
+      if (!child_agents_map || Object.keys(child_agents_map).length === 0) return;
+
+      const connected_agents = {};
+
+      for (const [agent_name, child_agent] of Object.entries(child_agents_map)) {
+        const child_details = child_agent?.bridge_details;
+        if (!child_details) continue;
+
+        const templateBridgeId = child_agent?.bridge_id?.toString?.() || child_agent?.bridge_id;
+        if (templateBridgeId && ancestorIds.has(templateBridgeId)) continue;
+
+        const childNameSlug = getUniqueNameAndSlug(agent_name, all_agent);
+        const child_model_data = { ...(child_details.configuration || {}) };
+        child_model_data.type = child_model_data.type || type;
+        child_model_data.response_format = child_model_data.response_format || {
+          type: "default",
+          cred: {}
+        };
+        if (child_model_data.is_rich_text === undefined) {
+          child_model_data.is_rich_text = false;
+        }
+        child_model_data.prompt = child_model_data.prompt || prompt;
+
+        let child_service = child_details.service || service;
+        if (folder_data) {
+          const api_key_object_ids = folder_data.apikey_object_id || {};
+          if (Object.keys(api_key_object_ids).length > 0) {
+            child_service = Object.keys(api_key_object_ids)[0];
+            if (new_agent_service[child_service]) {
+              child_model_data.model = new_agent_service[child_service];
+            }
+          }
+        }
+
+        const child_template_values = {};
+        for (const field of template_fields) {
+          if (child_details[field] !== undefined) {
+            child_template_values[field] = child_details[field];
+          }
+        }
+
+        const child_result = await ConfigurationServices.createAgent({
+          configuration: child_model_data,
+          name: childNameSlug.name,
+          slugName: childNameSlug.slugName,
+          service: child_service,
+          bridgeType: child_details.bridgeType || agentType,
+          org_id: org_id,
+          gpt_memory: true,
+          folder_id: folder_id,
+          user_id: user_id,
+          fall_back: fall_back,
+          bridge_limit: agent_limit,
+          bridge_usage: agent_usage,
+          bridge_status: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...child_template_values
+        });
+
+        const child_version = await agentVersionDbService.createAgentVersion(child_result.bridge);
+        await ConfigurationServices.updateAgent(child_result.bridge._id.toString(), { versions: [child_version._id.toString()] });
+
+        all_agent.push({ name: childNameSlug.name, slugName: childNameSlug.slugName });
+
+        const child_function_ids = normalizeFunctionIds(child_details.function_ids);
+        if (child_function_ids.length > 0) {
+          const cloned_function_ids = await cloneFunctionsForAgent(child_function_ids, org_id, child_result.bridge._id.toString());
+          if (cloned_function_ids.length > 0) {
+            const functionObjectIds = cloned_function_ids.map((fid) => new ObjectId(fid));
+            await ConfigurationServices.updateAgent(child_result.bridge._id.toString(), { function_ids: functionObjectIds });
+            await ConfigurationServices.updateAgent(null, { function_ids: functionObjectIds }, child_version._id.toString());
+          }
+        }
+
+        if (child_details.child_agents && Object.keys(child_details.child_agents).length > 0) {
+          const childAncestors = new Set([...ancestorIds, ...(templateBridgeId ? [templateBridgeId] : [])]);
+          await createChildAgentsRecursively(
+            child_details.child_agents,
+            child_result.bridge._id.toString(),
+            child_version._id.toString(),
+            childAncestors
+          );
+        }
+
+        connected_agents[agent_name] = {
+          description: child_agent?.description,
+          variables: child_agent?.variables || {},
+          bridge_id: child_result.bridge._id.toString()
+        };
+      }
+
+      if (Object.keys(connected_agents).length > 0) {
+        await ConfigurationServices.updateAgent(parent_bridge_id, { connected_agents });
+        await ConfigurationServices.updateAgent(null, { connected_agents }, parent_version_id);
+      }
+    };
+
+    if (template_content?.child_agents && Object.keys(template_content.child_agents).length > 0) {
+      await createChildAgentsRecursively(template_content.child_agents, result.bridge._id.toString(), create_version._id.toString());
+    }
+
+    const updated_agent_result = await ConfigurationServices.getAgentsWithTools(result.bridge._id.toString(), org_id);
 
     res.locals = {
       success: true,
       message: "Agent created successfully",
-      agent: updated_agent_result.result
+      agent: updated_agent_result.bridges
     };
     req.statusCode = 200;
 
