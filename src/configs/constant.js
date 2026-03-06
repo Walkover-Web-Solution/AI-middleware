@@ -3,6 +3,7 @@ import testcaseDbservice from "../db_services/testcase.service.js";
 import { renderCardToTailwind } from "../utils/Formatter.utility.js";
 import gptMemoryService from "../services/utils/gptMemory.service.js";
 import { convertPromptToString } from "../utils/promptWrapper.utils.js";
+import { buildSchemaFromTemplateFormat } from "../utils/templateVariables.utility.js";
 
 const collectionNames = {
   ApikeyCredentials: "ApikeyCredentials",
@@ -168,18 +169,82 @@ export const AI_OPERATION_CONFIG = {
     getMessage: () => "generate the rich ui template",
     successMessage: "Rich UI template generated successfully",
     postProcess: async (aiResult) => {
-      let html = "";
+      let ui = null;
+      let variables = {};
+      let originalRawUi = null;
       try {
-        const cardJson = typeof aiResult === "string" ? JSON.parse(aiResult) : aiResult;
-        html = renderCardToTailwind(cardJson);
+        const parsed = typeof aiResult === "string" ? JSON.parse(aiResult) : aiResult;
+        ui = parsed.ui || (parsed.type ? parsed : null);
+        variables = parsed.variables || parsed.data || {};
+        originalRawUi = JSON.parse(JSON.stringify(ui)); // copy raw template
+
+        if (ui && Object.keys(variables).length > 0) {
+          const replaceVariables = (data, vars) => {
+            const getValue = (obj, path) => {
+              if (!obj || !path) return undefined;
+              const keys = path.replace(/\[(\d+)\]/g, ".$1").split(".");
+              let val = obj;
+              for (const k of keys) {
+                if (val == null || typeof val !== "object") return undefined;
+                val = val[k];
+              }
+              return val;
+            };
+
+            const resolve = (node, context) => {
+              if (typeof node === "string") {
+                return node.replace(/\{\{([\w.[\]]+)\}\}/g, (match, path) => {
+                  const val = getValue(context, path);
+                  return val !== undefined ? val : match;
+                });
+              }
+              if (Array.isArray(node)) {
+                return node.map((n) => resolve(n, context));
+              }
+              if (node && typeof node === "object") {
+                // Special case: ListView loop expansion (handles pre-resolving items)
+                if (node.type === "ListView" && node.binding) {
+                  const listData = getValue(context, node.binding);
+                  if (Array.isArray(listData) && node.children?.length > 0) {
+                    const itemTemplate = node.children[0];
+                    const localKey = node.key || itemTemplate.key || "item";
+                    const resolvedChildren = listData.map((item) => {
+                      // Merge item properties into context so {{title}} works, 
+                      // but also keep [localKey] so {{item.title}} works.
+                      const localContext = (item && typeof item === "object" && !Array.isArray(item))
+                        ? { ...context, ...item, [localKey]: item }
+                        : { ...context, [localKey]: item };
+                      return resolve(itemTemplate, localContext);
+                    });
+                    return { ...node, children: resolvedChildren };
+                  }
+                }
+                // Normal object traversal
+                const newNode = {};
+                for (const [k, v] of Object.entries(node)) {
+                  newNode[k] = resolve(v, context);
+                }
+                return newNode;
+              }
+              return node;
+            };
+
+            return resolve(data, vars);
+          };
+          ui = replaceVariables(ui, variables);
+        }
       } catch (error) {
-        console.error("Error rendering card to HTML:", error);
+        console.error("Error parsing rich UI template result:", error);
       }
+
       return {
         success: true,
         message: "Rich UI template generated successfully",
-        result: aiResult,
-        html: html
+        result: ui, // For backward compat/immediate preview
+        ui,         // replaced structure
+        variables,  // raw data
+        template_format: originalRawUi, // unreplaced tree
+        json_schema: ui ? buildSchemaFromTemplateFormat(originalRawUi) : null
       };
     }
   },

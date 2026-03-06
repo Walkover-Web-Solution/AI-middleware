@@ -1,34 +1,74 @@
 // ----------------- PATH HELPER -----------------
-function setValueByPath(obj, path, value) {
-  const parts = path
-    .replace(/\]/g, "")
-    .split(/\.|\[/) // "children[0].children[1].value" -> ["children","0","children","1","value"]
-    .filter(Boolean);
+function applyVariables(ui, variables) {
+  function replaceVars(value, context = {}) {
+    if (typeof value !== "string") return value;
 
-  let current = obj;
+    return value.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
+      path = path.trim();
 
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
+      // support nested keys like place.name or trips[0].image
+      const keys = path.replace(/\[(\d+)\]/g, ".$1").split(".");
 
-    if (!(key in current)) {
-      console.warn("Invalid path:", path, "Missing key:", key);
-      return;
-    }
+      let source = keys[0] in context ? context : variables;
 
-    current = current[key];
+      let val = source;
+      for (const k of keys) {
+        if (val == null || typeof val !== "object") return match;
+        val = val[k];
+      }
+      return val !== undefined ? val : match;
+    });
   }
 
-  const finalKey = parts[parts.length - 1];
-  current[finalKey] = value;
-}
-
-function applyVariables(cardJson, variables) {
-  for (const path in variables) {
-    if (Object.prototype.hasOwnProperty.call(variables, path)) {
-      setValueByPath(cardJson, path, variables[path]);
+  function processNode(node, context = {}) {
+    if (Array.isArray(node)) {
+      return node.map(n => processNode(n, context));
     }
+
+    if (typeof node !== "object" || node === null) {
+      return replaceVars(node, context);
+    }
+
+    // Handle ListView binding
+    if (node.type === "ListView" && node.binding) {
+      const listKey = node.binding.replace(/[{}]/g, "").trim();
+
+      const keys = listKey.replace(/\[(\d+)\]/g, ".$1").split(".");
+      let listData = variables;
+      for (const k of keys) {
+        if (listData == null || typeof listData !== "object") {
+          listData = undefined;
+          break;
+        }
+        listData = listData[k];
+      }
+
+      const items = Array.isArray(listData) ? listData : [];
+
+      // If the AI only wrote 1 child array element as a template
+      if (Array.isArray(node.children) && node.children.length === 1 && items.length > 0) {
+        return {
+          ...node,
+          children: items.map(item => {
+            // merge context, also provide `place` or root specific variable `item`
+            const localContext = (item && typeof item === "object" && !Array.isArray(item))
+              ? { ...context, ...item, place: item, item }
+              : { ...context, place: item, item };
+            return processNode(node.children[0], localContext);
+          })
+        };
+      }
+    }
+
+    const result = {};
+    for (const key in node) {
+      result[key] = processNode(node[key], context);
+    }
+
+    return result;
   }
-  return cardJson;
+
+  return processNode(ui);
 }
 
 // ----------------- RENDERER -----------------
