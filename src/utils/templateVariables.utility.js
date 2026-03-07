@@ -28,49 +28,113 @@
  *     "total":  { type: "string", fields: Set() }
  *   }
  */
-function collectVariableStructure(node, structure = {}) {
+/**
+ * Walk any JSON node (string | array | object) and collect the structure of all
+ * variables found in {{...}} placeholders.
+ *
+ * Supports three binding patterns:
+ *   - Simple:         {{total}}         → scalar
+ *   - Object:         {{source.name}}   → object
+ *   - Indexed legacy: {{items[0].name}} → array
+ *   - Generic alias:  {{item.name}} inside a ListView itemTemplate
+ *                     with binding="rows" → treated as rows array field
+ *
+ * @param {*}      node       – any JSON value
+ * @param {Object} structure  – accumulator (mutated in-place)
+ * @param {Object} aliasMap   – maps itemAlias → binding key (filled when entering ListViews)
+ * @returns {Object} structure
+ */
+function collectVariableStructure(node, structure = {}, aliasMap = {}) {
     if (typeof node === "string") {
-        // Find all {{...}} patterns
-        const matches = node.match(/\{\{([^\}]+)\}\}/g);
+        const matches = node.match(/\{\{([^}]+)\}\}/g);
         if (matches) {
             for (const match of matches) {
-                const inner = match.slice(2, -2).trim(); // removing {{ and }}
+                const inner = match.slice(2, -2).trim();
 
-                // 1) Array-indexed field: items[0].name
+                // 1) Indexed legacy: items[0].name
                 const arrayMatch = inner.match(/^([a-zA-Z_]\w*)\[\d+\]\.(\w+)$/);
                 if (arrayMatch) {
                     const root = arrayMatch[1];
                     const field = arrayMatch[2];
                     if (!structure[root]) structure[root] = { type: 'array', fields: new Set() };
-                    structure[root].type = 'array'; // promote to array if mixed
+                    structure[root].type = 'array';
                     structure[root].fields.add(field);
                     continue;
                 }
 
-                // 2) Object property: source.name
+                // 2) Dot-notation: alias.field (e.g. item.name, buttons.label)
                 const objMatch = inner.match(/^([a-zA-Z_]\w*)\.(\w+)$/);
                 if (objMatch) {
                     const root = objMatch[1];
                     const field = objMatch[2];
-                    if (!structure[root]) structure[root] = { type: 'object', fields: new Set() };
-                    if (structure[root].type !== 'array') structure[root].type = 'object';
-                    structure[root].fields.add(field);
+                    // If root is a known item alias, map to the real binding key as array
+                    const bindingKey = aliasMap[root];
+                    if (bindingKey) {
+                        if (!structure[bindingKey]) structure[bindingKey] = { type: 'array', fields: new Set() };
+                        structure[bindingKey].type = 'array';
+                        structure[bindingKey].fields.add(field);
+                    } else {
+                        // Regular object (e.g. buttons.label, headers.name)
+                        if (!structure[root]) structure[root] = { type: 'object', fields: new Set() };
+                        if (structure[root].type !== 'array') structure[root].type = 'object';
+                        structure[root].fields.add(field);
+                    }
                     continue;
                 }
 
-                // 3) Scalar/simple: total
+                // 3) Scalar: total
                 const scalarMatch = inner.match(/^([a-zA-Z_]\w*)$/);
                 if (scalarMatch) {
                     const root = scalarMatch[1];
-                    if (!structure[root]) structure[root] = { type: 'string', fields: new Set() };
+                    // Skip bare alias names (they are not top-level variables)
+                    if (!aliasMap[root] && !structure[root]) {
+                        structure[root] = { type: 'string', fields: new Set() };
+                    }
                     continue;
                 }
             }
         }
     } else if (Array.isArray(node)) {
-        node.forEach((item) => collectVariableStructure(item, structure));
+        node.forEach((item) => collectVariableStructure(item, structure, aliasMap));
     } else if (node && typeof node === "object") {
-        Object.values(node).forEach((v) => collectVariableStructure(v, structure));
+        if (node.type === "ListView" && node.binding) {
+            // Extract the real binding key from either:
+            //   "{{trips}}"  → "trips"   (placeholder style — binding is a variable reference)
+            //   "rows"        → "rows"    (direct key style)
+            const placeholderMatch = typeof node.binding === "string"
+                ? node.binding.match(/^\{\{([a-zA-Z_]\w*)\}\}$/) : null;
+            const bindingKey = placeholderMatch ? placeholderMatch[1] : node.binding;
+
+            // Ensure the binding key is registered as an array in the schema
+            if (bindingKey) {
+                if (!structure[bindingKey]) structure[bindingKey] = { type: 'array', fields: new Set() };
+                structure[bindingKey].type = 'array';
+            }
+
+            // Find the item alias:
+            //   New mode:    node.itemAlias (e.g. "item")
+            //   Legacy mode: ListViewItem.key on first child (e.g. "row")
+            const alias = node.itemAlias
+                || node.children?.[0]?.key
+                || node.key
+                || "item";
+
+            const newAliasMap = { ...aliasMap, [alias]: bindingKey };
+
+            if (node.itemTemplate) {
+                // New generic mode — scan itemTemplate
+                collectVariableStructure(node.itemTemplate, structure, newAliasMap);
+            } else if (node.children) {
+                // Legacy mode — item template is first child; scan all children equally
+                collectVariableStructure(node.children, structure, newAliasMap);
+            }
+
+            // Scan remaining scalar/layout props (gap, direction, etc.) but NOT binding again
+            const { itemTemplate: _t, children: _c, binding: _b, ...rest } = node;
+            Object.values(rest).forEach((v) => collectVariableStructure(v, structure, aliasMap));
+        } else {
+            Object.values(node).forEach((v) => collectVariableStructure(v, structure, aliasMap));
+        }
     }
     return structure;
 }
@@ -152,6 +216,7 @@ function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}) {
         description: "Variables the AI must populate to fill the richUI template",
         properties,
         required: rootKeys,
+        additionalProperties: false,
     };
 
     _applyStrict(rootSchema);
@@ -274,7 +339,7 @@ function buildSchemaFromVariablesObject(name, data) {
     const schema = getSchemaForValue(data);
     schema.$schema = "https://json-schema.org/draft/2020-12/schema";
     schema.title = name;
-    
+
     return {
         name,
         strict: true,

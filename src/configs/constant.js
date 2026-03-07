@@ -172,66 +172,92 @@ export const AI_OPERATION_CONFIG = {
       let ui = null;
       let variables = {};
       let originalRawUi = null;
+      let actionDefinitions = {};
       try {
         const parsed = typeof aiResult === "string" ? JSON.parse(aiResult) : aiResult;
         ui = parsed.ui || (parsed.type ? parsed : null);
-        variables = parsed.variables || parsed.data || {};
-        originalRawUi = JSON.parse(JSON.stringify(ui)); // copy raw template
+        variables = parsed.variables || parsed.data || parsed.default_json || {};
+        actionDefinitions = parsed.action_definitions || {};
+        originalRawUi = JSON.parse(JSON.stringify(ui)); // copy raw template (unreplaced)
 
         if (ui && Object.keys(variables).length > 0) {
-          const replaceVariables = (data, vars) => {
-            const getValue = (obj, path) => {
-              if (!obj || !path) return undefined;
-              const keys = path.replace(/\[(\d+)\]/g, ".$1").split(".");
-              let val = obj;
-              for (const k of keys) {
-                if (val == null || typeof val !== "object") return undefined;
-                val = val[k];
-              }
-              return val;
-            };
-
-            const resolve = (node, context) => {
-              if (typeof node === "string") {
-                return node.replace(/\{\{([\w.[\]]+)\}\}/g, (match, path) => {
-                  const val = getValue(context, path);
-                  return val !== undefined ? val : match;
-                });
-              }
-              if (Array.isArray(node)) {
-                return node.map((n) => resolve(n, context));
-              }
-              if (node && typeof node === "object") {
-                // Special case: ListView loop expansion (handles pre-resolving items)
-                if (node.type === "ListView" && node.binding) {
-                  const listData = getValue(context, node.binding);
-                  if (Array.isArray(listData) && node.children?.length > 0) {
-                    const itemTemplate = node.children[0];
-                    const localKey = node.key || itemTemplate.key || "item";
-                    const resolvedChildren = listData.map((item) => {
-                      // Merge item properties into context so {{title}} works, 
-                      // but also keep [localKey] so {{item.title}} works.
-                      const localContext = (item && typeof item === "object" && !Array.isArray(item))
-                        ? { ...context, ...item, [localKey]: item }
-                        : { ...context, [localKey]: item };
-                      return resolve(itemTemplate, localContext);
-                    });
-                    return { ...node, children: resolvedChildren };
-                  }
-                }
-                // Normal object traversal
-                const newNode = {};
-                for (const [k, v] of Object.entries(node)) {
-                  newNode[k] = resolve(v, context);
-                }
-                return newNode;
-              }
-              return node;
-            };
-
-            return resolve(data, vars);
+          // ─── Path resolver ─────────────────────────────────────────────────
+          const getValue = (obj, path) => {
+            if (!obj || !path) return undefined;
+            const keys = path.replace(/\[(\d+)\]/g, ".$1").split(".");
+            let val = obj;
+            for (const k of keys) {
+              if (val == null || typeof val !== "object") return undefined;
+              val = val[k];
+            }
+            return val;
           };
-          ui = replaceVariables(ui, variables);
+
+          // ─── Recursive resolver ────────────────────────────────────────────
+          const resolve = (node, context) => {
+            if (typeof node === "string") {
+              return node.replace(/\{\{([\w.[\]]+)\}\}/g, (match, path) => {
+                const val = getValue(context, path);
+                return val !== undefined ? String(val) : match;
+              });
+            }
+            if (Array.isArray(node)) {
+              return node.map((n) => resolve(n, context));
+            }
+            if (node && typeof node === "object") {
+              // ── Generic binding mode (new: itemTemplate + binding + itemAlias) ──
+              if (node.type === "ListView" && node.binding && node.itemTemplate) {
+                // binding may be a direct key ("rows") or a placeholder ("{{trips}}")
+                const bpMatch = typeof node.binding === "string"
+                  ? node.binding.match(/^\{\{([\w.]+)\}\}$/) : null;
+                const bindingKey = bpMatch ? bpMatch[1] : node.binding;
+                const listData = getValue(context, bindingKey);
+                if (Array.isArray(listData)) {
+                  const alias = node.itemAlias || "item";
+                  const siblingScope = Object.fromEntries(
+                    Object.entries(context).filter(([k]) => k !== bindingKey)
+                  );
+                  const resolvedChildren = listData.map((item) => {
+                    const itemContext = { ...context, ...siblingScope, [alias]: item };
+                    return resolve(node.itemTemplate, itemContext);
+                  });
+                  const { itemTemplate: _t, binding: _b, itemAlias: _a, idField: _f, ...rest } = node;
+                  return { ...rest, children: resolvedChildren };
+                }
+              }
+
+              // ── Legacy binding mode (children[0] as template, binding may be {{placeholder}}) ──
+              if (node.type === "ListView" && node.binding && !node.itemTemplate) {
+                // Unwrap "{{trips}}" → "trips", or use direct key "rows" as-is
+                const bpMatch = typeof node.binding === "string"
+                  ? node.binding.match(/^\{\{([\w.]+)\}\}$/) : null;
+                const bindingKey = bpMatch ? bpMatch[1] : node.binding;
+                const listData = getValue(context, bindingKey);
+                if (Array.isArray(listData) && node.children?.length > 0) {
+                  const itemTemplate = node.children[0];
+                  // Alias priority: node.itemAlias > node.key > ListViewItem.key > "item"
+                  const localKey = node.itemAlias || node.key || itemTemplate.key || "item";
+                  const resolvedChildren = listData.map((item) => {
+                    const localContext = (item && typeof item === "object" && !Array.isArray(item))
+                      ? { ...context, ...item, [localKey]: item }
+                      : { ...context, [localKey]: item };
+                    return resolve(itemTemplate, localContext);
+                  });
+                  return { ...node, children: resolvedChildren };
+                }
+              }
+
+              // ── Normal object traversal ───────────────────────────────────
+              const newNode = {};
+              for (const [k, v] of Object.entries(node)) {
+                newNode[k] = resolve(v, context);
+              }
+              return newNode;
+            }
+            return node;
+          };
+
+          ui = resolve(ui, variables);
         }
       } catch (error) {
         console.error("Error parsing rich UI template result:", error);
@@ -240,11 +266,13 @@ export const AI_OPERATION_CONFIG = {
       return {
         success: true,
         message: "Rich UI template generated successfully",
-        result: ui, // For backward compat/immediate preview
-        ui,         // replaced structure
-        variables,  // raw data
-        template_format: originalRawUi, // unreplaced tree
-        json_schema: ui ? buildSchemaFromTemplateFormat(originalRawUi) : null
+        result: ui,               // resolved UI for immediate preview (backward compat)
+        ui,                       // resolved UI tree
+        variables,                // raw data / default_json
+        default_json: variables,  // alias used by new TemplatePlayground
+        action_definitions: actionDefinitions,
+        template_format: originalRawUi, // unreplaced tree for storage
+        json_schema: originalRawUi ? buildSchemaFromTemplateFormat(originalRawUi) : null,
       };
     }
   },
