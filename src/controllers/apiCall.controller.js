@@ -133,7 +133,7 @@ const createApi = async (req, res, next) => {
 const addPreTool = async (req, res, next) => {
   try {
     const { agent_id: bridgeId } = req.params;
-    const { version_id, pre_tools: pre_tool_id, status } = req.body;
+    const { version_id, pre_tools: pre_tool_entry, status } = req.body;
     const org_id = req.profile.org.id;
 
     const model_config = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id, version_id);
@@ -144,13 +144,34 @@ const addPreTool = async (req, res, next) => {
       return next();
     }
 
+    const current_pre_tools = model_config.bridges?.pre_tools || [];
     const data_to_update = {};
-    data_to_update["pre_tools"] = status === "1" ? [pre_tool_id] : [];
+
+    if (status === "1") {
+      // Prevent duplicate — one entry per type
+      const already_exists = current_pre_tools.some((t) => typeof t === "object" && t.type === pre_tool_entry.type);
+      if (already_exists) {
+        res.locals = { success: false, message: `Pre-tool of type '${pre_tool_entry.type}' already exists` };
+        req.statusCode = 400;
+        return next();
+      }
+      data_to_update["pre_tools"] = [...current_pre_tools, pre_tool_entry];
+    } else {
+      // Remove by type
+      data_to_update["pre_tools"] = current_pre_tools.filter((t) => {
+        // backward compat: old entries were plain strings (function IDs)
+        if (typeof t === "string") return t !== pre_tool_entry?.config?.function_id;
+        return t.type !== pre_tool_entry?.type;
+      });
+    }
 
     await ConfigurationServices.updateAgent(bridgeId, data_to_update, version_id);
     const result = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id, version_id);
 
-    await ConfigurationServices.updateAgentIdsInApiCalls(pre_tool_id, version_id || bridgeId, parseInt(status));
+    // Only update ApiCall bridge_ids for custom_function type (others are not tracked as functions)
+    if (pre_tool_entry.type === "custom_function" && pre_tool_entry?.config?.function_id) {
+      await ConfigurationServices.updateAgentIdsInApiCalls(pre_tool_entry?.config?.function_id, version_id || bridgeId, parseInt(status));
+    }
 
     if (result.success) {
       const response = await Helper.responseMiddlewareForBridge(
