@@ -23,7 +23,7 @@ export const createRichUiTemplate = async (req, res, next) => {
   // Auto-derive json_schema if missing
   let schema = json_schema;
   if (!schema && template_format) {
-    schema = buildSchemaFromTemplateFormat(template_format);
+    schema = buildSchemaFromTemplateFormat(template_format, {}, initialVariables ?? {});
   }
 
   const result = await createTemplate(
@@ -70,7 +70,7 @@ export const updateRichUiTemplate = async (req, res, next) => {
   // If template_format changed, regenerate schema and default_json
   if (updateData.template_format) {
     if (!updateData.json_schema) {
-      updateData.json_schema = buildSchemaFromTemplateFormat(updateData.template_format);
+      updateData.json_schema = buildSchemaFromTemplateFormat(updateData.template_format, {}, updateData.variables ?? updateData.default_json ?? {});
     }
     if (!updateData.default_json && !updateData.default_values) {
       const regeneratedDefaults = buildDefaultValues(updateData.template_format);

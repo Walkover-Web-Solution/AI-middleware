@@ -163,14 +163,84 @@ function extractPlaceholderKeys(templateFormat) {
  * @param {Object} typeOverrides  – optional map of rootKey → JSON-Schema fragment
  * @returns {Object}  JSON Schema for the "variables" object
  */
-function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}) {
+
+function extractActionDataFields(node, fieldsSet = new Set()) {
+    if (typeof node === "string") return fieldsSet;
+    if (Array.isArray(node)) {
+        node.forEach((item) => extractActionDataFields(item, fieldsSet));
+    } else if (node && typeof node === "object") {
+        if (node.type === "Button" && node.payload && typeof node.payload.action_data === "string") {
+            const match = node.payload.action_data.match(/\{\{([^}]+)\}\}/);
+            if (match) {
+                const parts = match[1].replace(/\[\d+\]/g, "").split(".");
+                fieldsSet.add(parts[parts.length - 1]);
+            }
+        }
+        Object.values(node).forEach((v) => extractActionDataFields(v, fieldsSet));
+    }
+    return fieldsSet;
+}
+
+function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}, variables = {}) {
+    const actionDataFields = extractActionDataFields(templateFormat);
+    const getActionDataSchema = (f) => ({
+        type: "object",
+        description: `Action data field "${f}"`,
+        properties: {
+            type: { type: "string" },
+            value: { type: "string" },
+            data: {
+                type: "object",
+                properties: {
+                    id: { type: "string" }
+                },
+                required: ["id"],
+                additionalProperties: false
+            }
+        },
+        required: ["type", "value", "data"],
+        additionalProperties: false
+    });
+
     const structure = collectVariableStructure(templateFormat);
     const rootKeys = Object.keys(structure);
     const properties = {};
 
+    // Derive schema from an actual JS value (handles nested objects/arrays/primitives)
+    function getSchemaForValue(value) {
+        if (Array.isArray(value)) {
+            if (value.length > 0) {
+                return { type: "array", items: getSchemaForValue(value[0]) };
+            }
+            return { type: "array" };
+        } else if (value !== null && typeof value === "object") {
+            const props = {};
+            const required = [];
+            for (const k in value) {
+                props[k] = getSchemaForValue(value[k]);
+                required.push(k);
+            }
+            return { type: "object", properties: props, required, additionalProperties: false };
+        } else if (typeof value === "number") {
+            return { type: "number" };
+        } else if (typeof value === "boolean") {
+            return { type: "boolean" };
+        } else {
+            return { type: "string" };
+        }
+    }
+
     rootKeys.forEach((key) => {
         if (typeOverrides[key]) {
             properties[key] = typeOverrides[key];
+            return;
+        }
+
+        // If the actual variable value is a non-primitive, derive the schema from it
+        // so that object/array payloads used as scalar placeholders get correct types
+        const actualValue = variables?.[key];
+        if (actualValue !== undefined && actualValue !== null && typeof actualValue === "object") {
+            properties[key] = getSchemaForValue(actualValue);
             return;
         }
 
@@ -179,7 +249,11 @@ function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}) {
         if (info.type === 'array') {
             const itemProperties = {};
             info.fields.forEach((f) => {
-                itemProperties[f] = { type: "string", description: `Field "${f}" of a ${key} item` };
+                if (actionDataFields.has(f) || f === "actionData") {
+                    itemProperties[f] = getActionDataSchema(f);
+                } else {
+                    itemProperties[f] = { type: "string", description: `Field "${f}" of a ${key} item` };
+                }
             });
             properties[key] = {
                 type: "array",
@@ -194,7 +268,11 @@ function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}) {
         } else if (info.type === 'object') {
             const objProperties = {};
             info.fields.forEach((f) => {
-                objProperties[f] = { type: "string", description: `Field "${f}" of the ${key} object` };
+                if (actionDataFields.has(f) || f === "actionData") {
+                    objProperties[f] = getActionDataSchema(f);
+                } else {
+                    objProperties[f] = { type: "string", description: `Field "${f}" of the ${key} object` };
+                }
             });
             properties[key] = {
                 type: "object",
@@ -205,7 +283,11 @@ function buildSchemaFromTemplateFormat(templateFormat, typeOverrides = {}) {
             };
         } else {
             // Scalar / simple
-            properties[key] = { type: "string", description: `Value for ${key}` };
+            if (actionDataFields.has(key) || key === "actionData") {
+                properties[key] = getActionDataSchema(key);
+            } else {
+                properties[key] = { type: "string", description: `Value for ${key}` };
+            }
         }
     });
 

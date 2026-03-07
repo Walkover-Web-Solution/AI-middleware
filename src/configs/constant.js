@@ -1,6 +1,5 @@
 import ConfigurationServices from "../db_services/configuration.service.js";
 import testcaseDbservice from "../db_services/testcase.service.js";
-import { renderCardToTailwind } from "../utils/Formatter.utility.js";
 import gptMemoryService from "../services/utils/gptMemory.service.js";
 import { convertPromptToString } from "../utils/promptWrapper.utils.js";
 import { buildSchemaFromTemplateFormat } from "../utils/templateVariables.utility.js";
@@ -236,7 +235,15 @@ export const AI_OPERATION_CONFIG = {
                 if (Array.isArray(listData) && node.children?.length > 0) {
                   const itemTemplate = node.children[0];
                   // Alias priority: node.itemAlias > node.key > ListViewItem.key > "item"
-                  const localKey = node.itemAlias || node.key || itemTemplate.key || "item";
+                  let localKey = node.itemAlias || node.key;
+                  if (!localKey) {
+                    if (itemTemplate.key && typeof itemTemplate.key === "string") {
+                      const match = itemTemplate.key.match(/^\{\{([\w]+)\./);
+                      localKey = match ? match[1] : itemTemplate.key;
+                    } else {
+                      localKey = "item";
+                    }
+                  }
                   const resolvedChildren = listData.map((item) => {
                     const localContext = (item && typeof item === "object" && !Array.isArray(item))
                       ? { ...context, ...item, [localKey]: item }
@@ -257,7 +264,7 @@ export const AI_OPERATION_CONFIG = {
             return node;
           };
 
-          ui = resolve(ui, variables);
+          ui = resolve(ui, variables); 
         }
       } catch (error) {
         console.error("Error parsing rich UI template result:", error);
@@ -272,7 +279,7 @@ export const AI_OPERATION_CONFIG = {
         default_json: variables,  // alias used by new TemplatePlayground
         action_definitions: actionDefinitions,
         template_format: originalRawUi, // unreplaced tree for storage
-        json_schema: originalRawUi ? buildSchemaFromTemplateFormat(originalRawUi) : null,
+        json_schema: originalRawUi ? buildSchemaFromTemplateFormat(originalRawUi, {}, variables ?? {}) : null,
       };
     }
   },
