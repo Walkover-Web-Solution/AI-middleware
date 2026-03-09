@@ -148,8 +148,14 @@ const addPreTool = async (req, res, next) => {
     const data_to_update = {};
 
     if (status === "1") {
+      // Prevent adding a new tool if one already exists (only one pre-tool allowed)
+      if (current_pre_tools.length > 0) {
+        res.locals = { success: false, message: "A pre-tool is already configured. Remove it before adding a new one." };
+        req.statusCode = 400;
+        return next();
+      }
       // Prevent duplicate — one entry per type
-      const already_exists = current_pre_tools.some((t) => typeof t === "object" && t.type === pre_tool_entry.type);
+      const already_exists = current_pre_tools.some((t) => t.type === pre_tool_entry.type);
       if (already_exists) {
         res.locals = { success: false, message: `Pre-tool of type '${pre_tool_entry.type}' already exists` };
         req.statusCode = 400;
@@ -157,14 +163,8 @@ const addPreTool = async (req, res, next) => {
       }
       data_to_update["pre_tools"] = [...current_pre_tools, pre_tool_entry];
     } else {
-      // Remove by type
-      data_to_update["pre_tools"] = current_pre_tools.filter((t) => {
-        // backward compat: old entries were plain strings (function IDs)
-        if (typeof t === "string") return t !== pre_tool_entry?.config?.function_id;
-        return t.type !== pre_tool_entry?.type;
-      });
+      data_to_update["pre_tools"] = current_pre_tools.filter((t) => t.type !== pre_tool_entry?.type);
     }
-
     await ConfigurationServices.updateAgent(bridgeId, data_to_update, version_id);
     const result = await ConfigurationServices.getAgentsWithTools(bridgeId, org_id, version_id);
 
