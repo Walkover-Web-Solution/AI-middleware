@@ -3,6 +3,9 @@ import axios from "axios";
 
 const NOT_DIAMOND_MODELS_URL = "https://api.notdiamond.ai/v2/models";
 
+const toInternalProviderName = (provider) => (provider === "google" ? "gemini" : provider);
+const toNotDiamondProviderName = (provider) => (provider === "gemini" ? "google" : provider);
+
 let supportedModelsCache = null;
 let cacheExpiresAt = 0;
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -18,7 +21,7 @@ const getSupportedModelSet = async () => {
   }
 
   const { data } = await axios.get(NOT_DIAMOND_MODELS_URL);
-  const modelSet = new Set((data.models || []).map(({ provider, model }) => `${provider}:${model}`));
+  const modelSet = new Set((data.models || []).map(({ provider, model }) => `${toInternalProviderName(provider)}:${model}`));
 
   supportedModelsCache = modelSet;
   cacheExpiresAt = now + CACHE_TTL_MS;
@@ -36,7 +39,12 @@ const getSupportedModelSet = async () => {
 const selectBestModel = async (systemContent, llmProviders) => {
   const supportedModels = await getSupportedModelSet();
 
-  const eligibleProviders = llmProviders.filter(({ provider, model }) => supportedModels.has(`${provider}:${model}`));
+  const eligibleProviders = llmProviders
+    .filter(({ provider, model }) => supportedModels.has(`${toInternalProviderName(provider)}:${model}`))
+    .map(({ provider, model }) => ({
+      provider: toNotDiamondProviderName(provider),
+      model
+    }));
 
   if (eligibleProviders.length === 0) {
     throw new Error("None of the available models are supported by Not Diamond.");
@@ -58,7 +66,7 @@ const selectBestModel = async (systemContent, llmProviders) => {
 
   return {
     model: providerInfo.model,
-    service: providerInfo.provider,
+    service: toInternalProviderName(providerInfo.provider),
     session_id: result.session_id ?? result.sessionId
   };
 };
