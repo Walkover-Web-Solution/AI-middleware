@@ -154,13 +154,6 @@ const addPreTool = async (req, res, next) => {
         req.statusCode = 400;
         return next();
       }
-      // Prevent duplicate — one entry per type
-      const already_exists = current_pre_tools.some((t) => t.type === pre_tool_entry.type);
-      if (already_exists) {
-        res.locals = { success: false, message: `Pre-tool of type '${pre_tool_entry.type}' already exists` };
-        req.statusCode = 400;
-        return next();
-      }
       data_to_update["pre_tools"] = [...current_pre_tools, pre_tool_entry];
     } else {
       data_to_update["pre_tools"] = current_pre_tools.filter((t) => t.type !== pre_tool_entry?.type);
