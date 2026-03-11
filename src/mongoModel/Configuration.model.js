@@ -287,6 +287,10 @@ const configuration = new mongoose.Schema({
   auto_model_select: {
     type: Boolean,
     default: false
+  },
+  cache_on: {
+    type: Boolean,
+    default: false
   }
 });
 
