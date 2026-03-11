@@ -23,7 +23,9 @@ async function processLogQueueMessage(messages) {
       assistant_answer: agent_memory_data.assistant_message || "",
       agent_id: agent_memory_data.bridge_id || "",
       bridge_name: agent_memory_data.bridge_name || "",
-      system_prompt: agent_memory_data.system_prompt || ""
+      system_prompt: agent_memory_data.system_prompt || "",
+      is_cache_hit: agent_memory_data.is_cache_hit || false,
+      cached_resource_id: agent_memory_data.resource_id || null
     });
   }
 
