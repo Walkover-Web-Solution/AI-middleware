@@ -121,10 +121,37 @@ const getCurrentOrgUsers = async (req, res, next) => {
   return next();
 };
 
+const getAffiliateEmbedToken = async (req, res, next) => {
+  const orgToken = process.env.AFFILIATE_ORG_TOKEN;
+  if (!orgToken) {
+    res.locals = { success: false, message: "AFFILIATE_ORG_TOKEN is not configured" };
+    req.statusCode = 500;
+    return next();
+  }
+
+  const { organization, expires_in_hours, label } = req.body;
+
+  const response = await fetch("https://apireftest.hostnsoft.com/api/v1/embed/token/generate", {
+    method: "POST",
+    headers: {
+      "X-Org-Token": orgToken,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ organization, expires_in_hours, label })
+  });
+
+  const data = await response.json();
+
+  res.locals = data;
+  req.statusCode = response.status;
+  return next();
+};
+
 export default {
   clearRedisCache,
   getRedisCache,
   callGtwy,
   generateToken,
-  getCurrentOrgUsers
+  getCurrentOrgUsers,
+  getAffiliateEmbedToken
 };

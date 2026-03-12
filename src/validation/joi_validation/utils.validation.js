@@ -88,6 +88,14 @@ const callAi = {
     .unknown(true)
 };
 
+const getAffiliateEmbedToken = {
+  body: Joi.object().keys({
+    organization: Joi.string().required(),
+    expires_in_hours: Joi.number().integer().min(1).optional(),
+    label: Joi.string().optional().allow("")
+  })
+};
+
 const generateToken = {
   body: Joi.object()
     .keys({
@@ -100,5 +108,6 @@ export default {
   clearRedisCache,
   getRedisCache,
   callAi,
-  generateToken
+  generateToken,
+  getAffiliateEmbedToken
 };
