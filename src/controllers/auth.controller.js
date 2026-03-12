@@ -109,9 +109,12 @@ const generateLocalToken = async (req, res) => {
     return res.status(400).json({ success: false, message: "env must be 'dev' or 'prod'" });
   }
 
-  const token = generateAuthToken(config.user, config.org);
+  const [token, proxy_auth_token] = await Promise.all([
+    generateAuthToken(config.user, config.org),
+    createProxyToken({ user_id: config.user.id, company_id: config.org.id })
+  ]);
 
-  return res.status(200).json({ success: true, token });
+  return res.status(200).json({ success: true, token, proxy_auth_token });
 };
 
 export {
