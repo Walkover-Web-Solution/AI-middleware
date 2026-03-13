@@ -173,6 +173,21 @@ const updateApikey = async (req, res, next) => {
 const deleteApikey = async (req, res, next) => {
   const { apikey_object_id } = req.body;
   const org_id = req.profile.org.id;
+  // Check if API key is in use
+  const usageCheck = await apikeyService.checkApikeyUsage(apikey_object_id, org_id);
+  if (usageCheck.isInUse) {
+    res.locals = {
+      success: false,
+      message: `This API key is currently being used by ${usageCheck.versions.length} agent version(s).`,
+      isInUse: true,
+      usageDetails: {
+        agents: usageCheck.agents,
+        versions: usageCheck.versions
+      }
+    };
+    req.statusCode = 400;
+    return next();
+  }
 
   const apikeys_data = await apikeyService.findApikeyById(apikey_object_id);
   let version_ids = apikeys_data?.version_ids || [];
