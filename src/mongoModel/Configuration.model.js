@@ -40,6 +40,62 @@ const pageConfigSchema = new Schema(
   { _id: false }
 );
 
+const responseFormatSchema = new Schema(
+  {
+    type: {
+      type: String,
+      default: "default"
+    },
+    cred: {
+      type: Object,
+      default: {}
+    }
+  },
+  { _id: false, strict: false }
+);
+
+const configurationSchema = new Schema(
+  {
+    model: {
+      type: String,
+      default: ""
+    },
+    type: {
+      type: String,
+      default: "chat"
+    },
+    response_type: {
+      type: String,
+      default: "default"
+    },
+    tool_choice: {
+      type: String,
+      default: "default"
+    },
+    max_tokens: {
+      type: Schema.Types.Mixed,
+      default: ""
+    },
+    is_rich_text: {
+      type: Boolean,
+      default: false
+    },
+    stream: {
+      type: Boolean,
+      default: false
+    },
+    response_format: {
+      type: responseFormatSchema,
+      default: {}
+    },
+    prompt: {
+      type: Schema.Types.Mixed,
+      default: ""
+    }
+  },
+  { _id: false, strict: false }
+);
+
 const configuration = new mongoose.Schema({
   org_id: {
     type: String,
@@ -64,7 +120,7 @@ const configuration = new mongoose.Schema({
     default: ""
   },
   configuration: {
-    type: Object,
+    type: configurationSchema,
     default: {}
   },
   apikey: {

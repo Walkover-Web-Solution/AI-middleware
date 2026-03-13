@@ -14,6 +14,7 @@ import { validateJsonSchemaConfiguration } from "../services/utils/common.utils.
 import { modelConfigDocument } from "../services/utils/loadModelConfigs.js";
 import { sendAgentCreatedWebhook } from "../services/utils/agentWebhook.utils.js";
 import { convertPromptToString } from "../utils/promptWrapper.utils.js";
+import apiCallService from "../db_services/apiCall.service.js";
 
 const createAgentController = async (req, res, next) => {
   try {
@@ -87,23 +88,30 @@ const createAgentController = async (req, res, next) => {
 
     const all_agent_name = all_agent.map((agent) => agent.name);
 
+    let agent_data = {};
+
     if (purpose) {
+      const functions = await apiCallService.getAllApiCallsByOrgId(org_id, folder_id, user_id, req.IsEmbedUser);
       const variables = {
         purpose: purpose,
-        all_bridge_names: all_agent_name
+        all_bridge_names: all_agent_name,
+        tools: functions.map((tools) => {
+          return { id: tools._id, description: tools.description };
+        }),
+        fields: folder_data
+          ? folder_data?.config?.prompt?.embedFields
+              ?.filter((field) => !field.hidden)
+              ?.reduce((acc, field) => {
+                acc[field.name] = field.value || "";
+                return acc;
+              }, {}) || { role: "", goal: "", instruction: "" }
+          : { role: "", goal: "", instruction: "" }
       };
-      const user = "Generate Agent Configuration accroding to the given user purpose.";
-      const agent_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
-      // Assuming agent_data is parsed JSON from callAiMiddleware
-      if (typeof agent_data === "object") {
-        model = agent_data.model || model;
-        service = agent_data.service || service;
-        name = name || agent_data.name;
-        // Only override prompt if we don't have folder prompt config
-        if (!folder_data?.config?.prompt) {
-          prompt = agent_data.system_prompt || prompt;
-        }
-        type = agent_data.type || type;
+      const user = "Generate Agent Configuration according to the given user purpose.";
+      const res_data = await callAiMiddleware(user, bridge_ids["create_bridge_using_ai"], variables);
+      // Use AI data as-is
+      if (typeof res_data === "object") {
+        agent_data = res_data;
       }
     }
 
@@ -132,29 +140,36 @@ const createAgentController = async (req, res, next) => {
       "style"
     ];
 
-    const model_data = {};
+    // Use AI configuration if purpose exists and valid, otherwise build manually
+    let model_data;
+    if (purpose && agent_data?.configuration) {
+      // Use AI configuration as-is
+      model_data = agent_data.configuration;
+    } else {
+      // Build configuration manually (original logic)
+      model_data = {};
 
-    // Get model configuration if available
-    const serviceLower = service.toLowerCase();
-    if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
-      const modelObj = modelConfigDocument[serviceLower][model];
-      const configurations = modelObj.configuration || {};
+      // Get model configuration if available
+      const serviceLower = service.toLowerCase();
+      if (modelConfigDocument[serviceLower] && modelConfigDocument[serviceLower][model]) {
+        const modelObj = modelConfigDocument[serviceLower][model];
+        const configurations = modelObj.configuration || {};
 
-      for (const key of keys_to_update) {
-        if (configurations[key]) {
-          model_data[key] = key === "model" ? configurations[key].default : "default";
+        for (const key of keys_to_update) {
+          if (configurations[key]) {
+            model_data[key] = key === "model" ? configurations[key].default : "default";
+          }
         }
       }
+
+      model_data.type = type;
+      model_data.response_format = {
+        type: "default",
+        cred: {}
+      };
+      model_data.is_rich_text = false;
+      model_data.prompt = prompt;
     }
-
-    model_data.type = type;
-    model_data.response_format = {
-      type: "default",
-      cred: {}
-    };
-    model_data.is_rich_text = false;
-    model_data.prompt = prompt;
-
     const fall_back = {
       is_enable: true,
       service: "ai_ml",
@@ -177,16 +192,18 @@ const createAgentController = async (req, res, next) => {
     const agent_limit_start_date = agents.bridge_limit_start_date;
 
     const result = await ConfigurationServices.createAgent({
-      configuration: model_data,
-      name: name,
+      // Use AI data when purpose exists, otherwise use manual defaults
+      ...(purpose ? agent_data : {}),
+      configuration: purpose ? agent_data?.configuration : model_data,
+      name: purpose ? agent_data?.name || name : name,
       slugName: slugName,
-      service: service,
+      service: purpose ? agent_data?.service || service : service,
       bridgeType: agentType,
       org_id: org_id,
-      gpt_memory: true,
+      gpt_memory: purpose ? (agent_data?.gpt_memory !== undefined ? agent_data?.gpt_memory : true) : true,
       folder_id: folder_id,
       user_id: user_id,
-      fall_back: fall_back,
+      fall_back: purpose ? agent_data?.fall_back || fall_back : fall_back,
       bridge_limit: agent_limit,
       bridge_usage: agent_usage,
       bridge_limit_reset_period: agent_limit_reset_period,
