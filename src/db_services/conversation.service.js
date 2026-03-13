@@ -377,7 +377,7 @@ async function sortThreadsByHits(threads) {
   return threads;
 }
 
-async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users = []) {
+async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users = [], filters = {}) {
   try {
     const offset = (page - 1) * pageSize;
     let pageNo = 1;
@@ -415,11 +415,34 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users
       userData = allUserData;
     }
     if (version_id) {
+      // Build where conditions for filtering
+      let whereConditions = {
+        org_id: org_id,
+        version_id: version_id
+      };
+
+      // Apply filters if provided
+      if (filters.user_ids && filters.user_ids.length > 0) {
+        whereConditions.user_id = { [Sequelize.Op.in]: filters.user_ids };
+      }
+
+      if (filters.types && filters.types.length > 0) {
+        whereConditions.type = { [Sequelize.Op.in]: filters.types };
+      }
+
+      if (filters.date_from) {
+        whereConditions.time = { [Sequelize.Op.gte]: new Date(filters.date_from) };
+      }
+
+      if (filters.date_to) {
+        whereConditions.time = {
+          ...whereConditions.time,
+          [Sequelize.Op.lte]: new Date(filters.date_to)
+        };
+      }
+
       const history = await models.pg.user_bridge_config_history.findAll({
-        where: {
-          org_id: org_id,
-          version_id: version_id
-        },
+        where: whereConditions,
         attributes: ["id", "user_id", "org_id", "bridge_id", "type", "time", "version_id"],
         order: [["time", "DESC"]],
         offset: offset,
@@ -438,7 +461,16 @@ async function getUserUpdates(org_id, version_id, page = 1, pageSize = 10, users
         };
       });
 
-      return { success: true, updates: updatedHistory };
+      return {
+        success: true,
+        updates: updatedHistory,
+        users: userData
+          .filter((user) => user?.meta?.type !== "embed")
+          .map((user) => ({
+            id: user.id,
+            name: user.name
+          }))
+      };
     } else {
       let filteredUsers = [];
 
